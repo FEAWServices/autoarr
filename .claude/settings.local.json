@@ -3,7 +3,15 @@
     "allow": [
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(mkdir:*)",
+      "Bash(python -m pytest --collect-only tests/unit/mcp_servers/sabnzbd/)",
+      "Bash(python -m pytest tests/unit/mcp_servers/sabnzbd/test_sabnzbd_client.py -v --tb=short)",
+      "Bash(poetry run pytest:*)",
+      "Bash(python3 -m pytest tests/unit/mcp_servers/sabnzbd/test_sabnzbd_client.py::TestSABnzbdClientInitialization::test_client_requires_url -v --tb=short)",
+      "Bash(python -m pip install:*)",
+      "Bash(python:*)",
+      "Bash(PYTHONPATH=\"C:\\Git\\autoarr\\mcp-servers:$PYTHONPATH\" python -m pytest tests/unit/mcp_servers/sabnzbd/test_sabnzbd_client.py::TestSABnzbdClientInitialization::test_client_requires_url -v --no-cov --tb=short)"
     ],
     "deny": [],
     "ask": []
