@@ -22,6 +22,7 @@ CHECK = "[OK]"
 CROSS = "[FAIL]"
 INFO = "[INFO]"
 
+
 def test_imports():
     """Test that all modules can be imported."""
     print("Testing imports...")
@@ -38,6 +39,7 @@ def test_imports():
             SystemStatus,
             ErrorResponse,
         )
+
         print(f"  {CHECK} All modules imported successfully")
         return True
     except ImportError as e:
@@ -51,20 +53,20 @@ def test_client_class():
     from radarr.client import RadarrClient
 
     required_methods = [
-        '__init__',
-        'create',
-        'close',
-        'health_check',
-        'get_system_status',
-        'get_movies',
-        'get_movie_by_id',
-        'add_movie',
-        'delete_movie',
-        'search_movie_lookup',
-        'search_movie',
-        'get_queue',
-        'get_calendar',
-        'get_wanted_missing',
+        "__init__",
+        "create",
+        "close",
+        "health_check",
+        "get_system_status",
+        "get_movies",
+        "get_movie_by_id",
+        "add_movie",
+        "delete_movie",
+        "search_movie_lookup",
+        "search_movie",
+        "get_queue",
+        "get_calendar",
+        "get_wanted_missing",
     ]
 
     for method in required_methods:
@@ -82,13 +84,13 @@ def test_server_class():
     from radarr.server import RadarrMCPServer
 
     required_methods = [
-        '__init__',
-        'start',
-        'stop',
-        'list_tools',
-        'call_tool',
-        '_get_tools',
-        '_call_tool',
+        "__init__",
+        "start",
+        "stop",
+        "list_tools",
+        "call_tool",
+        "_get_tools",
+        "_call_tool",
     ]
 
     for method in required_methods:
@@ -179,7 +181,7 @@ def test_models():
             hasFile=True,
             path="/movies/Inception (2010)",
             qualityProfileId=1,
-            monitored=True
+            monitored=True,
         )
         print("  [OK] Movie model works")
     except Exception as e:
@@ -193,7 +195,7 @@ def test_models():
             movieId=1,
             relativePath="Inception (2010).mkv",
             size=2000000000,
-            quality={"quality": {"name": "Bluray-1080p"}}
+            quality={"quality": {"name": "Bluray-1080p"}},
         )
         print("  [OK] MovieFile model works")
     except Exception as e:
@@ -202,11 +204,7 @@ def test_models():
 
     # Test Command model
     try:
-        command = Command(
-            id=1,
-            name="MoviesSearch",
-            status="completed"
-        )
+        command = Command(id=1, name="MoviesSearch", status="completed")
         print("  [OK] Command model works")
     except Exception as e:
         print(f"  [FAIL] Command model error: {e}")
@@ -223,20 +221,14 @@ def test_client_initialization():
 
     # Test valid initialization
     try:
-        client = RadarrClient(
-            url="http://localhost:7878",
-            api_key="test_key"
-        )
+        client = RadarrClient(url="http://localhost:7878", api_key="test_key")
         print("  [OK] Client initializes with valid parameters")
     except Exception as e:
         print(f"  [FAIL] Client initialization error: {e}")
         return False
 
     # Test URL normalization
-    client = RadarrClient(
-        url="http://localhost:7878/",
-        api_key="test_key"
-    )
+    client = RadarrClient(url="http://localhost:7878/", api_key="test_key")
     if client.url != "http://localhost:7878":
         print(f"  [FAIL] URL normalization failed: {client.url}")
         return False
@@ -323,6 +315,7 @@ def main():
         except Exception as e:
             print(f"\n[FAIL] Test failed with exception: {e}")
             import traceback
+
             traceback.print_exc()
             results.append(False)
 

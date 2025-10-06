@@ -27,6 +27,17 @@ echo "📦 Installing Poetry..."
 curl -sSL https://install.python-poetry.org | python3 -
 export PATH="/root/.local/bin:$PATH"
 
+# Configure Git credentials
+if [ -f ".env" ]; then
+    echo "🔧 Configuring Git credentials..."
+    source .env
+    if [ ! -z "$GIT_EMAIL" ] && [ ! -z "$GIT_NAME" ]; then
+        git config --global user.email "$GIT_EMAIL"
+        git config --global user.name "$GIT_NAME"
+        echo "✅ Git configured: $GIT_NAME <$GIT_EMAIL>"
+    fi
+fi
+
 # Configure Poetry
 echo "⚙️  Configuring Poetry..."
 poetry config virtualenvs.in-project true

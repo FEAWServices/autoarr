@@ -28,6 +28,7 @@ from pytest_httpx import HTTPXMock
 # We import from the source location during tests
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "mcp-servers"))
 
 from sabnzbd.client import SABnzbdClient, SABnzbdClientError, SABnzbdConnectionError
@@ -81,11 +82,7 @@ class TestSABnzbdClientInitialization:
 
     def test_client_accepts_custom_timeout(self, sabnzbd_url: str, sabnzbd_api_key: str) -> None:
         """Test that client accepts custom timeout values."""
-        client = SABnzbdClient(
-            url=sabnzbd_url,
-            api_key=sabnzbd_api_key,
-            timeout=60.0
-        )
+        client = SABnzbdClient(url=sabnzbd_url, api_key=sabnzbd_api_key, timeout=60.0)
         assert client.timeout == 60.0
 
     @pytest.mark.asyncio
@@ -95,12 +92,10 @@ class TestSABnzbdClientInitialization:
         """Test that client optionally validates connection on initialization."""
         httpx_mock.add_response(
             url=f"{sabnzbd_url}/api?mode=version&output=json&apikey={sabnzbd_api_key}",
-            json={"version": "4.1.0"}
+            json={"version": "4.1.0"},
         )
         client = await SABnzbdClient.create(
-            url=sabnzbd_url,
-            api_key=sabnzbd_api_key,
-            validate_connection=True
+            url=sabnzbd_url, api_key=sabnzbd_api_key, validate_connection=True
         )
         assert client is not None
 
@@ -259,9 +254,7 @@ class TestSABnzbdClientDownloadManagement:
     """Test suite for download management operations."""
 
     @pytest.mark.asyncio
-    async def test_retry_download_by_nzo_id(
-        self, httpx_mock: HTTPXMock, sabnzbd_client
-    ) -> None:
+    async def test_retry_download_by_nzo_id(self, httpx_mock: HTTPXMock, sabnzbd_client) -> None:
         """Test retrying a failed download by NZO ID."""
         httpx_mock.add_response(json={"status": True, "nzo_ids": ["new_id"]})
 
@@ -279,16 +272,11 @@ class TestSABnzbdClientDownloadManagement:
             await sabnzbd_client.retry_download(nzo_id="")
 
     @pytest.mark.asyncio
-    async def test_delete_download_by_nzo_id(
-        self, httpx_mock: HTTPXMock, sabnzbd_client
-    ) -> None:
+    async def test_delete_download_by_nzo_id(self, httpx_mock: HTTPXMock, sabnzbd_client) -> None:
         """Test deleting a download by NZO ID."""
         httpx_mock.add_response(json={"status": True})
 
-        result = await sabnzbd_client.delete_download(
-            nzo_id="nzo_123",
-            delete_files=True
-        )
+        result = await sabnzbd_client.delete_download(nzo_id="nzo_123", delete_files=True)
 
         request = httpx_mock.get_request()
         assert "mode=queue" in str(request.url)
@@ -297,9 +285,7 @@ class TestSABnzbdClientDownloadManagement:
         assert "del_files=1" in str(request.url)
 
     @pytest.mark.asyncio
-    async def test_pause_download_by_nzo_id(
-        self, httpx_mock: HTTPXMock, sabnzbd_client
-    ) -> None:
+    async def test_pause_download_by_nzo_id(self, httpx_mock: HTTPXMock, sabnzbd_client) -> None:
         """Test pausing a specific download."""
         httpx_mock.add_response(json={"status": True})
 
@@ -311,9 +297,7 @@ class TestSABnzbdClientDownloadManagement:
         assert "value=nzo_123" in str(request.url)
 
     @pytest.mark.asyncio
-    async def test_resume_download_by_nzo_id(
-        self, httpx_mock: HTTPXMock, sabnzbd_client
-    ) -> None:
+    async def test_resume_download_by_nzo_id(self, httpx_mock: HTTPXMock, sabnzbd_client) -> None:
         """Test resuming a paused download."""
         httpx_mock.add_response(json={"status": True})
 
@@ -367,9 +351,7 @@ class TestSABnzbdClientConfiguration:
         httpx_mock.add_response(json={"status": True})
 
         result = await sabnzbd_client.set_config(
-            section="misc",
-            keyword="cache_limit",
-            value="1000M"
+            section="misc", keyword="cache_limit", value="1000M"
         )
 
         request = httpx_mock.get_request()
@@ -475,9 +457,7 @@ class TestSABnzbdClientErrorHandling:
             await sabnzbd_client.get_queue()
 
     @pytest.mark.asyncio
-    async def test_handles_500_server_error(
-        self, httpx_mock: HTTPXMock, sabnzbd_client
-    ) -> None:
+    async def test_handles_500_server_error(self, httpx_mock: HTTPXMock, sabnzbd_client) -> None:
         """Test handling of 500 Internal Server Error."""
         httpx_mock.add_response(status_code=500, text="Internal Server Error")
 
@@ -485,9 +465,7 @@ class TestSABnzbdClientErrorHandling:
             await sabnzbd_client.get_queue()
 
     @pytest.mark.asyncio
-    async def test_handles_connection_timeout(
-        self, httpx_mock: HTTPXMock, sabnzbd_client
-    ) -> None:
+    async def test_handles_connection_timeout(self, httpx_mock: HTTPXMock, sabnzbd_client) -> None:
         """Test handling of connection timeout."""
         httpx_mock.add_exception(HTTPError("Timeout"))
 
@@ -495,9 +473,7 @@ class TestSABnzbdClientErrorHandling:
             await sabnzbd_client.get_queue()
 
     @pytest.mark.asyncio
-    async def test_handles_network_error(
-        self, httpx_mock: HTTPXMock, sabnzbd_client
-    ) -> None:
+    async def test_handles_network_error(self, httpx_mock: HTTPXMock, sabnzbd_client) -> None:
         """Test handling of network connection error."""
         httpx_mock.add_exception(HTTPError("Connection refused"))
 
@@ -515,9 +491,7 @@ class TestSABnzbdClientErrorHandling:
             await sabnzbd_client.get_queue()
 
     @pytest.mark.asyncio
-    async def test_retries_on_transient_error(
-        self, httpx_mock: HTTPXMock, sabnzbd_client
-    ) -> None:
+    async def test_retries_on_transient_error(self, httpx_mock: HTTPXMock, sabnzbd_client) -> None:
         """Test that client retries on transient errors."""
         httpx_mock.add_response(status_code=503)
         httpx_mock.add_response(json={"queue": {"slots": []}})
@@ -528,9 +502,7 @@ class TestSABnzbdClientErrorHandling:
         assert len(httpx_mock.get_requests()) == 2  # Two attempts
 
     @pytest.mark.asyncio
-    async def test_respects_max_retries(
-        self, httpx_mock: HTTPXMock, sabnzbd_client
-    ) -> None:
+    async def test_respects_max_retries(self, httpx_mock: HTTPXMock, sabnzbd_client) -> None:
         """Test that client respects max retry limit."""
         for _ in range(5):
             httpx_mock.add_response(status_code=503)
@@ -583,9 +555,7 @@ class TestSABnzbdClientRequestBuilding:
         httpx_mock.add_response(json={})
 
         await sabnzbd_client.set_config(
-            section="misc",
-            keyword="test key",
-            value="test value with spaces"
+            section="misc", keyword="test key", value="test value with spaces"
         )
 
         request = httpx_mock.get_request()
@@ -615,7 +585,6 @@ class TestSABnzbdClientResourceManagement:
 
         await sabnzbd_client.get_queue()
         await sabnzbd_client.get_history()
-
 
     @pytest.mark.asyncio
     async def test_concurrent_requests_dont_conflict(
