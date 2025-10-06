@@ -1,11 +1,13 @@
-Perfect! Now I understand the AutoArr project. This is an intelligent orchestration layer for the *arr media automation stack. Let me define a comprehensive set of Claude agents tailored specifically for this project with TDD, SAST, DAST, and documentation requirements.
+Perfect! Now I understand the AutoArr project. This is an intelligent orchestration layer for the \*arr media automation stack. Let me define a comprehensive set of Claude agents tailored specifically for this project with TDD, SAST, DAST, and documentation requirements.
 
 ## AutoArr Claude Agent Architecture
 
 ### **1. Orchestrator Agent (Master Conductor)**
+
 **Primary Role**: Coordinates all agents and manages the development workflow
 
 **Responsibilities**:
+
 - Parses user stories and technical requirements
 - Delegates tasks to specialized agents based on component (MCP servers, LLM integration, UI, etc.)
 - Enforces quality gates (tests pass, security scans clear, docs updated)
@@ -15,8 +17,9 @@ Perfect! Now I understand the AutoArr project. This is an intelligent orchestrat
 - Generates sprint reports and progress updates
 
 **Key Prompts**:
+
 ```
-You are the Orchestrator for the AutoArr project. Analyze this requirement: [requirement]. 
+You are the Orchestrator for the AutoArr project. Analyze this requirement: [requirement].
 Break it into tasks, assign to appropriate agents, and define the acceptance criteria.
 Ensure TDD approach is followed.
 ```
@@ -24,9 +27,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **2. MCP Server Development Agent**
+
 **Primary Role**: Builds and maintains MCP servers for SABnzbd, Sonarr, Radarr, and Plex
 
 **Responsibilities**:
+
 - Writes TDD tests for MCP server endpoints
 - Implements MCP protocol compliance
 - Creates API wrapper functions
@@ -35,13 +40,15 @@ Ensure TDD approach is followed.
 - Ensures idempotent operations
 - Documents MCP server capabilities
 
-**Technology Focus**: 
+**Technology Focus**:
+
 - Python/TypeScript for MCP servers
 - API integration patterns
 - WebSocket connections
 - JSON-RPC
 
 **Test Requirements**:
+
 - Unit tests for each MCP tool/resource
 - Integration tests with mock APIs
 - Contract tests for API compatibility
@@ -49,9 +56,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **3. LLM Integration Agent**
+
 **Primary Role**: Develops the intelligent decision-making layer
 
 **Responsibilities**:
+
 - Designs prompt engineering for configuration recommendations
 - Implements LLM context management
 - Builds natural language parsing for user requests
@@ -61,12 +70,14 @@ Ensure TDD approach is followed.
 - Fine-tuning coordination (when applicable)
 
 **Technology Focus**:
+
 - Claude API integration
 - Prompt engineering
 - RAG (Retrieval Augmented Generation)
 - Vector databases for documentation
 
 **Test Requirements**:
+
 - Unit tests for prompt templates
 - Integration tests for LLM responses
 - Performance tests for inference latency
@@ -75,9 +86,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **4. Event Processing Agent**
+
 **Primary Role**: Builds the event-driven architecture
 
 **Responsibilities**:
+
 - Designs event schemas
 - Implements webhook handlers
 - Creates polling mechanisms for applications without webhooks
@@ -87,12 +100,14 @@ Ensure TDD approach is followed.
 - Writes event processors (failed downloads, wanted items, etc.)
 
 **Technology Focus**:
+
 - Event-driven patterns
 - Message queues (Redis, RabbitMQ)
 - Async processing
 - State machines
 
 **Test Requirements**:
+
 - Event handler unit tests
 - Integration tests for event flows
 - Load tests for event processing
@@ -101,9 +116,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **5. Frontend Development Agent**
+
 **Primary Role**: Builds the mobile-first web UI
 
 **Responsibilities**:
+
 - Writes TDD tests for React components
 - Implements responsive design
 - Creates dashboard visualizations
@@ -113,12 +130,14 @@ Ensure TDD approach is followed.
 - Ensures accessibility (WCAG 2.1)
 
 **Technology Focus**:
+
 - React/Vue.js/Svelte
 - Tailwind CSS
 - WebSocket for real-time updates
 - PWA APIs
 
 **Test Requirements**:
+
 - Component unit tests (Jest/Vitest)
 - Integration tests (React Testing Library)
 - E2E tests (Playwright/Cypress)
@@ -128,9 +147,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **6. Backend API Agent**
+
 **Primary Role**: Develops the REST API and business logic
 
 **Responsibilities**:
+
 - Writes TDD tests for API endpoints
 - Implements authentication/authorization
 - Creates configuration audit logic
@@ -140,12 +161,14 @@ Ensure TDD approach is followed.
 - Creates audit logging
 
 **Technology Focus**:
+
 - FastAPI/Express.js/Go
 - JWT/OAuth
 - PostgreSQL/MongoDB
 - Redis caching
 
 **Test Requirements**:
+
 - API unit tests
 - Integration tests
 - Contract tests (OpenAPI)
@@ -154,9 +177,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **7. Docker/Infrastructure Agent**
+
 **Primary Role**: Manages containerization and deployment
 
 **Responsibilities**:
+
 - Creates Dockerfiles with TDD approach
 - Writes docker-compose configurations
 - Implements health checks
@@ -166,12 +191,14 @@ Ensure TDD approach is followed.
 - Creates deployment scripts
 
 **Technology Focus**:
+
 - Docker
 - Docker Compose
 - Kubernetes (future)
 - CI/CD pipelines
 
 **Test Requirements**:
+
 - Container smoke tests
 - Integration tests for multi-container setup
 - Security scanning of images
@@ -180,9 +207,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **8. SAST Security Agent**
+
 **Primary Role**: Performs static code security analysis
 
 **Responsibilities**:
+
 - Scans Python/JS/TS code for vulnerabilities
 - Reviews MCP server security
 - Checks for hardcoded secrets/credentials
@@ -192,6 +221,7 @@ Ensure TDD approach is followed.
 - Ensures OWASP Top 10 compliance
 
 **Tools Integration**:
+
 - Bandit (Python)
 - ESLint with security plugins
 - Semgrep
@@ -199,6 +229,7 @@ Ensure TDD approach is followed.
 - SonarQube
 
 **Scanning Scope**:
+
 - All MCP servers
 - Backend API code
 - Frontend code
@@ -206,6 +237,7 @@ Ensure TDD approach is followed.
 - CI/CD pipelines
 
 **Reports**:
+
 - Vulnerability severity (Critical/High/Medium/Low)
 - Remediation recommendations
 - Compliance reports
@@ -213,9 +245,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **9. DAST Security Agent**
+
 **Primary Role**: Performs dynamic security testing on running application
 
 **Responsibilities**:
+
 - Tests authentication/authorization bypasses
 - Checks for injection vulnerabilities (SQL, NoSQL, Command)
 - Validates session management
@@ -226,11 +260,13 @@ Ensure TDD approach is followed.
 - Tests for sensitive data exposure
 
 **Tools Integration**:
+
 - OWASP ZAP
 - Burp Suite
 - Custom security test suite
 
 **Testing Scenarios**:
+
 - MCP server API endpoints
 - REST API endpoints
 - WebSocket connections
@@ -240,9 +276,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **10. Test Architect Agent (TDD Specialist)**
+
 **Primary Role**: Ensures comprehensive test coverage and TDD compliance
 
 **Responsibilities**:
+
 - Designs test strategies for each component
 - Writes test specifications before implementation
 - Creates test data factories
@@ -253,11 +291,13 @@ Ensure TDD approach is followed.
 - Maintains test documentation
 
 **Test Pyramid Focus**:
+
 - Unit tests: 70%
 - Integration tests: 20%
 - E2E tests: 10%
 
 **Special Focus Areas**:
+
 - MCP protocol compliance testing
 - API contract testing
 - Event processing testing
@@ -267,9 +307,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **11. Documentation Agent**
+
 **Primary Role**: Creates and maintains all project documentation
 
 **Responsibilities**:
+
 - Writes API documentation (OpenAPI/Swagger)
 - Creates MCP server documentation
 - Generates architecture diagrams (C4 model)
@@ -282,7 +324,9 @@ Ensure TDD approach is followed.
 - Maintains changelog
 
 **Documentation Types**:
+
 1. **Technical Docs**:
+
    - Architecture Decision Records (ADRs)
    - API reference
    - MCP server specifications
@@ -290,6 +334,7 @@ Ensure TDD approach is followed.
    - Event schemas
 
 2. **User Docs**:
+
    - Installation guide
    - Quick start guide
    - Configuration guide
@@ -306,9 +351,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **12. Integration Testing Agent**
+
 **Primary Role**: Tests inter-component communication
 
 **Responsibilities**:
+
 - Tests MCP server ↔ Backend integration
 - Tests Backend ↔ Frontend integration
 - Tests External API integrations (SABnzbd, Sonarr, etc.)
@@ -318,6 +365,7 @@ Ensure TDD approach is followed.
 - Validates data consistency
 
 **Test Scenarios**:
+
 - User requests content → Classification → Radarr/Sonarr
 - Failed download → Event → Recovery logic → New search
 - Configuration audit → LLM recommendation → Apply change
@@ -326,9 +374,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **13. Performance & Load Testing Agent**
+
 **Primary Role**: Ensures system performance and scalability
 
 **Responsibilities**:
+
 - Creates load test scenarios
 - Tests concurrent user handling
 - Validates LLM inference performance
@@ -339,11 +389,13 @@ Ensure TDD approach is followed.
 - Validates caching effectiveness
 
 **Tools**:
+
 - k6/Gatling
 - Apache JMeter
 - Custom scripts
 
 **Key Metrics**:
+
 - API response time (p95, p99)
 - LLM inference latency
 - Event processing rate
@@ -353,9 +405,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **14. Code Review Agent**
+
 **Primary Role**: Performs comprehensive code reviews
 
 **Responsibilities**:
+
 - Reviews code quality and style
 - Checks adherence to Python/JS/TS best practices
 - Validates SOLID principles
@@ -367,6 +421,7 @@ Ensure TDD approach is followed.
 - Checks for code smells
 
 **Review Checklist**:
+
 - Code follows project style guide
 - Tests are comprehensive and meaningful
 - Error handling is robust
@@ -378,9 +433,11 @@ Ensure TDD approach is followed.
 ---
 
 ### **15. Compliance & Privacy Agent**
+
 **Primary Role**: Ensures legal and privacy compliance
 
 **Responsibilities**:
+
 - Reviews API ToS compliance
 - Ensures no user data leaves container (privacy-first)
 - Validates GDPR considerations
@@ -390,6 +447,7 @@ Ensure TDD approach is followed.
 - Validates logging practices (no PII)
 
 **Focus Areas**:
+
 - SABnzbd API ToS
 - Sonarr API ToS
 - Radarr API ToS
@@ -410,47 +468,47 @@ Ensure TDD approach is followed.
    - LLM classification logic
    - MCP server integration
    - Event handling
-   
+
 3. Test Architect Agent creates test specifications:
    - Unit tests for chat component
    - API endpoint tests
    - LLM classification tests
    - Integration test for full flow
-   
+
 4. Parallel execution:
    - Frontend Agent: Builds chat UI (TDD)
    - Backend API Agent: Creates endpoint (TDD)
    - LLM Integration Agent: Implements classification (TDD)
    - MCP Server Agent: Ensures ready
-   
+
 5. Integration Testing Agent validates complete flow
 
 6. SAST Agent scans all new code:
    - Input validation
    - No injection vulnerabilities
    - Authentication checks
-   
+
 7. DAST Agent tests running feature:
    - API security
    - Rate limiting
    - Input fuzzing
-   
+
 8. Performance Agent validates:
    - Response time < 2s
    - Concurrent request handling
    - LLM inference latency
-   
+
 9. Documentation Agent updates:
    - API docs
    - User guide
    - Architecture diagram
-   
+
 10. Code Review Agent reviews all PRs
 
 11. Compliance Agent verifies:
     - No user data logged
     - API usage within ToS
-    
+
 12. Orchestrator validates all gates passed → Merge to main
 ```
 
@@ -459,17 +517,20 @@ Ensure TDD approach is followed.
 ## CI/CD Pipeline Integration
 
 **Pre-commit**:
+
 - Code linting
 - Unit tests
 - SAST scan
 
 **Pull Request**:
+
 - All tests (unit + integration)
 - Code coverage check (80% minimum)
 - SAST full scan
 - Code review (agent + human)
 
 **Main Branch**:
+
 - Full test suite
 - SAST + DAST scans
 - Performance tests
@@ -478,6 +539,7 @@ Ensure TDD approach is followed.
 - Security scan of image
 
 **Release**:
+
 - Full regression suite
 - Load tests
 - DAST full scan
@@ -489,36 +551,40 @@ Ensure TDD approach is followed.
 
 ## Agent Interaction Matrix
 
-| Agent | Talks To | Provides | Receives |
-|-------|----------|----------|----------|
-| Orchestrator | All | Tasks, priorities | Status, blockers |
-| Test Architect | All dev agents | Test specs | Implementation updates |
-| SAST Agent | Code Review, Orchestrator | Vulnerability reports | Code changes |
-| DAST Agent | Integration Testing, Orchestrator | Security test results | Running environments |
-| Documentation | All agents | Docs | Implementation details |
+| Agent          | Talks To                          | Provides              | Receives               |
+| -------------- | --------------------------------- | --------------------- | ---------------------- |
+| Orchestrator   | All                               | Tasks, priorities     | Status, blockers       |
+| Test Architect | All dev agents                    | Test specs            | Implementation updates |
+| SAST Agent     | Code Review, Orchestrator         | Vulnerability reports | Code changes           |
+| DAST Agent     | Integration Testing, Orchestrator | Security test results | Running environments   |
+| Documentation  | All agents                        | Docs                  | Implementation details |
 
 ---
 
 ## Technology-Specific Recommendations
 
 **Python** (MCP Servers, Backend):
+
 - pytest for testing
 - Bandit for SAST
 - FastAPI for APIs
 - Pydantic for validation
 
 **TypeScript/JavaScript** (Frontend, possibly MCP):
+
 - Vitest/Jest for testing
 - ESLint + security plugins for SAST
 - React Testing Library
 - Playwright for E2E
 
 **Docker**:
+
 - Multi-stage builds
 - Non-root user
 - Security scanning with Trivy
 
 **Documentation**:
+
 - MkDocs or Docusaurus
 - OpenAPI for API docs
 - Mermaid for diagrams

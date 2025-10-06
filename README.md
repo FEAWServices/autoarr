@@ -1,6 +1,6 @@
 # AutoArr
 
-> **Intelligent cruise control for your *arr media automation stack**
+> **Intelligent cruise control for your \*arr media automation stack**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/autoarr/autoarr)
@@ -16,7 +16,7 @@ Think of it as **cruise control for your media server** — it continuously moni
 
 ### The Problem We Solve
 
-Managing a *arr media automation stack is **complex and time-consuming**:
+Managing a \*arr media automation stack is **complex and time-consuming**:
 
 - ⚙️ **Configuration Overhead**: Each app has dozens of settings that need constant tuning
 - 🔄 **Failed Downloads**: Manual intervention required when downloads fail
@@ -29,6 +29,7 @@ Managing a *arr media automation stack is **complex and time-consuming**:
 AutoArr provides three core capabilities:
 
 #### 🧠 **Configuration Intelligence**
+
 - Scans all connected applications and audits their settings
 - Compares against latest community best practices
 - Uses AI (Claude API or local LLM) to understand context and priorities
@@ -36,6 +37,7 @@ AutoArr provides three core capabilities:
 - One-click application with rollback safety
 
 #### 🤖 **Autonomous Recovery**
+
 - Monitors SABnzbd queue in real-time
 - Detects failed downloads immediately
 - Automatically triggers alternative searches intelligently
@@ -43,7 +45,8 @@ AutoArr provides three core capabilities:
 - Learns from patterns to prevent future failures
 
 #### 💬 **Natural Language Interface**
-- Request content in plain English: *"Add the new Dune movie in 4K"*
+
+- Request content in plain English: _"Add the new Dune movie in 4K"_
 - Automatically classifies movies vs. TV shows
 - Confirms matches before adding to your library
 - Provides real-time status updates
@@ -84,18 +87,21 @@ For detailed setup instructions, see [**docs/QUICK-START.md**](docs/QUICK-START.
 ## 📚 Documentation
 
 ### **Getting Started**
+
 Start here to understand AutoArr and get it running:
 
 1. [**QUICK-START.md**](docs/QUICK-START.md) - Get up and running in 30 minutes
 2. [**PROJECT-SUMMARY.md**](docs/PROJECT-SUMMARY.md) - Executive overview and key decisions
 
 ### **Understanding the Vision**
+
 Learn about the product strategy and goals:
 
 3. [**VISION.md**](docs/VISION.md) - Product vision, business model, and roadmap
 4. [**NAME-ANALYSIS.md**](docs/NAME-ANALYSIS.md) - Why we chose "AutoArr"
 
 ### **Technical Deep Dive**
+
 For developers and those interested in how it works:
 
 5. [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) - Complete technical architecture
@@ -103,12 +109,14 @@ For developers and those interested in how it works:
 7. [**CODE-EXAMPLES.md**](docs/CODE-EXAMPLES.md) - Starter code and implementation patterns
 
 ### **AI/LLM Strategy** (Advanced)
+
 For those interested in the local LLM training approach:
 
 8. [**LLM-TRAINING-STRATEGY.md**](docs/LLM-TRAINING-STRATEGY.md) - Complete local LLM strategy with LangChain
 9. [**LLM-IMPLEMENTATION-GUIDE.md**](docs/LLM-IMPLEMENTATION-GUIDE.md) - Code and scripts for training
 
 ### **Contributing**
+
 Want to help build AutoArr?
 
 10. [**CONTRIBUTING.md**](docs/CONTRIBUTING.md) - Developer guidelines and workflow
@@ -118,6 +126,7 @@ Want to help build AutoArr?
 ## ✨ Key Features
 
 ### 🎛️ **Intelligent Configuration Auditing**
+
 - Scans SABnzbd, Sonarr, Radarr, and Plex configurations
 - Compares against curated best practices database
 - Uses web search to find latest community recommendations
@@ -125,6 +134,7 @@ Want to help build AutoArr?
 - Tracks configuration history for safe rollbacks
 
 ### 🔄 **Automatic Download Recovery**
+
 - Real-time monitoring of SABnzbd queue
 - Instant detection of failed downloads
 - Intelligent retry strategies (quality fallback, alternative releases)
@@ -132,6 +142,7 @@ Want to help build AutoArr?
 - Detailed activity logging
 
 ### 💬 **Natural Language Content Requests**
+
 - Chat-based interface for content requests
 - Automatic movie vs. TV show classification
 - Smart search with disambiguation
@@ -139,6 +150,7 @@ Want to help build AutoArr?
 - Real-time download tracking
 
 ### 📊 **Unified Dashboard**
+
 - At-a-glance health monitoring
 - Configuration audit results
 - Active downloads and queue status
@@ -181,6 +193,7 @@ AutoArr is built on a **microservices architecture** using the **Model Context P
 ```
 
 **Key Design Principles:**
+
 - **Non-invasive**: Uses official APIs through MCP abstraction
 - **Intelligent**: LLM-powered reasoning, not just rules
 - **Transparent**: All actions logged and reversible
@@ -194,12 +207,14 @@ See [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) for complete technical details.
 ## 🛠️ Technology Stack
 
 ### **Backend**
+
 - **Python 3.11+** with FastAPI for async performance
 - **MCP (Model Context Protocol)** for application integration
 - **SQLite** (container) / **PostgreSQL** (SaaS)
 - **Claude API** or **Local Llama 3.1** for intelligence
 
 ### **Frontend**
+
 - **React 18** + **TypeScript** for type safety
 - **Tailwind CSS** for mobile-first responsive design
 - **Zustand** for lightweight state management
@@ -207,6 +222,7 @@ See [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) for complete technical details.
 - **Playwright** for E2E testing
 
 ### **Infrastructure**
+
 - **Docker** for containerization
 - **GitHub Actions** for CI/CD
 - **Prometheus + Grafana** for monitoring
@@ -217,12 +233,14 @@ See [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) for complete technical details.
 ## 🗓️ Development Roadmap
 
 ### ✅ **Phase 1: Foundation** (Weeks 1-4)
+
 - [x] Project structure and development environment
 - [ ] MCP servers for SABnzbd, Sonarr, Radarr, Plex
 - [ ] Basic API gateway with health checks
 - [ ] MCP orchestrator with connection pooling
 
 ### 🚧 **Phase 2: Intelligence** (Weeks 5-8) — **CURRENT**
+
 - [ ] Configuration Manager service
 - [ ] Best practices database
 - [ ] LLM integration (Claude API)
@@ -230,18 +248,21 @@ See [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) for complete technical details.
 - [ ] Configuration audit UI
 
 ### 📅 **Phase 3: Monitoring** (Weeks 9-12)
+
 - [ ] Download queue monitoring
 - [ ] Automatic failure detection and recovery
 - [ ] Activity logging and history
 - [ ] Real-time WebSocket updates
 
 ### 📅 **Phase 4: Natural Language** (Weeks 13-16)
+
 - [ ] Natural language request parsing
 - [ ] Content classification (movie vs. TV)
 - [ ] Chat interface with history
 - [ ] Request status tracking
 
 ### 📅 **Phase 5: Launch** (Weeks 17-20)
+
 - [ ] Comprehensive testing and bug fixes
 - [ ] Performance optimization
 - [ ] Complete documentation
@@ -257,14 +278,15 @@ See [**BUILD-PLAN.md**](docs/BUILD-PLAN.md) for detailed sprint planning.
 
 ### **Competitive Landscape**
 
-| Solution | Config Mgmt | Download Recovery | NL Interface | Intelligence |
-|----------|-------------|-------------------|--------------|--------------|
-| **Manual** | ❌ | ❌ | ❌ | ❌ |
-| **Overseerr** | ❌ | ❌ | ❌ | ❌ |
-| **Custom Scripts** | ⚠️ | ⚠️ | ❌ | ❌ |
-| **AutoArr** | ✅ | ✅ | ✅ | ✅ |
+| Solution           | Config Mgmt | Download Recovery | NL Interface | Intelligence |
+| ------------------ | ----------- | ----------------- | ------------ | ------------ |
+| **Manual**         | ❌          | ❌                | ❌           | ❌           |
+| **Overseerr**      | ❌          | ❌                | ❌           | ❌           |
+| **Custom Scripts** | ⚠️          | ⚠️                | ❌           | ❌           |
+| **AutoArr**        | ✅          | ✅                | ✅           | ✅           |
 
 **AutoArr is the only solution** that combines:
+
 - Configuration optimization based on best practices
 - Intelligent failure recovery with AI reasoning
 - Natural language interface for content requests
@@ -275,18 +297,21 @@ See [**BUILD-PLAN.md**](docs/BUILD-PLAN.md) for detailed sprint planning.
 **Open Core** approach for community growth and sustainability:
 
 #### **Free Tier** (MIT Licensed)
+
 - Configuration auditing
 - Basic download recovery
 - REST API access
 - Community support
 
 #### **Premium** ($4.99/month)
+
 - Advanced AI recommendations
 - Natural language interface
 - Priority support
 - Cloud configuration sync
 
 #### **Enterprise** (Custom pricing)
+
 - Multi-location support
 - Advanced analytics
 - Custom integrations
@@ -318,6 +343,7 @@ cd ui && pnpm test           # Frontend
 ```
 
 ### **Development Workflow**
+
 - Follow [Conventional Commits](https://www.conventionalcommits.org/)
 - Write tests first (TDD)
 - Maintain 85%+ test coverage

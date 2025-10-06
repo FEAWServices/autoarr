@@ -5,16 +5,13 @@
     "context": ".."
   },
   "workspaceFolder": "/app",
-
-  // Features to install
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
+  ],
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
-
-  // Install dependencies after container is created
   "postCreateCommand": "bash .devcontainer/post-create.sh",
-
-  // VS Code customizations
   "customizations": {
     "vscode": {
       "extensions": [
@@ -38,20 +35,7 @@
       }
     }
   },
-
-  // Forward ports
-  "forwardPorts": [
-    8088,  // AutoArr API
-    3000,  // AutoArr UI
-    8080,  // SABnzbd
-    8989,  // Sonarr
-    7878,  // Radarr
-    32400, // Plex
-    5432,  // PostgreSQL
-    6379   // Redis
-  ],
-
-  // Port labels
+  "forwardPorts": [8088, 3000, 8080, 8989, 7878, 32400, 5432, 6379],
   "portsAttributes": {
     "8088": {
       "label": "AutoArr API",
@@ -62,11 +46,7 @@
       "onAutoForward": "notify"
     }
   },
-
-  // Run as root to install packages
   "remoteUser": "root",
-
-  // Environment variables
   "remoteEnv": {
     "PYTHONPATH": "/app:/app/mcp-servers",
     "PATH": "/root/.local/bin:${containerEnv:PATH}"

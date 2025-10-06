@@ -25,7 +25,11 @@
       "Bash(set PYTHONPATH=.)",
       "Bash(mcp-servers:*)",
       "Bash(poetry install:*)",
-      "Bash(PYTHONPATH=. python -m pytest tests/unit/api/ -v --tb=short -k \"test_ping or test_root\")"
+      "Bash(PYTHONPATH=. python -m pytest tests/unit/api/ -v --tb=short -k \"test_ping or test_root\")",
+      "Bash(chmod:*)",
+      "Bash(bash:*)",
+      "Bash(poetry run pre-commit:*)",
+      "Bash(poetry run:*)"
     ],
     "deny": [],
     "ask": []
