@@ -44,15 +44,15 @@ AutoArr can be deployed in two modes:
    ```bash
    docker run -d \
      --name autoarr \
-     -p 8000:8000 \
+     -p 8088:8088 \
      -v autoarr-data:/data \
      --env-file .env \
      autoarr/autoarr:latest
    ```
 
 4. **Access AutoArr**
-   - Web UI: http://localhost:8000
-   - API Docs: http://localhost:8000/docs
+   - Web UI: http://localhost:8088
+   - API Docs: http://localhost:8088/docs
 
 ### Using Docker Compose (Recommended)
 
@@ -215,7 +215,7 @@ server {
     ssl_certificate_key /path/to/key.pem;
 
     location / {
-        proxy_pass http://localhost:8000;
+        proxy_pass http://localhost:8088;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -303,7 +303,7 @@ services:
 ### Health Checks
 AutoArr exposes a health endpoint:
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8088/health
 ```
 
 Response:

@@ -141,7 +141,7 @@ services:
       - ./mcp-servers:/app/mcp-servers
       - ./shared:/app/shared
     ports:
-      - "8000:8000"
+      - "8088:8088"
     depends_on:
       postgres:
         condition: service_healthy
@@ -150,7 +150,7 @@ services:
     restart: unless-stopped
     networks:
       - autoarr-network
-    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8088 --reload
 
   # AutoArr UI (React frontend)
   ui:
@@ -159,7 +159,7 @@ services:
       dockerfile: docker/Dockerfile.ui
     container_name: autoarr-ui
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8088
     volumes:
       - ./ui:/app
       - /app/node_modules

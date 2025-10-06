@@ -57,9 +57,9 @@ python -m api.main
 ### 4. Access API Documentation
 
 Open your browser to:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI JSON**: http://localhost:8000/openapi.json
+- **Swagger UI**: http://localhost:8088/docs
+- **ReDoc**: http://localhost:8088/redoc
+- **OpenAPI JSON**: http://localhost:8088/openapi.json
 
 ## API Endpoints
 
@@ -130,7 +130,7 @@ Open your browser to:
 ### Call a Tool
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/mcp/call" \
+curl -X POST "http://localhost:8088/api/v1/mcp/call" \
   -H "Content-Type: application/json" \
   -d '{
     "server": "sabnzbd",
@@ -142,13 +142,13 @@ curl -X POST "http://localhost:8000/api/v1/mcp/call" \
 ### Check Health
 
 ```bash
-curl "http://localhost:8000/health"
+curl "http://localhost:8088/health"
 ```
 
 ### Add a TV Show
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/shows/" \
+curl -X POST "http://localhost:8088/api/v1/shows/" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Breaking Bad",
