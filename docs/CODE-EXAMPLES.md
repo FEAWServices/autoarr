@@ -504,7 +504,7 @@ export function Dashboard() {
  * API Client for AutoArr Backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 class APIError extends Error {
   constructor(
@@ -807,7 +807,7 @@ services:
     ports:
       - "3000:80"
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8088
     restart: unless-stopped
 
   postgres:

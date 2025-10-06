@@ -34,7 +34,7 @@
 
 5. **Access the applications**
    - AutoArr UI: http://localhost:3000
-   - AutoArr API: http://localhost:8000/docs
+   - AutoArr API: http://localhost:8088/docs
    - SABnzbd: http://localhost:8080
    - Sonarr: http://localhost:8989
    - Radarr: http://localhost:7878

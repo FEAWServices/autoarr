@@ -22,14 +22,14 @@ You'll see:
 INFO:     Started server process
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000
+INFO:     Uvicorn running on http://0.0.0.0:8088
 ```
 
 ### Step 3: Open Admin Interface
 
 Open your browser to:
 ```
-http://localhost:8000/static/admin.html
+http://localhost:8088/static/admin.html
 ```
 
 You'll see a beautiful admin interface with cards for each service:
@@ -99,9 +99,9 @@ This writes settings to `.env` so they survive restarts.
 
 Once the server is running:
 
-- **OpenAPI Docs**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **Admin Panel**: http://localhost:8000/static/admin.html
+- **OpenAPI Docs**: http://localhost:8088/docs
+- **ReDoc**: http://localhost:8088/redoc
+- **Admin Panel**: http://localhost:8088/static/admin.html
 
 ---
 
@@ -111,57 +111,57 @@ Once configured, you have access to **50 API endpoints**:
 
 ### Health & Status
 ```bash
-curl http://localhost:8000/health
-curl http://localhost:8000/health/sabnzbd
-curl http://localhost:8000/health/sonarr
+curl http://localhost:8088/health
+curl http://localhost:8088/health/sabnzbd
+curl http://localhost:8088/health/sonarr
 ```
 
 ### SABnzbd Operations
 ```bash
 # Get download queue
-curl http://localhost:8000/api/v1/downloads/queue
+curl http://localhost:8088/api/v1/downloads/queue
 
 # Get history
-curl http://localhost:8000/api/v1/downloads/history
+curl http://localhost:8088/api/v1/downloads/history
 
 # Retry a failed download
-curl -X POST http://localhost:8000/api/v1/downloads/retry/SABnzbd_nzo_abc123
+curl -X POST http://localhost:8088/api/v1/downloads/retry/SABnzbd_nzo_abc123
 ```
 
 ### Sonarr Operations
 ```bash
 # List all TV shows
-curl http://localhost:8000/api/v1/shows/
+curl http://localhost:8088/api/v1/shows/
 
 # Get upcoming episodes
-curl http://localhost:8000/api/v1/shows/calendar
+curl http://localhost:8088/api/v1/shows/calendar
 
 # Search for a show
-curl http://localhost:8000/api/v1/shows/search?term=Breaking+Bad
+curl http://localhost:8088/api/v1/shows/search?term=Breaking+Bad
 ```
 
 ### Radarr Operations
 ```bash
 # List all movies
-curl http://localhost:8000/api/v1/movies/
+curl http://localhost:8088/api/v1/movies/
 
 # Get wanted movies
-curl http://localhost:8000/api/v1/movies/wanted
+curl http://localhost:8088/api/v1/movies/wanted
 
 # Search for a movie
-curl http://localhost:8000/api/v1/movies/lookup?term=Inception
+curl http://localhost:8088/api/v1/movies/lookup?term=Inception
 ```
 
 ### Plex Operations
 ```bash
 # List libraries
-curl http://localhost:8000/api/v1/media/libraries
+curl http://localhost:8088/api/v1/media/libraries
 
 # Get recently added
-curl http://localhost:8000/api/v1/media/recently-added
+curl http://localhost:8088/api/v1/media/recently-added
 
 # See what's playing
-curl http://localhost:8000/api/v1/media/sessions
+curl http://localhost:8088/api/v1/media/sessions
 ```
 
 ---
@@ -214,7 +214,7 @@ docker run -d \
   autoarr:latest
 
 # Access admin interface
-# http://localhost:8000/static/admin.html
+# http://localhost:8088/static/admin.html
 ```
 
 ### Using Docker Compose
@@ -224,7 +224,7 @@ docker run -d \
 docker-compose -f docker-compose.prod.yml up -d
 
 # Access admin interface
-# http://localhost:8000/static/admin.html
+# http://localhost:8088/static/admin.html
 ```
 
 ---
@@ -272,8 +272,8 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### Admin page won't load
 - Make sure server is running
-- Check http://localhost:8000 returns JSON
-- Try http://localhost:8000/static/admin.html
+- Check http://localhost:8088 returns JSON
+- Try http://localhost:8088/static/admin.html
 
 ### Settings won't save
 - Check server logs for errors
@@ -284,9 +284,9 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ## 📞 Support
 
-- **Documentation**: http://localhost:8000/docs
+- **Documentation**: http://localhost:8088/docs
 - **GitHub Issues**: https://github.com/autoarr/autoarr/issues
-- **Admin Interface**: http://localhost:8000/static/admin.html
+- **Admin Interface**: http://localhost:8088/static/admin.html
 
 ---
 
