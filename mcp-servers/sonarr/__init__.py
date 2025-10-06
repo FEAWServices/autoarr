@@ -1,0 +1,36 @@
+"""
+Sonarr MCP Server Package.
+
+This package provides a Model Context Protocol (MCP) server for Sonarr,
+enabling LLM-based interactions with Sonarr TV show management.
+"""
+
+from .client import SonarrClient, SonarrClientError, SonarrConnectionError
+from .server import SonarrMCPServer
+from .models import (
+    Series,
+    Episode,
+    Command,
+    Queue,
+    QueueRecord,
+    WantedMissing,
+    SystemStatus,
+    ErrorResponse,
+)
+
+__all__ = [
+    "SonarrClient",
+    "SonarrClientError",
+    "SonarrConnectionError",
+    "SonarrMCPServer",
+    "Series",
+    "Episode",
+    "Command",
+    "Queue",
+    "QueueRecord",
+    "WantedMissing",
+    "SystemStatus",
+    "ErrorResponse",
+]
+
+__version__ = "0.1.0"
