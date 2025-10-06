@@ -149,7 +149,7 @@ except RadarrClientError as e:
 - **client.py** - Async HTTP client for Radarr API v3
 - **server.py** - MCP server implementation
 - **models.py** - Pydantic data models for validation
-- ****init**.py** - Package exports
+- \***\*init**.py\*\* - Package exports
 
 ## Radarr API
 
