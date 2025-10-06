@@ -10,12 +10,16 @@ import sys
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, Generator
 
+# IMPORTANT: Add paths BEFORE any other imports to ensure modules can be found
+root_dir = Path(__file__).parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
+if str(root_dir / "mcp-servers") not in sys.path:
+    sys.path.insert(0, str(root_dir / "mcp-servers"))
+
 import pytest
 from httpx import AsyncClient, Response
 from pytest_httpx import HTTPXMock
-
-# Add mcp-servers directory to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent / "mcp-servers"))
 
 
 # Configure pytest-asyncio
@@ -90,5 +94,12 @@ def httpx_mock(httpx_mock: HTTPXMock) -> HTTPXMock:
     return httpx_mock
 
 
+# Pytest hook to configure paths before collection
+def pytest_configure(config):
+    """Configure pytest before collection starts."""
+    # Paths should already be set from module-level code above
+    pass
+
+
 # Import fixture factories from tests/fixtures/conftest.py
-pytest_plugins = ["tests.fixtures.conftest"]
+pytest_plugins = ["tests.fixtures.conftest", "tests.fixtures.mcp_orchestrator_fixtures"]

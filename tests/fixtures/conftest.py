@@ -273,6 +273,12 @@ def sabnzbd_status_factory() -> callable:
     return _create_status
 
 
+# ============================================================================
+# MCP Orchestrator Test Fixtures - Import from separate module
+# ============================================================================
+# Moved pytest_plugins to tests/conftest.py to comply with deprecation warning
+
+
 @pytest.fixture
 def sabnzbd_error_response_factory() -> callable:
     """
@@ -308,3 +314,590 @@ def sabnzbd_nzo_action_factory() -> callable:
         }
 
     return _create_action
+
+
+# ============================================================================
+# Sonarr Test Data Factories
+# ============================================================================
+
+
+@pytest.fixture
+def sonarr_series_factory() -> callable:
+    """
+    Factory to create mock Sonarr series (TV show) responses.
+
+    Usage:
+        series = sonarr_series_factory(series_id=1, title="Breaking Bad")
+        series_list = [sonarr_series_factory(series_id=i) for i in range(5)]
+    """
+
+    def _create_series(
+        series_id: int = 1,
+        title: str = "Test Series",
+        tvdb_id: int = 12345,
+        imdb_id: str = "tt1234567",
+        status: str = "continuing",
+        overview: str = "A test TV series",
+        network: str = "Test Network",
+        air_time: str = "21:00",
+        monitored: bool = True,
+        quality_profile_id: int = 1,
+        season_folder: bool = True,
+        path: str = "/tv/Test Series",
+        root_folder_path: str = "/tv",
+        season_count: int = 3,
+        year: int = 2020,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Create a mock Sonarr series response."""
+        # Build seasons array
+        seasons = []
+        for i in range(season_count + 1):  # Include season 0 (specials)
+            seasons.append({
+                "seasonNumber": i,
+                "monitored": True if i > 0 else False,
+                "statistics": {
+                    "episodeFileCount": 10 if i > 0 else 0,
+                    "episodeCount": 10 if i > 0 else 5,
+                    "totalEpisodeCount": 10 if i > 0 else 5,
+                    "sizeOnDisk": 5000000000 if i > 0 else 0,
+                    "percentOfEpisodes": 100.0 if i > 0 else 0.0,
+                }
+            })
+
+        series = {
+            "id": series_id,
+            "title": title,
+            "sortTitle": title.lower(),
+            "status": status,
+            "ended": status == "ended",
+            "overview": overview,
+            "network": network,
+            "airTime": air_time,
+            "images": [
+                {
+                    "coverType": "poster",
+                    "url": f"http://test.com/poster/{series_id}.jpg",
+                    "remoteUrl": f"http://test.com/poster/{series_id}.jpg"
+                },
+                {
+                    "coverType": "banner",
+                    "url": f"http://test.com/banner/{series_id}.jpg",
+                    "remoteUrl": f"http://test.com/banner/{series_id}.jpg"
+                }
+            ],
+            "seasons": seasons,
+            "year": year,
+            "path": path,
+            "qualityProfileId": quality_profile_id,
+            "seasonFolder": season_folder,
+            "monitored": monitored,
+            "useSceneNumbering": False,
+            "runtime": 45,
+            "tvdbId": tvdb_id,
+            "tvRageId": 0,
+            "tvMazeId": 0,
+            "firstAired": f"{year}-01-01T00:00:00Z",
+            "seriesType": "standard",
+            "cleanTitle": title.lower().replace(" ", ""),
+            "imdbId": imdb_id,
+            "titleSlug": title.lower().replace(" ", "-"),
+            "rootFolderPath": root_folder_path,
+            "certification": "TV-14",
+            "genres": ["Drama", "Thriller"],
+            "tags": [],
+            "added": datetime.now().isoformat(),
+            "ratings": {
+                "votes": 1000,
+                "value": 8.5
+            },
+            "statistics": {
+                "seasonCount": season_count,
+                "episodeFileCount": season_count * 10,
+                "episodeCount": season_count * 10,
+                "totalEpisodeCount": season_count * 10,
+                "sizeOnDisk": season_count * 5000000000,
+                "percentOfEpisodes": 100.0
+            }
+        }
+
+        # Allow kwargs to override any values
+        series.update(kwargs)
+        return series
+
+    return _create_series
+
+
+@pytest.fixture
+def sonarr_episode_factory() -> callable:
+    """
+    Factory to create mock Sonarr episode responses.
+
+    Usage:
+        episode = sonarr_episode_factory(episode_id=1, series_id=1, season_number=1)
+    """
+
+    def _create_episode(
+        episode_id: int = 1,
+        series_id: int = 1,
+        season_number: int = 1,
+        episode_number: int = 1,
+        title: str = "Test Episode",
+        air_date: str = "2020-01-01",
+        has_file: bool = False,
+        monitored: bool = True,
+        overview: str = "A test episode",
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Create a mock Sonarr episode response."""
+        episode = {
+            "id": episode_id,
+            "seriesId": series_id,
+            "tvdbId": episode_id + 100000,
+            "episodeFileId": episode_id + 1000 if has_file else 0,
+            "seasonNumber": season_number,
+            "episodeNumber": episode_number,
+            "title": title,
+            "airDate": air_date,
+            "airDateUtc": f"{air_date}T00:00:00Z",
+            "overview": overview,
+            "hasFile": has_file,
+            "monitored": monitored,
+            "absoluteEpisodeNumber": (season_number - 1) * 10 + episode_number,
+            "sceneEpisodeNumber": 0,
+            "sceneSeasonNumber": 0,
+            "unverifiedSceneNumbering": False,
+            "grabbed": False
+        }
+
+        # Add episode file if it has one
+        if has_file:
+            episode["episodeFile"] = {
+                "seriesId": series_id,
+                "seasonNumber": season_number,
+                "relativePath": f"Season {season_number}/Episode {episode_number}.mkv",
+                "path": f"/tv/Test Series/Season {season_number}/Episode {episode_number}.mkv",
+                "size": 1500000000,
+                "dateAdded": datetime.now().isoformat(),
+                "quality": {
+                    "quality": {
+                        "id": 4,
+                        "name": "HDTV-720p",
+                        "source": "television",
+                        "resolution": 720
+                    },
+                    "revision": {
+                        "version": 1,
+                        "real": 0,
+                        "isRepack": False
+                    }
+                },
+                "mediaInfo": {
+                    "videoCodec": "h264",
+                    "videoBitDepth": 8,
+                    "videoProfile": "main",
+                    "audioFormat": "AAC",
+                    "audioChannels": 2.0,
+                    "runTime": "00:42:30"
+                },
+                "qualityCutoffNotMet": False,
+                "id": episode_id + 1000
+            }
+
+        # Allow kwargs to override any values
+        episode.update(kwargs)
+        return episode
+
+    return _create_episode
+
+
+@pytest.fixture
+def sonarr_quality_profile_factory() -> callable:
+    """
+    Factory to create mock Sonarr quality profile responses.
+
+    Usage:
+        profile = sonarr_quality_profile_factory(profile_id=1, name="HD")
+    """
+
+    def _create_quality_profile(
+        profile_id: int = 1,
+        name: str = "HD",
+        cutoff: int = 4,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Create a mock Sonarr quality profile response."""
+        profile = {
+            "id": profile_id,
+            "name": name,
+            "upgradeAllowed": True,
+            "cutoff": cutoff,
+            "items": [
+                {
+                    "quality": {
+                        "id": 1,
+                        "name": "SDTV",
+                        "source": "television",
+                        "resolution": 480
+                    },
+                    "allowed": False
+                },
+                {
+                    "quality": {
+                        "id": 4,
+                        "name": "HDTV-720p",
+                        "source": "television",
+                        "resolution": 720
+                    },
+                    "allowed": True
+                },
+                {
+                    "quality": {
+                        "id": 5,
+                        "name": "HDTV-1080p",
+                        "source": "television",
+                        "resolution": 1080
+                    },
+                    "allowed": True
+                }
+            ]
+        }
+
+        # Allow kwargs to override any values
+        profile.update(kwargs)
+        return profile
+
+    return _create_quality_profile
+
+
+@pytest.fixture
+def sonarr_command_factory() -> callable:
+    """
+    Factory to create mock Sonarr command responses.
+
+    Usage:
+        command = sonarr_command_factory(command_id=1, name="SeriesSearch", status="completed")
+    """
+
+    def _create_command(
+        command_id: int = 1,
+        name: str = "SeriesSearch",
+        status: str = "queued",
+        queued: str = None,
+        started: str = None,
+        ended: str = None,
+        duration: str = "00:00:00",
+        message: str = None,
+        body: Dict[str, Any] = None,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Create a mock Sonarr command response."""
+        now = datetime.now().isoformat()
+
+        command = {
+            "id": command_id,
+            "name": name,
+            "commandName": name,
+            "message": message or f"{name} command",
+            "body": body or {"seriesId": 1},
+            "priority": "normal",
+            "status": status,
+            "queued": queued or now,
+            "started": started or (now if status in ["started", "completed", "failed"] else None),
+            "ended": ended or (now if status in ["completed", "failed"] else None),
+            "duration": duration if status in ["completed", "failed"] else "00:00:00",
+            "trigger": "manual",
+            "sendUpdatesToClient": True,
+            "updateScheduledTask": True,
+            "lastExecutionTime": now if status == "completed" else None
+        }
+
+        # Allow kwargs to override any values
+        command.update(kwargs)
+        return command
+
+    return _create_command
+
+
+@pytest.fixture
+def sonarr_calendar_factory() -> callable:
+    """
+    Factory to create mock Sonarr calendar responses (upcoming episodes).
+
+    Usage:
+        calendar = sonarr_calendar_factory(days=7, episodes_per_day=2)
+    """
+
+    def _create_calendar(
+        days: int = 7,
+        episodes_per_day: int = 2,
+        start_date: str = None,
+    ) -> List[Dict[str, Any]]:
+        """Create a mock Sonarr calendar response."""
+        from datetime import datetime, timedelta
+
+        base_date = datetime.fromisoformat(start_date) if start_date else datetime.now()
+        calendar = []
+
+        episode_id = 1
+        for day in range(days):
+            air_date = base_date + timedelta(days=day)
+            air_date_str = air_date.strftime("%Y-%m-%d")
+
+            for ep in range(episodes_per_day):
+                calendar.append({
+                    "id": episode_id,
+                    "seriesId": (episode_id % 5) + 1,
+                    "tvdbId": episode_id + 100000,
+                    "episodeFileId": 0,
+                    "seasonNumber": 1,
+                    "episodeNumber": episode_id,
+                    "title": f"Episode {episode_id}",
+                    "airDate": air_date_str,
+                    "airDateUtc": f"{air_date_str}T21:00:00Z",
+                    "overview": f"Upcoming episode {episode_id}",
+                    "hasFile": False,
+                    "monitored": True,
+                    "absoluteEpisodeNumber": episode_id,
+                    "series": {
+                        "title": f"Test Series {(episode_id % 5) + 1}",
+                        "status": "continuing",
+                        "overview": "Test series",
+                        "network": "Test Network",
+                        "airTime": "21:00",
+                        "images": [],
+                        "seasons": [],
+                        "year": 2020,
+                        "path": f"/tv/Test Series {(episode_id % 5) + 1}",
+                        "qualityProfileId": 1,
+                        "seasonFolder": True,
+                        "monitored": True,
+                        "runtime": 45,
+                        "tvdbId": 12345 + ((episode_id % 5) + 1),
+                        "seriesType": "standard",
+                        "cleanTitle": f"testseries{(episode_id % 5) + 1}",
+                        "imdbId": f"tt{1234567 + ((episode_id % 5) + 1)}",
+                        "titleSlug": f"test-series-{(episode_id % 5) + 1}",
+                        "certification": "TV-14",
+                        "genres": ["Drama"],
+                        "tags": [],
+                        "added": datetime.now().isoformat(),
+                        "ratings": {"votes": 100, "value": 8.0},
+                        "id": (episode_id % 5) + 1
+                    }
+                })
+                episode_id += 1
+
+        return calendar
+
+    return _create_calendar
+
+
+@pytest.fixture
+def sonarr_queue_factory() -> callable:
+    """
+    Factory to create mock Sonarr download queue responses.
+
+    Usage:
+        queue = sonarr_queue_factory(records=3)
+    """
+
+    def _create_queue(
+        records: int = 1,
+        page: int = 1,
+        page_size: int = 20,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Create a mock Sonarr queue response."""
+        queue_records = []
+
+        for i in range(records):
+            queue_records.append({
+                "id": i + 1,
+                "seriesId": (i % 5) + 1,
+                "episodeId": (i * 10) + 1,
+                "series": {
+                    "title": f"Test Series {(i % 5) + 1}",
+                    "tvdbId": 12345 + (i % 5) + 1,
+                    "id": (i % 5) + 1
+                },
+                "episode": {
+                    "id": (i * 10) + 1,
+                    "seasonNumber": 1,
+                    "episodeNumber": i + 1,
+                    "title": f"Episode {i + 1}",
+                    "seriesId": (i % 5) + 1
+                },
+                "quality": {
+                    "quality": {
+                        "id": 4,
+                        "name": "HDTV-720p",
+                        "source": "television",
+                        "resolution": 720
+                    },
+                    "revision": {
+                        "version": 1,
+                        "real": 0,
+                        "isRepack": False
+                    }
+                },
+                "size": 1500000000,
+                "title": f"Test.Series.S01E{i+1:02d}.720p.HDTV.x264",
+                "sizeleft": 750000000,
+                "timeleft": "00:15:00",
+                "estimatedCompletionTime": datetime.now().isoformat(),
+                "status": "downloading",
+                "trackedDownloadStatus": "ok",
+                "trackedDownloadState": "downloading",
+                "statusMessages": [],
+                "downloadId": f"download_{i+1}",
+                "protocol": "usenet",
+                "downloadClient": "SABnzbd",
+                "indexer": "Test Indexer",
+                "outputPath": f"/tv/Test Series {(i % 5) + 1}"
+            })
+
+        queue = {
+            "page": page,
+            "pageSize": page_size,
+            "sortKey": "timeleft",
+            "sortDirection": "ascending",
+            "totalRecords": len(queue_records),
+            "records": queue_records
+        }
+
+        # Allow kwargs to override any values
+        queue.update(kwargs)
+        return queue
+
+    return _create_queue
+
+
+@pytest.fixture
+def sonarr_wanted_factory() -> callable:
+    """
+    Factory to create mock Sonarr wanted/missing episodes responses.
+
+    Usage:
+        wanted = sonarr_wanted_factory(records=5, page=1)
+    """
+
+    def _create_wanted(
+        records: int = 1,
+        page: int = 1,
+        page_size: int = 20,
+        include_series: bool = True,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Create a mock Sonarr wanted/missing response."""
+        wanted_records = []
+
+        for i in range(records):
+            episode = {
+                "id": i + 1,
+                "seriesId": (i % 5) + 1,
+                "tvdbId": (i + 1) + 100000,
+                "episodeFileId": 0,
+                "seasonNumber": 1,
+                "episodeNumber": i + 1,
+                "title": f"Missing Episode {i + 1}",
+                "airDate": "2020-01-01",
+                "airDateUtc": "2020-01-01T21:00:00Z",
+                "overview": f"This episode is missing {i + 1}",
+                "hasFile": False,
+                "monitored": True,
+                "absoluteEpisodeNumber": i + 1,
+                "grabbed": False
+            }
+
+            if include_series:
+                episode["series"] = {
+                    "title": f"Test Series {(i % 5) + 1}",
+                    "status": "continuing",
+                    "overview": "Test series",
+                    "network": "Test Network",
+                    "airTime": "21:00",
+                    "images": [],
+                    "seasons": [],
+                    "year": 2020,
+                    "path": f"/tv/Test Series {(i % 5) + 1}",
+                    "qualityProfileId": 1,
+                    "seasonFolder": True,
+                    "monitored": True,
+                    "runtime": 45,
+                    "tvdbId": 12345 + ((i % 5) + 1),
+                    "seriesType": "standard",
+                    "cleanTitle": f"testseries{(i % 5) + 1}",
+                    "imdbId": f"tt{1234567 + ((i % 5) + 1)}",
+                    "titleSlug": f"test-series-{(i % 5) + 1}",
+                    "certification": "TV-14",
+                    "genres": ["Drama"],
+                    "tags": [],
+                    "added": datetime.now().isoformat(),
+                    "ratings": {"votes": 100, "value": 8.0},
+                    "id": (i % 5) + 1
+                }
+
+            wanted_records.append(episode)
+
+        wanted = {
+            "page": page,
+            "pageSize": page_size,
+            "sortKey": "airDateUtc",
+            "sortDirection": "descending",
+            "totalRecords": len(wanted_records),
+            "records": wanted_records
+        }
+
+        # Allow kwargs to override any values
+        wanted.update(kwargs)
+        return wanted
+
+    return _create_wanted
+
+
+@pytest.fixture
+def sonarr_system_status_factory() -> callable:
+    """
+    Factory to create mock Sonarr system status responses.
+
+    Usage:
+        status = sonarr_system_status_factory(version="3.0.10")
+    """
+
+    def _create_status(
+        version: str = "3.0.10.1567",
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Create a mock Sonarr system status response."""
+        status = {
+            "version": version,
+            "buildTime": "2023-01-01T00:00:00Z",
+            "isDebug": False,
+            "isProduction": True,
+            "isAdmin": True,
+            "isUserInteractive": False,
+            "startupPath": "/app/sonarr/bin",
+            "appData": "/config",
+            "osName": "ubuntu",
+            "osVersion": "20.04",
+            "isMonoRuntime": False,
+            "isMono": False,
+            "isLinux": True,
+            "isOsx": False,
+            "isWindows": False,
+            "isDocker": True,
+            "mode": "console",
+            "branch": "main",
+            "authentication": "forms",
+            "sqliteVersion": "3.36.0",
+            "urlBase": "",
+            "runtimeVersion": "6.0.10",
+            "runtimeName": "dotnet"
+        }
+
+        # Allow kwargs to override any values
+        status.update(kwargs)
+        return status
+
+    return _create_status
