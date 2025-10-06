@@ -1,0 +1,74 @@
+{
+  "name": "AutoArr Development",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/app",
+
+  // Features to install
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+
+  // Install dependencies after container is created
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  // VS Code customizations
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "streetsidesoftware.code-spell-checker",
+        "eamodio.gitlens",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/app/.venv/bin/python",
+        "python.formatting.provider": "black",
+        "python.linting.enabled": true,
+        "python.linting.ruffEnabled": true,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": true
+        }
+      }
+    }
+  },
+
+  // Forward ports
+  "forwardPorts": [
+    8088,  // AutoArr API
+    3000,  // AutoArr UI
+    8080,  // SABnzbd
+    8989,  // Sonarr
+    7878,  // Radarr
+    32400, // Plex
+    5432,  // PostgreSQL
+    6379   // Redis
+  ],
+
+  // Port labels
+  "portsAttributes": {
+    "8088": {
+      "label": "AutoArr API",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "AutoArr UI",
+      "onAutoForward": "notify"
+    }
+  },
+
+  // Run as root to install packages
+  "remoteUser": "root",
+
+  // Environment variables
+  "remoteEnv": {
+    "PYTHONPATH": "/app:/app/mcp-servers",
+    "PATH": "/root/.local/bin:${containerEnv:PATH}"
+  }
+}
