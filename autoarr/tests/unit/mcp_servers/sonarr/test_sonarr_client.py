@@ -24,13 +24,12 @@ import pytest
 from httpx import AsyncClient, HTTPError, HTTPStatusError, Response
 from pytest_httpx import HTTPXMock
 
-# Import the actual client - WILL FAIL until implemented (TDD red phase)
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "mcp-servers"))
-
-from sonarr.client import SonarrClient, SonarrClientError, SonarrConnectionError
+# Import the actual client - using new repository structure
+from autoarr.mcp_servers.mcp_servers.sonarr.client import (
+    SonarrClient,
+    SonarrClientError,
+    SonarrConnectionError,
+)
 
 
 # ============================================================================

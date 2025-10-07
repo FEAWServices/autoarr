@@ -35,7 +35,7 @@ import pytest
 
 # These imports will fail until we implement the orchestrator
 try:
-    from core.mcp_orchestrator import (
+    from autoarr.shared.core.mcp_orchestrator import (
         MCPOrchestrator,
         MCPOrchestratorError,
         MCPConnectionError,

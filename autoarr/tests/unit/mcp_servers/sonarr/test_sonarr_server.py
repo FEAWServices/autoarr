@@ -22,14 +22,9 @@ from unittest.mock import AsyncMock, Mock, patch, MagicMock
 import pytest
 from mcp.types import Tool, TextContent
 
-# Import the actual server - WILL FAIL until implemented (TDD red phase)
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "mcp-servers"))
-
-from sonarr.server import SonarrMCPServer
-from sonarr.client import SonarrClient, SonarrClientError
+# Import the actual server - using new repository structure
+from autoarr.mcp_servers.mcp_servers.sonarr.server import SonarrMCPServer
+from autoarr.mcp_servers.mcp_servers.sonarr.client import SonarrClient, SonarrClientError
 
 
 # ============================================================================
@@ -473,7 +468,7 @@ class TestSonarrMCPServerErrorHandling:
     @pytest.mark.asyncio
     async def test_handles_network_error(self, sonarr_server, mock_sonarr_client) -> None:
         """Test that server handles network errors gracefully."""
-        from sonarr.client import SonarrConnectionError
+        from autoarr.mcp_servers.mcp_servers.sonarr.client import SonarrConnectionError
 
         mock_sonarr_client.get_series.side_effect = SonarrConnectionError("Connection failed")
 

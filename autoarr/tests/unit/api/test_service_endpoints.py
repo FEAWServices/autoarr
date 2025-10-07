@@ -9,8 +9,8 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 
-from api.main import app
-from api.dependencies import reset_orchestrator
+from autoarr.api.main import app
+from autoarr.api.dependencies import reset_orchestrator
 
 
 @pytest.fixture

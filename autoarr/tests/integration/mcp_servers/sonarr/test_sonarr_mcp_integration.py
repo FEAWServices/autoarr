@@ -20,13 +20,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pytest_httpx import HTTPXMock
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "mcp-servers"))
-
-from sonarr.server import SonarrMCPServer
-from sonarr.client import SonarrClient, SonarrClientError
+from autoarr.mcp_servers.mcp_servers.sonarr.server import SonarrMCPServer
+from autoarr.mcp_servers.mcp_servers.sonarr.client import SonarrClient, SonarrClientError
 
 
 # ============================================================================

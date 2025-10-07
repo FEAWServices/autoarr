@@ -33,7 +33,7 @@ import pytest
 # These imports will fail until we implement the orchestrator
 # That's expected - this is TDD!
 try:
-    from core.mcp_orchestrator import (
+    from autoarr.shared.core.mcp_orchestrator import (
         MCPOrchestrator,
         MCPOrchestratorError,
         MCPConnectionError,

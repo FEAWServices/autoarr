@@ -23,15 +23,12 @@ import pytest
 from httpx import AsyncClient, HTTPError, HTTPStatusError, Response
 from pytest_httpx import HTTPXMock
 
-# Import the actual client - implementation complete!
-# Note: The package is in mcp-servers directory but exposed as mcp_servers
-# We import from the source location during tests
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "mcp-servers"))
-
-from sabnzbd.client import SABnzbdClient, SABnzbdClientError, SABnzbdConnectionError
+# Import the actual client - using new repository structure
+from autoarr.mcp_servers.mcp_servers.sabnzbd.client import (
+    SABnzbdClient,
+    SABnzbdClientError,
+    SABnzbdConnectionError,
+)
 
 
 # ============================================================================

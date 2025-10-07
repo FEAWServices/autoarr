@@ -11,11 +11,11 @@ from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, Generator
 
 # IMPORTANT: Add paths BEFORE any other imports to ensure modules can be found
-root_dir = Path(__file__).parent.parent
+# Note: With the new repository structure, autoarr is a package and should be
+# importable directly. The root directory should be in sys.path.
+root_dir = Path(__file__).parent.parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
-if str(root_dir / "mcp_servers") not in sys.path:
-    sys.path.insert(0, str(root_dir / "mcp_servers"))
 
 import pytest
 from httpx import AsyncClient, Response
@@ -102,4 +102,7 @@ def pytest_configure(config):
 
 
 # Import fixture factories from tests/fixtures/
-pytest_plugins = ["tests.fixtures.api_fixtures", "tests.fixtures.mcp_orchestrator_fixtures"]
+pytest_plugins = [
+    "autoarr.tests.fixtures.api_fixtures",
+    "autoarr.tests.fixtures.mcp_orchestrator_fixtures",
+]

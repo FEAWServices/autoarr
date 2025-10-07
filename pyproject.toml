@@ -39,11 +39,15 @@ vulture = "^2.11"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+testpaths = ["autoarr/tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 pythonpath = ["."]
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "slow: marks tests as slow running tests (deselect with '-m \"not slow\"')",
+]
 addopts = [
     "-p", "pytest_paths",
     "--cov=autoarr",

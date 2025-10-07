@@ -22,12 +22,11 @@ from typing import Any, Dict
 import pytest
 from pytest_httpx import HTTPXMock
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "mcp-servers"))
-
-from sonarr.client import SonarrClient, SonarrClientError, SonarrConnectionError
+from autoarr.mcp_servers.mcp_servers.sonarr.client import (
+    SonarrClient,
+    SonarrClientError,
+    SonarrConnectionError,
+)
 
 
 # ============================================================================
