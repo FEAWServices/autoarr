@@ -12,16 +12,16 @@ Successfully implemented a complete Model Context Protocol (MCP) server for Plex
 
 ### Files Created
 
-| File | Lines | Description |
-|------|-------|-------------|
-| `mcp-servers/plex/client.py` | ~550 | Async HTTP client for Plex API |
-| `mcp-servers/plex/server.py` | ~370 | MCP server with 8 tools |
-| `mcp-servers/plex/models.py` | ~180 | Pydantic models for data validation |
-| `mcp-servers/plex/__init__.py` | ~35 | Package exports |
-| `mcp-servers/plex/test_plex.py` | ~650 | Comprehensive test suite |
-| `mcp-servers/plex/example.py` | ~500 | Usage examples |
-| `mcp-servers/plex/README.md` | ~800 | Complete documentation |
-| `mcp-servers/plex/IMPLEMENTATION_NOTES.md` | ~600 | Technical implementation details |
+| File                                       | Lines | Description                         |
+| ------------------------------------------ | ----- | ----------------------------------- |
+| `mcp-servers/plex/client.py`               | ~550  | Async HTTP client for Plex API      |
+| `mcp-servers/plex/server.py`               | ~370  | MCP server with 8 tools             |
+| `mcp-servers/plex/models.py`               | ~180  | Pydantic models for data validation |
+| `mcp-servers/plex/__init__.py`             | ~35   | Package exports                     |
+| `mcp-servers/plex/test_plex.py`            | ~650  | Comprehensive test suite            |
+| `mcp-servers/plex/example.py`              | ~500  | Usage examples                      |
+| `mcp-servers/plex/README.md`               | ~800  | Complete documentation              |
+| `mcp-servers/plex/IMPLEMENTATION_NOTES.md` | ~600  | Technical implementation details    |
 
 **Total**: ~3,685 lines of code and documentation
 
@@ -30,6 +30,7 @@ Successfully implemented a complete Model Context Protocol (MCP) server for Plex
 ### 1. Client Architecture (`client.py`)
 
 #### Core Features
+
 - ✅ Async HTTP client using `httpx`
 - ✅ Token-based authentication (`X-Plex-Token` header)
 - ✅ Dual-format parsing (XML and JSON)
@@ -40,10 +41,12 @@ Successfully implemented a complete Model Context Protocol (MCP) server for Plex
 #### Key Methods
 
 **System Operations**:
+
 - `get_server_identity()` - Server info, version, platform
 - `health_check()` - Validate server connectivity
 
 **Library Operations**:
+
 - `get_libraries()` - List all library sections
 - `get_library_items(library_id, limit, offset)` - Browse library content
 - `get_recently_added(limit)` - Recently added media
@@ -51,10 +54,12 @@ Successfully implemented a complete Model Context Protocol (MCP) server for Plex
 - `refresh_library(library_id)` - Trigger library scan
 
 **Playback Operations**:
+
 - `get_sessions()` - Active streaming sessions
 - `get_history(limit, offset)` - Watch history
 
 **Search Operations**:
+
 - `search(query, limit, section_id)` - Search across libraries
 
 #### Authentication Pattern
@@ -67,7 +72,7 @@ def _get_headers(self) -> Dict[str, str]:
     }
 ```
 
-**Key Difference**: Plex uses `X-Plex-Token` instead of `X-Api-Key` used by *arr apps.
+**Key Difference**: Plex uses `X-Plex-Token` instead of `X-Api-Key` used by \*arr apps.
 
 #### Response Parsing
 
@@ -89,38 +94,45 @@ async def _request(self, method: str, endpoint: str, ...) -> Any:
 #### 8 MCP Tools Implemented
 
 1. **plex_get_libraries**
+
    - List all library sections
    - No parameters required
    - Returns: Array of library objects
 
 2. **plex_get_library_items**
+
    - Get items in a specific library
    - Required: `library_id`
    - Optional: `limit`, `offset`
    - Returns: Array of media items
 
 3. **plex_get_recently_added**
+
    - Recently added content
    - Optional: `limit`
    - Returns: Array of recent items
 
 4. **plex_get_on_deck**
+
    - Continue watching items
    - Optional: `limit`
    - Returns: Array of in-progress items
 
 5. **plex_get_sessions**
+
    - Currently playing sessions
    - No parameters required
    - Returns: Array of active sessions
 
 6. **plex_search**
+
    - Search for content
    - Required: `query`
    - Optional: `limit`, `section_id`
    - Returns: Array of search results
 
 7. **plex_refresh_library**
+
    - Trigger library scan
    - Required: `library_id`
    - Returns: Success confirmation
@@ -155,26 +167,31 @@ Tool(
 #### Pydantic Models
 
 1. **PlexLibrary**
+
    - Library metadata (title, type, key)
    - Agent and scanner information
    - Timestamps and UUID
 
 2. **PlexMediaItem**
+
    - Generic media item model
    - Supports movies, episodes, tracks
    - Optional fields for different media types
 
 3. **PlexSession**
+
    - Active playback session
    - User and player information
    - Playback position (`viewOffset`)
 
 4. **PlexServerIdentity**
+
    - Server identification
    - Version and platform info
    - Capabilities and features
 
 5. **PlexHistoryRecord**
+
    - Watch history entry
    - Viewed timestamp
    - Account and device info
@@ -185,6 +202,7 @@ Tool(
    - Error messages
 
 #### Model Features
+
 - ✅ Full type hints
 - ✅ Field aliases (camelCase ↔ snake_case)
 - ✅ Optional fields for flexibility
@@ -210,6 +228,7 @@ Tool(
 11. **MCP Server** - Tool execution
 
 #### Test Features
+
 - ✅ Colored output for readability
 - ✅ Detailed progress reporting
 - ✅ Graceful handling of empty results
@@ -243,35 +262,39 @@ python mcp-servers/plex/test_plex.py --url http://localhost:32400 --token YOUR_T
 8. Library refresh
 
 Each example demonstrates:
+
 - Proper client initialization
 - Error handling
 - Resource cleanup
 - Practical use cases
 
-## Key Differences from *arr Apps
+## Key Differences from \*arr Apps
 
 ### Plex vs Sonarr/Radarr
 
-| Aspect | Plex | Sonarr/Radarr |
-|--------|------|---------------|
-| **Authentication** | `X-Plex-Token` header | `X-Api-Key` header |
-| **Port** | 32400 | 8989/7878 |
-| **API Version** | No versioning | `/api/v3` |
-| **Response Format** | XML or JSON | JSON only |
-| **Organization** | Library-centric | Media-centric |
+| Aspect              | Plex                        | Sonarr/Radarr              |
+| ------------------- | --------------------------- | -------------------------- |
+| **Authentication**  | `X-Plex-Token` header       | `X-Api-Key` header         |
+| **Port**            | 32400                       | 8989/7878                  |
+| **API Version**     | No versioning               | `/api/v3`                  |
+| **Response Format** | XML or JSON                 | JSON only                  |
+| **Organization**    | Library-centric             | Media-centric              |
 | **Unique Features** | Session monitoring, On Deck | Queue management, searches |
 
 ### Plex-Specific Challenges Solved
 
 1. **Dual Format Responses**
+
    - Problem: Plex returns XML or JSON
    - Solution: Automatic format detection and parsing
 
 2. **MediaContainer Wrapping**
+
    - Problem: Responses wrapped in `MediaContainer` object
    - Solution: Flexible extraction logic
 
 3. **Variable Child Keys**
+
    - Problem: Children can be `Metadata`, `Video`, `Directory`, or `Track`
    - Solution: Try multiple keys in order
 
@@ -282,6 +305,7 @@ Each example demonstrates:
 ## Quality Metrics
 
 ### Code Quality
+
 - ✅ **Type Safety**: 100% type hints
 - ✅ **Documentation**: Comprehensive docstrings
 - ✅ **Error Handling**: Custom exception hierarchy
@@ -289,6 +313,7 @@ Each example demonstrates:
 - ✅ **Style**: PEP 8 compliant
 
 ### Test Coverage
+
 - ✅ Client initialization: ✓
 - ✅ Health checks: ✓
 - ✅ Library operations: ✓
@@ -297,6 +322,7 @@ Each example demonstrates:
 - ✅ MCP tool execution: ✓
 
 ### Documentation Quality
+
 - ✅ README with usage examples
 - ✅ Implementation notes with technical details
 - ✅ Inline docstrings (Google style)
@@ -412,6 +438,7 @@ Tools are exposed via MCP for LLM interaction:
 ### API Limitations
 
 Current implementation is **read-only**:
+
 - ❌ Cannot modify metadata
 - ❌ Cannot manage users
 - ❌ Cannot configure server settings
@@ -421,15 +448,15 @@ These could be added if needed.
 
 ## Comparison with Other Implementations
 
-| Feature | Plex | Radarr | Sonarr | SABnzbd |
-|---------|------|--------|--------|---------|
-| **Tools** | 8 | 9 | 10 | 8 |
-| **Models** | 6 | 8 | 7 | 5 |
-| **Test Suite** | ✅ | ✅ | ✅ | ✅ |
-| **Examples** | ✅ | ✅ | ✅ | ✅ |
-| **Documentation** | ✅ | ✅ | ✅ | ✅ |
-| **Read-Only** | Yes | No | No | No |
-| **Real-Time** | Sessions | No | No | Queue |
+| Feature           | Plex     | Radarr | Sonarr | SABnzbd |
+| ----------------- | -------- | ------ | ------ | ------- |
+| **Tools**         | 8        | 9      | 10     | 8       |
+| **Models**        | 6        | 8      | 7      | 5       |
+| **Test Suite**    | ✅       | ✅     | ✅     | ✅      |
+| **Examples**      | ✅       | ✅     | ✅     | ✅      |
+| **Documentation** | ✅       | ✅     | ✅     | ✅      |
+| **Read-Only**     | Yes      | No     | No     | No      |
+| **Real-Time**     | Sessions | No     | No     | Queue   |
 
 ## Lessons Learned
 
@@ -452,12 +479,14 @@ These could be added if needed.
 ### Production Deployment
 
 1. **Configuration**:
+
    ```bash
    export PLEX_URL="http://your-plex-server:32400"
    export PLEX_TOKEN="your_secure_token"
    ```
 
 2. **Health Monitoring**:
+
    ```python
    async def health_check():
        client = await PlexClient.create(url, token)
@@ -467,6 +496,7 @@ These could be added if needed.
    ```
 
 3. **Error Handling**:
+
    - Log all errors
    - Retry transient failures
    - Alert on authentication failures

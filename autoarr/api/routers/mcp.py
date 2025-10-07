@@ -8,7 +8,7 @@ allowing clients to call any tool on any server.
 from typing import AsyncGenerator, List
 
 from fastapi import APIRouter, Depends
-from shared.core.mcp_orchestrator import MCPOrchestrator
+from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
 from ..models import (

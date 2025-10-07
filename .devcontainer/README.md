@@ -13,27 +13,32 @@ This directory contains the configuration for the Visual Studio Code Dev Contain
 ## Getting Started
 
 1. **Install Prerequisites**
+
    - [Visual Studio Code](https://code.visualstudio.com/)
    - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
    - [Dev Containers Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
 2. **Open in Container**
+
    - Open VS Code
    - Press `F1` or `Ctrl+Shift+P`
    - Select "Dev Containers: Reopen in Container"
    - Wait for the container to build (first time takes 2-5 minutes)
 
 3. **Verify Poetry Installation**
+
    ```bash
    poetry --version
    ```
 
 4. **Install Dependencies** (done automatically via postCreateCommand)
+
    ```bash
    poetry install
    ```
 
 5. **Run Tests**
+
    ```bash
    poetry run pytest
    ```
@@ -59,12 +64,14 @@ The following ports are automatically forwarded:
 ## Python Path
 
 The `PYTHONPATH` is automatically set to include:
+
 - `/app` - Project root
 - `/app/mcp-servers` - MCP server modules
 
 ## VS Code Settings
 
 The container includes pre-configured settings for:
+
 - Black code formatting on save
 - Ruff linting
 - Import organization on save
@@ -73,18 +80,22 @@ The container includes pre-configured settings for:
 ## Troubleshooting
 
 ### Poetry not found
+
 If Poetry is not found after rebuild:
+
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
 export PATH="/opt/poetry/bin:$PATH"
 ```
 
 ### Dependencies not installed
+
 ```bash
 poetry install
 ```
 
 ### Python interpreter not detected
+
 1. Press `F1`
 2. Type "Python: Select Interpreter"
 3. Choose `/app/.venv/bin/python`

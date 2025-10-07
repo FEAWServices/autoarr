@@ -38,9 +38,7 @@ async def example_client_usage():
     try:
         # Create client with connection validation
         async with await RadarrClient.create(
-            url=radarr_url,
-            api_key=radarr_api_key,
-            validate_connection=True
+            url=radarr_url, api_key=radarr_api_key, validate_connection=True
         ) as client:
             print("[OK] Connected to Radarr!")
 
@@ -55,7 +53,7 @@ async def example_client_usage():
             movies = await client.get_movies(limit=5)
             print(f"   Found {len(movies)} movies:")
             for movie in movies:
-                status_icon = "[DOWNLOADED]" if movie.get('hasFile') else "[WANTED]"
+                status_icon = "[DOWNLOADED]" if movie.get("hasFile") else "[WANTED]"
                 print(f"   {status_icon} {movie['title']} ({movie['year']})")
 
             # Search for a movie
@@ -69,10 +67,10 @@ async def example_client_usage():
             # Get download queue
             print("\n4. Getting download queue...")
             queue = await client.get_queue(page_size=5)
-            if queue['totalRecords'] > 0:
+            if queue["totalRecords"] > 0:
                 print(f"   {queue['totalRecords']} items in queue:")
-                for item in queue['records']:
-                    movie = item.get('movie', {})
+                for item in queue["records"]:
+                    movie = item.get("movie", {})
                     print(f"   - {movie.get('title', 'Unknown')} ({item['status']})")
             else:
                 print("   Queue is empty")
@@ -80,9 +78,9 @@ async def example_client_usage():
             # Get wanted movies
             print("\n5. Getting wanted movies...")
             wanted = await client.get_wanted_missing(page_size=5)
-            if wanted['totalRecords'] > 0:
+            if wanted["totalRecords"] > 0:
                 print(f"   {wanted['totalRecords']} wanted movies:")
-                for record in wanted['records']:
+                for record in wanted["records"]:
                     print(f"   - {record['title']} ({record['year']})")
             else:
                 print("   No wanted movies")
@@ -90,6 +88,7 @@ async def example_client_usage():
             # Get calendar
             print("\n6. Getting calendar (upcoming releases)...")
             from datetime import datetime, timedelta
+
             today = datetime.now().strftime("%Y-%m-%d")
             next_week = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
             calendar = await client.get_calendar(start_date=today, end_date=next_week)
@@ -111,6 +110,7 @@ async def example_client_usage():
     except Exception as e:
         print(f"\n[FAIL] Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -129,9 +129,7 @@ async def example_mcp_server_usage():
     try:
         # Create client
         client = await RadarrClient.create(
-            url=radarr_url,
-            api_key=radarr_api_key,
-            validate_connection=True
+            url=radarr_url, api_key=radarr_api_key, validate_connection=True
         )
 
         # Create MCP server
@@ -155,24 +153,23 @@ async def example_mcp_server_usage():
             print("   [OK] Tool executed successfully!")
             # Parse response
             import json
+
             response = json.loads(result.content[0].text)
-            movies = response['data']
+            movies = response["data"]
             print(f"   Retrieved {len(movies)} movies")
         else:
             print("   [FAIL] Tool execution failed")
 
         # Example: Search for movies
         print("\n3. Calling radarr_search_movie_lookup tool...")
-        result = await server.call_tool(
-            "radarr_search_movie_lookup",
-            {"term": "The Matrix"}
-        )
+        result = await server.call_tool("radarr_search_movie_lookup", {"term": "The Matrix"})
 
         if not result.isError:
             print("   [OK] Search completed!")
             import json
+
             response = json.loads(result.content[0].text)
-            results = response['data']
+            results = response["data"]
             print(f"   Found {len(results)} results")
         else:
             print("   [FAIL] Search failed")
@@ -184,6 +181,7 @@ async def example_mcp_server_usage():
     except Exception as e:
         print(f"\n[FAIL] Error: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -222,5 +220,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\nFatal error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

@@ -62,9 +62,7 @@ class MCPOrchestratorConfig:
     # Retry settings
     default_tool_timeout: float = 30.0
     max_retries: int = 3
-    retryable_errors: List[type] = field(
-        default_factory=lambda: [ConnectionError, TimeoutError]
-    )
+    retryable_errors: List[type] = field(default_factory=lambda: [ConnectionError, TimeoutError])
 
     # Auto-reconnect settings
     auto_reconnect: bool = True

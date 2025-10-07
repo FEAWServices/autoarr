@@ -108,27 +108,29 @@ start htmlcov/index.html  # Windows
 
 ### Coverage Targets by Component
 
-| Component | Target | Current |
-|-----------|--------|---------|
-| MCP Orchestrator | 90%+ | TBD |
-| SABnzbd MCP Server | 95%+ | TBD |
-| Sonarr MCP Server | 95%+ | TBD |
-| Radarr MCP Server | 95%+ | TBD |
-| Plex MCP Server | 95%+ | TBD |
-| FastAPI Backend | 85%+ | TBD |
-| Overall | 90%+ | TBD |
+| Component          | Target | Current |
+| ------------------ | ------ | ------- |
+| MCP Orchestrator   | 90%+   | TBD     |
+| SABnzbd MCP Server | 95%+   | TBD     |
+| Sonarr MCP Server  | 95%+   | TBD     |
+| Radarr MCP Server  | 95%+   | TBD     |
+| Plex MCP Server    | 95%+   | TBD     |
+| FastAPI Backend    | 85%+   | TBD     |
+| Overall            | 90%+   | TBD     |
 
 ## TDD Workflow
 
 ### Red-Green-Refactor
 
 1. **🔴 RED**: Write a failing test
+
    ```bash
    # Test fails because feature doesn't exist
    pytest tests/unit/core/test_mcp_orchestrator.py::test_new_feature -v
    ```
 
 2. **🟢 GREEN**: Write minimal code to pass
+
    ```python
    # Implement just enough to make test pass
    def new_feature():
@@ -146,6 +148,7 @@ start htmlcov/index.html  # Windows
 ## CI/CD Integration
 
 Tests run automatically on:
+
 - Every push to any branch
 - Every pull request
 - Before merging to main

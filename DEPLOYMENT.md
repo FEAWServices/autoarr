@@ -27,15 +27,16 @@ See [Synology Deployment Guide](docs/SYNOLOGY_DEPLOYMENT.md) for detailed instru
 **Quick Deploy:**
 
 1. Create folders: `/volume1/docker/autoarr/{data,logs}`
-2. Copy `docker-compose.synology.yml` and `.env.synology.example`
+2. Create your own `docker-compose.yml` based on the example in docs
 3. Configure `.env` with your API keys
 4. Deploy via Container Manager or SSH
 
 #### Option 2: Docker Compose (Any Linux/macOS)
 
 ```bash
-# Use the production compose file
-docker compose -f docker-compose.prod.yml up -d
+# Create your docker-compose.yml and .env file
+# Then start the container
+docker compose up -d
 ```
 
 #### Option 3: Docker CLI
@@ -165,16 +166,16 @@ tar xzf autoarr-backup.tar.gz -C /
 
 ```bash
 cd /volume1/docker/autoarr
-docker compose -f docker-compose.synology.yml pull
-docker compose -f docker-compose.synology.yml up -d
+docker compose pull
+docker compose up -d
 ```
 
 ### Update from Local Build
 
 ```bash
 # Rebuild and restart
-docker compose -f docker-compose.prod.yml build --no-cache
-docker compose -f docker-compose.prod.yml up -d
+docker compose build --no-cache
+docker compose up -d
 ```
 
 ## Troubleshooting
@@ -186,7 +187,7 @@ Check logs:
 ```bash
 docker logs autoarr
 # or
-docker compose -f docker-compose.synology.yml logs -f
+docker compose logs -f
 ```
 
 ### Can't Connect to Services
@@ -235,7 +236,7 @@ docker restart autoarr
 
 To communicate with Sonarr/Radarr/etc by hostname:
 
-**Edit docker-compose.synology.yml:**
+**Edit docker-compose.yml:**
 
 ```yaml
 networks:

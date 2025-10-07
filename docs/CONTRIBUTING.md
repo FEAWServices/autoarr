@@ -24,6 +24,7 @@ We pledge to make participation in AutoArr a harassment-free experience for ever
 ### Our Standards
 
 **Positive behaviors include:**
+
 - Using welcoming and inclusive language
 - Being respectful of differing viewpoints
 - Gracefully accepting constructive criticism
@@ -31,6 +32,7 @@ We pledge to make participation in AutoArr a harassment-free experience for ever
 - Showing empathy towards other community members
 
 **Unacceptable behaviors include:**
+
 - Trolling, insulting/derogatory comments, and personal attacks
 - Public or private harassment
 - Publishing others' private information without permission
@@ -104,6 +106,7 @@ pnpm dev
 ```
 
 7. **Access the application**:
+
 - Frontend: http://localhost:5173
 - API docs: http://localhost:8000/docs
 - Test SABnzbd: http://localhost:8080
@@ -148,12 +151,14 @@ AutoArr follows **Test-Driven Development (TDD)**. Tests should be written befor
 ### Running Tests
 
 **Backend tests**:
+
 ```bash
 cd api
 pytest tests/ --cov --cov-report=html
 ```
 
 **Frontend tests**:
+
 ```bash
 cd ui
 pnpm test        # Unit tests
@@ -161,6 +166,7 @@ pnpm test:e2e    # E2E tests with Playwright
 ```
 
 **Integration tests**:
+
 ```bash
 pytest tests/integration/ -v
 ```
@@ -180,10 +186,10 @@ async def test_audit_identifies_non_optimal_settings():
     # Arrange
     manager = ConfigurationManager()
     config = {"setting1": "value1"}
-    
+
     # Act
     result = await manager.audit_configuration("sabnzbd", config)
-    
+
     # Assert
     assert result.has_recommendations
     assert len(result.recommendations) > 0
@@ -193,17 +199,19 @@ async def test_audit_identifies_non_optimal_settings():
 
 ```typescript
 // tests/ui/dashboard.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test('dashboard shows configuration audit results', async ({ page }) => {
-  await page.goto('http://localhost:3000');
-  
+test("dashboard shows configuration audit results", async ({ page }) => {
+  await page.goto("http://localhost:3000");
+
   // Click audit button
-  await page.getByRole('button', { name: 'Run Audit' }).click();
-  
+  await page.getByRole("button", { name: "Run Audit" }).click();
+
   // Check for results
-  await expect(page.getByText('Configuration Audit Complete')).toBeVisible();
-  await expect(page.getByTestId('recommendation-card')).toHaveCount.greaterThan(0);
+  await expect(page.getByText("Configuration Audit Complete")).toBeVisible();
+  await expect(page.getByTestId("recommendation-card")).toHaveCount.greaterThan(
+    0,
+  );
 });
 ```
 
@@ -228,6 +236,7 @@ We follow **PEP 8** with some modifications:
 - **Docstrings**: Google-style for all public functions
 
 **Example**:
+
 ```python
 from typing import List, Optional
 
@@ -236,14 +245,14 @@ async def fetch_configuration(
     include_hidden: bool = False
 ) -> Optional[dict]:
     """Fetch configuration from an application.
-    
+
     Args:
         app_name: Name of the application (e.g., "sabnzbd")
         include_hidden: Whether to include hidden settings
-        
+
     Returns:
         Configuration dictionary, or None if app not found
-        
+
     Raises:
         ConnectionError: If unable to connect to application
     """
@@ -252,6 +261,7 @@ async def fetch_configuration(
 ```
 
 **Formatting tools**:
+
 ```bash
 black .              # Format code
 isort .              # Sort imports
@@ -270,6 +280,7 @@ We follow **Airbnb Style Guide** with TypeScript:
 - **Components**: Functional components with hooks
 
 **Example**:
+
 ```typescript
 import { useState, useEffect } from 'react';
 
@@ -281,11 +292,11 @@ interface ConfigAuditProps {
 export function ConfigAudit({ appName, onComplete }: ConfigAuditProps) {
   const [results, setResults] = useState<AuditResult[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
   useEffect(() => {
     // Implementation
   }, [appName]);
-  
+
   return (
     <div className="config-audit">
       {/* JSX */}
@@ -295,6 +306,7 @@ export function ConfigAudit({ appName, onComplete }: ConfigAuditProps) {
 ```
 
 **Formatting tools**:
+
 ```bash
 pnpm lint           # ESLint
 pnpm format         # Prettier
@@ -314,6 +326,7 @@ footer
 ```
 
 **Types**:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only
@@ -323,6 +336,7 @@ footer
 - `chore`: Maintenance tasks
 
 **Examples**:
+
 ```bash
 feat(config-manager): add configuration rollback feature
 fix(monitoring): handle failed downloads correctly
@@ -346,33 +360,40 @@ test(services): add tests for request handler
 ### Submitting a Pull Request
 
 1. **Push your branch**:
+
 ```bash
 git push origin feature/your-feature-name
 ```
 
 2. **Create PR on GitHub**:
+
 - Base: `develop`
 - Compare: `feature/your-feature-name`
 - Fill out the PR template
 
 3. **PR Template**:
+
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Unit tests added/updated
 - [ ] Integration tests added/updated
 - [ ] E2E tests added/updated
 - [ ] All tests passing
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-reviewed code
 - [ ] Commented complex code
@@ -403,11 +424,13 @@ AutoArr leverages Claude Code for accelerated development. Here's how to use it 
 ### Setup Claude Code
 
 1. Install Claude Code:
+
 ```bash
 npm install -g @anthropic-ai/claude-code
 ```
 
 2. Configure with your API key:
+
 ```bash
 export ANTHROPIC_API_KEY=your_key_here
 ```
@@ -568,6 +591,7 @@ autoarr/
 Looking for where to start? Check out issues labeled [`good first issue`](https://github.com/autoarr/autoarr/labels/good%20first%20issue).
 
 Some ideas:
+
 - Add tests for existing components
 - Improve documentation
 - Fix typos or formatting
@@ -588,6 +612,7 @@ Some ideas:
 ## 🏆 Recognition
 
 Contributors are recognized in:
+
 - GitHub contributors page
 - Release notes
 - Monthly contributor highlights

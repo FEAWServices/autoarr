@@ -7,7 +7,7 @@ This module provides endpoints for accessing Plex media libraries.
 from typing import Any, AsyncGenerator, Dict, List
 
 from fastapi import APIRouter, Depends
-from shared.core.mcp_orchestrator import MCPOrchestrator
+from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
 from ..models import ScanLibraryRequest

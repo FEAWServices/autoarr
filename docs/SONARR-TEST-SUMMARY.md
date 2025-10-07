@@ -9,9 +9,11 @@ A comprehensive test suite has been created for the Sonarr MCP Server following 
 ## Deliverables
 
 ### 1. Test Strategy Document
+
 **Location:** `C:\Git\autoarr\docs\test-strategy-sonarr.md`
 
 Comprehensive test strategy covering:
+
 - Test pyramid distribution (70% unit, 20% integration, 10% E2E)
 - Test specifications for all components
 - Mock strategies and test data factories
@@ -19,9 +21,11 @@ Comprehensive test strategy covering:
 - CI/CD integration plan
 
 ### 2. Test Data Factories
+
 **Location:** `C:\Git\autoarr\tests\fixtures\conftest.py`
 
 Eight reusable factory fixtures for creating realistic Sonarr API responses:
+
 - `sonarr_series_factory` - TV series with seasons, images, statistics
 - `sonarr_episode_factory` - Episodes with optional file information
 - `sonarr_quality_profile_factory` - Quality profiles with cutoff settings
@@ -32,11 +36,13 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - `sonarr_system_status_factory` - System status information
 
 ### 3. Unit Tests - SonarrClient
+
 **Location:** `C:\Git\autoarr\tests\unit\mcp_servers\sonarr\test_sonarr_client.py`
 
 **54 comprehensive unit tests** covering:
 
 #### Initialization & Connection (8 tests)
+
 - URL and API key validation
 - URL normalization
 - Custom timeout configuration
@@ -45,6 +51,7 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - Context manager support
 
 #### Series Operations (10 tests)
+
 - Get all series
 - Get series by ID (success/404)
 - Add series with payload validation
@@ -57,6 +64,7 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - Delete series with addImportExclusion flag
 
 #### Episode Operations (5 tests)
+
 - Get episodes for series
 - Get episodes with season filtering
 - Get episode by ID
@@ -64,6 +72,7 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - Search episode returns command ID
 
 #### Command Operations (4 tests)
+
 - Execute command via POST
 - Get command status
 - Series search command
@@ -71,6 +80,7 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - Rescan series command
 
 #### Calendar, Queue & Wanted (6 tests)
+
 - Get calendar with date ranges
 - Get calendar with defaults
 - Get queue with download status
@@ -80,9 +90,11 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - Get wanted with series inclusion
 
 #### System Status (1 test)
+
 - Get system status
 
 #### Error Handling (7 tests)
+
 - 401 Unauthorized (invalid API key)
 - 404 Not Found
 - 500 Server Error
@@ -93,17 +105,20 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - Respect max retry limits
 
 #### Authentication & Request Building (4 tests)
+
 - API key in X-Api-Key header
 - API key NOT in URL
 - Correct /api/v3/ URL construction
 - Content-Type: application/json for POST
 
 #### Resource Management (3 tests)
+
 - Proper connection cleanup
 - HTTP client reuse
 - Concurrent request safety
 
 #### Edge Cases (6 tests)
+
 - Empty series lists
 - Large datasets (150+ items)
 - Special characters in titles
@@ -111,16 +126,19 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - Null values in responses
 
 ### 4. Unit Tests - SonarrMCPServer
+
 **Location:** `C:\Git\autoarr\tests\unit\mcp_servers\sonarr\test_sonarr_server.py`
 
 **41 comprehensive unit tests** covering:
 
 #### Server Initialization (3 tests)
+
 - Client requirement validation
 - Proper initialization
 - MCP handler setup
 
 #### Tool Registration (10 tests)
+
 - All 10 required tools registered
 - Each tool has correct schema
 - get_series tool schema
@@ -134,6 +152,7 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - delete_series has optional flags
 
 #### Tool Execution (11 tests)
+
 - get_series execution
 - get_series_by_id execution
 - add_series execution
@@ -148,6 +167,7 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - delete_series execution
 
 #### Error Handling (6 tests)
+
 - Unknown tool names
 - Client errors propagation
 - Missing required parameters
@@ -156,100 +176,120 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 - Unexpected exceptions
 
 #### Response Formatting (4 tests)
+
 - Success response format
 - Error response format
 - Valid JSON responses
 - Response metadata inclusion
 
 #### MCP Protocol Compliance (4 tests)
+
 - Tool schemas are valid JSON Schema
-- Tool names follow convention (sonarr_*)
+- Tool names follow convention (sonarr\_\*)
 - Tool descriptions are informative
 - Required parameters are documented
 
 #### Client Integration (3 tests)
+
 - Arguments passed correctly to client
 - Client responses handled correctly
 - Data structures preserved
 
 ### 5. Integration Tests - API
+
 **Location:** `C:\Git\autoarr\tests\integration\mcp_servers\sonarr\test_sonarr_api_integration.py`
 
 **16 integration tests** covering:
 
 #### Full Workflows (2 tests)
+
 - Complete series lifecycle: search → add → get → delete
 - Episode workflow: get episodes → search → monitor queue
 
 #### API Endpoint Validation (3 tests)
+
 - All requests use /api/v3/ prefix
 - All requests include X-Api-Key header
 - POST requests include Content-Type
 
 #### Error Scenarios (4 tests)
+
 - Sonarr 404 error format handling
 - Sonarr 400 validation error format
 - 401 Unauthorized handling
 - 503 retry logic
 
 #### Data Integrity (3 tests)
+
 - Complex series structures preserved
 - Pagination handling
 - Unicode and special characters
 
 #### Performance (2 tests)
+
 - Concurrent requests
 - Large response sets (150+ items)
 
 #### Calendar & Queue (2 tests)
+
 - Calendar date range filtering
 - Queue status monitoring
 
 ### 6. Integration Tests - MCP Protocol
+
 **Location:** `C:\Git\autoarr\tests\integration\mcp_servers\sonarr\test_sonarr_mcp_integration.py`
 
 **13 E2E integration tests** covering:
 
 #### E2E MCP Workflows (2 tests)
+
 - Complete series management via MCP tools
 - Episode search workflow via MCP tools
 
 #### MCP Protocol Compliance (3 tests)
+
 - Response format compliance (TextContent)
 - Schema validation enforcement
 - Error responses follow protocol
 
 #### Error Propagation (3 tests)
+
 - Client errors through MCP layer
 - Validation errors through MCP layer
 - Connection errors through MCP layer
 
 #### Data Transformation (2 tests)
+
 - Complex data structures preserved through MCP
 - Paginated data preserved through MCP
 
 #### Calendar & Queue via MCP (2 tests)
+
 - Calendar retrieval via MCP
 - Wanted episodes via MCP
 
 #### Concurrency (1 test)
+
 - Concurrent MCP tool execution
 
 ## Test Statistics
 
 ### Overall Metrics
+
 - **Total Tests**: 124
 - **Unit Tests**: 95 (77%)
 - **Integration Tests**: 29 (23%)
 - **Test Pyramid Compliance**: ✓ (70/20/10 distribution)
 
 ### Breakdown by Component
+
 - **SonarrClient Unit Tests**: 54
 - **SonarrMCPServer Unit Tests**: 41
 - **API Integration Tests**: 16
 - **MCP Protocol Integration Tests**: 13
 
 ### Coverage Targets
+
 - **Overall Coverage**: 90%+
 - **Client Coverage**: 90%+
 - **Server Coverage**: 90%+
@@ -262,6 +302,7 @@ Eight reusable factory fixtures for creating realistic Sonarr API responses:
 **File:** `mcp-servers/sonarr/client.py`
 
 **Required Classes:**
+
 ```python
 class SonarrClientError(Exception):
     """Base exception for Sonarr client errors."""
@@ -274,6 +315,7 @@ class SonarrClient:
 ```
 
 **Required Methods:**
+
 - `__init__(url, api_key, timeout=30.0)`
 - `async def create(url, api_key, timeout, validate_connection)`
 - `async def close()`
@@ -298,6 +340,7 @@ class SonarrClient:
 - `async def get_system_status() -> Dict`
 
 **Authentication Pattern:**
+
 ```python
 # CRITICAL: Header-based auth (NOT query params like SABnzbd)
 headers = {
@@ -307,6 +350,7 @@ headers = {
 ```
 
 **API v3 Endpoints:**
+
 - All endpoints must use `/api/v3/` prefix
 - API key must be in `X-Api-Key` header, NOT in URL
 - Must implement retry logic for 503 errors (max 3 attempts)
@@ -316,18 +360,21 @@ headers = {
 **File:** `mcp-servers/sonarr/server.py`
 
 **Required Classes:**
+
 ```python
 class SonarrMCPServer:
     """MCP Server for Sonarr."""
 ```
 
 **Required Methods:**
+
 - `__init__(client: SonarrClient)`
 - `def _setup_handlers()`
 - `def _get_tools() -> List[Tool]` (returns 10 tools)
 - `async def _call_tool(name: str, arguments: Dict) -> List[TextContent]`
 
 **Required Tools (10 total):**
+
 1. `sonarr_get_series` - List all series
 2. `sonarr_get_series_by_id` - Get specific series (requires: series_id)
 3. `sonarr_add_series` - Add new series (requires: tvdb_id, quality_profile_id, root_folder_path)
@@ -340,6 +387,7 @@ class SonarrMCPServer:
 10. `sonarr_delete_series` - Delete series (requires: series_id, optional: delete_files, add_import_exclusion)
 
 **Response Format:**
+
 ```python
 # Success
 {"success": True, "data": <result>}
@@ -351,6 +399,7 @@ class SonarrMCPServer:
 ## API Endpoint Reference
 
 ### Series Endpoints
+
 - `GET /api/v3/series` - List all series
 - `GET /api/v3/series/{id}` - Get series by ID
 - `POST /api/v3/series` - Add new series
@@ -358,21 +407,25 @@ class SonarrMCPServer:
 - `GET /api/v3/series/lookup?term={term}` - Search for series (TVDB lookup)
 
 ### Episode Endpoints
+
 - `GET /api/v3/episode?seriesId={id}` - Get all episodes for series
 - `GET /api/v3/episode?seriesId={id}&seasonNumber={num}` - Get episodes for season
 - `GET /api/v3/episode/{id}` - Get episode by ID
 
 ### Command Endpoints
+
 - `POST /api/v3/command` - Execute command (body: {name, ...params})
 - `GET /api/v3/command/{id}` - Get command status
 
 ### Other Endpoints
+
 - `GET /api/v3/calendar?start={date}&end={date}` - Get calendar
 - `GET /api/v3/queue?page={num}&pageSize={num}` - Get download queue
 - `GET /api/v3/wanted/missing?page={num}&pageSize={num}` - Get wanted episodes
 - `GET /api/v3/system/status` - Get system status
 
 ### Command Names
+
 - `EpisodeSearch` - Search for specific episode
 - `SeriesSearch` - Search for all episodes in series
 - `RefreshSeries` - Refresh series metadata
@@ -381,17 +434,20 @@ class SonarrMCPServer:
 ## Running the Tests
 
 ### Verify TDD Red Phase (Expected to Fail)
+
 ```bash
 pytest tests/unit/mcp_servers/sonarr/ -v
 # All tests should fail with ImportError or ModuleNotFoundError
 ```
 
 ### After Implementation - Run All Tests
+
 ```bash
 pytest tests/unit/mcp_servers/sonarr/ tests/integration/mcp_servers/sonarr/ -v
 ```
 
 ### Run with Coverage
+
 ```bash
 pytest tests/unit/mcp_servers/sonarr/ tests/integration/mcp_servers/sonarr/ \
   --cov=mcp_servers.sonarr \
@@ -401,6 +457,7 @@ pytest tests/unit/mcp_servers/sonarr/ tests/integration/mcp_servers/sonarr/ \
 ```
 
 ### Run Specific Test Categories
+
 ```bash
 # Client tests only
 pytest tests/unit/mcp_servers/sonarr/test_sonarr_client.py -v
@@ -418,12 +475,14 @@ pytest tests/unit/mcp_servers/sonarr/test_sonarr_client.py::TestSonarrClientSeri
 ## TDD Workflow
 
 ### Phase 1: RED (Current State) ✓
+
 - [x] All test specifications written
 - [x] Test data factories created
 - [x] All 124 tests implemented
 - [x] Tests will fail (no implementation yet)
 
 ### Phase 2: GREEN (Next Step)
+
 1. Create `mcp-servers/sonarr/__init__.py`
 2. Create `mcp-servers/sonarr/client.py` with `SonarrClient`
 3. Create `mcp-servers/sonarr/server.py` with `SonarrMCPServer`
@@ -431,6 +490,7 @@ pytest tests/unit/mcp_servers/sonarr/test_sonarr_client.py::TestSonarrClientSeri
 5. Verify all tests pass
 
 ### Phase 3: REFACTOR (After Green)
+
 1. Extract common patterns
 2. Improve code organization
 3. Add comprehensive type hints
@@ -439,6 +499,7 @@ pytest tests/unit/mcp_servers/sonarr/test_sonarr_client.py::TestSonarrClientSeri
 6. Ensure tests still pass
 
 ### Phase 4: MUTATION TESTING (Quality Validation)
+
 1. Install mutation testing tool: `pip install mutmut`
 2. Run mutation tests: `mutmut run --paths-to-mutate=mcp-servers/sonarr/`
 3. Target: 80%+ mutation score
@@ -447,18 +508,22 @@ pytest tests/unit/mcp_servers/sonarr/test_sonarr_client.py::TestSonarrClientSeri
 ## Key Differences from SABnzbd
 
 ### Authentication
+
 - **SABnzbd**: API key in query parameter (`?apikey=...`)
 - **Sonarr**: API key in header (`X-Api-Key: ...`)
 
 ### API Versioning
+
 - **SABnzbd**: No version in URL (`/api?mode=...`)
 - **Sonarr**: Version in URL (`/api/v3/...`)
 
 ### Response Format
+
 - **SABnzbd**: Nested in mode-specific keys
 - **Sonarr**: Direct JSON responses, paginated endpoints
 
 ### Command Execution
+
 - **SABnzbd**: Immediate responses
 - **Sonarr**: Async commands with tracking (command ID)
 
@@ -479,19 +544,23 @@ pytest tests/unit/mcp_servers/sonarr/test_sonarr_client.py::TestSonarrClientSeri
 ## Files Created
 
 ### Documentation
+
 1. `C:\Git\autoarr\docs\test-strategy-sonarr.md` - Comprehensive test strategy
 2. `C:\Git\autoarr\docs\SONARR-TEST-SUMMARY.md` - This summary document
 3. `C:\Git\autoarr\tests\unit\mcp_servers\sonarr\README.md` - Test suite README
 
 ### Test Data Factories
+
 4. `C:\Git\autoarr\tests\fixtures\conftest.py` - Added 8 Sonarr factories
 
 ### Unit Tests
+
 5. `C:\Git\autoarr\tests\unit\mcp_servers\sonarr\__init__.py`
 6. `C:\Git\autoarr\tests\unit\mcp_servers\sonarr\test_sonarr_client.py` - 54 tests
 7. `C:\Git\autoarr\tests\unit\mcp_servers\sonarr\test_sonarr_server.py` - 41 tests
 
 ### Integration Tests
+
 8. `C:\Git\autoarr\tests\integration\mcp_servers\sonarr\__init__.py`
 9. `C:\Git\autoarr\tests\integration\mcp_servers\sonarr\test_sonarr_api_integration.py` - 16 tests
 10. `C:\Git\autoarr\tests\integration\mcp_servers\sonarr\test_sonarr_mcp_integration.py` - 13 tests

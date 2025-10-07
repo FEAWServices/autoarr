@@ -11,7 +11,7 @@ from typing import Callable
 
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
-from shared.core.exceptions import (
+from autoarr.shared.core.exceptions import (
     CircuitBreakerOpenError,
     MCPConnectionError,
     MCPOrchestratorError,

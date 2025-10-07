@@ -40,15 +40,15 @@ docs/
 
 Complete test specifications for all 105 tests across 6 categories:
 
-| Category | Tests | File | Status |
-|----------|-------|------|--------|
-| Connection Management | 20 | test_mcp_orchestrator.py | ✅ Written |
-| Tool Routing | 15 | test_mcp_orchestrator.py | ✅ Written |
-| Parallel Execution | 10 | test_mcp_orchestrator.py | ✅ Written |
-| Error Handling | 12 | test_mcp_orchestrator.py | ✅ Written |
-| Health Checks | 8 | test_mcp_orchestrator.py | ✅ Written |
-| Resource Management | 10 | test_mcp_orchestrator.py | ✅ Written |
-| Integration Tests | 30 | test_mcp_orchestrator_integration.py | ✅ Written |
+| Category              | Tests | File                                 | Status     |
+| --------------------- | ----- | ------------------------------------ | ---------- |
+| Connection Management | 20    | test_mcp_orchestrator.py             | ✅ Written |
+| Tool Routing          | 15    | test_mcp_orchestrator.py             | ✅ Written |
+| Parallel Execution    | 10    | test_mcp_orchestrator.py             | ✅ Written |
+| Error Handling        | 12    | test_mcp_orchestrator.py             | ✅ Written |
+| Health Checks         | 8     | test_mcp_orchestrator.py             | ✅ Written |
+| Resource Management   | 10    | test_mcp_orchestrator.py             | ✅ Written |
+| Integration Tests     | 30    | test_mcp_orchestrator_integration.py | ✅ Written |
 
 ### 3. Test Data Factories ✅
 
@@ -83,6 +83,7 @@ Complete mocking strategies documented and implemented:
 Comprehensive documentation created:
 
 - ✅ **Test Strategy Document** (MCP_ORCHESTRATOR_TEST_STRATEGY.md)
+
   - 60+ page comprehensive guide
   - Architecture diagrams
   - Complete test specifications
@@ -92,6 +93,7 @@ Comprehensive documentation created:
   - Performance benchmarks
 
 - ✅ **Testing README** (README.md)
+
   - Quick start guide
   - Test pyramid explanation
   - Running tests instructions
@@ -107,11 +109,13 @@ Comprehensive documentation created:
 ### 1. Connection Management Tests (20 tests)
 
 #### 1.1 Initialization (3 tests)
+
 - `test_orchestrator_initialization_with_config`
 - `test_orchestrator_requires_configuration`
 - `test_orchestrator_validates_config_structure`
 
 #### 1.2 Connection Lifecycle (8 tests)
+
 - `test_connect_all_connects_to_all_enabled_servers`
 - `test_connect_all_skips_disabled_servers`
 - `test_connect_all_handles_partial_connection_failure`
@@ -122,6 +126,7 @@ Comprehensive documentation created:
 - `test_is_connected_returns_connection_status`
 
 #### 1.3 Connection Pooling (5 tests)
+
 - `test_connection_pooling_reuses_connections`
 - `test_connection_pool_limits_concurrent_connections`
 - `test_concurrent_connection_attempts_are_safe`
@@ -129,6 +134,7 @@ Comprehensive documentation created:
 - `test_connection_keepalive_mechanism`
 
 #### 1.4 Advanced Features (4 tests)
+
 - `test_connection_state_persistence_across_restarts`
 - `test_auto_reconnect_on_connection_loss`
 - `test_graceful_shutdown_waits_for_pending_requests`
@@ -137,6 +143,7 @@ Comprehensive documentation created:
 ### 2. Tool Routing Tests (15 tests)
 
 #### 2.1 Basic Routing (5 tests)
+
 - `test_call_tool_routes_to_correct_server`
 - `test_call_tool_validates_server_name`
 - `test_call_tool_validates_server_is_connected`
@@ -144,17 +151,20 @@ Comprehensive documentation created:
 - `test_call_tool_validates_params_type`
 
 #### 2.2 Parameter Handling (4 tests)
+
 - `test_call_tool_passes_params_correctly`
 - `test_call_tool_returns_result_data`
 - `test_call_tool_handles_tool_not_found_error`
 - `test_call_tool_handles_tool_execution_error`
 
 #### 2.3 Configuration (3 tests)
+
 - `test_call_tool_respects_timeout_parameter`
 - `test_call_tool_uses_default_timeout_if_not_specified`
 - `test_list_available_tools_for_server`
 
 #### 2.4 Advanced Features (3 tests)
+
 - `test_list_all_tools_across_all_servers`
 - `test_tool_routing_with_alias_names`
 - `test_call_tool_includes_metadata_in_result`
@@ -214,6 +224,7 @@ Comprehensive documentation created:
 ### 7. Integration Tests (30 tests)
 
 #### 7.1 Real Server Connections (5 tests)
+
 - `test_connect_to_all_real_servers`
 - `test_reconnect_after_connection_loss`
 - `test_health_check_real_servers`
@@ -221,6 +232,7 @@ Comprehensive documentation created:
 - `test_concurrent_connections_to_real_servers`
 
 #### 7.2 Tool Execution (10 tests)
+
 - `test_sabnzbd_get_queue`
 - `test_sabnzbd_get_history`
 - `test_sonarr_get_series`
@@ -233,6 +245,7 @@ Comprehensive documentation created:
 - `test_sequential_tool_calls_maintain_state`
 
 #### 7.3 Multi-Server Coordination (5 tests)
+
 - `test_parallel_calls_to_different_servers`
 - `test_aggregate_data_from_multiple_servers`
 - `test_cross_server_workflow`
@@ -240,6 +253,7 @@ Comprehensive documentation created:
 - `test_server_priority_routing`
 
 #### 7.4 Error Recovery (5 tests)
+
 - `test_recover_from_network_timeout`
 - `test_retry_on_transient_server_error`
 - `test_circuit_breaker_with_real_failures`
@@ -247,6 +261,7 @@ Comprehensive documentation created:
 - `test_continue_operation_with_degraded_service`
 
 #### 7.5 Performance (5 tests)
+
 - `test_high_throughput_tool_calls`
 - `test_concurrent_parallel_batches`
 - `test_connection_pool_efficiency`
@@ -259,15 +274,15 @@ Comprehensive documentation created:
 
 ### Coverage Targets
 
-| Component | Line Coverage | Branch Coverage |
-|-----------|---------------|-----------------|
-| Connection Manager | 95%+ | 90%+ |
-| Tool Router | 95%+ | 95%+ |
-| Circuit Breaker | 90%+ | 85%+ |
-| Parallel Executor | 90%+ | 85%+ |
-| Health Monitor | 90%+ | 85%+ |
-| Resource Manager | 85%+ | 80%+ |
-| **Overall Target** | **90%+** | **85%+** |
+| Component          | Line Coverage | Branch Coverage |
+| ------------------ | ------------- | --------------- |
+| Connection Manager | 95%+          | 90%+            |
+| Tool Router        | 95%+          | 95%+            |
+| Circuit Breaker    | 90%+          | 85%+            |
+| Parallel Executor  | 90%+          | 85%+            |
+| Health Monitor     | 90%+          | 85%+            |
+| Resource Manager   | 85%+          | 80%+            |
+| **Overall Target** | **90%+**      | **85%+**        |
 
 ### Critical Paths (100% Coverage Required)
 
@@ -330,6 +345,7 @@ Next steps for implementation:
 
 1. Create `core/mcp_orchestrator.py`
 2. Define basic classes:
+
    ```python
    class MCPOrchestratorError(Exception): pass
    class MCPConnectionError(MCPOrchestratorError): pass
@@ -359,26 +375,32 @@ Next steps for implementation:
 Follow this order (dependencies):
 
 1. **Connection Management** (Foundation)
+
    - Everything else depends on connections
    - 20 tests to pass
 
 2. **Tool Routing** (Core Functionality)
+
    - Depends on connections
    - 15 tests to pass
 
 3. **Health Checks** (Monitoring)
+
    - Depends on connections
    - 8 tests to pass
 
 4. **Error Handling** (Reliability)
+
    - Depends on routing
    - 12 tests to pass
 
 5. **Parallel Execution** (Performance)
+
    - Depends on routing
    - 10 tests to pass
 
 6. **Resource Management** (Cleanup)
+
    - Depends on all above
    - 10 tests to pass
 
@@ -439,6 +461,7 @@ docker-compose -f docker-compose.test.yml down
 ### Current Status: Ready for Implementation
 
 **What's Complete:**
+
 - ✅ Test infrastructure
 - ✅ All test specifications
 - ✅ Test data factories
@@ -446,6 +469,7 @@ docker-compose -f docker-compose.test.yml down
 - ✅ Documentation
 
 **What's Next:**
+
 1. Begin implementation following TDD
 2. Watch tests turn from ❌ to ✅
 3. Achieve 90%+ coverage
@@ -459,14 +483,17 @@ docker-compose -f docker-compose.test.yml down
 ### Test Files
 
 1. **`tests/unit/core/__init__.py`**
+
    - Package initialization
 
 2. **`tests/unit/core/test_mcp_orchestrator.py`** (75 tests)
+
    - Complete unit test suite
    - 6 test classes covering all functionality
    - ~600 lines of comprehensive tests
 
 3. **`tests/integration/core/__init__.py`**
+
    - Package initialization
 
 4. **`tests/integration/core/test_mcp_orchestrator_integration.py`** (30 tests)
@@ -477,6 +504,7 @@ docker-compose -f docker-compose.test.yml down
 ### Fixture Files
 
 5. **`tests/fixtures/mcp_orchestrator_fixtures.py`**
+
    - 13 test data factories
    - Data classes for type safety
    - ~500 lines of reusable fixtures
@@ -487,12 +515,14 @@ docker-compose -f docker-compose.test.yml down
 ### Documentation Files
 
 7. **`docs/testing/MCP_ORCHESTRATOR_TEST_STRATEGY.md`**
+
    - 60+ page comprehensive strategy
    - Architecture diagrams
    - Complete specifications
    - Implementation checklist
 
 8. **`docs/testing/README.md`**
+
    - Testing quick start guide
    - Best practices
    - Common commands
@@ -536,28 +566,33 @@ open htmlcov/index.html
 ### For Implementation Team
 
 1. **Review Documentation**
+
    - Read MCP_ORCHESTRATOR_TEST_STRATEGY.md
    - Understand test categories and requirements
 
 2. **Set Up Environment**
+
    ```bash
    pip install -e .[dev]
    pre-commit install
    ```
 
 3. **Verify Tests Fail**
+
    ```bash
    pytest tests/unit/core/test_mcp_orchestrator.py -v
    # Should see ImportError - this is correct!
    ```
 
 4. **Begin Implementation**
+
    - Create `core/mcp_orchestrator.py`
    - Follow TDD Red-Green-Refactor cycle
    - Start with connection management tests
    - Work through test categories in order
 
 5. **Track Progress**
+
    ```bash
    # Watch tests turn green
    pytest-watch tests/unit/core/ -v

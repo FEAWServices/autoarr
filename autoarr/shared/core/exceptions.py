@@ -32,7 +32,7 @@ class MCPConnectionError(MCPOrchestratorError):
         message: str,
         server: Optional[str] = None,
         original_error: Optional[Exception] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Initialize connection error.
@@ -52,11 +52,7 @@ class MCPToolError(MCPOrchestratorError):
     """Exception raised when tool operation fails."""
 
     def __init__(
-        self,
-        message: str,
-        server: Optional[str] = None,
-        tool: Optional[str] = None,
-        **kwargs: Any
+        self, message: str, server: Optional[str] = None, tool: Optional[str] = None, **kwargs: Any
     ) -> None:
         """
         Initialize tool error.
@@ -81,7 +77,7 @@ class MCPTimeoutError(MCPOrchestratorError):
         server: Optional[str] = None,
         tool: Optional[str] = None,
         timeout: Optional[float] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Initialize timeout error.
@@ -102,12 +98,7 @@ class MCPTimeoutError(MCPOrchestratorError):
 class CircuitBreakerOpenError(MCPOrchestratorError):
     """Exception raised when circuit breaker is open."""
 
-    def __init__(
-        self,
-        message: str,
-        server: Optional[str] = None,
-        **kwargs: Any
-    ) -> None:
+    def __init__(self, message: str, server: Optional[str] = None, **kwargs: Any) -> None:
         """
         Initialize circuit breaker error.
 

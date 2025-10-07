@@ -13,17 +13,20 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 ### Core Implementation (4 files)
 
 1. **`mcp-servers/radarr/models.py`** (187 lines)
+
    - Pydantic models for Radarr API data validation
    - Models: `Movie`, `MovieFile`, `Command`, `Queue`, `QueueRecord`, `WantedMissing`, `SystemStatus`, `ErrorResponse`
    - Full type safety and validation
 
 2. **`mcp-servers/radarr/client.py`** (559 lines)
+
    - Async HTTP client for Radarr API v3
    - 14 API methods covering all movie operations
    - Connection management, error handling, retry logic
    - Authentication via X-Api-Key header
 
 3. **`mcp-servers/radarr/server.py`** (487 lines)
+
    - MCP server implementation
    - 9 MCP tools for movie operations
    - Request routing and response formatting
@@ -36,12 +39,14 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 ### Documentation & Examples (3 files)
 
 5. **`mcp-servers/radarr/README.md`** (200+ lines)
+
    - Complete documentation
    - Usage examples
    - API reference
    - Configuration guide
 
 6. **`scripts/verify_radarr_implementation.py`** (345 lines)
+
    - Comprehensive verification script
    - 7 test suites validating implementation
    - All tests passing
@@ -55,15 +60,15 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 
 ### Radarr vs Sonarr Differences
 
-| Aspect | Sonarr | Radarr |
-|--------|--------|--------|
-| **Media Type** | TV Series | Movies |
-| **Episodes** | Yes | No (removed) |
-| **Database** | TVDB | TMDb |
-| **Primary Entity** | Series | Movie |
-| **API Endpoint** | `/api/v3/series` | `/api/v3/movie` |
-| **Default Port** | 8989 | 7878 |
-| **Search Command** | `SeriesSearch` | `MoviesSearch` |
+| Aspect             | Sonarr           | Radarr          |
+| ------------------ | ---------------- | --------------- |
+| **Media Type**     | TV Series        | Movies          |
+| **Episodes**       | Yes              | No (removed)    |
+| **Database**       | TVDB             | TMDb            |
+| **Primary Entity** | Series           | Movie           |
+| **API Endpoint**   | `/api/v3/series` | `/api/v3/movie` |
+| **Default Port**   | 8989             | 7878            |
+| **Search Command** | `SeriesSearch`   | `MoviesSearch`  |
 
 ### Implementation Strategy
 
@@ -81,6 +86,7 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 ## RadarrClient API Methods
 
 ### Movie Operations (6 methods)
+
 - `get_movies(limit, page)` - List all movies
 - `get_movie_by_id(movie_id)` - Get specific movie
 - `add_movie(movie_data)` - Add new movie
@@ -89,15 +95,18 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 - `search_movie(movie_id)` - Trigger download search
 
 ### Queue & Calendar (3 methods)
+
 - `get_queue(page, page_size)` - Get download queue
 - `get_calendar(start, end)` - Get upcoming releases
 - `get_wanted_missing(page, page_size)` - Get missing movies
 
 ### System (2 methods)
+
 - `get_system_status()` - Get Radarr version/status
 - `health_check()` - Validate connection
 
 ### Command Operations (3 methods)
+
 - `_execute_command(name, data)` - Execute command
 - `get_command(command_id)` - Get command status
 - `refresh_movie(movie_id)` - Refresh movie metadata
@@ -110,26 +119,31 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 ### Movie Management Tools
 
 1. **radarr_get_movies**
+
    - Description: Get all movies from Radarr with optional pagination
    - Parameters: `limit` (optional), `page` (optional)
    - Returns: List of movies
 
 2. **radarr_get_movie_by_id**
+
    - Description: Get detailed information about a specific movie by ID
    - Parameters: `movie_id` (required)
    - Returns: Movie details
 
 3. **radarr_add_movie**
+
    - Description: Add a new movie to Radarr for monitoring and downloading
    - Parameters: `tmdb_id` (required), `quality_profile_id` (required), `root_folder_path` (required), `title` (optional), `monitored` (optional), `minimum_availability` (optional)
    - Returns: Added movie data
 
 4. **radarr_delete_movie**
+
    - Description: Delete a movie from Radarr with optional file deletion
    - Parameters: `movie_id` (required), `delete_files` (optional), `add_import_exclusion` (optional)
    - Returns: Deletion confirmation
 
 5. **radarr_search_movie_lookup**
+
    - Description: Search for movies using TMDb lookup (use before adding)
    - Parameters: `term` (required)
    - Returns: List of search results
@@ -142,11 +156,13 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 ### Queue & Calendar Tools
 
 7. **radarr_get_queue**
+
    - Description: Get the current download queue with status and progress
    - Parameters: `page` (optional), `page_size` (optional)
    - Returns: Queue data with pagination
 
 8. **radarr_get_calendar**
+
    - Description: Get upcoming movie releases from the calendar
    - Parameters: `start_date` (optional), `end_date` (optional)
    - Returns: List of upcoming movies
@@ -161,25 +177,30 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 ## Pydantic Models
 
 ### Movie Model
+
 - **Fields**: 30+ fields including id, title, year, tmdbId, hasFile, path, quality, monitored, genres, runtime, etc.
 - **Purpose**: Type-safe movie data validation
 - **Aliases**: Converts camelCase API responses to snake_case Python
 
 ### MovieFile Model
+
 - **Fields**: id, movieId, relativePath, path, size, quality, mediaInfo
 - **Purpose**: Movie file information validation
 
 ### Queue, Command, WantedMissing Models
+
 - **Purpose**: Queue management, command tracking, and wanted movies
 - **Features**: Pagination support, status tracking
 
 ### SystemStatus Model
+
 - **Purpose**: Radarr system information validation
 - **Fields**: version, OS info, Docker status, authentication
 
 ## Testing & Verification
 
 ### Verification Script Results
+
 ```
 ============================================================
 Radarr MCP Server Implementation Verification
@@ -283,7 +304,7 @@ The Radarr MCP Server integrates seamlessly with the AutoArr ecosystem:
 1. **Sonarr** - TV show management (completed)
 2. **Radarr** - Movie management (this implementation)
 3. **SABnzbd** - Download client (completed)
-4. **Future** - Additional *arr services (Lidarr, Readarr, etc.)
+4. **Future** - Additional \*arr services (Lidarr, Readarr, etc.)
 
 ## Next Steps
 
@@ -295,13 +316,13 @@ The Radarr MCP Server integrates seamlessly with the AutoArr ecosystem:
 
 ## Comparison with Sonarr Implementation
 
-| Metric | Sonarr | Radarr | Notes |
-|--------|--------|--------|-------|
-| **Lines of Code** | ~600 | ~559 | Radarr is simpler (no episodes) |
-| **API Methods** | 17 | 14 | 3 fewer (no episode methods) |
-| **MCP Tools** | 10 | 9 | 1 fewer (no search_episode) |
-| **Models** | 8 | 8 | Same structure |
-| **Development Time** | 4+ hours | 30 minutes | Reuse paid off! |
+| Metric               | Sonarr   | Radarr     | Notes                           |
+| -------------------- | -------- | ---------- | ------------------------------- |
+| **Lines of Code**    | ~600     | ~559       | Radarr is simpler (no episodes) |
+| **API Methods**      | 17       | 14         | 3 fewer (no episode methods)    |
+| **MCP Tools**        | 10       | 9          | 1 fewer (no search_episode)     |
+| **Models**           | 8        | 8          | Same structure                  |
+| **Development Time** | 4+ hours | 30 minutes | Reuse paid off!                 |
 
 ## Key Achievements
 

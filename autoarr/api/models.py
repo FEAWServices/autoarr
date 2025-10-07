@@ -5,7 +5,6 @@ This module defines all request and response models used in the FastAPI Gateway,
 ensuring type safety and automatic validation.
 """
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field

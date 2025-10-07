@@ -17,7 +17,7 @@
 **Start Frontend (separate terminal):**
 
 ```bash
-cd ui
+cd autoarr/ui
 pnpm install  # First time only
 pnpm run dev
 ```
@@ -37,65 +37,68 @@ With both running, you have:
 
 ```
 autoarr/
-├── api/                      # FastAPI backend
-│   ├── main.py              # Main app entry point
-│   ├── config.py            # Settings configuration
-│   ├── dependencies.py      # Dependency injection
-│   ├── middleware.py        # Custom middleware
-│   ├── models.py            # Pydantic models
-│   └── routers/             # API endpoints
-│       ├── health.py        # Health checks
-│       ├── settings.py      # Settings API
-│       ├── downloads.py     # SABnzbd integration
-│       ├── shows.py         # Sonarr integration
-│       ├── movies.py        # Radarr integration
-│       └── media.py         # Plex integration
+├── autoarr/                  # Main application code
+│   ├── api/                 # FastAPI backend
+│   │   ├── main.py          # Main app entry point
+│   │   ├── config.py        # Settings configuration
+│   │   ├── dependencies.py  # Dependency injection
+│   │   ├── middleware.py    # Custom middleware
+│   │   ├── models.py        # Pydantic models
+│   │   └── routers/         # API endpoints
+│   │       ├── health.py    # Health checks
+│   │       ├── settings.py  # Settings API
+│   │       ├── downloads.py # SABnzbd integration
+│   │       ├── shows.py     # Sonarr integration
+│   │       ├── movies.py    # Radarr integration
+│   │       └── media.py     # Plex integration
+│   │
+│   ├── ui/                  # React frontend
+│   │   ├── src/
+│   │   │   ├── components/  # Reusable components
+│   │   │   ├── pages/       # Page components
+│   │   │   ├── layouts/     # Layout components
+│   │   │   ├── App.tsx      # Main app component
+│   │   │   ├── main.tsx     # Entry point
+│   │   │   └── index.css    # Global styles
+│   │   ├── index.html
+│   │   ├── vite.config.ts
+│   │   └── tailwind.config.js
+│   │
+│   ├── mcp-servers/         # MCP server implementations
+│   │   └── mcp_servers/
+│   │       ├── sabnzbd/     # SABnzbd client
+│   │       ├── sonarr/      # Sonarr client
+│   │       ├── radarr/      # Radarr client
+│   │       └── plex/        # Plex client
+│   │
+│   ├── shared/              # Shared code
+│   │   └── core/
+│   │       ├── mcp_orchestrator.py
+│   │       ├── config.py
+│   │       └── exceptions.py
+│   │
+│   └── tests/               # Test suite
+│       ├── unit/            # Unit tests
+│       ├── integration/     # Integration tests
+│       └── e2e/             # End-to-end tests
 │
-├── ui/                       # React frontend
-│   ├── src/
-│   │   ├── components/      # Reusable components
-│   │   │   ├── SplashScreen.tsx
-│   │   │   └── Sidebar.tsx
-│   │   ├── pages/           # Page components
-│   │   │   ├── Home.tsx     # Chat interface
-│   │   │   ├── Settings.tsx # Settings page
-│   │   │   └── Placeholder.tsx
-│   │   ├── layouts/         # Layout components
-│   │   │   └── MainLayout.tsx
-│   │   ├── App.tsx          # Main app component
-│   │   ├── main.tsx         # Entry point
-│   │   └── index.css        # Global styles
-│   ├── index.html
-│   ├── vite.config.ts
-│   └── tailwind.config.js
+├── docs/                    # Documentation
+│   └── examples/            # Example scripts
 │
-├── mcp-servers/             # MCP server implementations
-│   └── mcp_servers/
-│       ├── sabnzbd/         # SABnzbd client
-│       ├── sonarr/          # Sonarr client
-│       ├── radarr/          # Radarr client
-│       └── plex/            # Plex client
+├── scripts/                 # Development scripts
+│   ├── test.py
+│   ├── format.py
+│   └── verify_api.py
 │
-├── shared/                   # Shared code
-│   └── core/
-│       ├── mcp_orchestrator.py
-│       └── config.py
+├── .github/workflows/       # CI/CD workflows
+│   ├── ci.yml              # Test & lint
+│   └── docker-publish.yml  # Build & publish Docker
 │
-├── tests/                    # Test suite
-│   ├── unit/                # Unit tests
-│   ├── integration/         # Integration tests
-│   └── e2e/                 # End-to-end tests
-│
-├── .github/workflows/        # CI/CD workflows
-│   ├── ci.yml               # Test & lint
-│   └── docker-publish.yml   # Build & publish Docker
-│
-├── Dockerfile               # Production Docker image
-├── docker-compose.yml       # Development compose
-├── docker-compose.prod.yml  # Production compose
-├── docker-compose.synology.yml  # Synology deployment
 ├── run_dev.sh              # Dev server script
-└── pyproject.toml          # Python dependencies
+├── pyproject.toml          # Python dependencies
+├── DEVELOPMENT.md          # This file
+├── DEPLOYMENT.md           # Deployment guide
+└── README.md               # Project overview
 ```
 
 ## 🎨 Frontend Architecture
@@ -240,7 +243,7 @@ poetry run ptw
 ### Frontend Tests
 
 ```bash
-cd ui
+cd autoarr/ui
 
 # Unit tests (Vitest - TODO)
 pnpm run test:unit
@@ -261,10 +264,13 @@ pnpm run test:ui
 poetry run black .
 
 # Lint
-poetry run flake8 api/ mcp-servers/mcp_servers/ shared/
+poetry run flake8 autoarr/
 
 # Type check
-poetry run mypy api/ mcp-servers/mcp_servers/ shared/
+poetry run mypy autoarr/
+
+# Find dead code
+poetry run vulture autoarr/
 
 # All checks (pre-commit)
 poetry run pre-commit run --all-files
@@ -273,7 +279,7 @@ poetry run pre-commit run --all-files
 **Frontend:**
 
 ```bash
-cd ui
+cd autoarr/ui
 
 # Lint
 pnpm run lint
@@ -290,9 +296,9 @@ pnpm run format --check
 ### Frontend Build
 
 ```bash
-cd ui
+cd autoarr/ui
 pnpm run build
-# Output: ui/dist/
+# Output: autoarr/ui/dist/
 ```
 
 ### Docker Build

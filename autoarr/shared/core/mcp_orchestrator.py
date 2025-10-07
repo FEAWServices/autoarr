@@ -100,7 +100,7 @@ class CircuitBreaker:
             result = await func(*args, **kwargs)
             self.on_success()
             return result
-        except Exception as e:
+        except Exception:
             self.on_failure()
             raise
 
@@ -192,22 +192,16 @@ class MCPOrchestrator:
         self.keepalive_interval = getattr(config, "keepalive_interval", 30.0)
         self.max_parallel_calls = getattr(config, "max_parallel_calls", 10)
         self.parallel_timeout = getattr(config, "parallel_timeout", None)
-        self.cancel_on_critical_failure = getattr(
-            config, "cancel_on_critical_failure", False
-        )
+        self.cancel_on_critical_failure = getattr(config, "cancel_on_critical_failure", False)
         self.server_aliases = getattr(config, "server_aliases", {})
         self.health_check_interval = getattr(config, "health_check_interval", 60)
-        self.health_check_failure_threshold = getattr(
-            config, "health_check_failure_threshold", 3
-        )
+        self.health_check_failure_threshold = getattr(config, "health_check_failure_threshold", 3)
         self.circuit_breaker_threshold = getattr(config, "circuit_breaker_threshold", 5)
         self.circuit_breaker_timeout = getattr(config, "circuit_breaker_timeout", 60.0)
         self.circuit_breaker_success_threshold = getattr(
             config, "circuit_breaker_success_threshold", 3
         )
-        self.retryable_errors = getattr(
-            config, "retryable_errors", [ConnectionError, TimeoutError]
-        )
+        self.retryable_errors = getattr(config, "retryable_errors", [ConnectionError, TimeoutError])
 
         # Error callback
         self.on_error: Optional[Callable] = None
@@ -250,10 +244,12 @@ class MCPOrchestrator:
             # Import dynamically to avoid circular dependencies
             import sys
             import os
+
             mcp_path = os.path.join(os.path.dirname(__file__), "..", "..", "mcp-servers", "sabnzbd")
             if mcp_path not in sys.path:
                 sys.path.insert(0, mcp_path)
             from client import SABnzbdClient
+
             client = SABnzbdClient(
                 url=server_config.url,
                 api_key=server_config.api_key,
@@ -262,10 +258,12 @@ class MCPOrchestrator:
         elif server_name == "sonarr":
             import sys
             import os
+
             mcp_path = os.path.join(os.path.dirname(__file__), "..", "..", "mcp-servers", "sonarr")
             if mcp_path not in sys.path:
                 sys.path.insert(0, mcp_path)
             from client import SonarrClient
+
             client = SonarrClient(
                 url=server_config.url,
                 api_key=server_config.api_key,
@@ -274,10 +272,12 @@ class MCPOrchestrator:
         elif server_name == "radarr":
             import sys
             import os
+
             mcp_path = os.path.join(os.path.dirname(__file__), "..", "..", "mcp-servers", "radarr")
             if mcp_path not in sys.path:
                 sys.path.insert(0, mcp_path)
             from client import RadarrClient
+
             client = RadarrClient(
                 url=server_config.url,
                 api_key=server_config.api_key,
@@ -286,10 +286,12 @@ class MCPOrchestrator:
         elif server_name == "plex":
             import sys
             import os
+
             mcp_path = os.path.join(os.path.dirname(__file__), "..", "..", "mcp-servers", "plex")
             if mcp_path not in sys.path:
                 sys.path.insert(0, mcp_path)
             from client import PlexClient
+
             client = PlexClient(
                 url=server_config.url,
                 api_key_or_token=server_config.api_key,
@@ -341,7 +343,8 @@ class MCPOrchestrator:
         # Get enabled servers
         if isinstance(self.config, dict):
             enabled_servers = {
-                name: cfg for name, cfg in self.config.items()
+                name: cfg
+                for name, cfg in self.config.items()
                 if cfg and getattr(cfg, "enabled", True)
             }
         else:
@@ -403,11 +406,10 @@ class MCPOrchestrator:
                     self._clients[server_name] = client
                     self._stats["calls_per_server"][server_name] = 0
                     return True
-                except Exception as e:
-                    last_error = e
+                except Exception:
                     if attempt < max_retries:
                         # Exponential backoff
-                        delay = (2 ** attempt) * 0.5
+                        delay = (2**attempt) * 0.5
                         await asyncio.sleep(delay)
                     continue
 
@@ -528,10 +530,7 @@ class MCPOrchestrator:
         # Execute with circuit breaker and retries
         async def _execute():
             """Execute the tool call."""
-            return await asyncio.wait_for(
-                client.call_tool(tool, params),
-                timeout=call_timeout
-            )
+            return await asyncio.wait_for(client.call_tool(tool, params), timeout=call_timeout)
 
         # Retry logic
         last_error = None
@@ -558,17 +557,17 @@ class MCPOrchestrator:
                             "server": server,
                             "tool": tool,
                             "duration": duration,
-                        }
+                        },
                     }
 
                 return result
 
-            except asyncio.TimeoutError as e:
+            except asyncio.TimeoutError:
                 raise MCPTimeoutError(
                     f"Tool call timed out after {call_timeout}s",
                     server=server,
                     tool=tool,
-                    timeout=call_timeout
+                    timeout=call_timeout,
                 )
             except CircuitBreakerOpenError:
                 raise
@@ -578,9 +577,7 @@ class MCPOrchestrator:
                 last_error = e
 
                 # Check if error is retryable
-                is_retryable = any(
-                    isinstance(e, err_type) for err_type in self.retryable_errors
-                )
+                is_retryable = any(isinstance(e, err_type) for err_type in self.retryable_errors)
 
                 if not is_retryable:
                     # Not retryable, raise immediately
@@ -592,27 +589,20 @@ class MCPOrchestrator:
                         await self.reconnect(server)
 
                     # Exponential backoff
-                    delay = (2 ** attempt) * 0.5
+                    delay = (2**attempt) * 0.5
                     await asyncio.sleep(delay)
                     continue
 
                 # Invoke error callback if set
                 if self.on_error:
-                    self.on_error({
-                        "server": server,
-                        "tool": tool,
-                        "error": str(e),
-                        "attempt": attempt
-                    })
+                    self.on_error(
+                        {"server": server, "tool": tool, "error": str(e), "attempt": attempt}
+                    )
 
         # All retries exhausted
         if last_error:
             if isinstance(last_error, ConnectionError):
-                raise MCPConnectionError(
-                    str(last_error),
-                    server=server,
-                    original_error=last_error
-                )
+                raise MCPConnectionError(str(last_error), server=server, original_error=last_error)
             raise MCPOrchestratorError(str(last_error))
 
     async def call_tools_parallel(
@@ -644,24 +634,11 @@ class MCPOrchestrator:
                 try:
                     timeout = getattr(call, "timeout", None)
                     result = await self.call_tool(
-                        call.server,
-                        call.tool,
-                        call.params,
-                        timeout=timeout
+                        call.server, call.tool, call.params, timeout=timeout
                     )
-                    return {
-                        "success": True,
-                        "data": result,
-                        "error": None,
-                        "index": index
-                    }
+                    return {"success": True, "data": result, "error": None, "index": index}
                 except Exception as e:
-                    return {
-                        "success": False,
-                        "data": {},
-                        "error": str(e),
-                        "index": index
-                    }
+                    return {"success": False, "data": {}, "error": str(e), "index": index}
                 finally:
                     if progress_callback:
                         progress_callback(index + 1, len(calls))
@@ -673,8 +650,7 @@ class MCPOrchestrator:
         if self.parallel_timeout:
             try:
                 results = await asyncio.wait_for(
-                    asyncio.gather(*tasks, return_exceptions=True),
-                    timeout=self.parallel_timeout
+                    asyncio.gather(*tasks, return_exceptions=True), timeout=self.parallel_timeout
                 )
             except asyncio.TimeoutError:
                 if return_partial:
@@ -684,18 +660,16 @@ class MCPOrchestrator:
                         if task.done():
                             results.append(task.result())
                         else:
-                            results.append({
-                                "success": False,
-                                "data": {},
-                                "error": "Timeout"
-                            })
+                            results.append({"success": False, "data": {}, "error": "Timeout"})
                 else:
                     raise
         else:
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Sort results by index to maintain order
-        sorted_results = sorted([r for r in results if isinstance(r, dict)], key=lambda x: x.get("index", 0))
+        sorted_results = sorted(
+            [r for r in results if isinstance(r, dict)], key=lambda x: x.get("index", 0)
+        )
 
         # Remove index from results
         for result in sorted_results:
@@ -849,6 +823,7 @@ class MCPOrchestrator:
 
     def start_periodic_health_checks(self) -> None:
         """Start periodic health checks in background."""
+
         async def _health_check_loop():
             while True:
                 try:
@@ -869,6 +844,7 @@ class MCPOrchestrator:
 
     def start_keepalive(self) -> None:
         """Start keepalive mechanism."""
+
         async def _keepalive_loop():
             while True:
                 try:

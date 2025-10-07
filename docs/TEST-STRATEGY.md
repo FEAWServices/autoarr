@@ -17,6 +17,7 @@ This document outlines the comprehensive test strategy for the SABnzbd MCP Serve
 ### 1.1 TDD Red-Green-Refactor Approach
 
 All tests are written **BEFORE** implementation to ensure:
+
 - Clear requirements definition
 - Comprehensive edge case coverage
 - High-quality, testable code architecture
@@ -36,6 +37,7 @@ All tests are written **BEFORE** implementation to ensure:
 ```
 
 **SABnzbd MCP Server Breakdown**:
+
 - **Unit Tests**: 172 test cases (87%)
   - Client: 82 tests
   - MCP Server: 90 tests
@@ -44,14 +46,14 @@ All tests are written **BEFORE** implementation to ensure:
 
 ### 1.3 Quality Metrics
 
-| Metric | Target | Current Status |
-|--------|--------|----------------|
-| Code Coverage | 90%+ | 🔴 0% (not implemented) |
-| Unit Test Coverage | 95%+ | 🔴 0% (not implemented) |
-| Mutation Coverage | 80%+ | 🔴 Planned for later |
-| Tests Passing | 100% | 🟡 0/197 (all skipped - TDD red phase) |
-| Integration Tests | 25+ | ✅ 25 written |
-| Documentation | 100% | ✅ Complete |
+| Metric             | Target | Current Status                         |
+| ------------------ | ------ | -------------------------------------- |
+| Code Coverage      | 90%+   | 🔴 0% (not implemented)                |
+| Unit Test Coverage | 95%+   | 🔴 0% (not implemented)                |
+| Mutation Coverage  | 80%+   | 🔴 Planned for later                   |
+| Tests Passing      | 100%   | 🟡 0/197 (all skipped - TDD red phase) |
+| Integration Tests  | 25+    | ✅ 25 written                          |
+| Documentation      | 100%   | ✅ Complete                            |
 
 ## 2. Test Architecture
 
@@ -86,6 +88,7 @@ tests/
 **Pattern**: `test_[component]_[behavior]_[condition]`
 
 **Examples**:
+
 - `test_get_queue_returns_queue_data`
 - `test_retry_download_validates_nzo_id`
 - `test_client_handles_401_unauthorized_error`
@@ -116,45 +119,53 @@ class TestSABnzbdClientQueue:
 #### Test Classes
 
 1. **TestSABnzbdClientInitialization** (5 tests)
+
    - URL and API key validation
    - URL normalization
    - Custom timeout support
    - Connection validation
 
 2. **TestSABnzbdClientQueue** (6 tests)
+
    - Get queue operations
    - Pagination support
    - Pause/resume queue
    - NZO ID filtering
 
 3. **TestSABnzbdClientHistory** (4 tests)
+
    - Get history operations
    - Pagination support
    - Filter by status/category
 
 4. **TestSABnzbdClientDownloadManagement** (5 tests)
+
    - Retry failed downloads
    - Delete downloads
    - Pause/resume downloads
 
 5. **TestSABnzbdClientConfiguration** (6 tests)
+
    - Get configuration
    - Set configuration values
    - Batch updates
    - Section-specific operations
 
 6. **TestSABnzbdClientStatus** (4 tests)
+
    - Version information
    - Server status
    - Health checks
 
 7. **TestSABnzbdClientErrorHandling** (8 tests)
+
    - HTTP error codes (401, 500, 503)
    - Connection timeouts
    - Invalid JSON
    - Retry logic
 
 8. **TestSABnzbdClientRequestBuilding** (3 tests)
+
    - URL construction
    - API key inclusion
    - Parameter encoding
@@ -175,49 +186,58 @@ class TestSABnzbdClientQueue:
 #### Test Classes
 
 1. **TestSABnzbdMCPServerInitialization** (5 tests)
+
    - Client requirement
    - Server name/version
    - Startup validation
 
 2. **TestSABnzbdMCPServerToolRegistration** (8 tests)
+
    - All 5 tools registered
    - Tool descriptions
    - Tool schemas
    - Tool count verification
 
 3. **TestSABnzbdMCPServerGetQueueTool** (5 tests)
+
    - Schema validation
    - Client method calls
    - Parameter passing
    - Response formatting
 
 4. **TestSABnzbdMCPServerGetHistoryTool** (4 tests)
+
    - Schema validation
    - Filter support
    - Response formatting
 
 5. **TestSABnzbdMCPServerRetryDownloadTool** (4 tests)
+
    - Required parameters
    - Client method calls
    - Success status
 
 6. **TestSABnzbdMCPServerGetConfigTool** (4 tests)
+
    - Optional parameters
    - Section filtering
    - Complete config retrieval
 
 7. **TestSABnzbdMCPServerSetConfigTool** (4 tests)
+
    - Required parameters
    - Parameter validation
    - Success status
 
 8. **TestSABnzbdMCPServerErrorHandling** (6 tests)
+
    - Client error propagation
    - Invalid tool names
    - Parameter validation
    - Error response format
 
 9. **TestSABnzbdMCPServerProtocolCompliance** (4 tests)
+
    - MCP protocol methods
    - JSON Schema compliance
    - Response format
@@ -238,24 +258,29 @@ class TestSABnzbdClientQueue:
 #### Test Classes
 
 1. **TestSABnzbdClientIntegration** (7 tests)
+
    - Real SABnzbd connection
    - Real API responses
    - Error handling with real server
 
 2. **TestSABnzbdMCPServerIntegration** (5 tests)
+
    - Tools with real data
    - Real error scenarios
 
 3. **TestSABnzbdEndToEndWorkflows** (2 tests)
+
    - Queue monitoring workflow
    - Configuration audit workflow
 
 4. **TestSABnzbdPerformance** (4 tests)
+
    - Concurrent requests
    - Sequential requests
    - Large data handling
 
 5. **TestSABnzbdReliability** (3 tests)
+
    - Failure recovery
    - State persistence
    - Long-running stability
@@ -266,6 +291,7 @@ class TestSABnzbdClientQueue:
    - Config structure validation
 
 **Requirements**:
+
 - Running SABnzbd instance
 - Valid API key (SABNZBD_TEST_API_KEY)
 - Network connectivity
@@ -277,6 +303,7 @@ class TestSABnzbdClientQueue:
 ### 4.1 Available Factories
 
 1. **sabnzbd_queue_factory**
+
    ```python
    queue = sabnzbd_queue_factory(
        slots=5,
@@ -288,6 +315,7 @@ class TestSABnzbdClientQueue:
    ```
 
 2. **sabnzbd_history_factory**
+
    ```python
    history = sabnzbd_history_factory(
        entries=10,
@@ -298,6 +326,7 @@ class TestSABnzbdClientQueue:
    ```
 
 3. **sabnzbd_config_factory**
+
    ```python
    config = sabnzbd_config_factory(
        complete_dir="/downloads/complete",
@@ -307,6 +336,7 @@ class TestSABnzbdClientQueue:
    ```
 
 4. **sabnzbd_status_factory**
+
    ```python
    status = sabnzbd_status_factory(
        version="4.1.0",
@@ -315,6 +345,7 @@ class TestSABnzbdClientQueue:
    ```
 
 5. **sabnzbd_error_response_factory**
+
    ```python
    error = sabnzbd_error_response_factory(
        error_message="Invalid API key",
@@ -343,6 +374,7 @@ class TestSABnzbdClientQueue:
 ### 5.1 What to Mock in Unit Tests
 
 ✅ **DO Mock**:
+
 - External HTTP requests (httpx)
 - SABnzbd API responses
 - Time-dependent functions
@@ -350,6 +382,7 @@ class TestSABnzbdClientQueue:
 - File system operations
 
 ❌ **DON'T Mock**:
+
 - Internal business logic
 - Simple data transformations
 - Pure functions
@@ -358,6 +391,7 @@ class TestSABnzbdClientQueue:
 ### 5.2 Mocking Tools
 
 1. **httpx_mock** (from pytest-httpx)
+
    ```python
    def test_with_mock(httpx_mock):
        httpx_mock.add_response(json={"key": "value"})
@@ -365,6 +399,7 @@ class TestSABnzbdClientQueue:
    ```
 
 2. **AsyncMock** (from unittest.mock)
+
    ```python
    mock_client = AsyncMock()
    mock_client.get_queue = AsyncMock(return_value={"queue": {}})
@@ -519,6 +554,7 @@ def test_something(self):
 ```
 
 As implementation progresses:
+
 1. Remove `pytest.skip()` line
 2. Run test → should FAIL (red)
 3. Implement feature → should PASS (green)
@@ -528,13 +564,13 @@ As implementation progresses:
 
 ### 8.1 Coverage Goals
 
-| Component | Target | Priority |
-|-----------|--------|----------|
-| SABnzbd Client | 95%+ | Critical |
-| MCP Server | 95%+ | Critical |
-| Utility Functions | 90%+ | High |
-| Error Handling | 100% | Critical |
-| Configuration | 90%+ | High |
+| Component         | Target | Priority |
+| ----------------- | ------ | -------- |
+| SABnzbd Client    | 95%+   | Critical |
+| MCP Server        | 95%+   | Critical |
+| Utility Functions | 90%+   | High     |
+| Error Handling    | 100%   | Critical |
+| Configuration     | 90%+   | High     |
 
 ### 8.2 Coverage Reporting
 
@@ -570,6 +606,7 @@ These gaps are intentional and will be addressed in later phases:
 MCP servers must comply with the Model Context Protocol specification:
 
 **Protocol Requirements**:
+
 - ✅ Implement `list_tools()` method
 - ✅ Implement `call_tool()` method
 - ✅ Tool schemas follow JSON Schema spec
@@ -577,6 +614,7 @@ MCP servers must comply with the Model Context Protocol specification:
 - ✅ Error handling per MCP spec
 
 **Test Coverage**:
+
 ```python
 class TestSABnzbdMCPServerProtocolCompliance:
     def test_server_implements_list_tools(self):
@@ -597,11 +635,13 @@ class TestSABnzbdMCPServerProtocolCompliance:
 SABnzbd API responses must match expected formats:
 
 **Validation Strategy**:
+
 1. **Unit tests**: Use factories with known structures
 2. **Integration tests**: Validate real API responses
 3. **Schema validation**: Use Pydantic models (future enhancement)
 
 **Test Coverage**:
+
 ```python
 class TestSABnzbdDataFormats:
     @pytest.mark.integration
@@ -622,6 +662,7 @@ class TestSABnzbdDataFormats:
 Comprehensive error scenarios:
 
 **Error Categories**:
+
 1. **Network Errors**: Connection refused, timeouts
 2. **Authentication Errors**: Invalid API key, unauthorized
 3. **Server Errors**: 500 errors, service unavailable
@@ -629,6 +670,7 @@ Comprehensive error scenarios:
 5. **Parameter Errors**: Invalid inputs, missing required fields
 
 **Test Coverage** (14 tests in test_sabnzbd_client.py):
+
 ```python
 class TestSABnzbdClientErrorHandling:
     async def test_handles_401_unauthorized_error(self):
@@ -665,6 +707,7 @@ async def test_async_function():
 ```
 
 **Configuration** (in `pyproject.toml`):
+
 ```toml
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -675,6 +718,7 @@ asyncio_mode = "auto"
 Test configuration loading and validation:
 
 **Test Coverage**:
+
 - Valid configuration files
 - Missing required fields
 - Invalid data types
@@ -709,7 +753,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -755,12 +799,12 @@ repos:
 
 ### 11.1 Target Metrics
 
-| Test Type | Target Time | Current |
-|-----------|-------------|---------|
-| Single unit test | < 0.1s | N/A |
-| Full unit suite | < 30s | N/A |
-| Single integration test | < 2s | N/A |
-| Full integration suite | < 60s | N/A |
+| Test Type               | Target Time | Current |
+| ----------------------- | ----------- | ------- |
+| Single unit test        | < 0.1s      | N/A     |
+| Full unit suite         | < 30s       | N/A     |
+| Single integration test | < 2s        | N/A     |
+| Full integration suite  | < 60s       | N/A     |
 
 ### 11.2 Performance Test Coverage
 
@@ -790,6 +834,7 @@ async def test_concurrent_requests_performance(sabnzbd_client):
 **Tool**: `mutmut` or `cosmic-ray`
 
 **Process**:
+
 1. Automatically mutate source code
 2. Run test suite
 3. Tests should fail with mutations
@@ -798,6 +843,7 @@ async def test_concurrent_requests_performance(sabnzbd_client):
 **Target**: 80%+ mutation coverage on critical paths
 
 **Example**:
+
 ```bash
 # Install mutmut
 pip install mutmut
@@ -822,6 +868,7 @@ mutmut results
 ### 13.1 When Tests Fail
 
 **Diagnostic Process**:
+
 1. Read the failure message carefully
 2. Check if implementation changed
 3. Check if requirements changed
@@ -831,6 +878,7 @@ mutmut results
 ### 13.2 Adding New Features
 
 **TDD Process**:
+
 1. Write test first (should fail)
 2. Implement minimal feature (test passes)
 3. Refactor and improve
@@ -840,6 +888,7 @@ mutmut results
 ### 13.3 Refactoring Tests
 
 **Best Practices**:
+
 - Extract common setup to fixtures
 - Use descriptive test names
 - One logical assertion per test
@@ -858,6 +907,7 @@ mutmut results
 ### 14.2 Documentation Standards
 
 **Test Docstring Format**:
+
 ```python
 def test_something_specific(self):
     """

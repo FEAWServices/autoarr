@@ -7,7 +7,7 @@ This module provides endpoints for managing downloads via SABnzbd.
 from typing import Any, AsyncGenerator, Dict
 
 from fastapi import APIRouter, Depends
-from shared.core.mcp_orchestrator import MCPOrchestrator
+from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
 
