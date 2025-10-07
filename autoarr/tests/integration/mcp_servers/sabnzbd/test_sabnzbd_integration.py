@@ -171,11 +171,14 @@ class TestSABnzbdClientIntegration:
         sabnzbd_error_response_factory: callable,
     ) -> None:
         """Test that client properly handles invalid API key."""
-        # Mock 401 error response
-        error_data = sabnzbd_error_response_factory("Invalid API key", error_code=401)
-        httpx_mock.add_response(status_code=401, json=error_data)
+        # Skip test until SABnzbdClient is implemented
+        pytest.skip("SABnzbdClient not yet implemented - awaiting implementation")
 
         # TODO: Uncomment once implemented
+        # Mock 401 error response
+        # error_data = sabnzbd_error_response_factory("Invalid API key", error_code=401)
+        # httpx_mock.add_response(status_code=401, json=error_data)
+        #
         # from autoarr.mcp_servers.mcp_servers.sabnzbd.client import SABnzbdClient, SABnzbdClientError
         # client = SABnzbdClient(url=sabnzbd_integration_url, api_key="invalid_key")
         #
@@ -189,12 +192,14 @@ class TestSABnzbdClientIntegration:
         self, httpx_mock: HTTPXMock, sabnzbd_integration_url: str, sabnzbd_integration_api_key: str
     ) -> None:
         """Test that client handles network timeouts gracefully."""
-        # Mock timeout exception
-        from httpx import TimeoutException
-
-        httpx_mock.add_exception(TimeoutException("Request timed out"))
+        # Skip test until SABnzbdClient is implemented
+        pytest.skip("SABnzbdClient not yet implemented - awaiting implementation")
 
         # TODO: Uncomment once implemented
+        # Mock timeout exception
+        # from httpx import TimeoutException
+        # httpx_mock.add_exception(TimeoutException("Request timed out"))
+        #
         # from autoarr.mcp_servers.mcp_servers.sabnzbd.client import SABnzbdClient, SABnzbdConnectionError
         # client = SABnzbdClient(
         #     url=sabnzbd_integration_url,

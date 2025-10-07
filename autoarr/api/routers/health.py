@@ -48,13 +48,11 @@ async def health_check(
         }
         ```
     """
-    orch = orchestrator
-
     services = {}
     all_healthy = True
 
     # Get list of connected servers
-    connected_servers = list(orch._clients.keys())
+    connected_servers = list(orchestrator._clients.keys())
 
     if not connected_servers:
         # No servers connected - system is unhealthy
@@ -67,11 +65,11 @@ async def health_check(
     # Check each server
     for server_name in connected_servers:
         start_time = time.time()
-        is_healthy = await orch.health_check(server_name)
+        is_healthy = await orchestrator.health_check(server_name)
         latency = (time.time() - start_time) * 1000  # Convert to milliseconds
 
         # Get circuit breaker state
-        cb_state = orch.get_circuit_breaker_state(server_name)
+        cb_state = orchestrator.get_circuit_breaker_state(server_name)
 
         services[server_name] = ServiceHealth(
             healthy=is_healthy,
@@ -130,8 +128,6 @@ async def service_health(
         }
         ```
     """
-    orch = orchestrator
-
     # Validate service name
     valid_services = ["sabnzbd", "sonarr", "radarr", "plex"]
     if service not in valid_services:
@@ -140,9 +136,8 @@ async def service_health(
             detail=f"Invalid service name. Must be one of: {', '.join(valid_services)}",
         )
 
-    # Check if service is connected
-    is_connected = await orch.is_connected(service)
-    if not is_connected:
+    # Check if service is connected by checking if it's in _clients
+    if service not in orchestrator._clients:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Service '{service}' is not connected",
@@ -150,11 +145,11 @@ async def service_health(
 
     # Perform health check
     start_time = time.time()
-    is_healthy = await orch.health_check(service)
+    is_healthy = await orchestrator.health_check(service)
     latency = (time.time() - start_time) * 1000  # Convert to milliseconds
 
     # Get circuit breaker state
-    cb_state = orch.get_circuit_breaker_state(service)
+    cb_state = orchestrator.get_circuit_breaker_state(service)
 
     return ServiceHealth(
         healthy=is_healthy,
@@ -191,8 +186,6 @@ async def circuit_breaker_status(
         }
         ```
     """
-    orch = orchestrator
-
     # Validate service name
     valid_services = ["sabnzbd", "sonarr", "radarr", "plex"]
     if service not in valid_services:
@@ -201,4 +194,4 @@ async def circuit_breaker_status(
             detail=f"Invalid service name. Must be one of: {', '.join(valid_services)}",
         )
 
-    return orch.get_circuit_breaker_state(service)
+    return orchestrator.get_circuit_breaker_state(service)
