@@ -29,7 +29,8 @@
       "Bash(chmod:*)",
       "Bash(bash:*)",
       "Bash(poetry run pre-commit:*)",
-      "Bash(poetry run:*)"
+      "Bash(poetry run:*)",
+      "Bash(true\" from mypy to allow continue-on-error instead\n- Update pytest to run all tests with proper coverage targets\n- Add CODECOV_TOKEN environment variable for coverage uploads\n- Ensure all linting and test failures cause CI to fail\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
