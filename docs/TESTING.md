@@ -226,7 +226,7 @@ https://codecov.io/gh/FEAWServices/autoarr
 
 ### Tests Pass Locally But Fail in CI
 
-1. **Check Python version**: CI tests against 3.11 and 3.12
+1. **Check Python version**: CI tests against 3.11
 2. **Check dependencies**: Run `poetry lock` to update lock file
 3. **Check paths**: Ensure you're testing the same directories
 
