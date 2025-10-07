@@ -88,10 +88,6 @@ min_confidence = 80
 paths = ["autoarr/"]
 exclude = ["**/tests/", "**/__pycache__/", "**/node_modules/"]
 
-[tool.poetry.scripts]
-test = "scripts.test:main"
-format = "scripts.format:main"
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
