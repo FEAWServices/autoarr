@@ -1,37 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(mkdir:*)",
-      "Bash(python -m pytest --collect-only tests/unit/mcp_servers/sabnzbd/)",
-      "Bash(python -m pytest tests/unit/mcp_servers/sabnzbd/test_sabnzbd_client.py -v --tb=short)",
-      "Bash(poetry run pytest:*)",
-      "Bash(python3 -m pytest tests/unit/mcp_servers/sabnzbd/test_sabnzbd_client.py::TestSABnzbdClientInitialization::test_client_requires_url -v --tb=short)",
-      "Bash(python -m pip install:*)",
-      "Bash(python:*)",
-      "Bash(PYTHONPATH=\"C:\\Git\\autoarr\\mcp-servers:$PYTHONPATH\" python -m pytest tests/unit/mcp_servers/sabnzbd/test_sabnzbd_client.py::TestSABnzbdClientInitialization::test_client_requires_url -v --no-cov --tb=short)",
-      "Bash(PYTHONPATH=mcp-servers python -m pytest tests/unit/mcp_servers/sonarr/test_sonarr_client.py::TestSonarrClientInitialization::test_client_requires_url -v --no-cov)",
-      "Bash(export PYTHONPATH=mcp-servers)",
-      "Bash(dir \"C:\\Git\\autoarr\\mcp-servers\\radarr\")",
-      "Bash(cat:*)",
-      "Bash(dir:*)",
-      "Bash(test:*)",
-      "Bash(PYTHONPATH=.:mcp-servers python -c \"import tests.unit.core.test_mcp_orchestrator; print(''Imported successfully'')\")",
-      "Bash(PYTHONPATH=.:mcp-servers python -m pytest tests/unit/core/test_mcp_orchestrator.py -v --no-cov -x)",
-      "Bash(export PYTHONPATH=.:mcp-servers)",
-      "Bash(find:*)",
-      "Bash(set PYTHONPATH=.)",
-      "Bash(mcp-servers:*)",
-      "Bash(poetry install:*)",
-      "Bash(PYTHONPATH=. python -m pytest tests/unit/api/ -v --tb=short -k \"test_ping or test_root\")",
-      "Bash(chmod:*)",
-      "Bash(bash:*)",
-      "Bash(poetry run pre-commit:*)",
-      "Bash(poetry run:*)",
-      "Bash(true\" from mypy to allow continue-on-error instead\n- Update pytest to run all tests with proper coverage targets\n- Add CODECOV_TOKEN environment variable for coverage uploads\n- Ensure all linting and test failures cause CI to fail\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
-    ],
+    "allow": ["Bash(git mv:*)"],
     "deny": [],
     "ask": []
   }
