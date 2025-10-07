@@ -1,6 +1,21 @@
 {
   "permissions": {
-    "allow": ["Bash(git mv:*)"],
+    "allow": [
+      "Bash(git mv:*)",
+      "Bash(git checkout:*)",
+      "Bash(./run_dev.sh:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm install:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm run:*)",
+      "Read(///**)",
+      "Read(//tmp/**)",
+      "Bash(git clone:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm exec playwright:*)",
+      "Bash(python3:*)",
+      "Bash(pkill:*)"
+    ],
     "deny": [],
     "ask": []
   }

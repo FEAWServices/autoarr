@@ -46,14 +46,17 @@ jobs:
         run: poetry run black --check .
 
       - name: Run Flake8
-        run: poetry run flake8 api/ mcp-servers/mcp_servers/ shared/ tests/ --max-line-length=100 --extend-ignore=E203
+        working-directory: autoarr
+        run: poetry run flake8 api/ mcp-servers/mcp_servers/ ../shared/ tests/ --max-line-length=100 --extend-ignore=E203
 
       - name: Run MyPy
-        run: poetry run mypy api/ mcp-servers/mcp_servers/ shared/ --config-file=pyproject.toml
+        working-directory: autoarr
+        run: poetry run mypy api/ mcp-servers/mcp_servers/ ../shared/ --config-file=pyproject.toml
         continue-on-error: true
 
       - name: Run unit tests
-        run: poetry run pytest tests/ -v --cov=api --cov=mcp_servers --cov=shared --cov-report=xml --cov-report=term-missing
+        working-directory: autoarr
+        run: poetry run pytest tests/ -v --cov=api --cov=mcp_servers --cov=../shared --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -96,27 +99,35 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        working-directory: ./ui
+        working-directory: ./autoarr/ui
         run: pnpm install --frozen-lockfile
 
       - name: Run ESLint
-        working-directory: ./ui
+        working-directory: ./autoarr/ui
         run: pnpm run lint
 
+      - name: Run Stylelint (CSS Linter)
+        working-directory: ./autoarr/ui
+        run: pnpm run lint:css
+
       - name: Run Prettier check
-        working-directory: ./ui
+        working-directory: ./autoarr/ui
         run: pnpm run format --check
 
+      - name: Test for inline styles
+        working-directory: ./autoarr/ui
+        run: pnpm run test:no-inline-styles
+
       - name: Build
-        working-directory: ./ui
+        working-directory: ./autoarr/ui
         run: pnpm run build
 
       - name: Install Playwright Browsers
-        working-directory: ./ui
+        working-directory: ./autoarr/ui
         run: pnpm exec playwright install --with-deps
 
       - name: Run Playwright tests
-        working-directory: ./ui
+        working-directory: ./autoarr/ui
         run: pnpm run test
 
       - name: Upload Playwright report
