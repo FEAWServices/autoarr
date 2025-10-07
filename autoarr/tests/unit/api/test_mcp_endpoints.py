@@ -53,7 +53,7 @@ class TestMCPEndpoints:
             },
         }
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -81,7 +81,7 @@ class TestMCPEndpoints:
         """Test tool call with custom timeout."""
         mock_orchestrator.call_tool.return_value = {"result": "ok"}
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -109,7 +109,7 @@ class TestMCPEndpoints:
         """Test tool call that fails."""
         mock_orchestrator.call_tool.side_effect = Exception("Tool execution failed")
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -139,7 +139,7 @@ class TestMCPEndpoints:
             {"success": True, "data": {"series": []}, "error": None},
         ]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -171,7 +171,7 @@ class TestMCPEndpoints:
             {"success": False, "data": None, "error": "Connection failed"},
         ]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -204,7 +204,7 @@ class TestMCPEndpoints:
             "sonarr": ["get_series", "search_series"],
         }
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -229,7 +229,7 @@ class TestMCPEndpoints:
             "retry_download",
         ]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -257,7 +257,7 @@ class TestMCPEndpoints:
             },
         }
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -277,7 +277,7 @@ class TestMCPEndpoints:
         """Test tool call with parameters."""
         mock_orchestrator.call_tool.return_value = {"result": "success"}
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -304,7 +304,7 @@ class TestMCPEndpoints:
         """Test tool call with raw data response (no metadata)."""
         mock_orchestrator.call_tool.return_value = {"queue": []}
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -331,7 +331,7 @@ class TestMCPEndpoints:
         """Test batch call with empty call list."""
         mock_orchestrator.call_tools_parallel.return_value = []
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.mcp.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator

@@ -4,7 +4,7 @@ TV Shows endpoints (Sonarr).
 This module provides endpoints for managing TV shows via Sonarr.
 """
 
-from typing import Any, AsyncGenerator, Dict, List
+from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
@@ -17,7 +17,7 @@ router = APIRouter()
 
 @router.get("/", tags=["shows"])
 async def list_shows(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     List all TV shows.
@@ -36,8 +36,7 @@ async def list_shows(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sonarr", "get_series", {})
+    result = await orchestrator.call_tool("sonarr", "get_series", {})
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -48,7 +47,7 @@ async def list_shows(
 @router.get("/{series_id}", tags=["shows"])
 async def get_show(
     series_id: int,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get a specific TV show by ID.
@@ -70,15 +69,14 @@ async def get_show(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sonarr", "get_series_by_id", {"series_id": series_id})
+    result = await orchestrator.call_tool("sonarr", "get_series_by_id", {"series_id": series_id})
     return result
 
 
 @router.post("/", tags=["shows"])
 async def add_show(
     request: AddSeriesRequest,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Add a new TV show to Sonarr.
@@ -102,8 +100,7 @@ async def add_show(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sonarr", "add_series", request.model_dump())
+    result = await orchestrator.call_tool("sonarr", "add_series", request.model_dump())
     return result
 
 
@@ -111,7 +108,7 @@ async def add_show(
 async def delete_show(
     series_id: int,
     delete_files: bool = False,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Delete a TV show from Sonarr.
@@ -132,8 +129,7 @@ async def delete_show(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool(
+    result = await orchestrator.call_tool(
         "sonarr", "delete_series", {"series_id": series_id, "delete_files": delete_files}
     )
     return result
@@ -142,7 +138,7 @@ async def delete_show(
 @router.get("/search/{query}", tags=["shows"])
 async def search_shows(
     query: str,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> List[Dict[str, Any]]:
     """
     Search for TV shows.
@@ -166,8 +162,7 @@ async def search_shows(
         ]
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sonarr", "search_series", {"query": query})
+    result = await orchestrator.call_tool("sonarr", "search_series", {"query": query})
     return result if isinstance(result, list) else []
 
 
@@ -175,7 +170,7 @@ async def search_shows(
 async def get_calendar(
     start_date: str = None,
     end_date: str = None,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> List[Dict[str, Any]]:
     """
     Get upcoming episodes calendar.
@@ -200,20 +195,19 @@ async def get_calendar(
         ]
         ```
     """
-    orch = await orchestrator.__anext__()
     params = {}
     if start_date:
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
 
-    result = await orch.call_tool("sonarr", "get_calendar", params)
+    result = await orchestrator.call_tool("sonarr", "get_calendar", params)
     return result if isinstance(result, list) else []
 
 
 @router.get("/queue/active", tags=["shows"])
 async def get_queue(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get Sonarr download queue.
@@ -232,8 +226,7 @@ async def get_queue(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sonarr", "get_queue", {})
+    result = await orchestrator.call_tool("sonarr", "get_queue", {})
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -244,7 +237,7 @@ async def get_queue(
 @router.post("/command/series-search", tags=["shows"])
 async def search_series_episodes(
     series_id: int,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Trigger a search for all episodes of a series.
@@ -264,15 +257,16 @@ async def search_series_episodes(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sonarr", "trigger_series_search", {"series_id": series_id})
+    result = await orchestrator.call_tool(
+        "sonarr", "trigger_series_search", {"series_id": series_id}
+    )
     return result
 
 
 @router.post("/command/episode-search", tags=["shows"])
 async def search_episode(
     episode_id: int,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Trigger a search for a specific episode.
@@ -292,6 +286,7 @@ async def search_episode(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sonarr", "trigger_episode_search", {"episode_id": episode_id})
+    result = await orchestrator.call_tool(
+        "sonarr", "trigger_episode_search", {"episode_id": episode_id}
+    )
     return result

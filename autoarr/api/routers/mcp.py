@@ -5,7 +5,7 @@ This module provides endpoints for directly interacting with MCP tools,
 allowing clients to call any tool on any server.
 """
 
-from typing import AsyncGenerator, List
+from typing import List
 
 from fastapi import APIRouter, Depends
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
@@ -24,7 +24,7 @@ router = APIRouter()
 @router.post("/call", response_model=ToolCallResponse, tags=["mcp"])
 async def call_tool(
     request: ToolCallRequest,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> ToolCallResponse:
     """
     Call a single MCP tool.
@@ -62,12 +62,9 @@ async def call_tool(
         }
         ```
     """
-    # Resolve the async generator to get the orchestrator
-    orch = await orchestrator.__anext__()
-
     try:
         # Call the tool with metadata
-        result = await orch.call_tool(
+        result = await orchestrator.call_tool(
             server=request.server,
             tool=request.tool,
             params=request.params,
@@ -110,7 +107,7 @@ async def call_tool(
 @router.post("/batch", response_model=List[ToolCallResponse], tags=["mcp"])
 async def call_tools_batch(
     request: BatchToolCallRequest,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> List[ToolCallResponse]:
     """
     Call multiple MCP tools in parallel.
@@ -151,8 +148,6 @@ async def call_tools_batch(
         ]
         ```
     """
-    # Resolve the async generator to get the orchestrator
-    orch = await orchestrator.__anext__()
 
     # Convert ToolCallRequest objects to MCPToolCall-like objects
     # The orchestrator expects objects with server, tool, params attributes
@@ -168,7 +163,7 @@ async def call_tools_batch(
     ]
 
     # Execute tools in parallel
-    results = await orch.call_tools_parallel(
+    results = await orchestrator.call_tools_parallel(
         calls=tool_calls,
         return_partial=request.return_partial,
     )
@@ -190,7 +185,7 @@ async def call_tools_batch(
 
 @router.get("/tools", response_model=ToolListResponse, tags=["mcp"])
 async def list_tools(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> ToolListResponse:
     """
     List all available MCP tools.
@@ -213,11 +208,8 @@ async def list_tools(
         }
         ```
     """
-    # Resolve the async generator to get the orchestrator
-    orch = await orchestrator.__anext__()
-
     # Get all tools from all connected servers
-    all_tools = await orch.list_all_tools()
+    all_tools = await orchestrator.list_all_tools()
 
     return ToolListResponse(tools=all_tools)
 
@@ -225,7 +217,7 @@ async def list_tools(
 @router.get("/tools/{server}", tags=["mcp"])
 async def list_server_tools(
     server: str,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> dict:
     """
     List available tools for a specific server.
@@ -245,11 +237,8 @@ async def list_server_tools(
         }
         ```
     """
-    # Resolve the async generator to get the orchestrator
-    orch = await orchestrator.__anext__()
-
     # Get tools for specific server
-    tools = await orch.list_tools(server)
+    tools = await orchestrator.list_tools(server)
 
     return {
         "server": server,
@@ -259,7 +248,7 @@ async def list_server_tools(
 
 @router.get("/stats", tags=["mcp"])
 async def get_stats(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> dict:
     """
     Get orchestrator statistics.
@@ -283,10 +272,7 @@ async def get_stats(
         }
         ```
     """
-    # Resolve the async generator to get the orchestrator
-    orch = await orchestrator.__anext__()
-
     # Get orchestrator statistics
-    stats = orch.get_stats()
+    stats = orchestrator.get_stats()
 
     return stats

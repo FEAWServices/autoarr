@@ -4,7 +4,7 @@ Downloads endpoints (SABnzbd).
 This module provides endpoints for managing downloads via SABnzbd.
 """
 
-from typing import Any, AsyncGenerator, Dict
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.get("/queue", tags=["downloads"])
 async def get_download_queue(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get SABnzbd download queue.
@@ -37,15 +37,14 @@ async def get_download_queue(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sabnzbd", "get_queue", {})
+    result = await orchestrator.call_tool("sabnzbd", "get_queue", {})
     return result
 
 
 @router.get("/history", tags=["downloads"])
 async def get_download_history(
     limit: int = 50,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get SABnzbd download history.
@@ -65,15 +64,14 @@ async def get_download_history(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sabnzbd", "get_history", {"limit": limit})
+    result = await orchestrator.call_tool("sabnzbd", "get_history", {"limit": limit})
     return result
 
 
 @router.post("/retry/{nzo_id}", tags=["downloads"])
 async def retry_download(
     nzo_id: str,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Retry a failed download.
@@ -93,14 +91,13 @@ async def retry_download(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sabnzbd", "retry_download", {"nzo_id": nzo_id})
+    result = await orchestrator.call_tool("sabnzbd", "retry_download", {"nzo_id": nzo_id})
     return result
 
 
 @router.post("/pause", tags=["downloads"])
 async def pause_queue(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Pause the download queue.
@@ -117,14 +114,13 @@ async def pause_queue(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sabnzbd", "pause_queue", {})
+    result = await orchestrator.call_tool("sabnzbd", "pause_queue", {})
     return result
 
 
 @router.post("/resume", tags=["downloads"])
 async def resume_queue(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Resume the download queue.
@@ -141,15 +137,14 @@ async def resume_queue(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sabnzbd", "resume_queue", {})
+    result = await orchestrator.call_tool("sabnzbd", "resume_queue", {})
     return result
 
 
 @router.delete("/{nzo_id}", tags=["downloads"])
 async def delete_download(
     nzo_id: str,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Delete a download from the queue.
@@ -169,14 +164,13 @@ async def delete_download(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sabnzbd", "delete_download", {"nzo_id": nzo_id})
+    result = await orchestrator.call_tool("sabnzbd", "delete_download", {"nzo_id": nzo_id})
     return result
 
 
 @router.get("/status", tags=["downloads"])
 async def get_status(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get SABnzbd status.
@@ -197,6 +191,5 @@ async def get_status(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("sabnzbd", "get_status", {})
+    result = await orchestrator.call_tool("sabnzbd", "get_status", {})
     return result

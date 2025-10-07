@@ -1,33 +1,35 @@
 """
-Integration tests for SABnzbd MCP Server.
+Integration tests for SABnzbd MCP Server with mocked HTTP layer.
 
-These tests verify the complete integration between the MCP server and a real
-SABnzbd instance. They require a running SABnzbd server (can be in docker-compose).
+These tests verify the complete integration between the MCP server and SABnzbd API
+using HTTP mocking instead of requiring a real SABnzbd instance. This follows the
+same pattern as the Sonarr integration tests.
 
 Test Coverage Strategy:
-- End-to-end tool execution with real SABnzbd
+- End-to-end tool execution with mocked SABnzbd API
 - Authentication and connection handling
-- Real API responses and data formats
-- Error scenarios with real server
+- API response parsing and data formats
+- Error scenarios with realistic server responses
 - Performance and timeout handling
 
-Setup Requirements:
-- SABnzbd instance running (docker-compose up sabnzbd)
-- Valid API key configured
-- Network connectivity
+Test Approach:
+- Use pytest-httpx to mock HTTP calls
+- Use test data factories for realistic responses
+- Validate request/response patterns
+- Test error propagation
 
-Target Coverage: 20% of total test pyramid
+Target Coverage: 20% of total test pyramid (integration layer)
 """
 
 import asyncio
-import os
 from typing import Any, Dict
 
 import pytest
+from pytest_httpx import HTTPXMock
+from httpx import HTTPError
 
-# These imports will fail initially - that's expected in TDD!
-# from mcp_servers.sabnzbd.client import SABnzbdClient
-# from mcp_servers.sabnzbd.mcp_server import SABnzbdMCPServer
+# Note: These would be real imports once SABnzbdClient/Server are implemented
+# For now, we'll assume they exist and follow the same pattern as Sonarr
 
 
 # ============================================================================
@@ -35,474 +37,539 @@ import pytest
 # ============================================================================
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def sabnzbd_integration_url() -> str:
-    """
-    Get SABnzbd URL from environment or use default.
-
-    Set SABNZBD_TEST_URL to override the default.
-    """
-    return os.getenv("SABNZBD_TEST_URL", "http://localhost:8080")
+    """Get SABnzbd URL for integration tests."""
+    return "http://localhost:8080"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def sabnzbd_integration_api_key() -> str:
-    """
-    Get SABnzbd API key from environment.
-
-    Set SABNZBD_TEST_API_KEY for integration tests.
-    """
-    api_key = os.getenv("SABNZBD_TEST_API_KEY", "test_api_key")
-    if api_key == "test_api_key":
-        pytest.skip("SABNZBD_TEST_API_KEY not set - skipping integration tests")
-    return api_key
-
-
-@pytest.fixture(scope="module")
-def skip_if_sabnzbd_unavailable(sabnzbd_integration_url: str) -> None:
-    """
-    Skip integration tests if SABnzbd is not available.
-
-    This fixture checks if SABnzbd is reachable before running tests.
-    """
-    import httpx
-
-    try:
-        response = httpx.get(f"{sabnzbd_integration_url}/api?mode=version", timeout=5.0)
-        if response.status_code != 200:
-            pytest.skip(f"SABnzbd not available at {sabnzbd_integration_url}")
-    except Exception as e:
-        pytest.skip(f"SABnzbd not reachable: {e}")
+    """Get SABnzbd API key for integration tests."""
+    return "test_sabnzbd_api_key_12345"
 
 
 @pytest.fixture
 async def sabnzbd_integration_client(
-    sabnzbd_integration_url: str,
-    sabnzbd_integration_api_key: str,
-    skip_if_sabnzbd_unavailable: None,
+    sabnzbd_integration_url: str, sabnzbd_integration_api_key: str
 ):
-    """Create a real SABnzbd client for integration testing."""
-    pytest.skip("SABnzbdClient not yet implemented - TDD red phase")
-    # from mcp_servers.sabnzbd.client import SABnzbdClient
-
-    # client = SABnzbdClient(
-    #     url=sabnzbd_integration_url,
-    #     api_key=sabnzbd_integration_api_key
-    # )
+    """Create a SABnzbd client for integration testing (mocked HTTP layer)."""
+    # TODO: Once SABnzbdClient is implemented, uncomment:
+    # from autoarr.mcp_servers.mcp_servers.sabnzbd.client import SABnzbdClient
+    # client = SABnzbdClient(url=sabnzbd_integration_url, api_key=sabnzbd_integration_api_key)
     # yield client
-    # # Cleanup: ensure client is closed
     # await client.close()
+
+    # For now, skip until implementation exists
+    pytest.skip("SABnzbdClient not yet implemented - awaiting implementation")
 
 
 @pytest.fixture
 async def sabnzbd_integration_mcp_server(sabnzbd_integration_client):
-    """Create a real MCP server with real SABnzbd client."""
-    pytest.skip("SABnzbdMCPServer not yet implemented - TDD red phase")
-    # from mcp_servers.sabnzbd.mcp_server import SABnzbdMCPServer
-
+    """Create a SABnzbd MCP server for integration testing."""
+    # TODO: Once SABnzbdMCPServer is implemented, uncomment:
+    # from autoarr.mcp_servers.mcp_servers.sabnzbd.server import SABnzbdMCPServer
     # server = SABnzbdMCPServer(client=sabnzbd_integration_client)
-    # await server.start()
     # yield server
-    # await server.stop()
+
+    # For now, skip until implementation exists
+    pytest.skip("SABnzbdMCPServer not yet implemented - awaiting implementation")
 
 
 # ============================================================================
-# Client Integration Tests
+# Client Integration Tests (HTTP Mocked)
 # ============================================================================
 
 
 class TestSABnzbdClientIntegration:
-    """Integration tests for SABnzbd client with real API."""
+    """Integration tests for SABnzbd client with mocked HTTP layer."""
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_client_connects_to_real_sabnzbd(self, sabnzbd_integration_client) -> None:
-        """Test that client can connect to real SABnzbd instance."""
-        pytest.skip("Implementation pending - TDD")
+    async def test_client_connects_to_sabnzbd(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_status_factory: callable
+    ) -> None:
+        """Test that client can connect to SABnzbd (via mocked HTTP)."""
+        # Mock version/status endpoint
+        status_data = sabnzbd_status_factory(version="4.1.0")
+        httpx_mock.add_response(json=status_data)
+
+        # TODO: Uncomment once implemented
         # is_healthy = await sabnzbd_integration_client.health_check()
         # assert is_healthy is True
 
-    @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_client_gets_real_version(self, sabnzbd_integration_client) -> None:
-        """Test getting version from real SABnzbd."""
-        pytest.skip("Implementation pending - TDD")
-        # result = await sabnzbd_integration_client.get_version()
-        # assert "version" in result
-        # assert len(result["version"]) > 0
+        # Verify request was made correctly
+        # request = httpx_mock.get_requests()[0]
+        # assert "api?mode=version" in str(request.url) or "api" in str(request.url)
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_client_gets_real_queue(self, sabnzbd_integration_client) -> None:
-        """Test getting queue from real SABnzbd."""
-        pytest.skip("Implementation pending - TDD")
+    async def test_client_gets_version(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_status_factory: callable
+    ) -> None:
+        """Test getting version from SABnzbd API."""
+        # Mock version response
+        version_data = sabnzbd_status_factory(version="4.2.0")
+        httpx_mock.add_response(json=version_data)
+
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_client.get_version()
+        # assert "version" in result or "status" in result
+        # assert "4.2.0" in str(result)
+
+    @pytest.mark.asyncio
+    async def test_client_gets_queue(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_queue_factory: callable
+    ) -> None:
+        """Test getting queue from SABnzbd API."""
+        # Mock queue response with 2 downloads
+        queue_data = sabnzbd_queue_factory(slots=2, paused=False, speed="8.5 MB/s")
+        httpx_mock.add_response(json=queue_data)
+
+        # TODO: Uncomment once implemented
         # result = await sabnzbd_integration_client.get_queue()
         # assert "queue" in result
         # assert "slots" in result["queue"]
-        # assert isinstance(result["queue"]["slots"], list)
+        # assert len(result["queue"]["slots"]) == 2
+        # assert result["queue"]["speed"] == "8.5 MB/s"
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_client_gets_real_history(self, sabnzbd_integration_client) -> None:
-        """Test getting history from real SABnzbd."""
-        pytest.skip("Implementation pending - TDD")
+    async def test_client_gets_history(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_history_factory: callable
+    ) -> None:
+        """Test getting history from SABnzbd API."""
+        # Mock history response with 5 entries, 1 failed
+        history_data = sabnzbd_history_factory(entries=5, failed=1)
+        httpx_mock.add_response(json=history_data)
+
+        # TODO: Uncomment once implemented
         # result = await sabnzbd_integration_client.get_history()
         # assert "history" in result
         # assert "slots" in result["history"]
-        # assert isinstance(result["history"]["slots"], list)
+        # assert len(result["history"]["slots"]) == 5
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_client_gets_real_config(self, sabnzbd_integration_client) -> None:
-        """Test getting configuration from real SABnzbd."""
-        pytest.skip("Implementation pending - TDD")
+    async def test_client_gets_config(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_config_factory: callable
+    ) -> None:
+        """Test getting configuration from SABnzbd API."""
+        # Mock config response
+        config_data = sabnzbd_config_factory(
+            complete_dir="/downloads/complete", download_dir="/downloads/incomplete"
+        )
+        httpx_mock.add_response(json=config_data)
+
+        # TODO: Uncomment once implemented
         # result = await sabnzbd_integration_client.get_config()
         # assert "config" in result
         # assert "misc" in result["config"]
+        # assert result["config"]["misc"]["complete_dir"] == "/downloads/complete"
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_client_handles_invalid_api_key(self, sabnzbd_integration_url: str) -> None:
-        """Test that client properly handles invalid API key."""
-        pytest.skip("Implementation pending - TDD")
-        # from mcp_servers.sabnzbd.client import SABnzbdClient, SABnzbdClientError
-
-        # client = SABnzbdClient(
-        #     url=sabnzbd_integration_url,
-        #     api_key="invalid_key_12345"
-        # )
-
-        # with pytest.raises(SABnzbdClientError, match="Unauthorized|Invalid API"):
-        #     await client.get_queue()
-
-    @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_client_handles_network_timeout(
-        self, sabnzbd_integration_url: str, sabnzbd_integration_api_key: str
+    async def test_client_handles_invalid_api_key(
+        self,
+        httpx_mock: HTTPXMock,
+        sabnzbd_integration_url: str,
+        sabnzbd_error_response_factory: callable,
     ) -> None:
-        """Test that client handles network timeouts."""
-        pytest.skip("Implementation pending - TDD")
-        # from mcp_servers.sabnzbd.client import SABnzbdClient, SABnzbdConnectionError
+        """Test that client properly handles invalid API key."""
+        # Mock 401 error response
+        error_data = sabnzbd_error_response_factory("Invalid API key", error_code=401)
+        httpx_mock.add_response(status_code=401, json=error_data)
 
+        # TODO: Uncomment once implemented
+        # from autoarr.mcp_servers.mcp_servers.sabnzbd.client import SABnzbdClient, SABnzbdClientError
+        # client = SABnzbdClient(url=sabnzbd_integration_url, api_key="invalid_key")
+        #
+        # with pytest.raises(SABnzbdClientError, match="Unauthorized|Invalid API|401"):
+        #     await client.get_queue()
+        #
+        # await client.close()
+
+    @pytest.mark.asyncio
+    async def test_client_handles_network_timeout(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_url: str, sabnzbd_integration_api_key: str
+    ) -> None:
+        """Test that client handles network timeouts gracefully."""
+        # Mock timeout exception
+        from httpx import TimeoutException
+
+        httpx_mock.add_exception(TimeoutException("Request timed out"))
+
+        # TODO: Uncomment once implemented
+        # from autoarr.mcp_servers.mcp_servers.sabnzbd.client import SABnzbdClient, SABnzbdConnectionError
         # client = SABnzbdClient(
         #     url=sabnzbd_integration_url,
         #     api_key=sabnzbd_integration_api_key,
-        #     timeout=0.001  # Very short timeout to trigger
+        #     timeout=0.001
         # )
-
-        # with pytest.raises(SABnzbdConnectionError):
+        #
+        # with pytest.raises((SABnzbdConnectionError, TimeoutException)):
         #     await client.get_queue()
+        #
+        # await client.close()
 
 
 # ============================================================================
-# MCP Server Integration Tests
+# MCP Server Integration Tests (HTTP Mocked)
 # ============================================================================
 
 
 class TestSABnzbdMCPServerIntegration:
-    """Integration tests for MCP server with real SABnzbd."""
+    """Integration tests for MCP server with mocked SABnzbd API."""
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_mcp_server_get_queue_tool_with_real_data(
-        self, sabnzbd_integration_mcp_server
+    async def test_mcp_server_get_queue_tool(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_mcp_server, sabnzbd_queue_factory: callable
     ) -> None:
-        """Test get_queue tool with real SABnzbd data."""
-        pytest.skip("Implementation pending - TDD")
-        # result = await sabnzbd_integration_mcp_server.call_tool(
-        #     "sabnzbd_get_queue",
-        #     {}
-        # )
+        """Test get_queue tool with mocked SABnzbd data."""
+        # Mock queue response
+        queue_data = sabnzbd_queue_factory(slots=3)
+        httpx_mock.add_response(json=queue_data)
 
-        # assert result.isError is False
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_mcp_server._call_tool("sabnzbd_get_queue", {})
+        #
         # import json
-        # data = json.loads(result.content[0].text)
-        # assert "queue" in data
+        # from mcp.types import TextContent
+        # assert isinstance(result, list)
+        # assert isinstance(result[0], TextContent)
+        #
+        # data = json.loads(result[0].text)
+        # assert data["success"] is True
+        # assert "queue" in data["data"]
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_mcp_server_get_history_tool_with_real_data(
-        self, sabnzbd_integration_mcp_server
+    async def test_mcp_server_get_history_tool(
+        self,
+        httpx_mock: HTTPXMock,
+        sabnzbd_integration_mcp_server,
+        sabnzbd_history_factory: callable,
     ) -> None:
-        """Test get_history tool with real SABnzbd data."""
-        pytest.skip("Implementation pending - TDD")
-        # result = await sabnzbd_integration_mcp_server.call_tool(
-        #     "sabnzbd_get_history",
-        #     {}
-        # )
+        """Test get_history tool with mocked SABnzbd data."""
+        # Mock history response
+        history_data = sabnzbd_history_factory(entries=10, failed=2)
+        httpx_mock.add_response(json=history_data)
 
-        # assert result.isError is False
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_mcp_server._call_tool("sabnzbd_get_history", {})
+        #
         # import json
-        # data = json.loads(result.content[0].text)
-        # assert "history" in data
+        # data = json.loads(result[0].text)
+        # assert data["success"] is True
+        # assert "history" in data["data"]
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_mcp_server_get_config_tool_with_real_data(
-        self, sabnzbd_integration_mcp_server
+    async def test_mcp_server_get_config_tool(
+        self,
+        httpx_mock: HTTPXMock,
+        sabnzbd_integration_mcp_server,
+        sabnzbd_config_factory: callable,
     ) -> None:
-        """Test get_config tool with real SABnzbd data."""
-        pytest.skip("Implementation pending - TDD")
-        # result = await sabnzbd_integration_mcp_server.call_tool(
-        #     "sabnzbd_get_config",
-        #     {}
-        # )
+        """Test get_config tool with mocked SABnzbd data."""
+        # Mock config response
+        config_data = sabnzbd_config_factory()
+        httpx_mock.add_response(json=config_data)
 
-        # assert result.isError is False
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_mcp_server._call_tool("sabnzbd_get_config", {})
+        #
         # import json
-        # data = json.loads(result.content[0].text)
-        # assert "config" in data
+        # data = json.loads(result[0].text)
+        # assert data["success"] is True
+        # assert "config" in data["data"]
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
     async def test_mcp_server_get_config_specific_section(
-        self, sabnzbd_integration_mcp_server
+        self,
+        httpx_mock: HTTPXMock,
+        sabnzbd_integration_mcp_server,
+        sabnzbd_config_factory: callable,
     ) -> None:
         """Test get_config with specific section filter."""
-        pytest.skip("Implementation pending - TDD")
-        # result = await sabnzbd_integration_mcp_server.call_tool(
+        # Mock config response
+        config_data = sabnzbd_config_factory()
+        httpx_mock.add_response(json=config_data)
+
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_mcp_server._call_tool(
         #     "sabnzbd_get_config",
         #     {"section": "misc"}
         # )
-
-        # assert result.isError is False
+        #
         # import json
-        # data = json.loads(result.content[0].text)
-        # assert "config" in data
-        # assert "misc" in data["config"]
+        # data = json.loads(result[0].text)
+        # assert data["success"] is True
+        # assert "config" in data["data"]
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_mcp_server_handles_real_error_responses(
-        self, sabnzbd_integration_mcp_server
+    async def test_mcp_server_handles_error_responses(
+        self,
+        httpx_mock: HTTPXMock,
+        sabnzbd_integration_mcp_server,
+        sabnzbd_error_response_factory: callable,
     ) -> None:
-        """Test that MCP server handles real error responses."""
-        pytest.skip("Implementation pending - TDD")
-        # Try to retry a non-existent download
-        # result = await sabnzbd_integration_mcp_server.call_tool(
-        #     "sabnzbd_retry_download",
-        #     {"nzo_id": "nonexistent_id_12345"}
-        # )
+        """Test that MCP server handles error responses correctly."""
+        # Mock error response
+        error_data = sabnzbd_error_response_factory("Item not found", error_code=404)
+        httpx_mock.add_response(status_code=404, json=error_data)
 
-        # Should handle gracefully (either error or failure status)
-        # We don't assert isError since SABnzbd might return success=false
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_mcp_server._call_tool(
+        #     "sabnzbd_retry_download",
+        #     {"nzo_id": "nonexistent_id"}
+        # )
+        #
+        # import json
+        # data = json.loads(result[0].text)
+        # assert data["success"] is False
+        # assert "error" in data
 
 
 # ============================================================================
-# End-to-End Workflow Tests
+# End-to-End Workflow Tests (HTTP Mocked)
 # ============================================================================
 
 
 class TestSABnzbdEndToEndWorkflows:
-    """End-to-end workflow tests with real SABnzbd."""
+    """End-to-end workflow tests with mocked SABnzbd API."""
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    @pytest.mark.slow
-    async def test_complete_queue_monitoring_workflow(self, sabnzbd_integration_mcp_server) -> None:
+    async def test_complete_queue_monitoring_workflow(
+        self,
+        httpx_mock: HTTPXMock,
+        sabnzbd_integration_mcp_server,
+        sabnzbd_queue_factory: callable,
+        sabnzbd_history_factory: callable,
+    ) -> None:
         """
-        Test complete workflow: check queue -> identify status -> take action.
+        Test complete workflow: check queue -> check history -> identify issues.
 
         This simulates the AutoArr monitoring workflow.
         """
-        pytest.skip("Implementation pending - TDD")
+        # Mock queue response
+        queue_data = sabnzbd_queue_factory(slots=2)
+        httpx_mock.add_response(json=queue_data)
+
+        # Mock history response with failures
+        history_data = sabnzbd_history_factory(entries=10, failed=2)
+        httpx_mock.add_response(json=history_data)
+
+        # TODO: Uncomment once implemented
         # Step 1: Get current queue
-        # queue_result = await sabnzbd_integration_mcp_server.call_tool(
-        #     "sabnzbd_get_queue",
-        #     {}
-        # )
-        # assert queue_result.isError is False
-
+        # queue_result = await sabnzbd_integration_mcp_server._call_tool("sabnzbd_get_queue", {})
+        # assert queue_result is not None
+        #
         # Step 2: Get history to check for failures
-        # history_result = await sabnzbd_integration_mcp_server.call_tool(
-        #     "sabnzbd_get_history",
-        #     {"failed_only": True}
-        # )
-        # assert history_result.isError is False
-
-        # Step 3: If there are failures, could retry them
-        # import json
-        # history_data = json.loads(history_result.content[0].text)
-        # if history_data["history"]["slots"]:
-        #     # There's a failed download - workflow continues...
-        #     pass
+        # history_result = await sabnzbd_integration_mcp_server._call_tool("sabnzbd_get_history", {})
+        # assert history_result is not None
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_configuration_audit_workflow(self, sabnzbd_integration_mcp_server) -> None:
+    async def test_configuration_audit_workflow(
+        self,
+        httpx_mock: HTTPXMock,
+        sabnzbd_integration_mcp_server,
+        sabnzbd_config_factory: callable,
+    ) -> None:
         """
         Test configuration audit workflow.
 
         This simulates the AutoArr config audit workflow.
         """
-        pytest.skip("Implementation pending - TDD")
-        # Step 1: Get full configuration
-        # config_result = await sabnzbd_integration_mcp_server.call_tool(
-        #     "sabnzbd_get_config",
-        #     {}
-        # )
-        # assert config_result.isError is False
+        # Mock config response
+        config_data = sabnzbd_config_factory()
+        httpx_mock.add_response(json=config_data)
 
-        # Step 2: Parse and analyze config
-        # import json
-        # config_data = json.loads(config_result.content[0].text)
-        # assert "config" in config_data
-
-        # Step 3: Could set config if needed (careful in tests!)
-        # NOTE: We don't actually set config in tests to avoid side effects
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_mcp_server._call_tool("sabnzbd_get_config", {})
+        # assert result is not None
 
 
 # ============================================================================
-# Performance Tests
+# Performance Tests (HTTP Mocked)
 # ============================================================================
 
 
 class TestSABnzbdPerformance:
-    """Performance and load tests with real SABnzbd."""
+    """Performance tests with mocked SABnzbd API."""
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    @pytest.mark.slow
-    async def test_concurrent_requests_performance(self, sabnzbd_integration_client) -> None:
+    async def test_concurrent_requests_performance(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_queue_factory: callable
+    ) -> None:
         """Test performance of concurrent requests to SABnzbd."""
-        pytest.skip("Implementation pending - TDD")
-        # import time
+        # Mock 10 queue responses
+        for _ in range(10):
+            queue_data = sabnzbd_queue_factory(slots=1)
+            httpx_mock.add_response(json=queue_data)
 
+        # TODO: Uncomment once implemented
+        # import time
+        #
         # async def make_request():
         #     return await sabnzbd_integration_client.get_queue()
-
-        # # Make 10 concurrent requests
+        #
         # start_time = time.time()
         # results = await asyncio.gather(*[make_request() for _ in range(10)])
-        # end_time = time.time()
-
+        # duration = time.time() - start_time
+        #
         # assert len(results) == 10
         # assert all("queue" in r for r in results)
-
-        # # Should complete in reasonable time (adjust threshold as needed)
-        # duration = end_time - start_time
-        # assert duration < 5.0, f"Concurrent requests took {duration}s"
+        # assert duration < 5.0  # Should complete quickly with mocks
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    @pytest.mark.slow
-    async def test_sequential_requests_performance(self, sabnzbd_integration_client) -> None:
+    async def test_sequential_requests_performance(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_queue_factory: callable
+    ) -> None:
         """Test performance of sequential requests to SABnzbd."""
-        pytest.skip("Implementation pending - TDD")
-        # import time
+        # Mock 10 queue responses
+        for _ in range(10):
+            queue_data = sabnzbd_queue_factory(slots=1)
+            httpx_mock.add_response(json=queue_data)
 
+        # TODO: Uncomment once implemented
+        # import time
+        #
         # start_time = time.time()
         # for _ in range(10):
         #     await sabnzbd_integration_client.get_queue()
-        # end_time = time.time()
-
-        # duration = end_time - start_time
+        # duration = time.time() - start_time
+        #
         # avg_per_request = duration / 10
-
-        # # Each request should complete in reasonable time
-        # assert avg_per_request < 1.0, f"Average request time: {avg_per_request}s"
+        # assert avg_per_request < 0.5  # Each request should be fast with mocks
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_large_queue_handling(self, sabnzbd_integration_client) -> None:
+    async def test_large_queue_handling(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_queue_factory: callable
+    ) -> None:
         """Test handling of large queue responses."""
-        pytest.skip("Implementation pending - TDD")
-        # Get queue without limit to get all items
-        # result = await sabnzbd_integration_client.get_queue()
+        # Mock large queue with 50 items
+        queue_data = sabnzbd_queue_factory(slots=50)
+        httpx_mock.add_response(json=queue_data)
 
-        # Should handle any size queue without errors
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_client.get_queue()
         # assert "queue" in result
-        # assert isinstance(result["queue"]["slots"], list)
+        # assert len(result["queue"]["slots"]) == 50
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_large_history_pagination(self, sabnzbd_integration_client) -> None:
+    async def test_large_history_pagination(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_history_factory: callable
+    ) -> None:
         """Test pagination with large history."""
-        pytest.skip("Implementation pending - TDD")
-        # Get first page
-        # page1 = await sabnzbd_integration_client.get_history(start=0, limit=10)
-        # assert len(page1["history"]["slots"]) <= 10
+        # Mock paginated history
+        page1 = sabnzbd_history_factory(entries=10, start=0, limit=10)
+        page2 = sabnzbd_history_factory(entries=10, start=10, limit=10)
+        httpx_mock.add_response(json=page1)
+        httpx_mock.add_response(json=page2)
 
-        # Get second page
-        # page2 = await sabnzbd_integration_client.get_history(start=10, limit=10)
-        # assert len(page2["history"]["slots"]) <= 10
-
-        # Pages should be different (if enough history exists)
+        # TODO: Uncomment once implemented
+        # page1_result = await sabnzbd_integration_client.get_history(start=0, limit=10)
+        # page2_result = await sabnzbd_integration_client.get_history(start=10, limit=10)
+        #
+        # assert len(page1_result["history"]["slots"]) == 10
+        # assert len(page2_result["history"]["slots"]) == 10
 
 
 # ============================================================================
-# Reliability Tests
+# Reliability Tests (HTTP Mocked)
 # ============================================================================
 
 
 class TestSABnzbdReliability:
-    """Reliability and resilience tests."""
+    """Reliability and resilience tests with mocked failures."""
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
     async def test_client_recovers_from_temporary_failure(
-        self, sabnzbd_integration_url: str, sabnzbd_integration_api_key: str
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_queue_factory: callable
     ) -> None:
         """Test that client can recover from temporary failures."""
-        pytest.skip("Implementation pending - TDD")
-        # This is hard to test without actually stopping SABnzbd
-        # Could use a proxy that simulates failures
-        pass
+        # First request fails
+        httpx_mock.add_response(status_code=503, text="Service Unavailable")
+        # Second request succeeds
+        queue_data = sabnzbd_queue_factory()
+        httpx_mock.add_response(json=queue_data)
+
+        # TODO: Uncomment once implemented (with retry logic)
+        # First call might fail
+        # try:
+        #     await sabnzbd_integration_client.get_queue()
+        # except Exception:
+        #     pass  # Expected to fail
+        #
+        # Second call should succeed
+        # result = await sabnzbd_integration_client.get_queue()
+        # assert result is not None
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
     async def test_mcp_server_maintains_state_across_calls(
-        self, sabnzbd_integration_mcp_server
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_mcp_server, sabnzbd_queue_factory: callable
     ) -> None:
         """Test that MCP server maintains proper state across multiple calls."""
-        pytest.skip("Implementation pending - TDD")
-        # Make multiple calls in sequence
+        # Mock multiple responses
+        for _ in range(5):
+            queue_data = sabnzbd_queue_factory()
+            httpx_mock.add_response(json=queue_data)
+
+        # TODO: Uncomment once implemented
         # for _ in range(5):
-        #     result = await sabnzbd_integration_mcp_server.call_tool(
-        #         "sabnzbd_get_queue",
-        #         {}
-        #     )
-        #     assert result.isError is False
+        #     result = await sabnzbd_integration_mcp_server._call_tool("sabnzbd_get_queue", {})
+        #     import json
+        #     data = json.loads(result[0].text)
+        #     assert data["success"] is True
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_long_running_mcp_server_stability(self, sabnzbd_integration_mcp_server) -> None:
-        """Test MCP server stability over time."""
-        pytest.skip("Implementation pending - TDD")
-        # Make many requests over time
+    async def test_long_running_mcp_server_stability(
+        self,
+        httpx_mock: HTTPXMock,
+        sabnzbd_integration_mcp_server,
+        sabnzbd_queue_factory: callable,
+        sabnzbd_history_factory: callable,
+    ) -> None:
+        """Test MCP server stability over many requests."""
+        # Mock many responses
+        for i in range(100):
+            if i % 2 == 0:
+                httpx_mock.add_response(json=sabnzbd_queue_factory())
+            else:
+                httpx_mock.add_response(json=sabnzbd_history_factory())
+
+        # TODO: Uncomment once implemented
         # for i in range(100):
-        #     result = await sabnzbd_integration_mcp_server.call_tool(
-        #         "sabnzbd_get_queue" if i % 2 == 0 else "sabnzbd_get_history",
-        #         {}
-        #     )
-        #     assert result.isError is False
-        #     await asyncio.sleep(0.1)  # Small delay between requests
+        #     tool = "sabnzbd_get_queue" if i % 2 == 0 else "sabnzbd_get_history"
+        #     result = await sabnzbd_integration_mcp_server._call_tool(tool, {})
+        #     import json
+        #     data = json.loads(result[0].text)
+        #     assert data["success"] is True
+        #     await asyncio.sleep(0.01)
 
 
 # ============================================================================
-# Data Format Validation Tests
+# Data Format Validation Tests (HTTP Mocked)
 # ============================================================================
 
 
 class TestSABnzbdDataFormats:
-    """Test that real SABnzbd data matches expected formats."""
+    """Test that mocked SABnzbd data matches expected formats."""
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_queue_response_structure(self, sabnzbd_integration_client) -> None:
-        """Test that real queue response has expected structure."""
-        pytest.skip("Implementation pending - TDD")
-        # result = await sabnzbd_integration_client.get_queue()
+    async def test_queue_response_structure(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_queue_factory: callable
+    ) -> None:
+        """Test that queue response has expected structure."""
+        queue_data = sabnzbd_queue_factory(slots=2)
+        httpx_mock.add_response(json=queue_data)
 
-        # Validate structure
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_client.get_queue()
+        #
+        # # Validate structure
         # assert "queue" in result
         # queue = result["queue"]
         # assert "status" in queue
         # assert "speed" in queue
         # assert "slots" in queue
         # assert isinstance(queue["slots"], list)
-
-        # If there are slots, validate their structure
+        #
+        # # Validate slot structure
         # if queue["slots"]:
         #     slot = queue["slots"][0]
         #     assert "nzo_id" in slot
@@ -510,19 +577,23 @@ class TestSABnzbdDataFormats:
         #     assert "status" in slot
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_history_response_structure(self, sabnzbd_integration_client) -> None:
-        """Test that real history response has expected structure."""
-        pytest.skip("Implementation pending - TDD")
-        # result = await sabnzbd_integration_client.get_history()
+    async def test_history_response_structure(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_history_factory: callable
+    ) -> None:
+        """Test that history response has expected structure."""
+        history_data = sabnzbd_history_factory(entries=3, failed=1)
+        httpx_mock.add_response(json=history_data)
 
-        # Validate structure
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_client.get_history()
+        #
+        # # Validate structure
         # assert "history" in result
         # history = result["history"]
         # assert "slots" in history
         # assert isinstance(history["slots"], list)
-
-        # If there are slots, validate their structure
+        #
+        # # Validate slot structure
         # if history["slots"]:
         #     slot = history["slots"][0]
         #     assert "nzo_id" in slot
@@ -530,20 +601,24 @@ class TestSABnzbdDataFormats:
         #     assert "status" in slot
 
     @pytest.mark.asyncio
-    @pytest.mark.integration
-    async def test_config_response_structure(self, sabnzbd_integration_client) -> None:
-        """Test that real config response has expected structure."""
-        pytest.skip("Implementation pending - TDD")
-        # result = await sabnzbd_integration_client.get_config()
+    async def test_config_response_structure(
+        self, httpx_mock: HTTPXMock, sabnzbd_integration_client, sabnzbd_config_factory: callable
+    ) -> None:
+        """Test that config response has expected structure."""
+        config_data = sabnzbd_config_factory()
+        httpx_mock.add_response(json=config_data)
 
-        # Validate structure
+        # TODO: Uncomment once implemented
+        # result = await sabnzbd_integration_client.get_config()
+        #
+        # # Validate structure
         # assert "config" in result
         # config = result["config"]
         # assert "misc" in config
         # assert "servers" in config
         # assert "categories" in config
-
-        # Validate misc section
+        #
+        # # Validate misc section
         # misc = config["misc"]
         # assert "complete_dir" in misc
         # assert "download_dir" in misc

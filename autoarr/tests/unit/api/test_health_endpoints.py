@@ -44,7 +44,7 @@ class TestHealthEndpoints:
     @pytest.mark.asyncio
     async def test_overall_health_check_healthy(self, client, mock_orchestrator):
         """Test overall health check when all services are healthy."""
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.health.get_orchestrator") as mock_get_orch:
             # Setup mock to return async generator
             async def mock_generator():
                 yield mock_orchestrator
@@ -74,7 +74,7 @@ class TestHealthEndpoints:
 
         mock_orchestrator.health_check.side_effect = health_check_side_effect
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.health.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -95,7 +95,7 @@ class TestHealthEndpoints:
         mock_orch = MagicMock()
         mock_orch._clients = {}  # No clients connected
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.health.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orch
@@ -112,7 +112,7 @@ class TestHealthEndpoints:
     @pytest.mark.asyncio
     async def test_service_health_check_success(self, client, mock_orchestrator):
         """Test individual service health check for healthy service."""
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.health.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -132,7 +132,7 @@ class TestHealthEndpoints:
     @pytest.mark.asyncio
     async def test_service_health_check_invalid_service(self, client, mock_orchestrator):
         """Test service health check with invalid service name."""
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.health.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -150,7 +150,7 @@ class TestHealthEndpoints:
         """Test service health check when service is not connected."""
         mock_orchestrator.is_connected = AsyncMock(return_value=False)
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.health.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -173,7 +173,7 @@ class TestHealthEndpoints:
             "timeout": 60.0,
         }
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.health.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -191,7 +191,7 @@ class TestHealthEndpoints:
     @pytest.mark.asyncio
     async def test_circuit_breaker_status_invalid_service(self, client, mock_orchestrator):
         """Test circuit breaker status with invalid service name."""
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.health.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -207,7 +207,7 @@ class TestHealthEndpoints:
     @pytest.mark.asyncio
     async def test_health_check_includes_latency(self, client, mock_orchestrator):
         """Test that health check includes latency measurement."""
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.health.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -227,7 +227,7 @@ class TestHealthEndpoints:
         """Test health check for unhealthy service."""
         mock_orchestrator.health_check = AsyncMock(return_value=False)
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.routers.health.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator

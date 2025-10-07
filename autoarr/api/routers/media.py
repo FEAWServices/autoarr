@@ -4,7 +4,7 @@ Media endpoints (Plex).
 This module provides endpoints for accessing Plex media libraries.
 """
 
-from typing import Any, AsyncGenerator, Dict, List
+from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
@@ -17,7 +17,7 @@ router = APIRouter()
 
 @router.get("/libraries", tags=["media"])
 async def list_libraries(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     List all Plex libraries.
@@ -43,8 +43,8 @@ async def list_libraries(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("plex", "get_libraries", {})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("plex", "get_libraries", {})
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -55,7 +55,7 @@ async def list_libraries(
 @router.get("/libraries/{library_key}", tags=["media"])
 async def get_library(
     library_key: str,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get a specific library by key.
@@ -77,15 +77,15 @@ async def get_library(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("plex", "get_library", {"library_key": library_key})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("plex", "get_library", {"library_key": library_key})
     return result
 
 
 @router.get("/recently-added", tags=["media"])
 async def get_recently_added(
     limit: int = 20,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get recently added media items.
@@ -112,8 +112,8 @@ async def get_recently_added(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("plex", "get_recently_added", {"limit": limit})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("plex", "get_recently_added", {"limit": limit})
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -124,7 +124,7 @@ async def get_recently_added(
 @router.post("/scan", tags=["media"])
 async def scan_library(
     request: ScanLibraryRequest,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Scan a Plex library for new media.
@@ -151,15 +151,17 @@ async def scan_library(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("plex", "scan_library", {"library_key": request.library_key})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool(
+        "plex", "scan_library", {"library_key": request.library_key}
+    )
     return result
 
 
 @router.post("/refresh/{rating_key}", tags=["media"])
 async def refresh_metadata(
     rating_key: str,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Refresh metadata for a specific media item.
@@ -179,8 +181,8 @@ async def refresh_metadata(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("plex", "refresh_metadata", {"rating_key": rating_key})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("plex", "refresh_metadata", {"rating_key": rating_key})
     return result
 
 
@@ -188,7 +190,7 @@ async def refresh_metadata(
 async def search_media(
     query: str,
     library_key: str = None,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> List[Dict[str, Any]]:
     """
     Search for media in Plex.
@@ -213,18 +215,18 @@ async def search_media(
         ]
         ```
     """
-    orch = await orchestrator.__anext__()
+    # orchestrator is already resolved by FastAPI
     params = {"query": query}
     if library_key:
         params["library_key"] = library_key
 
-    result = await orch.call_tool("plex", "search_media", params)
+    result = await orchestrator.call_tool("plex", "search_media", params)
     return result if isinstance(result, list) else []
 
 
 @router.get("/on-deck", tags=["media"])
 async def get_on_deck(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get on deck media items (continue watching).
@@ -241,8 +243,8 @@ async def get_on_deck(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("plex", "get_on_deck", {})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("plex", "get_on_deck", {})
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -252,7 +254,7 @@ async def get_on_deck(
 
 @router.get("/sessions", tags=["media"])
 async def get_sessions(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get active playback sessions.
@@ -278,8 +280,8 @@ async def get_sessions(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("plex", "get_sessions", {})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("plex", "get_sessions", {})
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -289,7 +291,7 @@ async def get_sessions(
 
 @router.get("/server/status", tags=["media"])
 async def get_server_status(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get Plex server status and information.
@@ -308,15 +310,15 @@ async def get_server_status(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("plex", "get_server_status", {})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("plex", "get_server_status", {})
     return result
 
 
 @router.post("/optimize/{rating_key}", tags=["media"])
 async def optimize_item(
     rating_key: str,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Optimize a media item for streaming.
@@ -336,6 +338,6 @@ async def optimize_item(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("plex", "optimize_item", {"rating_key": rating_key})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("plex", "optimize_item", {"rating_key": rating_key})
     return result

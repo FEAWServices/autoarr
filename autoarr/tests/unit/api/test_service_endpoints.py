@@ -46,7 +46,7 @@ class TestDownloadsEndpoints:
             "paused": False,
         }
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -64,7 +64,7 @@ class TestDownloadsEndpoints:
         """Test retrying a download."""
         mock_orchestrator.call_tool.return_value = {"success": True}
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -88,7 +88,7 @@ class TestShowsEndpoints:
             {"id": 2, "title": "The Wire"},
         ]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -107,7 +107,7 @@ class TestShowsEndpoints:
         """Test searching for shows."""
         mock_orchestrator.call_tool.return_value = [{"title": "Breaking Bad", "tvdbId": 81189}]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -126,7 +126,7 @@ class TestShowsEndpoints:
         """Test adding a new show."""
         mock_orchestrator.call_tool.return_value = {"id": 123, "title": "Breaking Bad"}
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -161,7 +161,7 @@ class TestMoviesEndpoints:
             {"id": 2, "title": "Inception"},
         ]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -180,7 +180,7 @@ class TestMoviesEndpoints:
         """Test searching for movies."""
         mock_orchestrator.call_tool.return_value = [{"title": "The Matrix", "tmdbId": 603}]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -199,7 +199,7 @@ class TestMoviesEndpoints:
         """Test adding a new movie."""
         mock_orchestrator.call_tool.return_value = {"id": 123, "title": "The Matrix"}
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -226,7 +226,7 @@ class TestMoviesEndpoints:
         """Test deleting a movie."""
         mock_orchestrator.call_tool.return_value = {"success": True}
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -250,7 +250,7 @@ class TestMediaEndpoints:
             {"key": "2", "title": "TV Shows", "type": "show"},
         ]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -269,7 +269,7 @@ class TestMediaEndpoints:
         """Test getting recently added media."""
         mock_orchestrator.call_tool.return_value = [{"rating_key": "123", "title": "The Matrix"}]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -287,7 +287,7 @@ class TestMediaEndpoints:
         """Test scanning a library."""
         mock_orchestrator.call_tool.return_value = {"success": True}
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -308,7 +308,7 @@ class TestMediaEndpoints:
         """Test searching for media."""
         mock_orchestrator.call_tool.return_value = [{"rating_key": "123", "title": "The Matrix"}]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator
@@ -328,7 +328,7 @@ class TestMediaEndpoints:
             {"user": "John", "title": "The Matrix", "state": "playing"}
         ]
 
-        with patch("api.dependencies.get_orchestrator") as mock_get_orch:
+        with patch("autoarr.api.dependencies.get_orchestrator") as mock_get_orch:
 
             async def mock_generator():
                 yield mock_orchestrator

@@ -34,7 +34,8 @@
       "Bash(tee:*)",
       "Bash(timeout 30 python -m pytest:*)",
       "Bash(timeout 120 python -m pytest:*)",
-      "Bash(timeout 180 python -m pytest autoarr/tests/unit/ --no-cov)"
+      "Bash(timeout 180 python -m pytest autoarr/tests/unit/ --no-cov)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

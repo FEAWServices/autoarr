@@ -4,7 +4,7 @@ Movies endpoints (Radarr).
 This module provides endpoints for managing movies via Radarr.
 """
 
-from typing import Any, AsyncGenerator, Dict, List
+from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
@@ -17,7 +17,7 @@ router = APIRouter()
 
 @router.get("/", tags=["movies"])
 async def list_movies(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     List all movies.
@@ -36,8 +36,8 @@ async def list_movies(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("radarr", "get_movies", {})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("radarr", "get_movies", {})
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -48,7 +48,7 @@ async def list_movies(
 @router.get("/{movie_id}", tags=["movies"])
 async def get_movie(
     movie_id: int,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get a specific movie by ID.
@@ -70,15 +70,15 @@ async def get_movie(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("radarr", "get_movie_by_id", {"movie_id": movie_id})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("radarr", "get_movie_by_id", {"movie_id": movie_id})
     return result
 
 
 @router.post("/", tags=["movies"])
 async def add_movie(
     request: AddMovieRequest,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Add a new movie to Radarr.
@@ -101,8 +101,8 @@ async def add_movie(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("radarr", "add_movie", request.model_dump())
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("radarr", "add_movie", request.model_dump())
     return result
 
 
@@ -110,7 +110,7 @@ async def add_movie(
 async def delete_movie(
     movie_id: int,
     delete_files: bool = False,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Delete a movie from Radarr.
@@ -131,8 +131,8 @@ async def delete_movie(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool(
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool(
         "radarr", "delete_movie", {"movie_id": movie_id, "delete_files": delete_files}
     )
     return result
@@ -141,7 +141,7 @@ async def delete_movie(
 @router.get("/search/{query}", tags=["movies"])
 async def search_movies(
     query: str,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> List[Dict[str, Any]]:
     """
     Search for movies.
@@ -165,8 +165,8 @@ async def search_movies(
         ]
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("radarr", "search_movies", {"query": query})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("radarr", "search_movies", {"query": query})
     return result if isinstance(result, list) else []
 
 
@@ -174,7 +174,7 @@ async def search_movies(
 async def get_calendar(
     start_date: str = None,
     end_date: str = None,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> List[Dict[str, Any]]:
     """
     Get upcoming movies calendar.
@@ -198,20 +198,20 @@ async def get_calendar(
         ]
         ```
     """
-    orch = await orchestrator.__anext__()
+    # orchestrator is already resolved by FastAPI
     params = {}
     if start_date:
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
 
-    result = await orch.call_tool("radarr", "get_calendar", params)
+    result = await orchestrator.call_tool("radarr", "get_calendar", params)
     return result if isinstance(result, list) else []
 
 
 @router.get("/queue/active", tags=["movies"])
 async def get_queue(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get Radarr download queue.
@@ -230,8 +230,8 @@ async def get_queue(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("radarr", "get_queue", {})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("radarr", "get_queue", {})
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -242,7 +242,7 @@ async def get_queue(
 @router.post("/command/movie-search", tags=["movies"])
 async def search_movie(
     movie_id: int,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Trigger a search for a specific movie.
@@ -262,15 +262,15 @@ async def search_movie(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("radarr", "trigger_movie_search", {"movie_id": movie_id})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("radarr", "trigger_movie_search", {"movie_id": movie_id})
     return result
 
 
 @router.post("/command/refresh", tags=["movies"])
 async def refresh_movie(
     movie_id: int,
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Refresh movie information from TMDB.
@@ -290,14 +290,14 @@ async def refresh_movie(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("radarr", "refresh_movie", {"movie_id": movie_id})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("radarr", "refresh_movie", {"movie_id": movie_id})
     return result
 
 
 @router.get("/missing", tags=["movies"])
 async def get_missing_movies(
-    orchestrator: AsyncGenerator[MCPOrchestrator, None] = Depends(get_orchestrator),
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, Any]:
     """
     Get list of missing movies (monitored but not downloaded).
@@ -314,8 +314,8 @@ async def get_missing_movies(
         }
         ```
     """
-    orch = await orchestrator.__anext__()
-    result = await orch.call_tool("radarr", "get_missing_movies", {})
+    # orchestrator is already resolved by FastAPI
+    result = await orchestrator.call_tool("radarr", "get_missing_movies", {})
 
     # Ensure consistent response format
     if isinstance(result, list):

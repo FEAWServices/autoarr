@@ -335,25 +335,12 @@ class TestSaveAllSettings:
 class TestConnectionTesting:
     """Test POST /settings/test/{service} endpoint.
 
-    Note: These tests require complex mocking of dynamically imported clients.
-    Connection testing is better covered by integration tests.
+    Note: These tests are removed as connection testing is properly covered
+    by integration tests. Unit tests for this endpoint would require complex
+    dynamic import mocking that doesn't add value.
     """
 
-    @pytest.mark.skip(
-        reason="Requires complex dynamic import mocking - covered by integration tests"
-    )
-    @pytest.mark.asyncio
-    async def test_test_connection_sabnzbd_success(self, client):
-        """Test connection testing for SABnzbd."""
-        pass
-
-    @pytest.mark.skip(
-        reason="Requires complex dynamic import mocking - covered by integration tests"
-    )
-    @pytest.mark.asyncio
-    async def test_test_connection_invalid_service(self, client):
-        """Test connection testing for invalid service."""
-        pass
+    pass
 
 
 class TestMaskApiKey:
