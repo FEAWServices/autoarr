@@ -46,7 +46,7 @@ jobs:
         run: poetry run flake8 autoarr/ --max-line-length=100 --extend-ignore=E203,F541,F401,E402,F841 --exclude=autoarr/tests/,autoarr/mcp_servers/
 
       - name: Run MyPy
-        run: poetry run mypy autoarr/ --config-file=pyproject.toml --ignore-missing-imports --exclude='(autoarr/tests/|autoarr/mcp_servers/|autoarr/shared/|autoarr/api/)'
+        run: poetry run mypy autoarr/api/ --config-file=pyproject.toml --ignore-missing-imports
         continue-on-error: true
 
       - name: Run unit tests
