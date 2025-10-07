@@ -50,7 +50,6 @@ markers = [
     "slow: marks tests as slow running tests (deselect with '-m \"not slow\"')",
 ]
 addopts = [
-    "-p", "pytest_paths",
     "--cov=autoarr",
     "--cov-report=term-missing",
     "--cov-report=html",

@@ -501,7 +501,8 @@ class TestSABnzbdClientErrorHandling:
     @pytest.mark.asyncio
     async def test_respects_max_retries(self, httpx_mock: HTTPXMock, sabnzbd_client) -> None:
         """Test that client respects max retry limit."""
-        for _ in range(5):
+        # Add exactly 3 503 responses to match max_retries (default 3)
+        for _ in range(3):
             httpx_mock.add_response(status_code=503)
 
         with pytest.raises(SABnzbdClientError):

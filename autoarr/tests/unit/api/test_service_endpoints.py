@@ -14,8 +14,8 @@ from autoarr.api.dependencies import reset_orchestrator
 
 
 @pytest.fixture
-def client():
-    """Create a test client."""
+def client(mock_database_init):
+    """Create a test client with database mocking."""
     return TestClient(app)
 
 

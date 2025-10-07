@@ -30,7 +30,11 @@
       "Bash(git commit:*)",
       "WebFetch(domain:github.com)",
       "Bash(python:*)",
-      "Bash(poetry add:*)"
+      "Bash(poetry add:*)",
+      "Bash(tee:*)",
+      "Bash(timeout 30 python -m pytest:*)",
+      "Bash(timeout 120 python -m pytest:*)",
+      "Bash(timeout 180 python -m pytest autoarr/tests/unit/ --no-cov)"
     ],
     "deny": [],
     "ask": []

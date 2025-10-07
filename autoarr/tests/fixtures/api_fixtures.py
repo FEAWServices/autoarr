@@ -891,3 +891,185 @@ def sonarr_system_status_factory() -> callable:
         return status
 
     return _create_status
+
+
+# ============================================================================
+# Database and Settings Test Fixtures
+# ============================================================================
+
+
+@pytest.fixture
+def mock_database_init():
+    """
+    Mock the database initialization to prevent real database connections in tests.
+
+    This fixture patches the database module's init_database and get_database
+    functions to prevent tests from requiring a real database.
+
+    Usage:
+        Apply this as autouse fixture in conftest or use explicitly in tests.
+    """
+    from unittest.mock import MagicMock, AsyncMock, patch
+    from contextlib import asynccontextmanager
+
+    mock_db = MagicMock()
+    mock_db.database_url = "sqlite+aiosqlite:///:memory:"
+    mock_db.init_db = AsyncMock()
+    mock_db.close = AsyncMock()
+
+    # Mock session
+    mock_session = AsyncMock()
+    mock_session.execute = AsyncMock()
+    mock_session.commit = AsyncMock()
+    mock_session.rollback = AsyncMock()
+    mock_session.add = MagicMock()
+    mock_session.delete = AsyncMock()
+    mock_session.refresh = AsyncMock()
+
+    @asynccontextmanager
+    async def mock_session_context():
+        yield mock_session
+
+    mock_db.session = mock_session_context
+
+    with patch("autoarr.api.database.init_database", return_value=mock_db), patch(
+        "autoarr.api.database.get_database", return_value=mock_db
+    ):
+        yield mock_db
+
+
+@pytest.fixture
+async def mock_database():
+    """
+    Create a mock database instance for testing.
+
+    Usage:
+        async with mock_database.session() as session:
+            # Use session in tests
+    """
+    from unittest.mock import AsyncMock, MagicMock
+    from contextlib import asynccontextmanager
+
+    db = MagicMock()
+    db.database_url = "sqlite+aiosqlite:///:memory:"
+
+    # Mock session
+    mock_session = AsyncMock()
+    mock_session.execute = AsyncMock()
+    mock_session.commit = AsyncMock()
+    mock_session.rollback = AsyncMock()
+    mock_session.add = MagicMock()
+    mock_session.delete = AsyncMock()
+    mock_session.refresh = AsyncMock()
+
+    @asynccontextmanager
+    async def mock_session_context():
+        yield mock_session
+
+    db.session = mock_session_context
+    db.init_db = AsyncMock()
+    db.close = AsyncMock()
+
+    return db
+
+
+@pytest.fixture
+def mock_settings_repository():
+    """
+    Create a mock SettingsRepository for testing.
+
+    Usage:
+        repo = mock_settings_repository
+        settings = await repo.get_service_settings("sabnzbd")
+    """
+    from unittest.mock import AsyncMock, MagicMock
+
+    repo = MagicMock()
+    repo.get_service_settings = AsyncMock(return_value=None)
+    repo.get_all_service_settings = AsyncMock(return_value={})
+    repo.save_service_settings = AsyncMock()
+    repo.delete_service_settings = AsyncMock(return_value=False)
+
+    return repo
+
+
+@pytest.fixture
+def service_settings_factory():
+    """
+    Factory to create ServiceSettings database model instances.
+
+    Usage:
+        settings = service_settings_factory("sabnzbd")
+        settings = service_settings_factory("sonarr", enabled=False)
+    """
+
+    def _create(
+        service_name: str,
+        enabled: bool = True,
+        url: str = None,
+        api_key_or_token: str = None,
+        timeout: float = 30.0,
+    ):
+        """Create a ServiceSettings instance."""
+        from unittest.mock import MagicMock
+
+        settings = MagicMock()
+        settings.service_name = service_name
+        settings.enabled = enabled
+        settings.url = url or f"http://localhost:808{hash(service_name) % 10}"
+        settings.api_key_or_token = api_key_or_token or f"test_api_key_{service_name}"
+        settings.timeout = timeout
+
+        return settings
+
+    return _create
+
+
+@pytest.fixture
+def mock_settings_repository_with_data(service_settings_factory):
+    """
+    Create a mock SettingsRepository pre-populated with test data.
+
+    Usage:
+        repo = mock_settings_repository_with_data
+        settings = await repo.get_service_settings("sabnzbd")  # Returns mock data
+    """
+    from unittest.mock import AsyncMock, MagicMock
+
+    # Create mock service settings for all services
+    mock_settings = {
+        "sabnzbd": service_settings_factory("sabnzbd"),
+        "sonarr": service_settings_factory("sonarr"),
+        "radarr": service_settings_factory("radarr"),
+        "plex": service_settings_factory("plex"),
+    }
+
+    repo = MagicMock()
+
+    # Mock get_service_settings to return specific service
+    async def mock_get_service(service_name: str):
+        return mock_settings.get(service_name)
+
+    repo.get_service_settings = AsyncMock(side_effect=mock_get_service)
+    repo.get_all_service_settings = AsyncMock(return_value=mock_settings)
+
+    # Mock save to update the mock data
+    async def mock_save(
+        service_name: str, enabled: bool, url: str, api_key_or_token: str, timeout: float
+    ):
+        saved = service_settings_factory(service_name, enabled, url, api_key_or_token, timeout)
+        mock_settings[service_name] = saved
+        return saved
+
+    repo.save_service_settings = AsyncMock(side_effect=mock_save)
+
+    # Mock delete to remove from mock data
+    async def mock_delete(service_name: str):
+        if service_name in mock_settings:
+            del mock_settings[service_name]
+            return True
+        return False
+
+    repo.delete_service_settings = AsyncMock(side_effect=mock_delete)
+
+    return repo

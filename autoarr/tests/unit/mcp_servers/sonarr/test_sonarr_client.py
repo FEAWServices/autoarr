@@ -766,8 +766,8 @@ class TestSonarrClientErrorHandling:
         self, httpx_mock: HTTPXMock, sonarr_client: SonarrClient
     ) -> None:
         """Test that client respects maximum retry limit."""
-        # Add multiple 503 responses
-        for _ in range(5):
+        # Add exactly 3 503 responses to match max_retries (default 3)
+        for _ in range(3):
             httpx_mock.add_response(status_code=503)
 
         with pytest.raises(SonarrClientError):

@@ -23,12 +23,8 @@ from pytest_httpx import HTTPXMock
 
 
 # Configure pytest-asyncio
-@pytest.fixture(scope="session")
-def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+# Note: With asyncio_mode = "auto" in pyproject.toml, pytest-asyncio handles event loops automatically.
+# Custom event_loop fixture removed as it's deprecated and unnecessary with auto mode.
 
 
 @pytest.fixture
