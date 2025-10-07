@@ -4,10 +4,10 @@
 
 AutoArr supports **two deployment modes** aligned with the BUILD-PLAN.md roadmap:
 
-| Version | Mode | Architecture | Use Case |
-|---------|------|--------------|----------|
-| **v1.0** | Single Container | Monolithic | Home users, simplicity |
-| **v2.0** | Microservices | Distributed | SaaS, enterprise, scale |
+| Version  | Mode             | Architecture | Use Case                |
+| -------- | ---------------- | ------------ | ----------------------- |
+| **v1.0** | Single Container | Monolithic   | Home users, simplicity  |
+| **v2.0** | Microservices    | Distributed  | SaaS, enterprise, scale |
 
 ## v1.0: Single Container (Current)
 
@@ -46,25 +46,30 @@ AutoArr supports **two deployment modes** aligned with the BUILD-PLAN.md roadmap
 ### What's Included in the Container
 
 ✅ **Application Layer**
+
 - FastAPI backend (Python 3.11)
 - React frontend (built static files)
 - Uvicorn ASGI server (4 workers)
 
 ✅ **MCP Servers** (Embedded Libraries)
+
 - SABnzbd MCP client & server
 - Sonarr MCP client & server
 - Radarr MCP client & server
 - Plex MCP client & server
 
 ✅ **Database**
+
 - SQLite (default) - stored in `/data` volume
 - Optional: PostgreSQL (external)
 
 ✅ **Caching**
+
 - In-memory cache (default)
 - Optional: Redis (external)
 
 ✅ **Dependencies**
+
 - All Python packages (Poetry)
 - Runtime libraries
 
@@ -91,10 +96,12 @@ AutoArr supports **two deployment modes** aligned with the BUILD-PLAN.md roadmap
 The `Dockerfile` uses **multi-stage builds**:
 
 1. **Stage 1**: Build React frontend
+
    - Node.js 18 Alpine
    - pnpm build → static files in `dist/`
 
 2. **Stage 2**: Install Python dependencies
+
    - Python 3.11 + Poetry
    - Install packages to system Python
 
@@ -134,6 +141,7 @@ LOG_LEVEL=INFO
 Single volume mount: `/data`
 
 Contains:
+
 - `autoarr.db` - SQLite database
 - `logs/` - Application logs
 - `cache/` - Downloaded best practices & embeddings
@@ -141,6 +149,7 @@ Contains:
 ### Deployment Examples
 
 **Docker CLI:**
+
 ```bash
 docker run -d \
   --name autoarr \
@@ -152,6 +161,7 @@ docker run -d \
 ```
 
 **Docker Compose:**
+
 ```yaml
 services:
   autoarr:
@@ -164,19 +174,20 @@ services:
 ```
 
 **Kubernetes:**
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 spec:
-  replicas: 1  # Stateful, single replica
+  replicas: 1 # Stateful, single replica
   template:
     spec:
       containers:
-      - name: autoarr
-        image: autoarr/autoarr:latest
-        volumeMounts:
-        - name: data
-          mountPath: /data
+        - name: autoarr
+          image: autoarr/autoarr:latest
+          volumeMounts:
+            - name: data
+              mountPath: /data
 ```
 
 ---
@@ -223,32 +234,39 @@ spec:
 Each service gets its own container:
 
 1. **Frontend Service** (Nginx)
+
    - Serves static React app from CDN
    - ~50 MB image
 
 2. **API Gateway** (FastAPI)
+
    - Routes requests to MCP services
    - Authentication & rate limiting
    - ~200 MB image
 
 3. **MCP Service - SABnzbd** (Python)
+
    - Dedicated MCP server for SABnzbd
    - Horizontally scalable
    - ~150 MB image
 
 4. **MCP Service - Sonarr** (Python)
+
    - Dedicated MCP server for Sonarr
    - ~150 MB image
 
 5. **MCP Service - Radarr** (Python)
+
    - Dedicated MCP server for Radarr
    - ~150 MB image
 
 6. **MCP Service - Plex** (Python)
+
    - Dedicated MCP server for Plex
    - ~150 MB image
 
 7. **Configuration Manager** (Python)
+
    - Best practices & auditing
    - LLM integration
    - ~250 MB image
@@ -261,8 +279,9 @@ Each service gets its own container:
 ### Orchestration
 
 **Docker Swarm:**
+
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   api-gateway:
     image: autoarr/api-gateway:2.0
@@ -274,6 +293,7 @@ services:
 ```
 
 **Kubernetes:**
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -291,32 +311,39 @@ spec:
 ### Benefits of Microservices (v2.0)
 
 ✅ **Scalability**
+
 - Scale each MCP service independently
 - Handle high load (thousands of users)
 
 ✅ **Reliability**
+
 - Service isolation (one failure doesn't take down others)
 - Rolling updates with zero downtime
 
 ✅ **Development**
+
 - Teams can work on services independently
 - Faster CI/CD pipelines
 
 ✅ **Multi-tenancy**
+
 - SaaS platform support
 - User isolation
 
 ### Drawbacks vs Single Container
 
 ❌ **Complexity**
+
 - Requires orchestration (K8s/Swarm)
 - More configuration
 
 ❌ **Resource Usage**
+
 - Higher memory overhead (~2GB minimum vs 512MB)
 - More CPU for inter-service communication
 
 ❌ **Cost**
+
 - Requires managed database & cache
 - Higher hosting costs
 
@@ -327,6 +354,7 @@ spec:
 ### For v1.0 (Home Users) ✅
 
 **Use single container deployment:**
+
 - Easy setup: One `docker run` command
 - Low resources: 512 MB RAM, 0.5 CPU
 - Simple updates: `docker pull && docker restart`
@@ -339,6 +367,7 @@ spec:
 ### For v2.0 (SaaS Platform) 🚀
 
 **Use microservices deployment:**
+
 - Kubernetes cluster (AWS EKS, GKE, or self-hosted)
 - Managed PostgreSQL (AWS RDS, Cloud SQL)
 - Managed Redis (ElastiCache, Cloud Memorystore)
@@ -354,16 +383,19 @@ spec:
 ### Single Container
 
 **Build locally:**
+
 ```bash
 docker build -t autoarr/autoarr:latest .
 ```
 
 **Build with version tag:**
+
 ```bash
 docker build -t autoarr/autoarr:v1.0.0 .
 ```
 
 **Multi-platform build:**
+
 ```bash
 docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 \
   -t autoarr/autoarr:latest \
@@ -389,24 +421,29 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 \
 ## Distribution Channels
 
 ### Docker Hub
+
 - Primary distribution
 - `autoarr/autoarr:latest`
 - `autoarr/autoarr:v1.0.0`
 
 ### GitHub Container Registry
+
 - Backup/alternative
 - `ghcr.io/autoarr/autoarr:latest`
 
 ### Platform-Specific
 
 **Unraid:**
+
 - Community Applications template
 - One-click install
 
 **Synology:**
+
 - Community package
 
 **Home Assistant:**
+
 - Add-on repository
 
 ---
@@ -416,8 +453,9 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 \
 **Yes, AutoArr will be packaged as a single container for v1.0!**
 
 The architecture is designed to:
+
 - ✅ Be simple for end users (one container)
-- ✅ Work with existing *arr stacks
+- ✅ Work with existing \*arr stacks
 - ✅ Use minimal resources (< 1GB RAM)
 - ✅ Support easy updates
 - ✅ Scale to microservices in v2.0 when needed

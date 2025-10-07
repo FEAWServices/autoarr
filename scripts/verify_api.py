@@ -12,6 +12,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+
 def verify_imports():
     """Verify all API imports work."""
     print("=" * 70)
@@ -20,9 +21,11 @@ def verify_imports():
 
     try:
         from api.main import app
+
         print("[OK] api.main imported successfully")
 
         from api.config import get_settings
+
         print("[OK] api.config imported successfully")
 
         from api.models import (
@@ -31,21 +34,26 @@ def verify_imports():
             HealthCheckResponse,
             ServiceHealth,
         )
+
         print("[OK] api.models imported successfully")
 
         from api.dependencies import get_orchestrator, get_orchestrator_config
+
         print("[OK] api.dependencies imported successfully")
 
         from api.middleware import ErrorHandlerMiddleware, RequestLoggingMiddleware
+
         print("[OK] api.middleware imported successfully")
 
         from api.routers import health, mcp, downloads, shows, movies, media
+
         print("[OK] api.routers imported successfully")
 
         return True
     except Exception as e:
         print(f"[FAIL] Import failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -85,8 +93,8 @@ def verify_routes():
 
         routes = []
         for route in app.routes:
-            if hasattr(route, 'path') and hasattr(route, 'methods'):
-                methods = ','.join(route.methods) if route.methods else ''
+            if hasattr(route, "path") and hasattr(route, "methods"):
+                methods = ",".join(route.methods) if route.methods else ""
                 routes.append(f"{methods:8} {route.path}")
 
         # Expected routes
@@ -163,11 +171,7 @@ def verify_models():
         )
 
         # Test model creation
-        tool_request = ToolCallRequest(
-            server="sabnzbd",
-            tool="get_queue",
-            params={}
-        )
+        tool_request = ToolCallRequest(server="sabnzbd", tool="get_queue", params={})
         print(f"[OK] ToolCallRequest: {tool_request.server}/{tool_request.tool}")
 
         tool_response = ToolCallResponse(
@@ -188,6 +192,7 @@ def verify_models():
     except Exception as e:
         print(f"✗ Model verification failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -221,6 +226,7 @@ def verify_test_client():
     except Exception as e:
         print(f"✗ Test client verification failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

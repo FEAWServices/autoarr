@@ -83,11 +83,13 @@ class MCPOrchestrator:
 All tests in this strategy are written **BEFORE** implementation:
 
 1. **RED Phase** ✗
+
    - Write failing test
    - Test should fail because feature doesn't exist
    - Validates test is actually testing something
 
 2. **GREEN Phase** ✓
+
    - Write minimal code to make test pass
    - Focus on functionality, not perfection
    - Get to green as quickly as possible
@@ -99,15 +101,15 @@ All tests in this strategy are written **BEFORE** implementation:
 
 ### Test Categories
 
-| Category | Tests | Coverage Focus | Priority |
-|----------|-------|----------------|----------|
-| Connection Management | 20 | Connection lifecycle, pooling, reconnection | Critical |
-| Tool Routing | 15 | Correct routing, validation, error handling | Critical |
-| Parallel Execution | 10 | Concurrency, aggregation, cancellation | High |
-| Error Handling | 12 | Circuit breaker, retries, degradation | Critical |
-| Health Checks | 8 | Health monitoring, failure detection | High |
-| Resource Management | 10 | Cleanup, lifecycle, memory management | High |
-| Integration Tests | 30 | Real server interactions, E2E workflows | Medium |
+| Category              | Tests | Coverage Focus                              | Priority |
+| --------------------- | ----- | ------------------------------------------- | -------- |
+| Connection Management | 20    | Connection lifecycle, pooling, reconnection | Critical |
+| Tool Routing          | 15    | Correct routing, validation, error handling | Critical |
+| Parallel Execution    | 10    | Concurrency, aggregation, cancellation      | High     |
+| Error Handling        | 12    | Circuit breaker, retries, degradation       | Critical |
+| Health Checks         | 8     | Health monitoring, failure detection        | High     |
+| Resource Management   | 10    | Cleanup, lifecycle, memory management       | High     |
+| Integration Tests     | 30    | Real server interactions, E2E workflows     | Medium   |
 
 **Total: 105 Tests**
 
@@ -594,14 +596,14 @@ assert mock_client.connect.call_count == 4  # Initial + 3 retries
 
 ### Coverage Targets by Component
 
-| Component | Line Coverage | Branch Coverage | Priority |
-|-----------|---------------|-----------------|----------|
-| Connection Manager | 95%+ | 90%+ | Critical |
-| Tool Router | 95%+ | 95%+ | Critical |
-| Circuit Breaker | 90%+ | 85%+ | Critical |
-| Parallel Executor | 90%+ | 85%+ | High |
-| Health Monitor | 90%+ | 85%+ | High |
-| Resource Manager | 85%+ | 80%+ | High |
+| Component          | Line Coverage | Branch Coverage | Priority |
+| ------------------ | ------------- | --------------- | -------- |
+| Connection Manager | 95%+          | 90%+            | Critical |
+| Tool Router        | 95%+          | 95%+            | Critical |
+| Circuit Breaker    | 90%+          | 85%+            | Critical |
+| Parallel Executor  | 90%+          | 85%+            | High     |
+| Health Monitor     | 90%+          | 85%+            | High     |
+| Resource Manager   | 85%+          | 80%+            | High     |
 
 ### Overall Target: 90%+ Coverage
 
@@ -719,7 +721,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - name: Install dependencies
         run: |
           pip install -e .[dev]
@@ -751,14 +753,14 @@ jobs:
 
 ### Target Metrics
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Connection Establishment | < 1s per server | Time to connect all 4 servers |
-| Tool Call Latency | < 100ms overhead | Time added by orchestrator |
-| Parallel Call Throughput | 100+ calls/sec | Concurrent tool executions |
-| Health Check Interval | Every 30s | Background monitoring |
-| Memory Usage | < 100MB | Resident memory |
-| CPU Usage | < 5% idle | Background processes |
+| Metric                   | Target           | Measurement                   |
+| ------------------------ | ---------------- | ----------------------------- |
+| Connection Establishment | < 1s per server  | Time to connect all 4 servers |
+| Tool Call Latency        | < 100ms overhead | Time added by orchestrator    |
+| Parallel Call Throughput | 100+ calls/sec   | Concurrent tool executions    |
+| Health Check Interval    | Every 30s        | Background monitoring         |
+| Memory Usage             | < 100MB          | Resident memory               |
+| CPU Usage                | < 5% idle        | Background processes          |
 
 ### Load Test Scenarios
 
@@ -811,30 +813,35 @@ for _ in range(100):
 ### Phase Completion Criteria
 
 **Phase 1-2 (Connection Management)**
+
 - ✓ All 20 connection tests passing
 - ✓ 95%+ code coverage
 - ✓ Connection pooling verified
 - ✓ Zero memory leaks
 
 **Phase 3 (Routing & Parallel)**
+
 - ✓ All 25 routing/parallel tests passing
 - ✓ 90%+ code coverage
 - ✓ Parallel execution verified
 - ✓ Order preservation confirmed
 
 **Phase 4 (Error Handling)**
+
 - ✓ All 20 error handling tests passing
 - ✓ Circuit breaker verified working
 - ✓ Exponential backoff confirmed
 - ✓ Graceful degradation working
 
 **Phase 5 (Resource Management)**
+
 - ✓ All 10 resource tests passing
 - ✓ Clean shutdown verified
 - ✓ No resource leaks
 - ✓ Context manager working
 
 **Phase 6 (Integration)**
+
 - ✓ All 30 integration tests passing
 - ✓ Works with real MCP servers
 - ✓ Performance targets met
@@ -919,6 +926,7 @@ pytest-watch tests/unit/core/
 **Next Review**: After Phase 2 Completion
 
 **Related Documents**:
+
 - `BUILD-PLAN.md` - Overall project plan
 - `MCP_PROTOCOL.md` - MCP protocol specification
 - `ARCHITECTURE.md` - System architecture

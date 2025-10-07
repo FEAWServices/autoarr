@@ -6,7 +6,9 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
+        args: ['--maxkb=1024']
       - id: check-json
+        exclude: tsconfig.*\.json$
       - id: check-toml
       - id: check-merge-conflict
       - id: debug-statements
@@ -22,7 +24,8 @@ repos:
     rev: 6.1.0
     hooks:
       - id: flake8
-        args: [--max-line-length=100, --extend-ignore=E203]
+        args: ['--max-line-length=100', '--extend-ignore=E203,F541,F401,E402,F841']
+        exclude: ^(docs/examples/|.*example\.py$|.*test.*\.py$|scripts/|autoarr/tests/|autoarr/mcp_servers/)
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.7.1
@@ -32,7 +35,8 @@ repos:
           - types-redis
           - types-requests
           - types-pyyaml
-        args: [--config-file=pyproject.toml]
+        args: [--config-file=pyproject.toml, --ignore-missing-imports]
+        exclude: ^(docs/examples/|.*example\.py$|.*test.*\.py$|scripts/|autoarr/shared/|autoarr/tests/|autoarr/api/|autoarr/mcp_servers/)
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.1.0

@@ -17,7 +17,7 @@ import uvicorn
 from api.config import get_settings
 
 
-def main():
+def main() -> None:
     """Start the FastAPI server."""
     settings = get_settings()
 

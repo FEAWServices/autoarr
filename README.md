@@ -8,6 +8,11 @@
 
 ---
 
+![AutoArr UI Mockup](docs/images/ui-mockup.png)
+_Aspirational UI: Modern, unified dashboard for your entire media automation stack_
+
+---
+
 ## 🎯 What is AutoArr?
 
 AutoArr is an **intelligent orchestration layer** that sits above your media automation stack (SABnzbd, Sonarr, Radarr, and Plex), providing autonomous configuration optimization, intelligent download recovery, and natural language content requests.
@@ -91,7 +96,16 @@ For detailed setup instructions, see [**docs/QUICK-START.md**](docs/QUICK-START.
 Start here to understand AutoArr and get it running:
 
 1. [**QUICK-START.md**](docs/QUICK-START.md) - Get up and running in 30 minutes
-2. [**PROJECT-SUMMARY.md**](docs/PROJECT-SUMMARY.md) - Executive overview and key decisions
+2. [**DOCKER_SETUP.md**](docs/DOCKER_SETUP.md) - Production deployment with Docker/Synology
+3. [**PROJECT-SUMMARY.md**](docs/PROJECT-SUMMARY.md) - Executive overview and key decisions
+
+### **Deployment**
+
+For production deployment:
+
+- [**DEPLOYMENT.md**](DEPLOYMENT.md) - Complete deployment guide
+- [**DEPLOYMENT_PIPELINE.md**](docs/DEPLOYMENT_PIPELINE.md) - CI/CD and automated builds
+- [**DOCKER_SETUP.md**](docs/DOCKER_SETUP.md) - Docker and Synology NAS setup
 
 ### **Understanding the Vision**
 
