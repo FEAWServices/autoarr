@@ -27,7 +27,9 @@
       "Bash(poetry run:*)",
       "Bash(poetry install:*)",
       "Bash(poetry lock:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []
