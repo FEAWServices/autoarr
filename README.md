@@ -334,19 +334,24 @@ cd autoarr
 docker-compose -f docker/docker-compose.dev.yml up -d
 
 # 3. Install dependencies
-cd api && poetry install && cd ..
-cd ui && pnpm install && cd ..
+poetry install
 
-# 4. Run tests
-pytest tests/ --cov          # Backend
-cd ui && pnpm test           # Frontend
+# 4. Run tests (matches CI exactly)
+poetry run test              # Run all linters and tests
+poetry run format            # Auto-format code
+
+# Or use the shell scripts directly
+bash scripts/test.sh         # Run all checks
+bash scripts/format.sh       # Format code
 ```
 
 ### **Development Workflow**
 
 - Follow [Conventional Commits](https://www.conventionalcommits.org/)
 - Write tests first (TDD)
-- Maintain 85%+ test coverage
+- Maintain 80%+ test coverage
+- Run `poetry run test` before committing (matches CI checks)
+- Run `poetry run format` to auto-fix formatting issues
 - Use Claude Code agents for accelerated development
 
 See [**CONTRIBUTING.md**](docs/CONTRIBUTING.md) for detailed guidelines.
