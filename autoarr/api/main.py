@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from .config import get_settings
+from .database import init_database, get_database
 from .dependencies import shutdown_orchestrator
 from .middleware import (
     ErrorHandlerMiddleware,
@@ -46,11 +47,29 @@ async def lifespan(app: FastAPI):
     logger.info(f"Environment: {settings.app_env}")
     logger.info(f"Log level: {settings.log_level}")
 
+    # Initialize database
+    if settings.database_url:
+        logger.info("Initializing database...")
+        db = init_database(settings.database_url)
+        await db.init_db()
+        logger.info("Database initialized successfully")
+    else:
+        logger.warning("No DATABASE_URL configured, settings will not persist")
+
     yield
 
     # Shutdown
     logger.info("Shutting down AutoArr FastAPI Gateway...")
     await shutdown_orchestrator()
+
+    # Close database connections
+    try:
+        db = get_database()
+        await db.close()
+        logger.info("Database connections closed")
+    except RuntimeError:
+        pass  # Database was not initialized
+
     logger.info("Shutdown complete")
 
 

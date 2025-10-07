@@ -12,11 +12,29 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ..config import get_settings
+from ..database import get_database, SettingsRepository
 from ..dependencies import get_orchestrator
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+# ============================================================================
+# Dependencies
+# ============================================================================
+
+
+async def get_settings_repo() -> SettingsRepository:
+    """Get settings repository dependency."""
+    try:
+        db = get_database()
+        return SettingsRepository(db)
+    except RuntimeError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database not configured. Settings persistence disabled.",
+        )
 
 
 # ============================================================================
@@ -128,13 +146,52 @@ async def get_service_status(service_name: str, orchestrator) -> str:
 
 
 @router.get("/", response_model=AllServicesConfigResponse)
-async def get_all_settings(orchestrator=Depends(get_orchestrator)):
+async def get_all_settings(
+    orchestrator=Depends(get_orchestrator), repo: SettingsRepository = Depends(get_settings_repo)
+):
     """
     Get current configuration for all services.
 
-    Returns masked API keys for security.
+    Returns masked API keys for security. Reads from database if available,
+    falls back to environment variables.
     """
     settings = get_settings()
+
+    # Try to get settings from database first
+    db_settings = await repo.get_all_service_settings()
+
+    # Helper to get setting (DB first, then env)
+    def get_setting(service_name: str, env_enabled, env_url, env_key, env_timeout):
+        db = db_settings.get(service_name)
+        if db:
+            return db.enabled, db.url, db.api_key_or_token, db.timeout
+        return env_enabled, env_url, env_key, env_timeout
+
+    # Get settings for each service
+    sabn_enabled, sabn_url, sabn_key, sabn_timeout = get_setting(
+        "sabnzbd",
+        settings.sabnzbd_enabled,
+        settings.sabnzbd_url,
+        settings.sabnzbd_api_key,
+        settings.sabnzbd_timeout,
+    )
+    son_enabled, son_url, son_key, son_timeout = get_setting(
+        "sonarr",
+        settings.sonarr_enabled,
+        settings.sonarr_url,
+        settings.sonarr_api_key,
+        settings.sonarr_timeout,
+    )
+    rad_enabled, rad_url, rad_key, rad_timeout = get_setting(
+        "radarr",
+        settings.radarr_enabled,
+        settings.radarr_url,
+        settings.radarr_api_key,
+        settings.radarr_timeout,
+    )
+    plex_enabled, plex_url, plex_key, plex_timeout = get_setting(
+        "plex", settings.plex_enabled, settings.plex_url, settings.plex_token, settings.plex_timeout
+    )
 
     # Get current connection statuses
     sabnzbd_status = await get_service_status("sabnzbd", orchestrator)
@@ -144,40 +201,40 @@ async def get_all_settings(orchestrator=Depends(get_orchestrator)):
 
     return AllServicesConfigResponse(
         sabnzbd=ServiceConnectionConfigResponse(
-            enabled=settings.sabnzbd_enabled,
-            url=settings.sabnzbd_url,
-            api_key_masked=mask_api_key(settings.sabnzbd_api_key),
-            timeout=settings.sabnzbd_timeout,
+            enabled=sabn_enabled,
+            url=sabn_url,
+            api_key_masked=mask_api_key(sabn_key),
+            timeout=sabn_timeout,
             status=sabnzbd_status,
         )
-        if settings.sabnzbd_enabled
+        if sabn_enabled
         else None,
         sonarr=ServiceConnectionConfigResponse(
-            enabled=settings.sonarr_enabled,
-            url=settings.sonarr_url,
-            api_key_masked=mask_api_key(settings.sonarr_api_key),
-            timeout=settings.sonarr_timeout,
+            enabled=son_enabled,
+            url=son_url,
+            api_key_masked=mask_api_key(son_key),
+            timeout=son_timeout,
             status=sonarr_status,
         )
-        if settings.sonarr_enabled
+        if son_enabled
         else None,
         radarr=ServiceConnectionConfigResponse(
-            enabled=settings.radarr_enabled,
-            url=settings.radarr_url,
-            api_key_masked=mask_api_key(settings.radarr_api_key),
-            timeout=settings.radarr_timeout,
+            enabled=rad_enabled,
+            url=rad_url,
+            api_key_masked=mask_api_key(rad_key),
+            timeout=rad_timeout,
             status=radarr_status,
         )
-        if settings.radarr_enabled
+        if rad_enabled
         else None,
         plex=ServiceConnectionConfigResponse(
-            enabled=settings.plex_enabled,
-            url=settings.plex_url,
-            api_key_masked=mask_api_key(settings.plex_token),
-            timeout=settings.plex_timeout,
+            enabled=plex_enabled,
+            url=plex_url,
+            api_key_masked=mask_api_key(plex_key),
+            timeout=plex_timeout,
             status=plex_status,
         )
-        if settings.plex_enabled
+        if plex_enabled
         else None,
     )
 
@@ -246,20 +303,45 @@ async def update_service_settings(
     service: str,
     config: ServiceConnectionConfig,
     orchestrator=Depends(get_orchestrator),
+    repo: SettingsRepository = Depends(get_settings_repo),
 ):
     """
     Update configuration for a specific service.
 
-    This endpoint updates the service configuration and attempts to reconnect.
+    This endpoint updates the service configuration in the database and attempts to reconnect.
 
     Args:
         service: Service name (sabnzbd, sonarr, radarr, plex)
         config: New configuration
     """
-    settings = get_settings()
     service = service.lower()
 
-    # Update settings based on service
+    # Validate service name
+    if service not in ["sabnzbd", "sonarr", "radarr", "plex"]:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Service '{service}' not found. Valid services: sabnzbd, sonarr, radarr, plex",
+        )
+
+    # Save settings to database
+    try:
+        await repo.save_service_settings(
+            service_name=service,
+            enabled=config.enabled,
+            url=config.url,
+            api_key_or_token=config.api_key_or_token,
+            timeout=config.timeout,
+        )
+        logger.info(f"Saved {service} settings to database")
+    except Exception as e:
+        logger.error(f"Failed to save {service} settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save settings: {str(e)}",
+        )
+
+    # Update in-memory settings for immediate effect
+    settings = get_settings()
     if service == "sabnzbd":
         settings.sabnzbd_enabled = config.enabled
         settings.sabnzbd_url = config.url
@@ -280,11 +362,6 @@ async def update_service_settings(
         settings.plex_url = config.url
         settings.plex_token = config.api_key_or_token
         settings.plex_timeout = config.timeout
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Service '{service}' not found",
-        )
 
     # Attempt to reconnect to the service
     try:
@@ -297,12 +374,12 @@ async def update_service_settings(
         logger.error(f"Failed to reconnect to {service}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Settings updated but failed to connect: {str(e)}",
+            detail=f"Settings saved but failed to connect: {str(e)}",
         )
 
     return {
         "success": True,
-        "message": f"Successfully updated {service} configuration",
+        "message": f"Successfully updated and saved {service} configuration",
         "service": service,
     }
 
@@ -405,40 +482,62 @@ async def test_service_connection(service: str, request: TestConnectionRequest):
 
 
 @router.post("/")
-async def save_all_settings(config: AllServicesConfig, orchestrator=Depends(get_orchestrator)):
+async def save_all_settings(
+    config: AllServicesConfig,
+    orchestrator=Depends(get_orchestrator),
+    repo: SettingsRepository = Depends(get_settings_repo),
+):
     """
     Save configuration for all services at once.
 
-    This endpoint updates all service configurations in memory.
-    Use /save-to-env to persist to disk.
+    This endpoint updates all service configurations in the database and in memory.
 
     Args:
         config: Configuration for all services
     """
     settings = get_settings()
+    save_errors = []
 
-    # Update SABnzbd settings
+    # Save each service configuration to database
+    for service_name, service_config in [
+        ("sabnzbd", config.sabnzbd),
+        ("sonarr", config.sonarr),
+        ("radarr", config.radarr),
+        ("plex", config.plex),
+    ]:
+        if service_config:
+            try:
+                await repo.save_service_settings(
+                    service_name=service_name,
+                    enabled=service_config.enabled,
+                    url=service_config.url,
+                    api_key_or_token=service_config.api_key_or_token,
+                    timeout=service_config.timeout,
+                )
+                logger.info(f"Saved {service_name} settings to database")
+            except Exception as e:
+                logger.error(f"Failed to save {service_name} settings: {e}")
+                save_errors.append(f"{service_name}: {str(e)}")
+
+    # Update in-memory settings for immediate effect
     if config.sabnzbd:
         settings.sabnzbd_enabled = config.sabnzbd.enabled
         settings.sabnzbd_url = config.sabnzbd.url
         settings.sabnzbd_api_key = config.sabnzbd.api_key_or_token
         settings.sabnzbd_timeout = config.sabnzbd.timeout
 
-    # Update Sonarr settings
     if config.sonarr:
         settings.sonarr_enabled = config.sonarr.enabled
         settings.sonarr_url = config.sonarr.url
         settings.sonarr_api_key = config.sonarr.api_key_or_token
         settings.sonarr_timeout = config.sonarr.timeout
 
-    # Update Radarr settings
     if config.radarr:
         settings.radarr_enabled = config.radarr.enabled
         settings.radarr_url = config.radarr.url
         settings.radarr_api_key = config.radarr.api_key_or_token
         settings.radarr_timeout = config.radarr.timeout
 
-    # Update Plex settings
     if config.plex:
         settings.plex_enabled = config.plex.enabled
         settings.plex_url = config.plex.url
@@ -461,16 +560,17 @@ async def save_all_settings(config: AllServicesConfig, orchestrator=Depends(get_
                 logger.error(f"Failed to reconnect to {service_name}: {e}")
                 reconnect_errors.append(f"{service_name}: {str(e)}")
 
-    if reconnect_errors:
+    if save_errors or reconnect_errors:
         return {
             "success": False,
-            "message": "Settings updated but some services failed to connect",
-            "errors": reconnect_errors,
+            "message": "Some operations failed",
+            "save_errors": save_errors,
+            "reconnect_errors": reconnect_errors,
         }
 
     return {
         "success": True,
-        "message": "All settings updated successfully",
+        "message": "All settings saved and applied successfully",
     }
 
 
