@@ -1,6 +1,6 @@
 # AutoArr
 
-> Intelligent cruise control for your *arr media automation stack
+> Intelligent cruise control for your \*arr media automation stack
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker Pulls](https://img.shields.io/docker/pulls/autoarr/autoarr)](https://hub.docker.com/r/autoarr/autoarr)
@@ -16,6 +16,7 @@ AutoArr is an intelligent orchestration layer that sits over your media automati
 ### The Problem
 
 Managing a media automation stack is complex:
+
 - ⚙️ Dozens of configuration settings that need optimization
 - 🔄 Failed downloads require manual intervention
 - 🎬 Multiple UIs to request and manage content
@@ -24,6 +25,7 @@ Managing a media automation stack is complex:
 ### The Solution
 
 AutoArr provides:
+
 - 🔍 **Configuration Intelligence**: Audits your setup and recommends optimizations
 - 🤖 **Autonomous Recovery**: Automatically retries failed downloads intelligently
 - 💬 **Natural Language Interface**: Request content in plain English
@@ -34,6 +36,7 @@ AutoArr provides:
 ## ✨ Features
 
 ### 🎛️ Configuration Optimization
+
 - Scans all connected applications (SABnzbd, Sonarr, Radarr, Plex)
 - Compares against latest best practices
 - Uses AI to recommend optimal settings
@@ -41,6 +44,7 @@ AutoArr provides:
 - Tracks configuration history for rollback
 
 ### 🔄 Automatic Download Recovery
+
 - Monitors SABnzbd queue in real-time
 - Detects failed downloads immediately
 - Automatically searches for alternatives
@@ -48,6 +52,7 @@ AutoArr provides:
 - Keeps wanted lists clean
 
 ### 💬 Natural Language Content Requests
+
 - "Add the new Dune movie in 4K"
 - "Get all seasons of Breaking Bad"
 - Automatically determines movie vs. TV show
@@ -55,6 +60,7 @@ AutoArr provides:
 - Real-time status updates
 
 ### 📊 Unified Dashboard
+
 - At-a-glance health status
 - Configuration recommendations
 - Active downloads tracking
@@ -66,6 +72,7 @@ AutoArr provides:
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Docker & Docker Compose
 - Running instances of: SABnzbd, Sonarr, Radarr (Plex optional)
 - API keys for each application
@@ -75,7 +82,7 @@ AutoArr provides:
 1. **Create docker-compose.yml**:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   autoarr:
@@ -86,19 +93,19 @@ services:
     environment:
       # Claude API for intelligence features (optional)
       - CLAUDE_API_KEY=${CLAUDE_API_KEY}
-      
+
       # SABnzbd
       - SABNZBD_URL=http://sabnzbd:8080
       - SABNZBD_API_KEY=${SABNZBD_API_KEY}
-      
+
       # Sonarr
       - SONARR_URL=http://sonarr:8989
       - SONARR_API_KEY=${SONARR_API_KEY}
-      
+
       # Radarr
       - RADARR_URL=http://radarr:7878
       - RADARR_API_KEY=${RADARR_API_KEY}
-      
+
       # Plex (optional)
       - PLEX_URL=http://plex:32400
       - PLEX_TOKEN=${PLEX_TOKEN}
@@ -146,6 +153,7 @@ Open http://localhost:3000 in your browser.
 ## 🛠️ Technology Stack
 
 ### Backend
+
 - **Language**: Python 3.11+
 - **Framework**: FastAPI
 - **MCP**: Model Context Protocol for app integration
@@ -153,6 +161,7 @@ Open http://localhost:3000 in your browser.
 - **Intelligence**: Claude API + local LLM fallback
 
 ### Frontend
+
 - **Framework**: React 18 + TypeScript
 - **Styling**: Tailwind CSS
 - **State**: Zustand
@@ -160,6 +169,7 @@ Open http://localhost:3000 in your browser.
 - **Build**: Vite
 
 ### Infrastructure
+
 - **Container**: Docker
 - **Orchestration**: Docker Compose
 - **CI/CD**: GitHub Actions
@@ -211,17 +221,20 @@ We welcome contributions! AutoArr is built with Test-Driven Development (TDD) an
 ### Development Setup
 
 1. **Clone the repository**:
+
 ```bash
 git clone https://github.com/autoarr/autoarr.git
 cd autoarr
 ```
 
 2. **Start development environment**:
+
 ```bash
 docker-compose -f docker-compose.dev.yml up -d
 ```
 
 3. **Install dependencies**:
+
 ```bash
 # Backend
 cd api && poetry install
@@ -231,6 +244,7 @@ cd ui && pnpm install
 ```
 
 4. **Run tests**:
+
 ```bash
 # Backend tests
 pytest tests/ --cov
@@ -246,29 +260,34 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 ## 📋 Roadmap
 
 ### ✅ Phase 1: Foundation (Completed)
+
 - [x] MCP server infrastructure
 - [x] Basic API gateway
 - [x] Development environment
 
 ### 🚧 Phase 2: Intelligence (In Progress)
+
 - [x] Configuration auditing
 - [x] LLM integration
 - [ ] Web search for best practices
 - [ ] Configuration UI
 
 ### 📅 Phase 3: Monitoring (Planned - Q4 2025)
+
 - [ ] Download queue monitoring
 - [ ] Automatic failure recovery
 - [ ] Activity logging
 - [ ] Real-time WebSocket updates
 
 ### 📅 Phase 4: Natural Language (Planned - Q1 2026)
+
 - [ ] Content request parsing
 - [ ] Movie vs. TV classification
 - [ ] Chat interface
 - [ ] Request status tracking
 
 ### 📅 Phase 5: Polish (Planned - Q2 2026)
+
 - [ ] Mobile optimization
 - [ ] Performance tuning
 - [ ] Comprehensive documentation
@@ -283,18 +302,21 @@ See [BUILD-PLAN.md](BUILD-PLAN.md) for detailed roadmap.
 AutoArr follows an **open-core** model:
 
 ### Free (Open Source)
+
 - ✅ Configuration auditing
 - ✅ Basic download recovery
 - ✅ REST API
 - ✅ Community support
 
 ### Premium ($4.99/month)
+
 - 🤖 Advanced AI recommendations
 - 💬 Natural language interface
 - 🔄 Multi-location sync
 - 🎯 Priority support
 
 ### Enterprise ($49.99/month)
+
 - 🏢 Unlimited locations
 - 📊 Advanced analytics
 - 🔌 Custom integrations
@@ -307,6 +329,7 @@ See [VISION.md](VISION.md) for business strategy.
 ## 🎖️ Credits
 
 AutoArr is built with:
+
 - [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
 - [React](https://react.dev/) - UI library
 - [MCP](https://modelcontextprotocol.io/) - Model Context Protocol
@@ -365,6 +388,7 @@ SOFTWARE.
 ## 🙏 Support
 
 If you find AutoArr useful, please consider:
+
 - ⭐ Starring the repository
 - 🐛 Reporting bugs
 - 💡 Suggesting features

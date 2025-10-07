@@ -16,6 +16,7 @@ A complete Test-Driven Development (TDD) test suite has been created for the Son
 ### 📚 Documentation (3 files)
 
 1. **`C:\Git\autoarr\docs\test-strategy-sonarr.md`**
+
    - Comprehensive test strategy document
    - Test specifications for all components
    - Mock strategies and patterns
@@ -23,6 +24,7 @@ A complete Test-Driven Development (TDD) test suite has been created for the Son
    - CI/CD integration plan
 
 2. **`C:\Git\autoarr\docs\SONARR-TEST-SUMMARY.md`**
+
    - Executive summary of test suite
    - Implementation requirements
    - API endpoint reference
@@ -48,9 +50,11 @@ A complete Test-Driven Development (TDD) test suite has been created for the Son
 ### 🧪 Unit Tests (3 files)
 
 5. **`C:\Git\autoarr\tests\unit\mcp_servers\sonarr\__init__.py`**
+
    - Package initialization
 
 6. **`C:\Git\autoarr\tests\unit\mcp_servers\sonarr\test_sonarr_client.py`**
+
    - **112 test methods** for SonarrClient class
    - Covers: initialization, series ops, episode ops, commands, calendar, queue, wanted, errors, auth, edge cases
 
@@ -61,9 +65,11 @@ A complete Test-Driven Development (TDD) test suite has been created for the Son
 ### 🔗 Integration Tests (3 files)
 
 8. **`C:\Git\autoarr\tests\integration\mcp_servers\sonarr\__init__.py`**
+
    - Package initialization
 
 9. **`C:\Git\autoarr\tests\integration\mcp_servers\sonarr\test_sonarr_api_integration.py`**
+
    - **32 test methods** for API integration
    - Covers: full workflows, API endpoint validation, error scenarios, data integrity, performance
 
@@ -106,11 +112,13 @@ pytest tests/unit/mcp_servers/sonarr/test_sonarr_client.py -v
 ### Step 1: Create Client Module
 
 **File:** `C:\Git\autoarr\mcp-servers\sonarr\__init__.py`
+
 ```python
 """Sonarr MCP Server package."""
 ```
 
 **File:** `C:\Git\autoarr\mcp-servers\sonarr\client.py`
+
 ```python
 """Sonarr API Client."""
 
@@ -138,6 +146,7 @@ class SonarrClient:
 ### Step 2: Create Server Module
 
 **File:** `C:\Git\autoarr\mcp-servers\sonarr\server.py`
+
 ```python
 """Sonarr MCP Server."""
 
@@ -176,6 +185,7 @@ pytest tests/unit/mcp_servers/sonarr/ tests/integration/mcp_servers/sonarr/ \
 ### Step 4: Refactor Phase
 
 Once all tests pass:
+
 1. Extract common patterns
 2. Improve code organization
 3. Add comprehensive type hints
@@ -218,6 +228,7 @@ url = f"{base_url}?apikey={api_key}"
 All endpoints must use `/api/v3/` prefix:
 
 **Series:**
+
 - `GET /api/v3/series` - List all
 - `GET /api/v3/series/{id}` - Get by ID
 - `POST /api/v3/series` - Add new
@@ -225,14 +236,17 @@ All endpoints must use `/api/v3/` prefix:
 - `GET /api/v3/series/lookup?term={term}` - Search
 
 **Episodes:**
+
 - `GET /api/v3/episode?seriesId={id}` - List for series
 - `GET /api/v3/episode/{id}` - Get by ID
 
 **Commands:**
+
 - `POST /api/v3/command` - Execute
 - `GET /api/v3/command/{id}` - Get status
 
 **Other:**
+
 - `GET /api/v3/calendar` - Upcoming episodes
 - `GET /api/v3/queue` - Download queue
 - `GET /api/v3/wanted/missing` - Wanted episodes
@@ -248,6 +262,7 @@ All endpoints must use `/api/v3/` prefix:
 ### 📦 Required Dependencies
 
 Already in `pyproject.toml`:
+
 - `httpx` - Async HTTP client
 - `mcp` - Model Context Protocol
 - `pytest` - Testing framework
@@ -259,35 +274,42 @@ Already in `pyproject.toml`:
 ### ✅ Unit Tests - SonarrClient
 
 1. **Initialization & Connection** (8 tests)
+
    - URL/API key validation
    - Connection validation
    - Health checks
    - Context manager
 
 2. **Series Operations** (10+ tests)
+
    - CRUD operations
    - Search (TVDB)
    - Validation
 
 3. **Episode Operations** (5+ tests)
+
    - List with filtering
    - Search/download
 
 4. **Command Operations** (4+ tests)
+
    - Execute commands
    - Track status
 
 5. **Calendar/Queue/Wanted** (6+ tests)
+
    - Date filtering
    - Pagination
    - Series inclusion
 
 6. **Error Handling** (7+ tests)
+
    - HTTP errors (401, 404, 500)
    - Connection errors
    - Retry logic
 
 7. **Authentication** (4+ tests)
+
    - Header-based auth
    - API v3 URLs
 
@@ -308,18 +330,22 @@ Already in `pyproject.toml`:
 ### ✅ Integration Tests
 
 1. **Full Workflows** (2 tests)
+
    - Complete series lifecycle
    - Episode search workflow
 
 2. **API Validation** (3 tests)
+
    - Endpoint format
    - Header authentication
 
 3. **Error Scenarios** (4 tests)
+
    - Sonarr error formats
    - Retry logic
 
 4. **Data Integrity** (3 tests)
+
    - Complex structures
    - Pagination
    - Unicode
@@ -348,38 +374,48 @@ Already in `pyproject.toml`:
 ## Next Actions
 
 1. **Review Documentation**
+
    - Read `docs/test-strategy-sonarr.md`
    - Review `docs/SONARR-TEST-SUMMARY.md`
 
 2. **Verify RED Phase**
+
    ```bash
    pytest tests/unit/mcp_servers/sonarr/test_sonarr_client.py::TestSonarrClientInitialization::test_client_requires_url -v
    ```
+
    Expected: `ModuleNotFoundError: No module named 'sonarr.client'`
 
 3. **Implement Client**
+
    - Create `mcp-servers/sonarr/client.py`
    - Follow test specifications
    - Use header-based auth
 
 4. **Implement Server**
+
    - Create `mcp-servers/sonarr/server.py`
    - Register 10 MCP tools
    - Format responses correctly
 
 5. **Verify GREEN Phase**
+
    ```bash
    pytest tests/unit/mcp_servers/sonarr/ -v
    ```
+
    Expected: All tests pass
 
 6. **Achieve Coverage**
+
    ```bash
    pytest tests/ --cov=mcp_servers.sonarr --cov-fail-under=90
    ```
+
    Expected: 90%+ coverage
 
 7. **Refactor**
+
    - Improve code quality
    - Keep tests green
 
@@ -392,12 +428,12 @@ Already in `pyproject.toml`:
 
 ### Differences from SABnzbd
 
-| Aspect | SABnzbd | Sonarr |
-|--------|---------|--------|
+| Aspect             | SABnzbd                  | Sonarr                |
+| ------------------ | ------------------------ | --------------------- |
 | **Authentication** | Query param (`?apikey=`) | Header (`X-Api-Key:`) |
-| **API Version** | No version in URL | `/api/v3/` prefix |
-| **Commands** | Immediate | Async with tracking |
-| **Responses** | Nested in mode keys | Direct JSON |
+| **API Version**    | No version in URL        | `/api/v3/` prefix     |
+| **Commands**       | Immediate                | Async with tracking   |
+| **Responses**      | Nested in mode keys      | Direct JSON           |
 
 ### Testing Tools Used
 
@@ -410,6 +446,7 @@ Already in `pyproject.toml`:
 ### Coverage Configuration
 
 Already configured in `pyproject.toml`:
+
 ```toml
 [tool.pytest.ini_options]
 addopts = [
@@ -429,6 +466,7 @@ addopts = [
 ## Contact & Questions
 
 If you encounter issues or have questions:
+
 1. Review the test specifications in test files
 2. Check the test strategy document
 3. Reference SABnzbd implementation as pattern

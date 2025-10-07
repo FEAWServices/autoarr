@@ -1,0 +1,93 @@
+version: '3.8'
+
+# AutoArr - Intelligent Media Automation for Synology NAS
+# This compose file is optimized for Synology DSM with Container Manager
+
+services:
+  autoarr:
+    image: ghcr.io/feawservices/autoarr:latest
+    container_name: autoarr
+    restart: unless-stopped
+
+    # Port mapping - Access via http://YOUR_NAS_IP:8088
+    ports:
+      - "8088:8088"
+
+    # Volumes - Adjust paths to match your Synology structure
+    volumes:
+      # Data persistence (SQLite database)
+      - /volume1/docker/autoarr/data:/data
+
+      # Application logs
+      - /volume1/docker/autoarr/logs:/app/logs
+
+      # Optional: Share media folders for monitoring
+      # - /volume1/media:/media:ro
+
+    environment:
+      # === Application Settings ===
+      APP_ENV: production
+      LOG_LEVEL: INFO
+      PORT: 8088
+
+      # === Database (SQLite - recommended for Synology) ===
+      DATABASE_URL: sqlite:////data/autoarr.db
+
+      # === Cache/Queue (In-memory - no Redis needed) ===
+      REDIS_URL: memory://
+
+      # === Service Configuration ===
+      # Configure your services through the Settings UI after first launch
+      # Visit: http://YOUR_NAS_IP:8088/settings
+      #
+      # Optional: Pre-configure services via environment variables
+      # (You can skip this and use the UI instead)
+      #
+      # SABNZBD_URL: http://YOUR_NAS_IP:8080
+      # SABNZBD_API_KEY: your_api_key_here
+      # SABNZBD_ENABLED: "true"
+      #
+      # SONARR_URL: http://YOUR_NAS_IP:8989
+      # SONARR_API_KEY: your_api_key_here
+      # SONARR_ENABLED: "true"
+      #
+      # RADARR_URL: http://YOUR_NAS_IP:7878
+      # RADARR_API_KEY: your_api_key_here
+      # RADARR_ENABLED: "true"
+      #
+      # PLEX_URL: http://YOUR_NAS_IP:32400
+      # PLEX_TOKEN: your_token_here
+      # PLEX_ENABLED: "true"
+
+      # === AI Features (Optional) ===
+      # Get your key from: https://console.anthropic.com/
+      # ANTHROPIC_API_KEY: ""
+      #
+      # Optional: Brave Search API for enhanced search
+      # Get your key from: https://brave.com/search/api/
+      # BRAVE_API_KEY: ""
+
+    # Resource limits for Synology (adjust based on your NAS capabilities)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Health check to monitor container status
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Optional: Connect to existing media stack network
+# Uncomment if your Sonarr/Radarr/SABnzbd/Plex are on a custom Docker network
+# networks:
+#   media-stack:
+#     external: true
+#     name: your_media_network_name

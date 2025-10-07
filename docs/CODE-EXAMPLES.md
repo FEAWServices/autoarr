@@ -24,12 +24,12 @@ from mcp import MCPServer, Tool
 
 class SABnzbdClient:
     """Client for SABnzbd API."""
-    
+
     def __init__(self, base_url: str, api_key: str):
         self.base_url = base_url.rstrip('/')
         self.api_key = api_key
         self.client = httpx.AsyncClient(timeout=30.0)
-    
+
     async def _request(self, mode: str, params: Optional[Dict] = None) -> Dict[str, Any]:
         """Make a request to SABnzbd API."""
         url = f"{self.base_url}/api"
@@ -39,30 +39,30 @@ class SABnzbdClient:
             'apikey': self.api_key,
             'output': 'json'
         })
-        
+
         try:
             response = await self.client.get(url, params=params)
             response.raise_for_status()
             return response.json()
         except httpx.HTTPError as e:
             raise ConnectionError(f"SABnzbd API error: {e}")
-    
+
     async def get_queue(self) -> Dict[str, Any]:
         """Get current download queue."""
         return await self._request('queue')
-    
+
     async def get_history(self, limit: int = 50) -> Dict[str, Any]:
         """Get download history."""
         return await self._request('history', {'limit': limit})
-    
+
     async def retry_download(self, nzo_id: str) -> Dict[str, Any]:
         """Retry a failed download."""
         return await self._request('retry', {'value': nzo_id})
-    
+
     async def get_config(self) -> Dict[str, Any]:
         """Get SABnzbd configuration."""
         return await self._request('get_config')
-    
+
     async def close(self):
         """Close the client."""
         await self.client.aclose()
@@ -70,12 +70,12 @@ class SABnzbdClient:
 
 class SABnzbdMCPServer(MCPServer):
     """MCP Server for SABnzbd."""
-    
+
     def __init__(self, url: str, api_key: str):
         super().__init__()
         self.client = SABnzbdClient(url, api_key)
         self._register_tools()
-    
+
     def _register_tools(self):
         """Register all available tools."""
         self.add_tool(
@@ -85,7 +85,7 @@ class SABnzbdMCPServer(MCPServer):
                 handler=self._get_queue
             )
         )
-        
+
         self.add_tool(
             Tool(
                 name="get_history",
@@ -100,7 +100,7 @@ class SABnzbdMCPServer(MCPServer):
                 }
             )
         )
-        
+
         self.add_tool(
             Tool(
                 name="retry_download",
@@ -115,19 +115,19 @@ class SABnzbdMCPServer(MCPServer):
                 }
             )
         )
-    
+
     async def _get_queue(self, **kwargs) -> Dict[str, Any]:
         """Tool handler for get_queue."""
         return await self.client.get_queue()
-    
+
     async def _get_history(self, limit: int = 50, **kwargs) -> Dict[str, Any]:
         """Tool handler for get_history."""
         return await self.client.get_history(limit=limit)
-    
+
     async def _retry_download(self, nzo_id: str, **kwargs) -> Dict[str, Any]:
         """Tool handler for retry_download."""
         return await self.client.retry_download(nzo_id)
-    
+
     async def cleanup(self):
         """Clean up resources."""
         await self.client.close()
@@ -137,17 +137,17 @@ async def main():
     """Run the MCP server."""
     import os
     from dotenv import load_dotenv
-    
+
     load_dotenv()
-    
+
     url = os.getenv('SABNZBD_URL', 'http://localhost:8080')
     api_key = os.getenv('SABNZBD_API_KEY')
-    
+
     if not api_key:
         raise ValueError("SABNZBD_API_KEY environment variable is required")
-    
+
     server = SABnzbdMCPServer(url, api_key)
-    
+
     try:
         await server.run()
     finally:
@@ -194,7 +194,7 @@ class AuditResult:
     timestamp: datetime
     recommendations: List[Recommendation]
     overall_score: int  # 0-100
-    
+
     @property
     def has_recommendations(self) -> bool:
         return len(self.recommendations) > 0
@@ -202,11 +202,11 @@ class AuditResult:
 
 class ConfigurationManager:
     """Manages configuration auditing and optimization."""
-    
+
     def __init__(self, orchestrator: MCPOrchestrator):
         self.orchestrator = orchestrator
         self.best_practices = self._load_best_practices()
-    
+
     def _load_best_practices(self) -> Dict[str, List[Dict]]:
         """Load best practices from database."""
         # TODO: Load from database
@@ -253,34 +253,34 @@ class ConfigurationManager:
                 },
             ],
         }
-    
+
     async def audit_application(
         self,
         app_name: str,
         config: Optional[Dict] = None
     ) -> AuditResult:
         """Audit an application's configuration.
-        
+
         Args:
             app_name: Name of the application to audit
             config: Optional configuration dict (will fetch if not provided)
-            
+
         Returns:
             AuditResult with recommendations
         """
         # Get current configuration if not provided
         if config is None:
             config = await self._fetch_config(app_name)
-        
+
         # Get best practices for this app
         practices = self.best_practices.get(app_name, [])
-        
+
         # Generate recommendations
         recommendations = []
         for practice in practices:
             setting = practice['setting']
             current_value = config.get(setting)
-            
+
             # Check if current value meets best practice
             if not practice['condition'](current_value):
                 recommendations.append(
@@ -294,17 +294,17 @@ class ConfigurationManager:
                         impact=self._estimate_impact(practice['priority'])
                     )
                 )
-        
+
         # Calculate overall score
         score = self._calculate_score(len(practices), len(recommendations))
-        
+
         return AuditResult(
             app_name=app_name,
             timestamp=datetime.utcnow(),
             recommendations=recommendations,
             overall_score=score
         )
-    
+
     async def _fetch_config(self, app_name: str) -> Dict:
         """Fetch configuration from application via MCP."""
         result = await self.orchestrator.call_tool(
@@ -312,18 +312,18 @@ class ConfigurationManager:
             tool='get_config',
             params={}
         )
-        
+
         if not result.success:
             raise ValueError(f"Failed to fetch config from {app_name}")
-        
+
         return result.data
-    
+
     def _calculate_score(self, total_checks: int, issues: int) -> int:
         """Calculate configuration score (0-100)."""
         if total_checks == 0:
             return 100
         return int(((total_checks - issues) / total_checks) * 100)
-    
+
     def _estimate_impact(self, priority: str) -> str:
         """Estimate impact of implementing recommendation."""
         impact_map = {
@@ -332,18 +332,18 @@ class ConfigurationManager:
             'low': 'Minor optimization'
         }
         return impact_map.get(priority, 'Unknown impact')
-    
+
     async def apply_configuration(
         self,
         app_name: str,
         changes: Dict[str, any]
     ) -> bool:
         """Apply configuration changes.
-        
+
         Args:
             app_name: Name of application
             changes: Dict of setting -> new value
-            
+
         Returns:
             True if successful
         """
@@ -352,7 +352,7 @@ class ConfigurationManager:
             tool='set_config',
             params={'changes': changes}
         )
-        
+
         return result.success
 ```
 
@@ -504,29 +504,29 @@ export function Dashboard() {
  * API Client for AutoArr Backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8088";
 
 class APIError extends Error {
   constructor(
     message: string,
     public status: number,
-    public data?: any
+    public data?: any,
   ) {
     super(message);
-    this.name = 'APIError';
+    this.name = "APIError";
   }
 }
 
 async function fetchJSON<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options?.headers,
     },
   });
@@ -534,9 +534,9 @@ async function fetchJSON<T>(
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     throw new APIError(
-      data.message || 'API request failed',
+      data.message || "API request failed",
       response.status,
-      data
+      data,
     );
   }
 
@@ -545,21 +545,21 @@ async function fetchJSON<T>(
 
 export const api = {
   // System Status
-  getStatus: () => fetchJSON('/api/v1/monitoring/status'),
+  getStatus: () => fetchJSON("/api/v1/monitoring/status"),
 
   // Configuration Audit
-  triggerAudit: () => fetchJSON('/api/v1/config/audit', { method: 'POST' }),
-  getAuditResults: () => fetchJSON('/api/v1/config/recommendations'),
+  triggerAudit: () => fetchJSON("/api/v1/config/audit", { method: "POST" }),
+  getAuditResults: () => fetchJSON("/api/v1/config/recommendations"),
   applyConfig: (appName: string, changes: Record<string, any>) =>
-    fetchJSON('/api/v1/config/apply', {
-      method: 'POST',
+    fetchJSON("/api/v1/config/apply", {
+      method: "POST",
       body: JSON.stringify({ app_name: appName, changes }),
     }),
 
   // Content Requests
   requestContent: (query: string) =>
-    fetchJSON('/api/v1/request/content', {
-      method: 'POST',
+    fetchJSON("/api/v1/request/content", {
+      method: "POST",
       body: JSON.stringify({ query }),
     }),
   getRequestStatus: (requestId: string) =>
@@ -617,15 +617,15 @@ async def test_audit_identifies_missing_download_dir(config_manager, mock_orches
         'incomplete_dir': '/downloads/incomplete',
         'servers': ['server1', 'server2']
     }
-    
+
     mock_orchestrator.call_tool.return_value = MagicMock(
         success=True,
         data=mock_config
     )
-    
+
     # Act
     result = await config_manager.audit_application('sabnzbd')
-    
+
     # Assert
     assert result.has_recommendations
     assert any(
@@ -644,15 +644,15 @@ async def test_audit_with_optimal_config(config_manager, mock_orchestrator):
         'incomplete_dir': '/downloads/incomplete',
         'servers': ['server1', 'server2']
     }
-    
+
     mock_orchestrator.call_tool.return_value = MagicMock(
         success=True,
         data=mock_config
     )
-    
+
     # Act
     result = await config_manager.audit_application('sabnzbd')
-    
+
     # Assert
     assert not result.has_recommendations
     assert result.overall_score == 100
@@ -664,10 +664,10 @@ async def test_apply_configuration(config_manager, mock_orchestrator):
     # Arrange
     changes = {'download_dir': '/downloads'}
     mock_orchestrator.call_tool.return_value = MagicMock(success=True)
-    
+
     # Act
     success = await config_manager.apply_configuration('sabnzbd', changes)
-    
+
     # Assert
     assert success
     mock_orchestrator.call_tool.assert_called_once_with(
@@ -682,12 +682,12 @@ async def test_apply_configuration(config_manager, mock_orchestrator):
 **File**: `ui/tests/dashboard.spec.ts`
 
 ```typescript
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Dashboard', () => {
+test.describe("Dashboard", () => {
   test.beforeEach(async ({ page }) => {
     // Mock API responses
-    await page.route('**/api/v1/monitoring/status', async (route) => {
+    await page.route("**/api/v1/monitoring/status", async (route) => {
       await route.fulfill({
         json: {
           sabnzbd: { connected: true, queue_count: 3 },
@@ -697,39 +697,39 @@ test.describe('Dashboard', () => {
       });
     });
 
-    await page.goto('http://localhost:3000');
+    await page.goto("http://localhost:3000");
   });
 
-  test('should display status cards', async ({ page }) => {
+  test("should display status cards", async ({ page }) => {
     // Check that all status cards are visible
-    await expect(page.getByText('SABnzbd')).toBeVisible();
-    await expect(page.getByText('Sonarr')).toBeVisible();
-    await expect(page.getByText('Radarr')).toBeVisible();
+    await expect(page.getByText("SABnzbd")).toBeVisible();
+    await expect(page.getByText("Sonarr")).toBeVisible();
+    await expect(page.getByText("Radarr")).toBeVisible();
 
     // Check queue counts
-    await expect(page.getByText('Queue: 3')).toBeVisible();
-    await expect(page.getByText('Wanted: 5')).toBeVisible();
-    await expect(page.getByText('Wanted: 2')).toBeVisible();
+    await expect(page.getByText("Queue: 3")).toBeVisible();
+    await expect(page.getByText("Wanted: 5")).toBeVisible();
+    await expect(page.getByText("Wanted: 2")).toBeVisible();
   });
 
-  test('should run configuration audit', async ({ page }) => {
+  test("should run configuration audit", async ({ page }) => {
     // Mock audit endpoint
-    await page.route('**/api/v1/config/audit', async (route) => {
+    await page.route("**/api/v1/config/audit", async (route) => {
       await route.fulfill({ json: { success: true } });
     });
 
-    await page.route('**/api/v1/config/recommendations', async (route) => {
+    await page.route("**/api/v1/config/recommendations", async (route) => {
       await route.fulfill({
         json: {
           sabnzbd: {
             score: 75,
             recommendations: [
               {
-                setting: 'download_dir',
-                current_value: '',
-                recommended_value: '/downloads',
-                priority: 'high',
-                reason: 'Download directory should be explicitly set',
+                setting: "download_dir",
+                current_value: "",
+                recommended_value: "/downloads",
+                priority: "high",
+                reason: "Download directory should be explicitly set",
               },
             ],
           },
@@ -738,19 +738,19 @@ test.describe('Dashboard', () => {
     });
 
     // Click Run Audit button
-    await page.getByRole('button', { name: 'Run Audit' }).click();
+    await page.getByRole("button", { name: "Run Audit" }).click();
 
     // Should show loading state
-    await expect(page.getByText('Running Audit...')).toBeVisible();
+    await expect(page.getByText("Running Audit...")).toBeVisible();
 
     // Should show results
-    await expect(page.getByText('download_dir')).toBeVisible();
+    await expect(page.getByText("download_dir")).toBeVisible();
     await expect(
-      page.getByText('Download directory should be explicitly set')
+      page.getByText("Download directory should be explicitly set"),
     ).toBeVisible();
   });
 
-  test('should be mobile responsive', async ({ page }) => {
+  test("should be mobile responsive", async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
 
@@ -760,7 +760,9 @@ test.describe('Dashboard', () => {
     const secondCardBox = await cards.nth(1).boundingBox();
 
     // Second card should be below first card (not beside)
-    expect(secondCardBox!.y).toBeGreaterThan(firstCardBox!.y + firstCardBox!.height);
+    expect(secondCardBox!.y).toBeGreaterThan(
+      firstCardBox!.y + firstCardBox!.height,
+    );
   });
 });
 ```
@@ -772,7 +774,7 @@ test.describe('Dashboard', () => {
 ### docker-compose.yml
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   api:
