@@ -7,11 +7,13 @@ enabling validation, serialization, and documentation of data structures.
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Movie(BaseModel):
     """Model for a movie."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     id: int = Field(..., description="Unique movie ID")
     title: str = Field(..., description="Movie title")
@@ -62,12 +64,11 @@ class Movie(BaseModel):
         None, alias="movieFile", description="Movie file information"
     )
 
-    class Config:
-        populate_by_name = True
-
 
 class MovieFile(BaseModel):
     """Model for a movie file."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     id: int = Field(..., description="Unique file ID")
     movie_id: int = Field(..., alias="movieId", description="Parent movie ID")
@@ -80,12 +81,11 @@ class MovieFile(BaseModel):
         None, alias="mediaInfo", description="Media information"
     )
 
-    class Config:
-        populate_by_name = True
-
 
 class Command(BaseModel):
     """Model for a Radarr command."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     id: int = Field(..., description="Command ID")
     name: str = Field(..., description="Command name")
@@ -100,12 +100,11 @@ class Command(BaseModel):
     duration: Optional[str] = Field(None, description="Command duration")
     trigger: Optional[str] = Field(None, description="What triggered the command")
 
-    class Config:
-        populate_by_name = True
-
 
 class QueueRecord(BaseModel):
     """Model for a download queue record."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     id: int = Field(..., description="Queue record ID")
     movie_id: int = Field(..., alias="movieId", description="Movie ID")
@@ -131,12 +130,11 @@ class QueueRecord(BaseModel):
         None, alias="downloadClient", description="Download client name"
     )
 
-    class Config:
-        populate_by_name = True
-
 
 class Queue(BaseModel):
     """Model for the download queue."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     page: int = Field(..., description="Current page number")
     page_size: int = Field(..., alias="pageSize", description="Page size")
@@ -145,12 +143,11 @@ class Queue(BaseModel):
     total_records: int = Field(..., alias="totalRecords", description="Total number of records")
     records: List[Dict[str, Any]] = Field(default_factory=list, description="Queue records")
 
-    class Config:
-        populate_by_name = True
-
 
 class WantedMissing(BaseModel):
     """Model for wanted/missing movies."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     page: int = Field(..., description="Current page number")
     page_size: int = Field(..., alias="pageSize", description="Page size")
@@ -159,12 +156,11 @@ class WantedMissing(BaseModel):
     total_records: int = Field(..., alias="totalRecords", description="Total number of records")
     records: List[Dict[str, Any]] = Field(default_factory=list, description="Missing movie records")
 
-    class Config:
-        populate_by_name = True
-
 
 class SystemStatus(BaseModel):
     """Model for Radarr system status."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     version: str = Field(..., description="Radarr version")
     build_time: Optional[str] = Field(None, alias="buildTime", description="Build timestamp")
@@ -183,17 +179,13 @@ class SystemStatus(BaseModel):
     authentication: Optional[str] = Field(None, description="Authentication method")
     url_base: Optional[str] = Field(None, alias="urlBase", description="URL base")
 
-    class Config:
-        populate_by_name = True
-
 
 class ErrorResponse(BaseModel):
     """Model for error responses from Radarr API."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     status: bool = Field(default=False, description="Status (always False for errors)")
     error: str = Field(..., description="Error message")
     message: Optional[str] = Field(None, description="Additional error message")
     status_code: Optional[int] = Field(None, alias="statusCode", description="HTTP status code")
-
-    class Config:
-        populate_by_name = True

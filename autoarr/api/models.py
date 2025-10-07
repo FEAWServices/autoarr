@@ -7,7 +7,7 @@ ensuring type safety and automatic validation.
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ============================================================================
@@ -18,13 +18,8 @@ from pydantic import BaseModel, Field
 class ToolCallRequest(BaseModel):
     """Request model for calling a single MCP tool."""
 
-    server: str = Field(..., description="MCP server name (sabnzbd, sonarr, radarr, plex)")
-    tool: str = Field(..., description="Tool name to call")
-    params: Dict[str, Any] = Field(default_factory=dict, description="Tool parameters")
-    timeout: Optional[float] = Field(None, description="Optional timeout in seconds")
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "server": "sabnzbd",
                 "tool": "get_queue",
@@ -32,18 +27,19 @@ class ToolCallRequest(BaseModel):
                 "timeout": 30.0,
             }
         }
+    )
+
+    server: str = Field(..., description="MCP server name (sabnzbd, sonarr, radarr, plex)")
+    tool: str = Field(..., description="Tool name to call")
+    params: Dict[str, Any] = Field(default_factory=dict, description="Tool parameters")
+    timeout: Optional[float] = Field(None, description="Optional timeout in seconds")
 
 
 class ToolCallResponse(BaseModel):
     """Response model for tool call results."""
 
-    success: bool = Field(..., description="Whether the tool call was successful")
-    data: Optional[Dict[str, Any]] = Field(None, description="Tool call result data")
-    error: Optional[str] = Field(None, description="Error message if call failed")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "data": {"queue": []},
@@ -51,16 +47,19 @@ class ToolCallResponse(BaseModel):
                 "metadata": {"server": "sabnzbd", "tool": "get_queue", "duration": 0.123},
             }
         }
+    )
+
+    success: bool = Field(..., description="Whether the tool call was successful")
+    data: Optional[Dict[str, Any]] = Field(None, description="Tool call result data")
+    error: Optional[str] = Field(None, description="Error message if call failed")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
 
 
 class BatchToolCallRequest(BaseModel):
     """Request model for calling multiple MCP tools in parallel."""
 
-    calls: List[ToolCallRequest] = Field(..., description="List of tool calls to execute")
-    return_partial: bool = Field(False, description="Return partial results if some calls fail")
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "calls": [
                     {"server": "sabnzbd", "tool": "get_queue", "params": {}},
@@ -69,15 +68,17 @@ class BatchToolCallRequest(BaseModel):
                 "return_partial": False,
             }
         }
+    )
+
+    calls: List[ToolCallRequest] = Field(..., description="List of tool calls to execute")
+    return_partial: bool = Field(False, description="Return partial results if some calls fail")
 
 
 class ToolListResponse(BaseModel):
     """Response model for listing available tools."""
 
-    tools: Dict[str, List[str]] = Field(..., description="Tools grouped by server")
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "tools": {
                     "sabnzbd": ["get_queue", "get_history", "retry_download"],
@@ -85,6 +86,9 @@ class ToolListResponse(BaseModel):
                 }
             }
         }
+    )
+
+    tools: Dict[str, List[str]] = Field(..., description="Tools grouped by server")
 
 
 # ============================================================================
@@ -95,16 +99,8 @@ class ToolListResponse(BaseModel):
 class ServiceHealth(BaseModel):
     """Health status for a single service."""
 
-    healthy: bool = Field(..., description="Whether the service is healthy")
-    latency_ms: Optional[float] = Field(None, description="Response latency in milliseconds")
-    error: Optional[str] = Field(None, description="Error message if unhealthy")
-    last_check: str = Field(..., description="ISO timestamp of last health check")
-    circuit_breaker_state: Optional[str] = Field(
-        None, description="Circuit breaker state (closed, open, half_open)"
-    )
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "healthy": True,
                 "latency_ms": 45.2,
@@ -113,17 +109,22 @@ class ServiceHealth(BaseModel):
                 "circuit_breaker_state": "closed",
             }
         }
+    )
+
+    healthy: bool = Field(..., description="Whether the service is healthy")
+    latency_ms: Optional[float] = Field(None, description="Response latency in milliseconds")
+    error: Optional[str] = Field(None, description="Error message if unhealthy")
+    last_check: str = Field(..., description="ISO timestamp of last health check")
+    circuit_breaker_state: Optional[str] = Field(
+        None, description="Circuit breaker state (closed, open, half_open)"
+    )
 
 
 class HealthCheckResponse(BaseModel):
     """Overall system health check response."""
 
-    status: str = Field(..., description="Overall status (healthy, degraded, unhealthy)")
-    services: Dict[str, ServiceHealth] = Field(..., description="Individual service health")
-    timestamp: str = Field(..., description="ISO timestamp of health check")
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "status": "healthy",
                 "services": {
@@ -138,6 +139,11 @@ class HealthCheckResponse(BaseModel):
                 "timestamp": "2025-01-15T10:30:00Z",
             }
         }
+    )
+
+    status: str = Field(..., description="Overall status (healthy, degraded, unhealthy)")
+    services: Dict[str, ServiceHealth] = Field(..., description="Individual service health")
+    timestamp: str = Field(..., description="ISO timestamp of health check")
 
 
 # ============================================================================
@@ -148,13 +154,8 @@ class HealthCheckResponse(BaseModel):
 class ErrorResponse(BaseModel):
     """Standard error response model."""
 
-    error: str = Field(..., description="Error type or category")
-    detail: str = Field(..., description="Detailed error message")
-    timestamp: str = Field(..., description="ISO timestamp of error")
-    path: Optional[str] = Field(None, description="Request path that caused the error")
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "error": "Service unavailable",
                 "detail": "Connection to SABnzbd failed",
@@ -162,6 +163,12 @@ class ErrorResponse(BaseModel):
                 "path": "/api/v1/downloads/queue",
             }
         }
+    )
+
+    error: str = Field(..., description="Error type or category")
+    detail: str = Field(..., description="Detailed error message")
+    timestamp: str = Field(..., description="ISO timestamp of error")
+    path: Optional[str] = Field(None, description="Request path that caused the error")
 
 
 # ============================================================================

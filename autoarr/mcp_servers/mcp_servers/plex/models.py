@@ -7,11 +7,13 @@ enabling validation, serialization, and documentation of data structures.
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PlexLibrary(BaseModel):
     """Model for a Plex library section."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     key: str = Field(..., description="Library ID/key")
     title: str = Field(..., description="Library name")
@@ -33,12 +35,11 @@ class PlexLibrary(BaseModel):
         None, alias="Location", description="Library locations"
     )
 
-    class Config:
-        populate_by_name = True
-
 
 class PlexMediaItem(BaseModel):
     """Model for a generic Plex media item (movie, episode, track)."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     rating_key: str = Field(..., alias="ratingKey", description="Unique rating key")
     key: str = Field(..., description="Media item key/path")
@@ -102,12 +103,11 @@ class PlexMediaItem(BaseModel):
     writer: Optional[List[Dict[str, Any]]] = Field(None, alias="Writer", description="Writers")
     role: Optional[List[Dict[str, Any]]] = Field(None, alias="Role", description="Cast/roles")
 
-    class Config:
-        populate_by_name = True
-
 
 class PlexSession(BaseModel):
     """Model for a currently playing Plex session."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     session_key: str = Field(..., alias="sessionKey", description="Session key")
     user: Dict[str, Any] = Field(..., alias="User", description="User information")
@@ -124,12 +124,11 @@ class PlexSession(BaseModel):
     thumb: Optional[str] = Field(None, description="Thumbnail")
     duration: Optional[int] = Field(None, description="Total duration in milliseconds")
 
-    class Config:
-        populate_by_name = True
-
 
 class PlexServerIdentity(BaseModel):
     """Model for Plex server identity information."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     machine_identifier: str = Field(
         ..., alias="machineIdentifier", description="Unique machine identifier"
@@ -229,12 +228,11 @@ class PlexServerIdentity(BaseModel):
         None, alias="voiceSearch", description="Voice search enabled"
     )
 
-    class Config:
-        populate_by_name = True
-
 
 class PlexHistoryRecord(BaseModel):
     """Model for a Plex watch history record."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     history_key: Optional[str] = Field(None, alias="historyKey", description="History key")
     key: Optional[str] = Field(None, description="Media key")
@@ -253,17 +251,13 @@ class PlexHistoryRecord(BaseModel):
     account_id: Optional[int] = Field(None, alias="accountID", description="Account ID")
     device_id: Optional[int] = Field(None, alias="deviceID", description="Device ID")
 
-    class Config:
-        populate_by_name = True
-
 
 class ErrorResponse(BaseModel):
     """Model for error responses from Plex API."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     status: bool = Field(default=False, description="Status (always False for errors)")
     error: str = Field(..., description="Error message")
     message: Optional[str] = Field(None, description="Additional error message")
     status_code: Optional[int] = Field(None, alias="statusCode", description="HTTP status code")
-
-    class Config:
-        populate_by_name = True

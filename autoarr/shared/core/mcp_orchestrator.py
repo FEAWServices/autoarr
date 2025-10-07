@@ -340,17 +340,19 @@ class MCPOrchestrator:
         """
         results = {}
 
-        # Get enabled servers
+        # Get enabled servers - check both config dict and individual server configs
         if isinstance(self.config, dict):
-            enabled_servers = {
-                name: cfg
-                for name, cfg in self.config.items()
-                if cfg and getattr(cfg, "enabled", True)
-            }
+            enabled_servers = {}
+            for name, cfg in self.config.items():
+                if cfg:
+                    # Check if server is enabled (default to True if not specified)
+                    is_enabled = getattr(cfg, "enabled", True)
+                    if is_enabled:
+                        enabled_servers[name] = cfg
         else:
             enabled_servers = self.config.get_enabled_servers()
 
-        # Connect to each server
+        # Connect to each enabled server
         for server_name in enabled_servers:
             try:
                 result = await self.connect(server_name)
@@ -406,6 +408,9 @@ class MCPOrchestrator:
                     self._clients[server_name] = client
                     self._stats["calls_per_server"][server_name] = 0
                     return True
+                except asyncio.TimeoutError:
+                    # Re-raise timeout errors immediately
+                    raise
                 except Exception:
                     if attempt < max_retries:
                         # Exponential backoff
@@ -513,7 +518,7 @@ class MCPOrchestrator:
 
         # Check if connected
         if not await self.is_connected(server):
-            raise MCPConnectionError(f"Server {server} is not connected")
+            raise MCPConnectionError(f"[{server}] Server is not connected")
 
         # Get client
         client = self._clients[server]
@@ -564,7 +569,7 @@ class MCPOrchestrator:
 
             except asyncio.TimeoutError:
                 raise MCPTimeoutError(
-                    f"Tool call timed out after {call_timeout}s",
+                    f"[{server}] Tool call timed out after {call_timeout}s",
                     server=server,
                     tool=tool,
                     timeout=call_timeout,
@@ -580,8 +585,13 @@ class MCPOrchestrator:
                 is_retryable = any(isinstance(e, err_type) for err_type in self.retryable_errors)
 
                 if not is_retryable:
+                    # Invoke error callback before raising
+                    if self.on_error:
+                        self.on_error(
+                            {"server": server, "tool": tool, "error": str(e), "attempt": attempt}
+                        )
                     # Not retryable, raise immediately
-                    raise MCPOrchestratorError(str(e))
+                    raise MCPOrchestratorError(f"[{server}] {str(e)}")
 
                 if attempt < self.max_retries:
                     # Auto-reconnect if enabled
@@ -593,17 +603,22 @@ class MCPOrchestrator:
                     await asyncio.sleep(delay)
                     continue
 
-                # Invoke error callback if set
-                if self.on_error:
-                    self.on_error(
-                        {"server": server, "tool": tool, "error": str(e), "attempt": attempt}
-                    )
-
-        # All retries exhausted
+        # All retries exhausted - invoke error callback if set
         if last_error:
+            if self.on_error:
+                self.on_error(
+                    {
+                        "server": server,
+                        "tool": tool,
+                        "error": str(last_error),
+                        "attempt": self.max_retries,
+                    }
+                )
             if isinstance(last_error, ConnectionError):
-                raise MCPConnectionError(str(last_error), server=server, original_error=last_error)
-            raise MCPOrchestratorError(str(last_error))
+                raise MCPConnectionError(
+                    f"[{server}] {str(last_error)}", server=server, original_error=last_error
+                )
+            raise MCPOrchestratorError(f"[{server}] {str(last_error)}")
 
     async def call_tools_parallel(
         self,
@@ -643,8 +658,8 @@ class MCPOrchestrator:
                     if progress_callback:
                         progress_callback(index + 1, len(calls))
 
-        # Create tasks
-        tasks = [_execute_call(call, i) for i, call in enumerate(calls)]
+        # Create tasks - wrap coroutines in asyncio.create_task()
+        tasks = [asyncio.create_task(_execute_call(call, i)) for i, call in enumerate(calls)]
 
         # Execute with optional timeout
         if self.parallel_timeout:
@@ -679,7 +694,7 @@ class MCPOrchestrator:
         if self.cancel_on_critical_failure:
             for result in sorted_results:
                 if not result["success"] and "Critical" in result.get("error", ""):
-                    raise MCPOrchestratorError(result["error"])
+                    raise MCPOrchestratorError(f"Critical failure: {result['error']}")
 
         return sorted_results
 
@@ -696,7 +711,7 @@ class MCPOrchestrator:
         server = self._resolve_server_name(server)
 
         if not await self.is_connected(server):
-            raise MCPConnectionError(f"Server {server} is not connected")
+            raise MCPConnectionError(f"[{server}] Server is not connected")
 
         client = self._clients[server]
         return await client.list_tools()
