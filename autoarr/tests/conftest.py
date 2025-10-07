@@ -14,8 +14,8 @@ from typing import Any, AsyncGenerator, Dict, Generator
 root_dir = Path(__file__).parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
-if str(root_dir / "mcp-servers") not in sys.path:
-    sys.path.insert(0, str(root_dir / "mcp-servers"))
+if str(root_dir / "mcp_servers") not in sys.path:
+    sys.path.insert(0, str(root_dir / "mcp_servers"))
 
 import pytest
 from httpx import AsyncClient, Response
@@ -101,5 +101,5 @@ def pytest_configure(config):
     pass
 
 
-# Import fixture factories from tests/fixtures/conftest.py
-pytest_plugins = ["tests.fixtures.conftest", "tests.fixtures.mcp_orchestrator_fixtures"]
+# Import fixture factories from tests/fixtures/
+pytest_plugins = ["tests.fixtures.api_fixtures", "tests.fixtures.mcp_orchestrator_fixtures"]
