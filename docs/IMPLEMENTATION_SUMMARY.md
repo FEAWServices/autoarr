@@ -45,11 +45,13 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 ## API Endpoints Implemented
 
 ### Health Checks (3 endpoints)
+
 - ✅ `GET /health` - Overall system health
 - ✅ `GET /health/{service}` - Individual service health
 - ✅ `GET /health/circuit-breaker/{service}` - Circuit breaker status
 
 ### MCP Proxy (5 endpoints)
+
 - ✅ `POST /api/v1/mcp/call` - Call single MCP tool
 - ✅ `POST /api/v1/mcp/batch` - Call multiple tools in parallel
 - ✅ `GET /api/v1/mcp/tools` - List all available tools
@@ -57,6 +59,7 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 - ✅ `GET /api/v1/mcp/stats` - Get orchestrator statistics
 
 ### Downloads/SABnzbd (7 endpoints)
+
 - ✅ `GET /api/v1/downloads/queue` - Get download queue
 - ✅ `GET /api/v1/downloads/history` - Get download history
 - ✅ `GET /api/v1/downloads/status` - Get SABnzbd status
@@ -66,6 +69,7 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 - ✅ `DELETE /api/v1/downloads/{nzo_id}` - Delete download
 
 ### Shows/Sonarr (9 endpoints)
+
 - ✅ `GET /api/v1/shows/` - List all TV shows
 - ✅ `GET /api/v1/shows/{series_id}` - Get specific show
 - ✅ `GET /api/v1/shows/search/{query}` - Search for shows
@@ -77,6 +81,7 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 - ✅ `DELETE /api/v1/shows/{series_id}` - Delete show
 
 ### Movies/Radarr (10 endpoints)
+
 - ✅ `GET /api/v1/movies/` - List all movies
 - ✅ `GET /api/v1/movies/{movie_id}` - Get specific movie
 - ✅ `GET /api/v1/movies/search/{query}` - Search for movies
@@ -89,6 +94,7 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 - ✅ `DELETE /api/v1/movies/{movie_id}` - Delete movie
 
 ### Media/Plex (10 endpoints)
+
 - ✅ `GET /api/v1/media/libraries` - List all libraries
 - ✅ `GET /api/v1/media/libraries/{library_key}` - Get specific library
 - ✅ `GET /api/v1/media/recently-added` - Get recently added media
@@ -101,6 +107,7 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 - ✅ `POST /api/v1/media/optimize/{rating_key}` - Optimize media item
 
 ### Root Endpoints (2 endpoints)
+
 - ✅ `GET /` - API information
 - ✅ `GET /ping` - Simple health check
 
@@ -109,12 +116,14 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 ## Key Features Implemented
 
 ### 1. CORS Support ✅
+
 - Configured for web UI integration
 - Supports multiple origins (localhost:3000, localhost:5173)
 - Credentials support enabled
 - All methods and headers allowed
 
 ### 2. Error Handling Middleware ✅
+
 - MCPConnectionError → 503 Service Unavailable
 - MCPTimeoutError → 504 Gateway Timeout
 - CircuitBreakerOpenError → 503 Service Temporarily Unavailable
@@ -123,24 +132,28 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 - Generic errors → 500 Internal Server Error
 
 ### 3. Request Logging Middleware ✅
+
 - Logs all incoming requests
 - Tracks request duration
 - Adds process time headers
 - Request ID tracking
 
 ### 4. Security Headers Middleware ✅
+
 - X-Content-Type-Options: nosniff
 - X-Frame-Options: DENY
 - X-XSS-Protection: 1; mode=block
 - Strict-Transport-Security headers
 
 ### 5. Dependency Injection ✅
+
 - Singleton orchestrator instance
 - Automatic connection management
 - Graceful shutdown handling
 - Clean lifecycle management
 
 ### 6. OpenAPI Documentation ✅
+
 - Auto-generated at `/docs` (Swagger UI)
 - Auto-generated at `/redoc` (ReDoc)
 - JSON schema at `/openapi.json`
@@ -148,12 +161,14 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 - Example requests included
 
 ### 7. Type Safety ✅
+
 - Full type hints throughout
 - Pydantic v2 models
 - Request/response validation
 - Automatic serialization
 
 ### 8. Configuration Management ✅
+
 - Environment variable support
 - .env file loading
 - Settings validation
@@ -162,6 +177,7 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 ## Pydantic Models Created
 
 ### Request Models
+
 - `ToolCallRequest` - Single tool call
 - `BatchToolCallRequest` - Batch tool calls
 - `AddSeriesRequest` - Add TV show
@@ -170,6 +186,7 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 - `RetryDownloadRequest` - Retry download
 
 ### Response Models
+
 - `ToolCallResponse` - Tool call result
 - `ToolListResponse` - Available tools
 - `HealthCheckResponse` - System health
@@ -193,6 +210,7 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 ## Testing
 
 ### Test Coverage
+
 - ✅ 33 unit tests created
 - ✅ All critical endpoints tested
 - ✅ Error handling tested
@@ -200,13 +218,16 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 - ✅ Test fixtures configured
 
 ### Test Categories
+
 1. **Health Endpoints** (10 tests)
+
    - Overall health check
    - Individual service health
    - Circuit breaker status
    - Error scenarios
 
 2. **MCP Proxy Endpoints** (11 tests)
+
    - Single tool calls
    - Batch tool calls
    - Tool listing
@@ -221,6 +242,7 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
    - Root endpoints
 
 ### Verification
+
 - ✅ All imports verified
 - ✅ App configuration verified
 - ✅ All routes verified
@@ -231,6 +253,7 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 ## Architecture
 
 ### Request Flow
+
 ```
 Client Request
     ↓
@@ -252,6 +275,7 @@ JSON Response
 ```
 
 ### Middleware Stack
+
 1. **CORSMiddleware** - Handles cross-origin requests
 2. **ErrorHandlerMiddleware** - Catches and formats errors
 3. **RequestLoggingMiddleware** - Logs requests/responses

@@ -11,13 +11,17 @@ All components of the Radarr MCP Server have been successfully implemented, test
 ### Core Implementation (4 files, 1,266 lines)
 
 #### 1. `mcp-servers/radarr/__init__.py` (36 lines)
+
 **Purpose**: Package initialization and exports
+
 - Exports all public classes: `RadarrClient`, `RadarrMCPServer`, models
 - Version: 0.1.0
 - Clean package interface
 
 #### 2. `mcp-servers/radarr/models.py` (169 lines)
+
 **Purpose**: Pydantic data models for type safety
+
 - **Models Implemented**:
   - `Movie` - Movie data validation (30+ fields)
   - `MovieFile` - Movie file information
@@ -31,7 +35,9 @@ All components of the Radarr MCP Server have been successfully implemented, test
 - Type validation
 
 #### 3. `mcp-servers/radarr/client.py` (543 lines)
+
 **Purpose**: Async HTTP client for Radarr API v3
+
 - **14 API Methods Implemented**:
   - Movie Operations: `get_movies`, `get_movie_by_id`, `add_movie`, `delete_movie`, `search_movie_lookup`, `search_movie`
   - Queue & Calendar: `get_queue`, `get_calendar`, `get_wanted_missing`
@@ -47,7 +53,9 @@ All components of the Radarr MCP Server have been successfully implemented, test
   - Query parameter building
 
 #### 4. `mcp-servers/radarr/server.py` (518 lines)
+
 **Purpose**: MCP server implementation
+
 - **9 MCP Tools Implemented**:
   1. `radarr_get_movies` - List movies with pagination
   2. `radarr_get_movie_by_id` - Get movie details
@@ -69,7 +77,9 @@ All components of the Radarr MCP Server have been successfully implemented, test
 ### Documentation & Examples (3 files)
 
 #### 5. `mcp-servers/radarr/README.md` (200+ lines)
+
 **Purpose**: Complete user documentation
+
 - Overview and features
 - Installation instructions
 - Usage examples (client & server)
@@ -80,7 +90,9 @@ All components of the Radarr MCP Server have been successfully implemented, test
 - Comparison with Sonarr
 
 #### 6. `scripts/verify_radarr_implementation.py` (345 lines)
+
 **Purpose**: Implementation verification
+
 - **7 Test Suites**:
   1. Module imports
   2. Client class structure
@@ -94,7 +106,9 @@ All components of the Radarr MCP Server have been successfully implemented, test
 - Clear pass/fail reporting
 
 #### 7. `examples/radarr_example.py` (250+ lines)
+
 **Purpose**: Practical usage examples
+
 - Client usage patterns
 - MCP server usage patterns
 - Error handling examples
@@ -105,17 +119,17 @@ All components of the Radarr MCP Server have been successfully implemented, test
 
 ## Implementation Statistics
 
-| Metric | Value |
-|--------|-------|
-| **Total Files** | 7 |
-| **Total Lines of Code** | 1,266 (core) + 600 (docs/examples) |
-| **API Methods** | 14 |
-| **MCP Tools** | 9 |
-| **Pydantic Models** | 8 |
-| **Test Suites** | 7 |
-| **Verification Result** | ✅ 7/7 passed |
-| **Development Time** | ~30 minutes |
-| **Code Reuse from Sonarr** | ~90% |
+| Metric                     | Value                              |
+| -------------------------- | ---------------------------------- |
+| **Total Files**            | 7                                  |
+| **Total Lines of Code**    | 1,266 (core) + 600 (docs/examples) |
+| **API Methods**            | 14                                 |
+| **MCP Tools**              | 9                                  |
+| **Pydantic Models**        | 8                                  |
+| **Test Suites**            | 7                                  |
+| **Verification Result**    | ✅ 7/7 passed                      |
+| **Development Time**       | ~30 minutes                        |
+| **Code Reuse from Sonarr** | ~90%                               |
 
 ---
 
@@ -306,15 +320,15 @@ The Radarr MCP Server integrates seamlessly with:
 
 ## Comparison: Sonarr vs Radarr
 
-| Feature | Sonarr | Radarr |
-|---------|--------|--------|
-| **Media Type** | TV Series | Movies |
-| **Episodes** | ✅ Yes | ❌ No |
-| **Database** | TVDB | TMDb |
-| **Lines of Code** | 600 | 543 |
-| **API Methods** | 17 | 14 |
-| **MCP Tools** | 10 | 9 |
-| **Dev Time** | 4+ hours | 30 minutes |
+| Feature           | Sonarr    | Radarr     |
+| ----------------- | --------- | ---------- |
+| **Media Type**    | TV Series | Movies     |
+| **Episodes**      | ✅ Yes    | ❌ No      |
+| **Database**      | TVDB      | TMDb       |
+| **Lines of Code** | 600       | 543        |
+| **API Methods**   | 17        | 14         |
+| **MCP Tools**     | 10        | 9          |
+| **Dev Time**      | 4+ hours  | 30 minutes |
 
 ---
 

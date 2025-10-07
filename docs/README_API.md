@@ -57,6 +57,7 @@ python -m api.main
 ### 4. Access API Documentation
 
 Open your browser to:
+
 - **Swagger UI**: http://localhost:8088/docs
 - **ReDoc**: http://localhost:8088/redoc
 - **OpenAPI JSON**: http://localhost:8088/openapi.json

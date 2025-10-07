@@ -18,6 +18,7 @@ poetry run python -m api.main
 ```
 
 You'll see:
+
 ```
 INFO:     Started server process
 INFO:     Waiting for application startup.
@@ -28,11 +29,13 @@ INFO:     Uvicorn running on http://0.0.0.0:8088
 ### Step 3: Open Admin Interface
 
 Open your browser to:
+
 ```
 http://localhost:8088/static/admin.html
 ```
 
 You'll see a beautiful admin interface with cards for each service:
+
 - 📺 **SABnzbd** - Download manager
 - 📺 **Sonarr** - TV show manager
 - 🎬 **Radarr** - Movie manager
@@ -52,18 +55,22 @@ For each service, you can:
 ### Where to Find API Keys:
 
 #### SABnzbd
+
 1. Go to `http://localhost:8080`
 2. Config → General → Security → API Key
 
 #### Sonarr
+
 1. Go to `http://localhost:8989`
 2. Settings → General → Security → API Key
 
 #### Radarr
+
 1. Go to `http://localhost:7878`
 2. Settings → General → Security → API Key
 
 #### Plex
+
 1. Go to `https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/`
 2. Follow instructions to get your X-Plex-Token
 
@@ -86,9 +93,11 @@ This lets you verify credentials **before** saving!
 ## 💾 Save Settings
 
 ### Option 1: Save Individual Service
+
 Click **"Save"** on each service card to save just that service.
 
 ### Option 2: Save All to .env File
+
 Click the **"💾 Save All Settings to .env File"** button at the bottom to persist all settings.
 
 This writes settings to `.env` so they survive restarts.
@@ -110,6 +119,7 @@ Once the server is running:
 Once configured, you have access to **50 API endpoints**:
 
 ### Health & Status
+
 ```bash
 curl http://localhost:8088/health
 curl http://localhost:8088/health/sabnzbd
@@ -117,6 +127,7 @@ curl http://localhost:8088/health/sonarr
 ```
 
 ### SABnzbd Operations
+
 ```bash
 # Get download queue
 curl http://localhost:8088/api/v1/downloads/queue
@@ -129,6 +140,7 @@ curl -X POST http://localhost:8088/api/v1/downloads/retry/SABnzbd_nzo_abc123
 ```
 
 ### Sonarr Operations
+
 ```bash
 # List all TV shows
 curl http://localhost:8088/api/v1/shows/
@@ -141,6 +153,7 @@ curl http://localhost:8088/api/v1/shows/search?term=Breaking+Bad
 ```
 
 ### Radarr Operations
+
 ```bash
 # List all movies
 curl http://localhost:8088/api/v1/movies/
@@ -153,6 +166,7 @@ curl http://localhost:8088/api/v1/movies/lookup?term=Inception
 ```
 
 ### Plex Operations
+
 ```bash
 # List libraries
 curl http://localhost:8088/api/v1/media/libraries
@@ -169,9 +183,11 @@ curl http://localhost:8088/api/v1/media/sessions
 ## 🔧 Configuration Files
 
 ### Runtime (In-Memory)
+
 Settings are stored in memory and can be updated via the admin interface.
 
 ### Persistent (.env file)
+
 Click "Save All to .env" to persist settings:
 
 ```env
@@ -265,17 +281,20 @@ docker-compose -f docker-compose.prod.yml up -d
 ## 🆘 Troubleshooting
 
 ### "Connection failed" error
+
 - Verify the URL is correct
 - Check the API key is valid
 - Ensure the service is running
 - Check firewall rules
 
 ### Admin page won't load
+
 - Make sure server is running
 - Check http://localhost:8088 returns JSON
 - Try http://localhost:8088/static/admin.html
 
 ### Settings won't save
+
 - Check server logs for errors
 - Verify you have write permissions for .env file
 - Try saving individual services first
