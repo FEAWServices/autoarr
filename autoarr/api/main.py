@@ -21,7 +21,7 @@ from .middleware import (
     RequestLoggingMiddleware,
     add_security_headers,
 )
-from .routers import downloads, health, media, mcp, movies, shows
+from .routers import configuration, downloads, health, media, mcp, movies, shows
 from .routers import settings as settings_router
 
 # Configure logging
@@ -31,9 +31,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Get settings
-settings = get_settings()
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,19 +39,26 @@ async def lifespan(app: FastAPI):
 
     Manages startup and shutdown events.
     """
-    # Startup
-    logger.info("Starting AutoArr FastAPI Gateway...")
-    logger.info(f"Environment: {settings.app_env}")
-    logger.info(f"Log level: {settings.log_level}")
+    # Get settings (allows mocking in tests)
+    settings = get_settings()
 
-    # Initialize database
-    if settings.database_url:
-        logger.info("Initializing database...")
-        db = init_database(settings.database_url)
-        await db.init_db()
-        logger.info("Database initialized successfully")
-    else:
-        logger.warning("No DATABASE_URL configured, settings will not persist")
+    # Startup
+    try:
+        logger.info("Starting AutoArr FastAPI Gateway...")
+        logger.info(f"Environment: {settings.app_env}")
+        logger.info(f"Log level: {settings.log_level}")
+
+        # Initialize database
+        if settings.database_url:
+            logger.info("Initializing database...")
+            db = init_database(settings.database_url)
+            await db.init_db()
+            logger.info("Database initialized successfully")
+        else:
+            logger.warning("No DATABASE_URL configured, settings will not persist")
+    except Exception as e:
+        logger.error(f"Error during startup: {e}")
+        # Continue to yield so shutdown can run
 
     yield
 
@@ -73,14 +77,17 @@ async def lifespan(app: FastAPI):
     logger.info("Shutdown complete")
 
 
+# Get settings for app configuration
+_settings = get_settings()
+
 # Create FastAPI application
 app = FastAPI(
-    title=settings.app_name,
-    description=settings.app_description,
-    version=settings.app_version,
-    docs_url=settings.docs_url,
-    redoc_url=settings.redoc_url,
-    openapi_url=settings.openapi_url,
+    title=_settings.app_name,
+    description=_settings.app_description,
+    version=_settings.app_version,
+    docs_url=_settings.docs_url,
+    redoc_url=_settings.redoc_url,
+    openapi_url=_settings.openapi_url,
     lifespan=lifespan,
 )
 
@@ -92,10 +99,10 @@ app = FastAPI(
 # CORS middleware (must be added before other middleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=settings.cors_allow_credentials,
-    allow_methods=settings.cors_allow_methods,
-    allow_headers=settings.cors_allow_headers,
+    allow_origins=_settings.cors_origins,
+    allow_credentials=_settings.cors_allow_credentials,
+    allow_methods=_settings.cors_allow_methods,
+    allow_headers=_settings.cors_allow_headers,
 )
 
 # Error handling middleware
@@ -121,43 +128,50 @@ app.include_router(
 # MCP proxy endpoints
 app.include_router(
     mcp.router,
-    prefix=f"{settings.api_v1_prefix}/mcp",
+    prefix=f"{_settings.api_v1_prefix}/mcp",
     tags=["mcp"],
 )
 
 # Downloads endpoints (SABnzbd)
 app.include_router(
     downloads.router,
-    prefix=f"{settings.api_v1_prefix}/downloads",
+    prefix=f"{_settings.api_v1_prefix}/downloads",
     tags=["downloads"],
 )
 
 # Shows endpoints (Sonarr)
 app.include_router(
     shows.router,
-    prefix=f"{settings.api_v1_prefix}/shows",
+    prefix=f"{_settings.api_v1_prefix}/shows",
     tags=["shows"],
 )
 
 # Movies endpoints (Radarr)
 app.include_router(
     movies.router,
-    prefix=f"{settings.api_v1_prefix}/movies",
+    prefix=f"{_settings.api_v1_prefix}/movies",
     tags=["movies"],
 )
 
 # Media endpoints (Plex)
 app.include_router(
     media.router,
-    prefix=f"{settings.api_v1_prefix}/media",
+    prefix=f"{_settings.api_v1_prefix}/media",
     tags=["media"],
 )
 
 # Settings endpoints
 app.include_router(
     settings_router.router,
-    prefix=f"{settings.api_v1_prefix}/settings",
+    prefix=f"{_settings.api_v1_prefix}/settings",
     tags=["settings"],
+)
+
+# Configuration audit endpoints
+app.include_router(
+    configuration.router,
+    prefix=f"{_settings.api_v1_prefix}/config",
+    tags=["configuration"],
 )
 
 
@@ -185,10 +199,10 @@ async def root() -> dict:
         dict: API information
     """
     return {
-        "name": settings.app_name,
-        "version": settings.app_version,
-        "description": settings.app_description,
-        "docs": settings.docs_url,
+        "name": _settings.app_name,
+        "version": _settings.app_version,
+        "description": _settings.app_description,
+        "docs": _settings.docs_url,
         "admin": "/static/admin.html",
         "health": "/health",
     }
@@ -214,9 +228,9 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "api.main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.reload,
-        workers=settings.workers,
-        log_level=settings.log_level.lower(),
+        host=_settings.host,
+        port=_settings.port,
+        reload=_settings.reload,
+        workers=_settings.workers,
+        log_level=_settings.log_level.lower(),
     )
