@@ -398,7 +398,7 @@ class BestPracticesRepository:
         async with self.db.session() as session:
             query = select(BestPractice)
             if enabled_only:
-                query = query.where(BestPractice.enabled is True)
+                query = query.where(BestPractice.enabled)
             result = await session.execute(query)
             return list(result.scalars().all())
 
@@ -418,7 +418,7 @@ class BestPracticesRepository:
         async with self.db.session() as session:
             query = select(BestPractice).where(BestPractice.application == application)
             if enabled_only:
-                query = query.where(BestPractice.enabled is True)
+                query = query.where(BestPractice.enabled)
             result = await session.execute(query)
             return list(result.scalars().all())
 
@@ -441,7 +441,7 @@ class BestPracticesRepository:
                 BestPractice.application == application, BestPractice.category == category
             )
             if enabled_only:
-                query = query.where(BestPractice.enabled is True)
+                query = query.where(BestPractice.enabled)
             result = await session.execute(query)
             return list(result.scalars().all())
 
@@ -461,7 +461,7 @@ class BestPracticesRepository:
         async with self.db.session() as session:
             query = select(BestPractice).where(BestPractice.priority.in_(priorities))
             if enabled_only:
-                query = query.where(BestPractice.enabled is True)
+                query = query.where(BestPractice.enabled)
             result = await session.execute(query)
             return list(result.scalars().all())
 
@@ -484,7 +484,7 @@ class BestPracticesRepository:
                 | (BestPractice.category.ilike(search_pattern))
             )
             if enabled_only:
-                query = query.where(BestPractice.enabled is True)
+                query = query.where(BestPractice.enabled)
             result = await session.execute(query)
             return list(result.scalars().all())
 
@@ -541,7 +541,7 @@ class BestPracticesRepository:
             if application:
                 query = query.where(BestPractice.application == application)
             if enabled_only:
-                query = query.where(BestPractice.enabled is True)
+                query = query.where(BestPractice.enabled)
 
             result = await session.execute(query)
             return result.scalar_one()
@@ -669,7 +669,7 @@ class BestPracticesRepository:
             query = select(BestPractice)
 
             if enabled_only:
-                query = query.where(BestPractice.enabled is True)
+                query = query.where(BestPractice.enabled)
 
             query = query.offset(offset).limit(page_size)
             result = await session.execute(query)

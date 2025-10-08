@@ -164,10 +164,20 @@ class TestSABnzbdClientIntegration:
         """Test that invalid API key raises appropriate error."""
         client = SABnzbdClient(url=sabnzbd_url, api_key="invalid_key_12345")
 
-        with pytest.raises(SABnzbdClientError, match="Unauthorized"):
+        try:
             await client.get_queue()
-
-        await client.close()
+            # If we get here without error, the test should fail
+            pytest.fail("Expected SABnzbdClientError but no error was raised")
+        except SABnzbdClientError as e:
+            # Check if it's a connection error (SABnzbd not available)
+            if "Connection failed" in str(e) or "All connection attempts failed" in str(e):
+                pytest.skip("SABnzbd instance not available for testing")
+            # Otherwise, check for the expected "Unauthorized" message
+            assert "Unauthorized" in str(e) or "401" in str(
+                e
+            ), f"Expected Unauthorized error, got: {e}"
+        finally:
+            await client.close()
 
 
 # ============================================================================
