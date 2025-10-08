@@ -1,0 +1,2 @@
+# Prevent automatic merging of poetry.lock - always regenerate instead
+poetry.lock merge=binary
