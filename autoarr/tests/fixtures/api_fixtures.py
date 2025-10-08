@@ -932,8 +932,9 @@ def mock_database_init():
 
     mock_db.session = mock_session_context
 
-    with patch("autoarr.api.database.init_database", return_value=mock_db), patch(
-        "autoarr.api.database.get_database", return_value=mock_db
+    with (
+        patch("autoarr.api.database.init_database", return_value=mock_db),
+        patch("autoarr.api.database.get_database", return_value=mock_db),
     ):
         yield mock_db
 
