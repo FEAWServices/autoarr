@@ -21,7 +21,7 @@ from .middleware import (
     RequestLoggingMiddleware,
     add_security_headers,
 )
-from .routers import downloads, health, media, mcp, movies, shows
+from .routers import configuration, downloads, health, media, mcp, movies, shows
 from .routers import settings as settings_router
 
 # Configure logging
@@ -158,6 +158,13 @@ app.include_router(
     settings_router.router,
     prefix=f"{settings.api_v1_prefix}/settings",
     tags=["settings"],
+)
+
+# Configuration audit endpoints
+app.include_router(
+    configuration.router,
+    prefix=f"{settings.api_v1_prefix}/config",
+    tags=["configuration"],
 )
 
 
