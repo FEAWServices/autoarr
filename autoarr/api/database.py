@@ -46,6 +46,107 @@ class ServiceSettings(Base):
 
 
 # ============================================================================
+# Activity Log Model
+# ============================================================================
+
+
+class ActivityLog(Base):
+    """
+    Database model for activity logging.
+
+    Tracks all monitoring, recovery, and system actions with complete context
+    for debugging, auditing, and analytics.
+    """
+
+    __tablename__ = "activity_log"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Timestamp
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+    # Event tracking
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    correlation_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    causation_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+    # Action details
+    action: Mapped[str] = mapped_column(String(200), nullable=False)
+    source: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+
+    # Context
+    details: Mapped[str] = mapped_column(Text, nullable=False)  # JSON string
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Related entities
+    download_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+    application: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)
+
+
+# ============================================================================
+# Download Monitoring Model
+# ============================================================================
+
+
+class DownloadMonitoring(Base):
+    """
+    Database model for download monitoring and retry tracking.
+
+    Tracks download attempts, failures, retries, and recovery actions
+    to provide comprehensive download lifecycle management.
+    """
+
+    __tablename__ = "download_monitoring"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Download identification
+    nzo_id: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    filename: Mapped[str] = mapped_column(String(500), nullable=False)
+
+    # Source tracking
+    source_application: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+    # Status tracking
+    status: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    failure_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Retry tracking
+    retry_count: Mapped[int] = mapped_column(Integer, default=0)
+    max_retries: Mapped[int] = mapped_column(Integer, default=3)
+    last_retry_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    next_retry_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Recovery attempts
+    quality_downgrades: Mapped[int] = mapped_column(Integer, default=0)
+    indexer_switches: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Dead letter queue
+    in_dlq: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    dlq_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    dlq_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Event correlation
+    correlation_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+
+    # Metadata
+    original_quality: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    current_quality: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    download_metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON string
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
+# ============================================================================
 # Best Practices Model
 # ============================================================================
 
@@ -754,5 +855,394 @@ class AuditResultsRepository:
                 .order_by(AuditResult.timestamp.desc())
                 .limit(limit)
             )
+            result = await session.execute(query)
+            return list(result.scalars().all())
+
+
+# ============================================================================
+# Activity Log Repository
+# ============================================================================
+
+
+class ActivityLogRepository:
+    """Repository for activity log database operations."""
+
+    def __init__(self, db: Database):
+        """
+        Initialize repository.
+
+        Args:
+            db: Database instance
+        """
+        self.db = db
+
+    async def create_log(
+        self,
+        event_type: str,
+        correlation_id: str,
+        action: str,
+        source: str,
+        status: str,
+        details: str,
+        causation_id: Optional[str] = None,
+        error_message: Optional[str] = None,
+        download_id: Optional[str] = None,
+        application: Optional[str] = None,
+    ) -> ActivityLog:
+        """
+        Create a new activity log entry.
+
+        Args:
+            event_type: Type of event
+            correlation_id: Correlation ID for tracking
+            action: Action performed
+            source: Source of the action
+            status: Status of the action
+            details: JSON string with details
+            causation_id: Optional causation ID
+            error_message: Optional error message
+            download_id: Optional related download ID
+            application: Optional related application
+
+        Returns:
+            Created ActivityLog instance
+        """
+        async with self.db.session() as session:
+            log = ActivityLog(
+                event_type=event_type,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                action=action,
+                source=source,
+                status=status,
+                details=details,
+                error_message=error_message,
+                download_id=download_id,
+                application=application,
+            )
+            session.add(log)
+            await session.commit()
+            await session.refresh(log)
+            return log
+
+    async def get_logs(
+        self,
+        event_type: Optional[str] = None,
+        source: Optional[str] = None,
+        status: Optional[str] = None,
+        download_id: Optional[str] = None,
+        application: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[ActivityLog]:
+        """
+        Query activity logs with filters and pagination.
+
+        Args:
+            event_type: Filter by event type
+            source: Filter by source
+            status: Filter by status
+            download_id: Filter by download ID
+            application: Filter by application
+            correlation_id: Filter by correlation ID
+            limit: Maximum number of results
+            offset: Number of results to skip
+
+        Returns:
+            List of ActivityLog instances
+        """
+        async with self.db.session() as session:
+            query = select(ActivityLog)
+
+            if event_type:
+                query = query.where(ActivityLog.event_type == event_type)
+            if source:
+                query = query.where(ActivityLog.source == source)
+            if status:
+                query = query.where(ActivityLog.status == status)
+            if download_id:
+                query = query.where(ActivityLog.download_id == download_id)
+            if application:
+                query = query.where(ActivityLog.application == application)
+            if correlation_id:
+                query = query.where(ActivityLog.correlation_id == correlation_id)
+
+            query = query.order_by(ActivityLog.timestamp.desc()).offset(offset).limit(limit)
+
+            result = await session.execute(query)
+            return list(result.scalars().all())
+
+    async def count_logs(
+        self,
+        event_type: Optional[str] = None,
+        source: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> int:
+        """
+        Count activity logs matching filters.
+
+        Args:
+            event_type: Filter by event type
+            source: Filter by source
+            status: Filter by status
+
+        Returns:
+            Count of matching logs
+        """
+        from sqlalchemy import func
+
+        async with self.db.session() as session:
+            query = select(func.count(ActivityLog.id))
+
+            if event_type:
+                query = query.where(ActivityLog.event_type == event_type)
+            if source:
+                query = query.where(ActivityLog.source == source)
+            if status:
+                query = query.where(ActivityLog.status == status)
+
+            result = await session.execute(query)
+            return result.scalar_one()
+
+    async def delete_old_logs(self, days: int) -> int:
+        """
+        Delete activity logs older than specified days.
+
+        Args:
+            days: Number of days to retain
+
+        Returns:
+            Number of logs deleted
+        """
+        from datetime import timedelta
+
+        from sqlalchemy import delete as sql_delete
+
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+
+        async with self.db.session() as session:
+            result = await session.execute(
+                sql_delete(ActivityLog).where(ActivityLog.timestamp < cutoff_date)
+            )
+            await session.commit()
+            return result.rowcount
+
+
+# ============================================================================
+# Download Monitoring Repository
+# ============================================================================
+
+
+class DownloadMonitoringRepository:
+    """Repository for download monitoring database operations."""
+
+    def __init__(self, db: Database):
+        """
+        Initialize repository.
+
+        Args:
+            db: Database instance
+        """
+        self.db = db
+
+    async def create_or_update(
+        self,
+        nzo_id: str,
+        filename: str,
+        source_application: str,
+        status: str,
+        correlation_id: str,
+        category: Optional[str] = None,
+        failure_reason: Optional[str] = None,
+        original_quality: Optional[str] = None,
+        download_metadata: Optional[str] = None,
+    ) -> DownloadMonitoring:
+        """
+        Create or update a download monitoring record.
+
+        Args:
+            nzo_id: NZO ID
+            filename: Filename
+            source_application: Source application (sonarr, radarr)
+            status: Current status
+            correlation_id: Correlation ID
+            category: Optional category
+            failure_reason: Optional failure reason
+            original_quality: Optional original quality
+            download_metadata: Optional metadata JSON string
+
+        Returns:
+            Created or updated DownloadMonitoring instance
+        """
+        async with self.db.session() as session:
+            # Try to find existing record
+            result = await session.execute(
+                select(DownloadMonitoring).where(DownloadMonitoring.nzo_id == nzo_id)
+            )
+            record = result.scalar_one_or_none()
+
+            if record:
+                # Update existing
+                record.filename = filename
+                record.status = status
+                record.failure_reason = failure_reason
+                record.updated_at = datetime.utcnow()
+            else:
+                # Create new
+                record = DownloadMonitoring(
+                    nzo_id=nzo_id,
+                    filename=filename,
+                    source_application=source_application,
+                    category=category,
+                    status=status,
+                    failure_reason=failure_reason,
+                    correlation_id=correlation_id,
+                    original_quality=original_quality,
+                    current_quality=original_quality,
+                    download_metadata=download_metadata,
+                )
+                session.add(record)
+
+            await session.commit()
+            await session.refresh(record)
+            return record
+
+    async def increment_retry(self, nzo_id: str) -> Optional[DownloadMonitoring]:
+        """
+        Increment retry count for a download.
+
+        Args:
+            nzo_id: NZO ID
+
+        Returns:
+            Updated DownloadMonitoring instance or None if not found
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(DownloadMonitoring).where(DownloadMonitoring.nzo_id == nzo_id)
+            )
+            record = result.scalar_one_or_none()
+
+            if record:
+                record.retry_count += 1
+                record.last_retry_at = datetime.utcnow()
+                await session.commit()
+                await session.refresh(record)
+                return record
+
+            return None
+
+    async def move_to_dlq(self, nzo_id: str, dlq_reason: str) -> Optional[DownloadMonitoring]:
+        """
+        Move a download to dead letter queue.
+
+        Args:
+            nzo_id: NZO ID
+            dlq_reason: Reason for moving to DLQ
+
+        Returns:
+            Updated DownloadMonitoring instance or None if not found
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(DownloadMonitoring).where(DownloadMonitoring.nzo_id == nzo_id)
+            )
+            record = result.scalar_one_or_none()
+
+            if record:
+                record.in_dlq = True
+                record.dlq_reason = dlq_reason
+                record.dlq_timestamp = datetime.utcnow()
+                record.status = "dlq"
+                await session.commit()
+                await session.refresh(record)
+                return record
+
+            return None
+
+    async def mark_resolved(self, nzo_id: str) -> Optional[DownloadMonitoring]:
+        """
+        Mark a download as resolved.
+
+        Args:
+            nzo_id: NZO ID
+
+        Returns:
+            Updated DownloadMonitoring instance or None if not found
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(DownloadMonitoring).where(DownloadMonitoring.nzo_id == nzo_id)
+            )
+            record = result.scalar_one_or_none()
+
+            if record:
+                record.status = "resolved"
+                record.resolved_at = datetime.utcnow()
+                await session.commit()
+                await session.refresh(record)
+                return record
+
+            return None
+
+    async def get_by_nzo_id(self, nzo_id: str) -> Optional[DownloadMonitoring]:
+        """
+        Get download monitoring record by NZO ID.
+
+        Args:
+            nzo_id: NZO ID
+
+        Returns:
+            DownloadMonitoring instance or None if not found
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(DownloadMonitoring).where(DownloadMonitoring.nzo_id == nzo_id)
+            )
+            return result.scalar_one_or_none()
+
+    async def get_failed_downloads(
+        self, limit: int = 50, exclude_dlq: bool = True
+    ) -> list[DownloadMonitoring]:
+        """
+        Get failed downloads that need retry.
+
+        Args:
+            limit: Maximum number of results
+            exclude_dlq: Whether to exclude DLQ entries
+
+        Returns:
+            List of DownloadMonitoring instances
+        """
+        async with self.db.session() as session:
+            query = select(DownloadMonitoring).where(DownloadMonitoring.status == "failed")
+
+            if exclude_dlq:
+                query = query.where(DownloadMonitoring.in_dlq.is_(False))
+
+            query = query.order_by(DownloadMonitoring.created_at.desc()).limit(limit)
+
+            result = await session.execute(query)
+            return list(result.scalars().all())
+
+    async def get_dlq_entries(self, limit: int = 50) -> list[DownloadMonitoring]:
+        """
+        Get downloads in dead letter queue.
+
+        Args:
+            limit: Maximum number of results
+
+        Returns:
+            List of DownloadMonitoring instances in DLQ
+        """
+        async with self.db.session() as session:
+            query = (
+                select(DownloadMonitoring)
+                .where(DownloadMonitoring.in_dlq.is_(True))
+                .order_by(DownloadMonitoring.dlq_timestamp.desc())
+                .limit(limit)
+            )
+
             result = await session.execute(query)
             return list(result.scalars().all())
