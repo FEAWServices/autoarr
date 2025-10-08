@@ -7,12 +7,11 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "../Toast";
 import {
   ArrowUpDown,
   Loader2,
   AlertCircle,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -141,25 +140,18 @@ export const ConfigAudit: React.FC = () => {
           dryRun
             ? "Dry run completed successfully"
             : "Setting applied successfully",
-          {
-            icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-            duration: 4000,
-            position: "top-right",
-          },
+          undefined,
+          4000,
         );
       } else {
-        toast.error(applyResult.message || "Failed to apply recommendation", {
-          icon: <AlertCircle className="h-5 w-5 text-red-500" />,
-          duration: 5000,
-          position: "top-right",
-        });
+        toast.error(
+          "Failed to apply recommendation",
+          applyResult.message,
+          5000,
+        );
       }
     } catch (err) {
-      toast.error("Failed to connect to service", {
-        icon: <AlertCircle className="h-5 w-5 text-red-500" />,
-        duration: 5000,
-        position: "top-right",
-      });
+      toast.error("Failed to connect to service", undefined, 5000);
     } finally {
       setApplyingId(null);
       setDialogOpen(false);
@@ -180,8 +172,6 @@ export const ConfigAudit: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Toaster />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">

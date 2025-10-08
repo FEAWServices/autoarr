@@ -80,16 +80,26 @@ class Settings(BaseSettings):
     plex_timeout: float = 30.0
 
     # ============================================================================
-    # Database Settings (for future use)
+    # Database Settings
     # ============================================================================
 
-    database_url: Optional[str] = None
+    database_url: str = "sqlite:///./autoarr.db"
 
     # ============================================================================
-    # Redis Settings (for future use)
+    # Redis Settings
     # ============================================================================
 
     redis_url: Optional[str] = None
+    redis_enabled: bool = False
+
+    # ============================================================================
+    # Web Search Settings
+    # ============================================================================
+
+    brave_api_key: str = ""
+    brave_search_enabled: bool = False
+    search_cache_ttl: int = 86400  # 24 hours
+    best_practices_cache_ttl: int = 604800  # 7 days
 
     # ============================================================================
     # MCP Orchestrator Settings

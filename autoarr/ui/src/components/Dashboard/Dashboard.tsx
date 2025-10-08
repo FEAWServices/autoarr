@@ -23,7 +23,7 @@ import type {
   SystemHealth,
   Recommendation,
 } from "../../types/config";
-import toast, { Toaster } from "react-hot-toast";
+import { toast } from "../Toast";
 
 export function Dashboard() {
   const [isRunningAudit, setIsRunningAudit] = useState(false);
@@ -147,19 +147,13 @@ export function Dashboard() {
         includeWebSearch: false,
       });
 
-      toast.success("Audit completed successfully!", {
-        icon: <CheckCircle className="w-5 h-5" />,
-        duration: 4000,
-      });
+      toast.success("Audit completed successfully!", undefined, 4000);
 
       // Refetch recommendations
       await refetch();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      toast.error(`Failed to run audit: ${errorMessage}`, {
-        icon: <AlertCircle className="w-5 h-5" />,
-        duration: 5000,
-      });
+      toast.error("Failed to run audit", errorMessage, 5000);
     } finally {
       setIsRunningAudit(false);
     }
@@ -167,18 +161,6 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6 lg:p-8">
-      {/* Toast Container */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          className: "dark:bg-gray-800 dark:text-white",
-          style: {
-            borderRadius: "8px",
-            padding: "12px 16px",
-          },
-        }}
-      />
-
       <div className="max-w-7xl mx-auto" data-testid="dashboard-container">
         {/* Header */}
         <div className="mb-6 md:mb-8">

@@ -100,7 +100,7 @@ export const Settings = () => {
       const response = await fetch(`/health/${service}`);
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         setTestResults({ ...testResults, [service]: "success" });
         setTestErrors({ ...testErrors, [service]: "" });
       } else {
@@ -175,11 +175,17 @@ export const Settings = () => {
         <div className="relative">
           <input
             type={showKeys[service] ? "text" : "password"}
-            value={showToken ? config.token : config.apiKey}
+            value={
+              showToken
+                ? (config as ServiceConfig & { token?: string }).token || ""
+                : config.apiKey
+            }
             onChange={(e) =>
               onChange(
                 showToken
-                  ? { token: e.target.value }
+                  ? ({ token: e.target.value } as Partial<
+                      ServiceConfig & { token: string }
+                    >)
                   : { apiKey: e.target.value },
               )
             }
