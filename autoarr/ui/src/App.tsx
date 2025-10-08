@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Download, Tv, Film, Server, Activity } from "lucide-react";
 import { SplashScreen } from "./components/SplashScreen";
@@ -7,6 +7,8 @@ import { Home } from "./pages/Home";
 import { Search } from "./pages/Search";
 import { Settings } from "./pages/Settings";
 import { Placeholder } from "./pages/Placeholder";
+import { Dashboard } from "./components/Dashboard";
+import ConfigAuditPage from "./pages/ConfigAudit";
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -25,7 +27,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
+          <Route index element={<Dashboard />} />
           <Route path="search" element={<Search />} />
           <Route path="settings" element={<Settings />} />
           <Route
@@ -78,6 +80,7 @@ function App() {
               />
             }
           />
+          <Route path="config-audit" element={<ConfigAuditPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
