@@ -5,9 +5,10 @@ This module defines all request and response models used in the FastAPI Gateway,
 ensuring type safety and automatic validation.
 """
 
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 # ============================================================================
@@ -338,3 +339,201 @@ class StatsResponse(BaseModel):
 
     stats: OrchestratorStats = Field(..., description="Orchestrator statistics")
     timestamp: str = Field(..., description="ISO timestamp")
+
+
+# ============================================================================
+# Best Practices Models
+# ============================================================================
+
+
+# Type definitions for validation
+ApplicationType = Literal["sabnzbd", "sonarr", "radarr", "plex"]
+PriorityLevel = Literal["critical", "high", "medium", "low"]
+CheckType = Literal[
+    "equals",
+    "not_equals",
+    "contains",
+    "not_contains",
+    "greater_than",
+    "less_than",
+    "in_range",
+    "regex",
+    "exists",
+    "not_empty",
+    "boolean",
+    "custom",
+]
+
+
+class BestPracticeBase(BaseModel):
+    """Base model for best practice with common fields."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "application": "sabnzbd",
+                "category": "downloads",
+                "setting_name": "incomplete_dir",
+                "setting_path": "misc.incomplete_dir",
+                "recommended_value": '{"type": "not_empty", "description": "Separate directory"}',
+                "current_check_type": "not_empty",
+                "explanation": "Using a separate incomplete directory prevents issues",
+                "priority": "high",
+                "impact": "Incomplete downloads may be processed incorrectly",
+                "documentation_url": "https://sabnzbd.org/wiki/configuration/",
+                "version_added": "1.0.0",
+                "enabled": True,
+            }
+        }
+    )
+
+    application: ApplicationType = Field(..., description="Application name")
+    category: str = Field(..., description="Configuration category", max_length=100)
+    setting_name: str = Field(..., description="Name of the setting", max_length=200)
+    setting_path: str = Field(..., description="JSON path or config location", max_length=500)
+    recommended_value: str = Field(..., description="Recommended value as JSON string")
+    current_check_type: CheckType = Field(..., description="How to validate the setting")
+    explanation: str = Field(..., description="Why this is recommended")
+    priority: PriorityLevel = Field(..., description="Priority level")
+    impact: Optional[str] = Field(None, description="Impact of not following this practice")
+    documentation_url: Optional[str] = Field(
+        None, description="Link to official docs", max_length=500
+    )
+    version_added: str = Field(..., description="Version when practice was added", max_length=50)
+    version_updated: Optional[str] = Field(None, description="Last version updated", max_length=50)
+    enabled: bool = Field(True, description="Whether this practice is active")
+
+    @field_validator("recommended_value")
+    @classmethod
+    def validate_json_string(cls, v: str) -> str:
+        """Validate that recommended_value is a valid JSON string."""
+        import json
+
+        try:
+            json.loads(v)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"recommended_value must be valid JSON: {e}")
+        return v
+
+
+class BestPracticeCreate(BestPracticeBase):
+    """Model for creating a new best practice."""
+
+    pass
+
+
+class BestPracticeUpdate(BaseModel):
+    """Model for updating an existing best practice (all fields optional)."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "priority": "low",
+                "enabled": False,
+                "explanation": "Updated explanation",
+            }
+        }
+    )
+
+    application: Optional[ApplicationType] = None
+    category: Optional[str] = Field(None, max_length=100)
+    setting_name: Optional[str] = Field(None, max_length=200)
+    setting_path: Optional[str] = Field(None, max_length=500)
+    recommended_value: Optional[str] = None
+    current_check_type: Optional[CheckType] = None
+    explanation: Optional[str] = None
+    priority: Optional[PriorityLevel] = None
+    impact: Optional[str] = None
+    documentation_url: Optional[str] = Field(None, max_length=500)
+    version_updated: Optional[str] = Field(None, max_length=50)
+    enabled: Optional[bool] = None
+
+    @field_validator("recommended_value")
+    @classmethod
+    def validate_json_string(cls, v: Optional[str]) -> Optional[str]:
+        """Validate that recommended_value is a valid JSON string if provided."""
+        if v is not None:
+            import json
+
+            try:
+                json.loads(v)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"recommended_value must be valid JSON: {e}")
+        return v
+
+
+class BestPracticeResponse(BestPracticeBase):
+    """Response model for a best practice (includes id and timestamps)."""
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "application": "sabnzbd",
+                "category": "downloads",
+                "setting_name": "incomplete_dir",
+                "setting_path": "misc.incomplete_dir",
+                "recommended_value": '{"type": "not_empty"}',
+                "current_check_type": "not_empty",
+                "explanation": "Prevents issues with incomplete downloads",
+                "priority": "high",
+                "impact": "May cause processing errors",
+                "documentation_url": "https://sabnzbd.org/wiki/",
+                "version_added": "1.0.0",
+                "version_updated": None,
+                "enabled": True,
+                "created_at": "2025-01-15T10:30:00Z",
+                "updated_at": "2025-01-15T10:30:00Z",
+            }
+        },
+    )
+
+    id: int = Field(..., description="Unique identifier")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
+
+
+class BestPracticeFilter(BaseModel):
+    """Model for filtering best practices."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "application": "sabnzbd",
+                "category": "downloads",
+                "priority": "high",
+                "enabled": True,
+            }
+        }
+    )
+
+    application: Optional[ApplicationType] = None
+    category: Optional[str] = None
+    priority: Optional[PriorityLevel] = None
+    enabled: Optional[bool] = None
+
+
+class BestPracticeListResponse(BaseModel):
+    """Response model for listing best practices."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "practices": [
+                    {
+                        "id": 1,
+                        "application": "sabnzbd",
+                        "category": "downloads",
+                        "setting_name": "incomplete_dir",
+                        "priority": "high",
+                        "enabled": True,
+                    }
+                ],
+                "total": 1,
+            }
+        }
+    )
+
+    practices: List[BestPracticeResponse] = Field(..., description="List of best practices")
+    total: int = Field(..., description="Total number of practices")

@@ -2,7 +2,7 @@
 # This builds both frontend and backend into a single container (like Sonarr/Radarr)
 
 # Stage 1: Build frontend
-FROM node:18-alpine AS frontend-builder
+FROM node:24-alpine AS frontend-builder
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ COPY autoarr/ui ./
 RUN pnpm run build
 
 # Stage 2: Build backend with frontend assets
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
