@@ -43,18 +43,22 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
 
     # Startup
-    logger.info("Starting AutoArr FastAPI Gateway...")
-    logger.info(f"Environment: {settings.app_env}")
-    logger.info(f"Log level: {settings.log_level}")
+    try:
+        logger.info("Starting AutoArr FastAPI Gateway...")
+        logger.info(f"Environment: {settings.app_env}")
+        logger.info(f"Log level: {settings.log_level}")
 
-    # Initialize database
-    if settings.database_url:
-        logger.info("Initializing database...")
-        db = init_database(settings.database_url)
-        await db.init_db()
-        logger.info("Database initialized successfully")
-    else:
-        logger.warning("No DATABASE_URL configured, settings will not persist")
+        # Initialize database
+        if settings.database_url:
+            logger.info("Initializing database...")
+            db = init_database(settings.database_url)
+            await db.init_db()
+            logger.info("Database initialized successfully")
+        else:
+            logger.warning("No DATABASE_URL configured, settings will not persist")
+    except Exception as e:
+        logger.error(f"Error during startup: {e}")
+        # Continue to yield so shutdown can run
 
     yield
 
