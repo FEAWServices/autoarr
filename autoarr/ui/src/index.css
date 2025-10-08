@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* AutoArr Design System - Based on Lovable branding */
 @layer base {
