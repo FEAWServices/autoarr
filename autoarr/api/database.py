@@ -146,6 +146,20 @@ class ActivityLog(Base):
 
     __tablename__ = "activity_log"
 
+# Content Request Model
+# ============================================================================
+
+
+class ContentRequest(Base):
+    """
+    Database model for content requests.
+
+    Tracks user requests for movies and TV shows through the system,
+    including classification, status, and external service IDs.
+    """
+
+    __tablename__ = "content_requests"
+
     # Primary key
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
@@ -217,6 +231,315 @@ class RecoveryAttempt(Base):
 
     # Error information
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Request identification
+    correlation_id: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False, index=True
+    )
+    query: Mapped[str] = mapped_column(Text, nullable=False)
+    user_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+
+    # Classification
+    content_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)  # movie/tv
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    quality: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    season: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    episode: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    # Status tracking
+    status: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    external_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+    # Metadata
+    tmdb_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    imdb_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    poster_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
+# ============================================================================
+# Content Request Repository
+# ============================================================================
+
+
+class ContentRequestRepository:
+    """Repository for content request database operations."""
+
+    def __init__(self, db: "Database"):
+        """
+        Initialize repository.
+
+        Args:
+            db: Database instance
+        """
+        self.db = db
+
+    async def create(
+        self,
+        correlation_id: str,
+        query: str,
+        content_type: str,
+        title: str,
+        status: str = "submitted",
+        user_id: Optional[str] = None,
+        year: Optional[int] = None,
+        quality: Optional[str] = None,
+        season: Optional[int] = None,
+        episode: Optional[int] = None,
+        tmdb_id: Optional[int] = None,
+        imdb_id: Optional[str] = None,
+        poster_path: Optional[str] = None,
+    ) -> ContentRequest:
+        """
+        Create a new content request.
+
+        Args:
+            correlation_id: Unique correlation ID
+            query: User query
+            content_type: Content type (movie/tv)
+            title: Content title
+            status: Request status
+            user_id: Optional user ID
+            year: Optional year
+            quality: Optional quality preference
+            season: Optional season number
+            episode: Optional episode number
+            tmdb_id: Optional TMDB ID
+            imdb_id: Optional IMDb ID
+            poster_path: Optional poster path
+
+        Returns:
+            Created ContentRequest
+        """
+        async with self.db.session() as session:
+            request = ContentRequest(
+                correlation_id=correlation_id,
+                query=query,
+                content_type=content_type,
+                title=title,
+                status=status,
+                user_id=user_id,
+                year=year,
+                quality=quality,
+                season=season,
+                episode=episode,
+                tmdb_id=tmdb_id,
+                imdb_id=imdb_id,
+                poster_path=poster_path,
+            )
+            session.add(request)
+            await session.commit()
+            await session.refresh(request)
+            return request
+
+    async def get_by_id(self, request_id: int) -> Optional[ContentRequest]:
+        """
+        Get a content request by ID.
+
+        Args:
+            request_id: Request ID
+
+        Returns:
+            ContentRequest if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(ContentRequest).where(ContentRequest.id == request_id)
+            )
+            return result.scalar_one_or_none()
+
+    async def get_by_correlation_id(self, correlation_id: str) -> Optional[ContentRequest]:
+        """
+        Get a content request by correlation ID.
+
+        Args:
+            correlation_id: Correlation ID
+
+        Returns:
+            ContentRequest if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(ContentRequest).where(ContentRequest.correlation_id == correlation_id)
+            )
+            return result.scalar_one_or_none()
+
+    async def get_all(
+        self,
+        user_id: Optional[str] = None,
+        content_type: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[ContentRequest]:
+        """
+        Get all content requests with optional filters.
+
+        Args:
+            user_id: Optional user ID filter
+            content_type: Optional content type filter
+            status: Optional status filter
+            limit: Maximum number of results
+            offset: Offset for pagination
+
+        Returns:
+            List of ContentRequest instances
+        """
+        async with self.db.session() as session:
+            query = select(ContentRequest)
+
+            if user_id:
+                query = query.where(ContentRequest.user_id == user_id)
+            if content_type:
+                query = query.where(ContentRequest.content_type == content_type)
+            if status:
+                query = query.where(ContentRequest.status == status)
+
+            query = query.order_by(ContentRequest.created_at.desc()).limit(limit).offset(offset)
+
+            result = await session.execute(query)
+            return list(result.scalars().all())
+
+    async def update_status(
+        self,
+        request_id: int,
+        status: str,
+        external_id: Optional[str] = None,
+        completed_at: Optional[datetime] = None,
+    ) -> Optional[ContentRequest]:
+        """
+        Update request status.
+
+        Args:
+            request_id: Request ID
+            status: New status
+            external_id: Optional external service ID
+            completed_at: Optional completion timestamp
+
+        Returns:
+            Updated ContentRequest if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(ContentRequest).where(ContentRequest.id == request_id)
+            )
+            request = result.scalar_one_or_none()
+
+            if request:
+                request.status = status
+                if external_id:
+                    request.external_id = external_id
+                if completed_at:
+                    request.completed_at = completed_at
+                elif status == "completed":
+                    request.completed_at = datetime.utcnow()
+
+                await session.commit()
+                await session.refresh(request)
+                return request
+
+            return None
+
+    async def update_metadata(
+        self,
+        request_id: int,
+        tmdb_id: Optional[int] = None,
+        imdb_id: Optional[str] = None,
+        poster_path: Optional[str] = None,
+    ) -> Optional[ContentRequest]:
+        """
+        Update request metadata.
+
+        Args:
+            request_id: Request ID
+            tmdb_id: Optional TMDB ID
+            imdb_id: Optional IMDb ID
+            poster_path: Optional poster path
+
+        Returns:
+            Updated ContentRequest if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(ContentRequest).where(ContentRequest.id == request_id)
+            )
+            request = result.scalar_one_or_none()
+
+            if request:
+                if tmdb_id is not None:
+                    request.tmdb_id = tmdb_id
+                if imdb_id is not None:
+                    request.imdb_id = imdb_id
+                if poster_path is not None:
+                    request.poster_path = poster_path
+
+                await session.commit()
+                await session.refresh(request)
+                return request
+
+            return None
+
+    async def delete(self, request_id: int) -> bool:
+        """
+        Delete a content request.
+
+        Args:
+            request_id: Request ID
+
+        Returns:
+            True if deleted, False if not found
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(ContentRequest).where(ContentRequest.id == request_id)
+            )
+            request = result.scalar_one_or_none()
+
+            if request:
+                await session.delete(request)
+                await session.commit()
+                return True
+
+            return False
+
+    async def count(
+        self,
+        user_id: Optional[str] = None,
+        content_type: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> int:
+        """
+        Count content requests with optional filters.
+
+        Args:
+            user_id: Optional user ID filter
+            content_type: Optional content type filter
+            status: Optional status filter
+
+        Returns:
+            Count of matching requests
+        """
+        from sqlalchemy import func
+
+        async with self.db.session() as session:
+            query = select(func.count(ContentRequest.id))
+
+            if user_id:
+                query = query.where(ContentRequest.user_id == user_id)
+            if content_type:
+                query = query.where(ContentRequest.content_type == content_type)
+            if status:
+                query = query.where(ContentRequest.status == status)
+
+            result = await session.execute(query)
+            return result.scalar_one()
 
 
 # ============================================================================
