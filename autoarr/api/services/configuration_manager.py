@@ -425,11 +425,13 @@ class ConfigurationManager:
                 high_priority_count=result.high_priority,
                 medium_priority_count=result.medium_priority,
                 low_priority_count=result.low_priority,
-                health_score=self._calculate_health_score(
-                    result.total_checks, []  # We don't need full recommendations for summary
-                )
-                if result.total_checks > 0
-                else 100.0,
+                health_score=(
+                    self._calculate_health_score(
+                        result.total_checks, []  # We don't need full recommendations for summary
+                    )
+                    if result.total_checks > 0
+                    else 100.0
+                ),
             )
             for result in audit_results
         ]
