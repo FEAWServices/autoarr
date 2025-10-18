@@ -1,0 +1,257 @@
+name: Frontend CI
+
+on:
+  push:
+    branches:
+      - main # Production
+      - develop # Staging/Daily latest
+      - "feature/**" # Feature branches
+      - "fix/**" # Bug fixes
+    paths:
+      - "autoarr/ui/**"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    branches:
+      - main # PRs to production
+      - develop # PRs to staging
+    paths:
+      - "autoarr/ui/**"
+      - ".github/workflows/frontend-ci.yml"
+
+# Cancel in-progress runs when a new workflow is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & Type Check
+    runs-on: [self-hosted, alienware]
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        working-directory: autoarr/ui
+        run: pnpm run lint
+
+      - name: Run Stylelint
+        working-directory: autoarr/ui
+        run: pnpm run lint:css
+
+      - name: Check code formatting (Prettier)
+        working-directory: autoarr/ui
+        run: pnpm exec prettier --check "src/**/*.{ts,tsx,css}"
+
+      - name: TypeScript type check
+        working-directory: autoarr/ui
+        run: pnpm exec tsc --noEmit
+
+  build:
+    name: Build & Test
+    runs-on: [self-hosted, alienware]
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        working-directory: autoarr/ui
+        run: pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: Check build size
+        working-directory: autoarr/ui
+        run: |
+          du -sh dist
+          echo "Build size: $(du -sh dist | cut -f1)"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: autoarr/ui/dist/
+          retention-days: 7
+
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: [self-hosted, alienware]
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Install dependencies
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: autoarr/ui
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        working-directory: autoarr/ui
+        run: pnpm exec playwright test
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: autoarr/ui/playwright-report/
+          retention-days: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results
+          path: autoarr/ui/test-results/
+          retention-days: 30
+
+  accessibility:
+    name: Accessibility Tests
+    runs-on: [self-hosted, alienware]
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Install dependencies
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        working-directory: autoarr/ui
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run accessibility tests
+        working-directory: autoarr/ui
+        run: pnpm exec playwright test --grep "@accessibility"
+        continue-on-error: true
+
+  bundle-size:
+    name: Bundle Size Analysis
+    runs-on: [self-hosted, alienware]
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Install dependencies
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and analyze bundle
+        working-directory: autoarr/ui
+        run: |
+          pnpm run build
+          echo "## Bundle Size" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          du -sh dist >> $GITHUB_STEP_SUMMARY
+          find dist -type f -name "*.js" -exec du -h {} \; | sort -h >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

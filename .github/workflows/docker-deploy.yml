@@ -1,0 +1,182 @@
+name: Docker Build & Deploy
+
+on:
+  push:
+    branches:
+      - main # Production deployment
+      - develop # Staging deployment
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".github/workflows/python-ci.yml"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+
+# Cancel in-progress runs when a new workflow is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker Image
+    runs-on: [self-hosted, alienware]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # For main branch (production)
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=stable,enable=${{ github.ref == 'refs/heads/main' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            # For develop branch (staging)
+            type=raw,value=staging,enable=${{ github.ref == 'refs/heads/develop' }}
+            type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
+            # SHA for all builds
+            type=sha,prefix={{branch}}-
+          labels: |
+            org.opencontainers.image.title=AutoArr
+            org.opencontainers.image.description=Intelligent orchestration layer for media automation
+            org.opencontainers.image.vendor=FEAWServices
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+
+      - name: Run Trivy security scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          format: "sarif"
+          output: "trivy-results.sarif"
+        continue-on-error: true
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-results.sarif"
+        continue-on-error: true
+
+      - name: Generate deployment summary
+        run: |
+          echo "## 🐳 Docker Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Tags" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            echo "### 🚀 Production Deployment" >> $GITHUB_STEP_SUMMARY
+            echo "Pull and run with:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
+            echo "docker-compose -f docker/docker-compose.yml up -d" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ github.ref_name }}" == "develop" ]; then
+            echo "### 🧪 Staging Deployment" >> $GITHUB_STEP_SUMMARY
+            echo "Pull and run with:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging" >> $GITHUB_STEP_SUMMARY
+            echo "docker-compose -f docker/docker-compose.staging.yml up -d" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  deploy-synology-staging:
+    name: Deploy to Synology Staging
+    needs: build-and-push
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: [self-hosted, alienware]
+    steps:
+      - name: Deploy notification
+        run: |
+          echo "## 🎯 Staging Deployment Ready" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The staging image is ready for deployment to Synology NAS." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Manual Deployment Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. SSH into Synology NAS" >> $GITHUB_STEP_SUMMARY
+          echo "2. Pull latest staging image" >> $GITHUB_STEP_SUMMARY
+          echo "3. Restart AutoArr container" >> $GITHUB_STEP_SUMMARY
+
+      # Future: Add SSH deployment to Synology NAS
+      # - name: Deploy to Synology NAS
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ secrets.SYNOLOGY_HOST }}
+      #     username: ${{ secrets.SYNOLOGY_USER }}
+      #     key: ${{ secrets.SYNOLOGY_SSH_KEY }}
+      #     script: |
+      #       cd /volume1/docker/autoarr
+      #       docker-compose pull
+      #       docker-compose up -d
+
+  deploy-production:
+    name: Production Deployment Gate
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: [self-hosted, alienware]
+    environment:
+      name: production
+      url: https://github.com/${{ github.repository }}/packages
+    steps:
+      - name: Production deployment notification
+        run: |
+          echo "## 🚀 Production Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The production image is available for deployment." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment Options:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docker Compose:** \`docker-compose -f docker/docker-compose.yml up -d\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Synology NAS:** Update container in Container Manager" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docker CLI:** \`docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
