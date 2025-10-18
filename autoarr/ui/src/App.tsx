@@ -3,12 +3,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Download, Tv, Film, Server, Activity } from "lucide-react";
 import { SplashScreen } from "./components/SplashScreen";
 import { MainLayout } from "./layouts/MainLayout";
-import { Home } from "./pages/Home";
 import { Search } from "./pages/Search";
 import { Settings } from "./pages/Settings";
 import { Placeholder } from "./pages/Placeholder";
 import { Dashboard } from "./components/Dashboard";
 import ConfigAuditPage from "./pages/ConfigAudit";
+import { Chat } from "./pages/Chat";
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -28,6 +28,7 @@ function App() {
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Dashboard />} />
+          <Route path="chat" element={<Chat />} />
           <Route path="search" element={<Search />} />
           <Route path="settings" element={<Settings />} />
           <Route
