@@ -30,7 +30,7 @@ env:
 jobs:
   build-and-push:
     name: Build & Push Docker Image
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, alienware]
     permissions:
       contents: read
       packages: write
@@ -132,7 +132,7 @@ jobs:
     name: Deploy to Synology Staging
     needs: build-and-push
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, alienware]
     steps:
       - name: Deploy notification
         run: |
@@ -163,7 +163,7 @@ jobs:
     name: Production Deployment Gate
     needs: build-and-push
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, alienware]
     environment:
       name: production
       url: https://github.com/${{ github.repository }}/packages
