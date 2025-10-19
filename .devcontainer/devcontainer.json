@@ -49,6 +49,8 @@
   "remoteUser": "root",
   "remoteEnv": {
     "PYTHONPATH": "/app:/app/mcp-servers",
-    "PATH": "/root/.local/bin:${containerEnv:PATH}"
+    "PATH": "/root/.local/bin:${containerEnv:PATH}",
+    "GITHUB_ADMIN_TOKEN": "${localEnv:GITHUB_ADMIN_TOKEN}",
+    "GH_TOKEN": "${localEnv:GITHUB_ADMIN_TOKEN}"
   }
 }

@@ -22,7 +22,7 @@ COPY autoarr/ui ./
 RUN pnpm run build
 
 # Stage 2: Build backend with frontend assets
-FROM python:3.14-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -53,6 +53,14 @@ COPY --from=frontend-builder /app/dist ./autoarr/ui/dist
 
 # Create data directory
 RUN mkdir -p /data
+
+# Create non-root user for security
+RUN groupadd -r autoarr --gid=1001 && \
+    useradd -r -g autoarr --uid=1001 --home=/app autoarr && \
+    chown -R autoarr:autoarr /app /data
+
+# Switch to non-root user
+USER autoarr
 
 # Expose API port
 EXPOSE 8088
