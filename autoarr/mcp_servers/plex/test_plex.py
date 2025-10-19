@@ -23,8 +23,8 @@ from typing import Any
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from plex.client import PlexClient
-from plex.server import PlexMCPServer
+from plex.client import PlexClient  # noqa: E402
+from plex.server import PlexMCPServer  # noqa: E402
 
 # ============================================================================
 # Color Output Utilities

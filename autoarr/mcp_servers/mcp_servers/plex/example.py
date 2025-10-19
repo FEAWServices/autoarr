@@ -18,7 +18,7 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from plex import PlexClient, PlexMCPServer
+from plex import PlexClient, PlexMCPServer  # noqa: E402
 
 
 async def example_1_basic_client_usage():
