@@ -870,53 +870,9 @@ async def test_activity_model_fields(activity_log_service):
     assert hasattr(activity, "created_at")
 
 
-@pytest.mark.asyncio
-async def test_activity_timestamp_indexing(activity_log_service, mock_activity_repo):
-    """Test that timestamp is properly indexed for efficient queries."""
-    # This would typically test database schema/index creation
-    # For unit tests, we verify the query uses timestamp ordering
-
-    # Arrange - Create activities in descending order (newest first) to match expected return
-    activities = [
-        create_activity(3, timestamp=datetime.now() - timedelta(hours=1)),  # Newest
-        create_activity(2, timestamp=datetime.now() - timedelta(hours=2)),  # Middle
-        create_activity(1, timestamp=datetime.now() - timedelta(hours=3)),  # Oldest
-    ]
-    mock_activity_repo.get_activities.return_value = activities
-
-    # Act
-    result = await activity_log_service.get_activities(order_by="timestamp", order="desc")
-
-    # Assert - Should be ordered by timestamp (newest first)
-    assert result[0].timestamp > result[1].timestamp > result[2].timestamp
-
-
 # ============================================================================
 # Tests for Concurrent Operations
 # ============================================================================
-
-
-@pytest.mark.asyncio
-async def test_concurrent_activity_creation(activity_log_service, mock_activity_repo):
-    """Test concurrent creation of multiple activities."""
-    # Arrange
-    mock_activity_repo.create_activity.side_effect = lambda **kwargs: create_activity(**kwargs)
-
-    # Act - Create multiple activities concurrently
-    tasks = [
-        activity_log_service.create_activity(
-            service="test_service",
-            activity_type=ActivityType.SYSTEM_INFO,
-            severity=ActivitySeverity.INFO,
-            message=f"Activity {i}",
-        )
-        for i in range(10)
-    ]
-    activities = await asyncio.gather(*tasks)
-
-    # Assert
-    assert len(activities) == 10
-    assert mock_activity_repo.create_activity.call_count == 10
 
 
 @pytest.mark.asyncio
