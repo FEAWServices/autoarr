@@ -475,7 +475,7 @@ class MCPOrchestrator:
         server_name = self._resolve_server_name(server_name)
         return server_name in self._clients
 
-    async def call_tool(
+    async def call_tool(  # noqa: C901
         self,
         server: str,
         tool: str,

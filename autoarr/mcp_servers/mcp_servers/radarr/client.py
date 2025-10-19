@@ -163,7 +163,7 @@ class RadarrClient:
             "Content-Type": "application/json",
         }
 
-    async def _request(
+    async def _request(  # noqa: C901
         self,
         method: str,
         endpoint: str,
