@@ -22,7 +22,7 @@ COPY autoarr/ui ./
 RUN pnpm run build
 
 # Stage 2: Build backend with frontend assets
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
