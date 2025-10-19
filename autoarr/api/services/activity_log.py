@@ -416,11 +416,12 @@ class ActivityLogService:
         Returns:
             Dictionary mapping dates (YYYY-MM-DD) to counts
         """
-        return await self.repository.get_trend(
+        result = await self.repository.get_trend(
             days=days,
             event_type=event_type.value if event_type else None,
             service=service,
         )
+        return dict(result)  # Explicitly cast to dict
 
     async def delete_old_activities(self, cutoff_date: datetime) -> int:
         """
@@ -432,7 +433,8 @@ class ActivityLogService:
         Returns:
             Number of activities deleted
         """
-        return await self.repository.delete_old_activities(cutoff_date)
+        count = await self.repository.delete_old_activities(cutoff_date)
+        return int(count)  # Explicitly cast to int
 
     async def cleanup_by_retention_policy(self, retention_days: int) -> int:
         """
@@ -447,7 +449,7 @@ class ActivityLogService:
         cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
         return await self.delete_old_activities(cutoff_date)
 
-    def _build_filter_params(self, filter: Optional[ActivityFilter]) -> dict:
+    def _build_filter_params(self, filter: Optional[ActivityFilter]) -> Dict[str, Any]:
         """
         Build filter parameters for repository queries.
 
@@ -460,7 +462,7 @@ class ActivityLogService:
         if not filter:
             return {}
 
-        params = {}
+        params: Dict[str, Any] = {}
 
         if filter.service:
             params["service"] = filter.service

@@ -447,8 +447,9 @@ class ContentRequestRepository:
 
             if request:
                 request.status = status
-                if external_id:
-                    request.external_id = external_id
+                # Note: external_id field doesn't exist in ContentRequest model
+                # if external_id:
+                #     request.external_id = external_id
                 if completed_at:
                     request.completed_at = completed_at
                 elif status == "completed":
@@ -1517,7 +1518,8 @@ class ActivityLogRepository:
             result = await session.execute(query)  # noqa: F841
             rows = result.all()
 
-            return {str(row.date): row.count for row in rows}
+            # row.count is the actual count value, not a callable
+            return {str(row.date): row.count for row in rows}  # type: ignore[misc]
 
     async def delete_old_activities(self, cutoff_date: datetime) -> int:
         """

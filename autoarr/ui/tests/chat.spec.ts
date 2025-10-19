@@ -25,8 +25,8 @@ import { test, expect } from "@playwright/test";
 // Test Configuration
 // ============================================================================
 
-const BASE_URL = "http://localhost:3001";
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const BASE_URL = "http://localhost:3000";
+const API_BASE_URL = "http://localhost:8088/api/v1";
 
 // Mock data for testing
 const mockContentRequestResponse = {

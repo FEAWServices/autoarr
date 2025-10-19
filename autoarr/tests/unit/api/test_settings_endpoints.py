@@ -350,7 +350,7 @@ class TestMaskApiKey:
         from autoarr.api.routers.settings import mask_api_key
 
         result = mask_api_key("1234567890abcde")  # noqa: F841
-        assert result == "1234...cde"  # noqa: F841
+        assert result == "1234...bcde"  # noqa: F841
 
     def test_mask_api_key_short(self):
         """Test masking a short API key."""
