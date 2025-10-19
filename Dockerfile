@@ -2,7 +2,7 @@
 # This builds both frontend and backend into a single container (like Sonarr/Radarr)
 
 # Stage 1: Build frontend
-FROM node:24-alpine AS frontend-builder
+FROM node:25-alpine AS frontend-builder
 
 WORKDIR /app
 
