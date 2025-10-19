@@ -11,14 +11,14 @@ from datetime import datetime, timedelta
 from typing import AsyncGenerator, Optional
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     Float,
+    Index,
     Integer,
     String,
     Text,
-    JSON,
-    Index,
     create_engine,
     select,
 )
@@ -146,20 +146,6 @@ class ActivityLog(Base):
 
     __tablename__ = "activity_log"
 
-# Content Request Model
-# ============================================================================
-
-
-class ContentRequest(Base):
-    """
-    Database model for content requests.
-
-    Tracks user requests for movies and TV shows through the system,
-    including classification, status, and external service IDs.
-    """
-
-    __tablename__ = "content_requests"
-
     # Primary key
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
@@ -189,6 +175,77 @@ class ContentRequest(Base):
         Index("ix_activity_log_service_timestamp", "service", "timestamp"),
         Index("ix_activity_log_severity_timestamp", "severity", "timestamp"),
         Index("ix_activity_log_event_type_timestamp", "event_type", "timestamp"),
+    )
+
+
+# ============================================================================
+# Content Request Model
+# ============================================================================
+
+
+class ContentRequest(Base):
+    """
+    Database model for content requests.
+
+    Tracks user requests for movies and TV shows through the system,
+    including classification, status, and external service IDs.
+    """
+
+    __tablename__ = "content_requests"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Request correlation
+    correlation_id: Mapped[str] = mapped_column(
+        String(100), nullable=False, unique=True, index=True
+    )
+
+    # User query
+    query: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # Classification result
+    content_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)  # movie or tv
+    title: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
+
+    # Request status
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="submitted", index=True)
+
+    # Optional fields
+    year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    quality: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    season: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    episode: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    # External IDs
+    tmdb_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    imdb_id: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, index=True)
+    tvdb_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+
+    # Media info
+    poster_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    overview: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Service integration IDs
+    sonarr_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    radarr_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False, index=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Optional user tracking for future multi-user support
+    user_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+
+    # Composite indexes for common query patterns
+    __table_args__ = (
+        Index("ix_content_requests_status_created", "status", "created_at"),
+        Index("ix_content_requests_type_created", "content_type", "created_at"),
     )
 
 
@@ -231,37 +288,6 @@ class RecoveryAttempt(Base):
 
     # Error information
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    # Request identification
-    correlation_id: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=False, index=True
-    )
-    query: Mapped[str] = mapped_column(Text, nullable=False)
-    user_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
-
-    # Classification
-    content_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)  # movie/tv
-    title: Mapped[str] = mapped_column(String(500), nullable=False)
-    year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    quality: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    season: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    episode: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-
-    # Status tracking
-    status: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    external_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-
-    # Metadata
-    tmdb_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
-    imdb_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    poster_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
 
 # ============================================================================
@@ -353,7 +379,7 @@ class ContentRequestRepository:
             result = await session.execute(
                 select(ContentRequest).where(ContentRequest.id == request_id)
             )
-            return result.scalar_one_or_none()
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
 
     async def get_by_correlation_id(self, correlation_id: str) -> Optional[ContentRequest]:
         """
@@ -369,7 +395,7 @@ class ContentRequestRepository:
             result = await session.execute(
                 select(ContentRequest).where(ContentRequest.correlation_id == correlation_id)
             )
-            return result.scalar_one_or_none()
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
 
     async def get_all(
         self,
@@ -443,7 +469,7 @@ class ContentRequestRepository:
 
                 await session.commit()
                 await session.refresh(request)
-                return request
+                return request  # type: ignore[no-any-return]
 
             return None
 
@@ -482,7 +508,7 @@ class ContentRequestRepository:
 
                 await session.commit()
                 await session.refresh(request)
-                return request
+                return request  # type: ignore[no-any-return]
 
             return None
 
@@ -539,7 +565,7 @@ class ContentRequestRepository:
                 query = query.where(ContentRequest.status == status)
 
             result = await session.execute(query)
-            return result.scalar_one()
+            return result.scalar_one()  # type: ignore[no-any-return]
 
 
 # ============================================================================
@@ -572,13 +598,13 @@ class Database:
             self.engine, class_=AsyncSession, expire_on_commit=False
         )
 
-    async def init_db(self):
+    async def init_db(self) -> None:
         """Initialize database tables."""
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("Database initialized successfully")
 
-    async def close(self):
+    async def close(self) -> None:
         """Close database connections."""
         await self.engine.dispose()
 
@@ -667,7 +693,7 @@ class SettingsRepository:
             result = await session.execute(
                 select(ServiceSettings).where(ServiceSettings.service_name == service_name)
             )
-            return result.scalar_one_or_none()
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
 
     async def get_all_service_settings(self) -> dict[str, ServiceSettings]:
         """
@@ -728,7 +754,7 @@ class SettingsRepository:
 
             await session.commit()
             await session.refresh(settings)
-            return settings
+            return settings  # type: ignore[no-any-return]
 
     async def delete_service_settings(self, service_name: str) -> bool:
         """
@@ -807,7 +833,7 @@ class BestPracticesRepository:
             result = await session.execute(
                 select(BestPractice).where(BestPractice.id == practice_id)
             )
-            return result.scalar_one_or_none()
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
 
     async def get_all(self, enabled_only: bool = False) -> list[BestPractice]:
         """
@@ -968,7 +994,7 @@ class BestPracticesRepository:
                 query = query.where(BestPractice.enabled)
 
             result = await session.execute(query)
-            return result.scalar_one()
+            return result.scalar_one()  # type: ignore[no-any-return]
 
     async def update(self, practice_id: int, data: dict) -> Optional[BestPractice]:
         """
@@ -994,7 +1020,7 @@ class BestPracticesRepository:
 
                 await session.commit()
                 await session.refresh(practice)
-                return practice
+                return practice  # type: ignore[no-any-return]
 
             return None
 
@@ -1072,7 +1098,7 @@ class BestPracticesRepository:
                 sql_delete(BestPractice).where(BestPractice.id.in_(practice_ids))
             )
             await session.commit()
-            return result.rowcount
+            return result.rowcount  # type: ignore[no-any-return]
 
     async def get_paginated(
         self, page: int = 1, page_size: int = 10, enabled_only: bool = False
@@ -1259,7 +1285,7 @@ class ActivityLogRepository:
         """
         async with self.db.session() as session:
             result = await session.execute(select(ActivityLog).where(ActivityLog.id == activity_id))
-            return result.scalar_one_or_none()
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
 
     async def get_activities(
         self,
@@ -1417,7 +1443,7 @@ class ActivityLogRepository:
                 query = query.where(ActivityLog.message.ilike(search_pattern))
 
             result = await session.execute(query)
-            return result.scalar_one()
+            return result.scalar_one()  # type: ignore[no-any-return]
 
     async def get_statistics(
         self,
@@ -1522,4 +1548,4 @@ class ActivityLogRepository:
                 sql_delete(ActivityLog).where(ActivityLog.timestamp < cutoff_date)
             )
             await session.commit()
-            return result.rowcount
+            return result.rowcount  # type: ignore[no-any-return]
