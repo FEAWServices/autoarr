@@ -88,7 +88,7 @@ async def trigger_config_audit(
             )
 
         # Perform the audit
-        result = await config_manager.audit_configuration(
+        result = await config_manager.audit_configuration(  # noqa: F841
             services=request.services,
             include_web_search=request.include_web_search,
         )
@@ -149,7 +149,7 @@ async def get_recommendations(
         50 recommendations queries per hour
     """
     try:
-        result = await config_manager.get_recommendations(
+        result = await config_manager.get_recommendations(  # noqa: F841
             service=service,
             priority=priority,
             category=category,
@@ -201,7 +201,7 @@ async def get_recommendation_detail(
         50 recommendations queries per hour
     """
     try:
-        result = await config_manager.get_recommendation_by_id(recommendation_id)
+        result = await config_manager.get_recommendation_by_id(recommendation_id)  # noqa: F841
 
         if result is None:
             raise HTTPException(
@@ -263,7 +263,7 @@ async def apply_config_changes(
             )
 
         # Apply the recommendations
-        result = await config_manager.apply_recommendations(
+        result = await config_manager.apply_recommendations(  # noqa: F841
             recommendation_ids=request.recommendation_ids,
             dry_run=request.dry_run,
         )
@@ -316,7 +316,7 @@ async def get_audit_history(
         50 recommendations queries per hour
     """
     try:
-        result = await config_manager.get_audit_history(
+        result = await config_manager.get_audit_history(  # noqa: F841
             page=page,
             page_size=page_size,
         )

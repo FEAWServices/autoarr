@@ -5,12 +5,13 @@ This module tests the service-specific API endpoints for Downloads (SABnzbd),
 Shows (Sonarr), Movies (Radarr), and Media (Plex).
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 
-from autoarr.api.main import app
 from autoarr.api.dependencies import reset_orchestrator
+from autoarr.api.main import app
 
 
 @pytest.fixture

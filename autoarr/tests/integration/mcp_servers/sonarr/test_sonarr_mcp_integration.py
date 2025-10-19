@@ -14,15 +14,12 @@ Target Coverage: 10% of total test suite (E2E layer)
 """
 
 import json
-from typing import Any, Dict
-from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_httpx import HTTPXMock
 
+from autoarr.mcp_servers.mcp_servers.sonarr.client import SonarrClient
 from autoarr.mcp_servers.mcp_servers.sonarr.server import SonarrMCPServer
-from autoarr.mcp_servers.mcp_servers.sonarr.client import SonarrClient, SonarrClientError
-
 
 # ============================================================================
 # MCP Integration Test Fixtures
@@ -32,7 +29,7 @@ from autoarr.mcp_servers.mcp_servers.sonarr.client import SonarrClient, SonarrCl
 @pytest.fixture
 async def sonarr_mcp_integration_client(httpx_mock: HTTPXMock):
     """Create Sonarr client with HTTP mocking for MCP integration tests."""
-    client = SonarrClient(url="http://localhost:8989", api_key="test_mcp_api_key")
+    client = SonarrClient(url="http://localhost:8989", api_key="test_mcp_api_key")  # noqa: F841
     yield client
     await client.close()
 
@@ -366,7 +363,7 @@ class TestSonarrMCPDataTransformation:
         )
 
         response_data = json.loads(response[0].text)
-        result = response_data["data"]
+        result = response_data["data"]  # noqa: F841
 
         assert result["page"] == 2
         assert result["pageSize"] == 20

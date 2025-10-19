@@ -5,9 +5,8 @@ This module tests the recommendation engine's ability to aggregate context,
 assess priorities using LLM, and generate detailed explanations.
 """
 
-import json
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 

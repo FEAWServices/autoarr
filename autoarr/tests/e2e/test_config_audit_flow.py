@@ -11,13 +11,13 @@ Tests the complete configuration audit workflow:
 7. Check activity log entries
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from autoarr.api.models import ActivityLog, ConfigAudit
+from autoarr.api.models import ConfigAudit
 
 
 @pytest.mark.asyncio
@@ -65,7 +65,7 @@ class TestConfigurationAuditFlow:
                 json={"service": "sabnzbd"},
             )
             assert response.status_code == 200
-            audit_result = response.json()
+            audit_result = response.json()  # noqa: F841
 
             # Step 3: Verify audit results
             assert audit_result["service"] == "sabnzbd"
@@ -85,7 +85,7 @@ class TestConfigurationAuditFlow:
                 from sqlalchemy import select
 
                 stmt = select(ConfigAudit).where(ConfigAudit.id == audit_id)
-                result = await db_session.execute(stmt)
+                result = await db_session.execute(stmt)  # noqa: F841
                 audit_record = result.scalar_one_or_none()
                 assert audit_record is not None
                 assert audit_record.service == "sabnzbd"
@@ -132,7 +132,7 @@ class TestConfigurationAuditFlow:
                 json={"service": "sonarr"},
             )
             assert response.status_code == 200
-            audit_result = response.json()
+            audit_result = response.json()  # noqa: F841
 
             # Verify audit results
             assert audit_result["service"] == "sonarr"
@@ -176,7 +176,7 @@ class TestConfigurationAuditFlow:
                 json={"service": "radarr"},
             )
             assert response.status_code == 200
-            audit_result = response.json()
+            audit_result = response.json()  # noqa: F841
 
             # Verify audit results
             assert audit_result["service"] == "radarr"
@@ -229,7 +229,7 @@ class TestConfigurationAuditFlow:
                 json={"service": "sabnzbd", "generate_recommendations": True},
             )
             assert response.status_code == 200
-            audit_result = response.json()
+            audit_result = response.json()  # noqa: F841
 
             # Verify LLM recommendations included
             assert "findings" in audit_result
@@ -274,7 +274,6 @@ class TestConfigurationAuditFlow:
             mock_instance.call_tool.side_effect = mock_call_tool
 
             # Run audit for all services
-            import asyncio
             import time
 
             start_time = time.time()
@@ -337,7 +336,7 @@ class TestConfigurationAuditFlow:
                 pytest.skip("Configuration update endpoint not implemented yet")
 
             assert response.status_code in [200, 201]
-            result = response.json()
+            result = response.json()  # noqa: F841
             assert result.get("success") is True or "cache_limit" in str(result)
 
     async def test_audit_error_handling(

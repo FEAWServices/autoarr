@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-
 # ============================================================================
 # MCP Tool Models
 # ============================================================================
@@ -418,8 +417,6 @@ class BestPracticeBase(BaseModel):
 
 class BestPracticeCreate(BestPracticeBase):
     """Model for creating a new best practice."""
-
-    pass
 
 
 class BestPracticeUpdate(BaseModel):

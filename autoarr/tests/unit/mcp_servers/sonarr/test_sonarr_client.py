@@ -16,12 +16,9 @@ Target Coverage: 90%+ for the Sonarr client class
 """
 
 import json
-from datetime import datetime
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from httpx import AsyncClient, HTTPError, HTTPStatusError, Response
+from httpx import HTTPError
 from pytest_httpx import HTTPXMock
 
 # Import the actual client - using new repository structure
@@ -30,7 +27,6 @@ from autoarr.mcp_servers.mcp_servers.sonarr.client import (
     SonarrClientError,
     SonarrConnectionError,
 )
-
 
 # ============================================================================
 # Test Fixtures
@@ -75,12 +71,12 @@ class TestSonarrClientInitialization:
 
     def test_client_normalizes_url(self, sonarr_api_key: str) -> None:
         """Test that client normalizes URLs (removes trailing slash)."""
-        client = SonarrClient(url="http://localhost:8989/", api_key=sonarr_api_key)
+        client = SonarrClient(url="http://localhost:8989/", api_key=sonarr_api_key)  # noqa: F841
         assert client.url == "http://localhost:8989"
 
     def test_client_accepts_custom_timeout(self, sonarr_url: str, sonarr_api_key: str) -> None:
         """Test that client accepts custom timeout values."""
-        client = SonarrClient(url=sonarr_url, api_key=sonarr_api_key, timeout=60.0)
+        client = SonarrClient(url=sonarr_url, api_key=sonarr_api_key, timeout=60.0)  # noqa: F841
         assert client.timeout == 60.0
 
     @pytest.mark.asyncio
@@ -95,7 +91,7 @@ class TestSonarrClientInitialization:
         mock_status = sonarr_system_status_factory()
         httpx_mock.add_response(url=f"{sonarr_url}/api/v3/system/status", json=mock_status)
 
-        client = await SonarrClient.create(
+        client = await SonarrClient.create(  # noqa: F841
             url=sonarr_url, api_key=sonarr_api_key, validate_connection=True
         )
         assert client is not None
@@ -156,7 +152,7 @@ class TestSonarrClientSeriesOperations:
         mock_series = [sonarr_series_factory(series_id=i) for i in range(1, 4)]
         httpx_mock.add_response(json=mock_series)
 
-        result = await sonarr_client.get_series()
+        result = await sonarr_client.get_series()  # noqa: F841
 
         assert isinstance(result, list)
         assert len(result) == 3
@@ -171,7 +167,7 @@ class TestSonarrClientSeriesOperations:
         """Test that get_series returns empty list when no series exist."""
         httpx_mock.add_response(json=[])
 
-        result = await sonarr_client.get_series()
+        result = await sonarr_client.get_series()  # noqa: F841
 
         assert isinstance(result, list)
         assert len(result) == 0
@@ -184,7 +180,7 @@ class TestSonarrClientSeriesOperations:
         mock_series = sonarr_series_factory(series_id=5, title="Breaking Bad")
         httpx_mock.add_response(json=mock_series)
 
-        result = await sonarr_client.get_series_by_id(series_id=5)
+        result = await sonarr_client.get_series_by_id(series_id=5)  # noqa: F841
 
         assert result["id"] == 5
         assert result["title"] == "Breaking Bad"
@@ -220,7 +216,7 @@ class TestSonarrClientSeriesOperations:
             "monitored": True,
         }
 
-        result = await sonarr_client.add_series(series_data)
+        result = await sonarr_client.add_series(series_data)  # noqa: F841
 
         # Verify POST request was made
         request = httpx_mock.get_request()
@@ -281,7 +277,7 @@ class TestSonarrClientSeriesOperations:
         ]
         httpx_mock.add_response(json=mock_results)
 
-        result = await sonarr_client.search_series(term="The Wire")
+        result = await sonarr_client.search_series(term="The Wire")  # noqa: F841
 
         # Verify search endpoint
         request = httpx_mock.get_request()
@@ -296,10 +292,10 @@ class TestSonarrClientSeriesOperations:
         self, httpx_mock: HTTPXMock, sonarr_client: SonarrClient, sonarr_series_factory: callable
     ) -> None:
         """Test that search_series can lookup by TVDB ID."""
-        mock_result = [sonarr_series_factory(tvdb_id=12345)]
+        mock_result = [sonarr_series_factory(tvdb_id=12345)]  # noqa: F841
         httpx_mock.add_response(json=mock_result)
 
-        result = await sonarr_client.search_series(term="tvdb:12345")
+        result = await sonarr_client.search_series(term="tvdb:12345")  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "term=tvdb%3A12345" in str(request.url) or "term=tvdb:12345" in str(request.url)
@@ -361,7 +357,7 @@ class TestSonarrClientEpisodeOperations:
         ]
         httpx_mock.add_response(json=mock_episodes)
 
-        result = await sonarr_client.get_episodes(series_id=1)
+        result = await sonarr_client.get_episodes(series_id=1)  # noqa: F841
 
         assert len(result) == 10
         assert result[0]["seriesId"] == 1
@@ -381,7 +377,7 @@ class TestSonarrClientEpisodeOperations:
         ]
         httpx_mock.add_response(json=mock_episodes)
 
-        result = await sonarr_client.get_episodes(series_id=1, season_number=2)
+        result = await sonarr_client.get_episodes(series_id=1, season_number=2)  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "seasonNumber=2" in str(request.url)
@@ -395,7 +391,7 @@ class TestSonarrClientEpisodeOperations:
         mock_episode = sonarr_episode_factory(episode_id=42, title="Pilot")
         httpx_mock.add_response(json=mock_episode)
 
-        result = await sonarr_client.get_episode_by_id(episode_id=42)
+        result = await sonarr_client.get_episode_by_id(episode_id=42)  # noqa: F841
 
         assert result["id"] == 42
         assert result["title"] == "Pilot"
@@ -413,7 +409,7 @@ class TestSonarrClientEpisodeOperations:
         )
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await sonarr_client.search_episode(episode_id=5)
+        result = await sonarr_client.search_episode(episode_id=5)  # noqa: F841
 
         # Verify command was posted
         request = httpx_mock.get_request()
@@ -434,7 +430,7 @@ class TestSonarrClientEpisodeOperations:
         mock_command = sonarr_command_factory(command_id=123)
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await sonarr_client.search_episode(episode_id=10)
+        result = await sonarr_client.search_episode(episode_id=10)  # noqa: F841
 
         assert "id" in result
         assert result["id"] == 123
@@ -456,7 +452,9 @@ class TestSonarrClientCommandOperations:
         mock_command = sonarr_command_factory(name="TestCommand")
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await sonarr_client._execute_command("TestCommand", {"param": "value"})
+        result = await sonarr_client._execute_command(
+            "TestCommand", {"param": "value"}
+        )  # noqa: F841
 
         request = httpx_mock.get_request()
         assert request.method == "POST"
@@ -476,7 +474,7 @@ class TestSonarrClientCommandOperations:
         )
         httpx_mock.add_response(json=mock_command)
 
-        result = await sonarr_client.get_command(command_id=50)
+        result = await sonarr_client.get_command(command_id=50)  # noqa: F841
 
         assert result["id"] == 50
         assert result["status"] == "completed"
@@ -493,7 +491,7 @@ class TestSonarrClientCommandOperations:
         mock_command = sonarr_command_factory(name="SeriesSearch", body={"seriesId": 3})
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await sonarr_client.search_series_command(series_id=3)
+        result = await sonarr_client.search_series_command(series_id=3)  # noqa: F841
 
         request = httpx_mock.get_request()
         payload = json.loads(request.content)
@@ -508,7 +506,7 @@ class TestSonarrClientCommandOperations:
         mock_command = sonarr_command_factory(name="RefreshSeries", body={"seriesId": 7})
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await sonarr_client.refresh_series(series_id=7)
+        result = await sonarr_client.refresh_series(series_id=7)  # noqa: F841
 
         request = httpx_mock.get_request()
         payload = json.loads(request.content)
@@ -523,7 +521,7 @@ class TestSonarrClientCommandOperations:
         mock_command = sonarr_command_factory(name="RescanSeries")
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await sonarr_client.rescan_series(series_id=4)
+        result = await sonarr_client.rescan_series(series_id=4)  # noqa: F841
 
         request = httpx_mock.get_request()
         payload = json.loads(request.content)
@@ -547,7 +545,9 @@ class TestSonarrClientCalendarQueueWanted:
         mock_calendar = sonarr_calendar_factory(days=7, episodes_per_day=2)
         httpx_mock.add_response(json=mock_calendar)
 
-        result = await sonarr_client.get_calendar(start_date="2020-01-01", end_date="2020-01-07")
+        result = await sonarr_client.get_calendar(
+            start_date="2020-01-01", end_date="2020-01-07"
+        )  # noqa: F841
 
         assert len(result) == 14  # 7 days * 2 episodes per day
 
@@ -577,7 +577,7 @@ class TestSonarrClientCalendarQueueWanted:
         mock_queue = sonarr_queue_factory(records=3)
         httpx_mock.add_response(json=mock_queue)
 
-        result = await sonarr_client.get_queue()
+        result = await sonarr_client.get_queue()  # noqa: F841
 
         assert "records" in result
         assert len(result["records"]) == 3
@@ -594,7 +594,7 @@ class TestSonarrClientCalendarQueueWanted:
         mock_queue = sonarr_queue_factory(records=5, page=2, page_size=20)
         httpx_mock.add_response(json=mock_queue)
 
-        result = await sonarr_client.get_queue(page=2, page_size=20)
+        result = await sonarr_client.get_queue(page=2, page_size=20)  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "page=2" in str(request.url)
@@ -611,7 +611,7 @@ class TestSonarrClientCalendarQueueWanted:
         mock_wanted = sonarr_wanted_factory(records=10)
         httpx_mock.add_response(json=mock_wanted)
 
-        result = await sonarr_client.get_wanted_missing()
+        result = await sonarr_client.get_wanted_missing()  # noqa: F841
 
         assert "records" in result
         assert len(result["records"]) == 10
@@ -628,7 +628,7 @@ class TestSonarrClientCalendarQueueWanted:
         mock_wanted = sonarr_wanted_factory(records=5, page=3, page_size=10)
         httpx_mock.add_response(json=mock_wanted)
 
-        result = await sonarr_client.get_wanted_missing(page=3, page_size=10)
+        result = await sonarr_client.get_wanted_missing(page=3, page_size=10)  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "page=3" in str(request.url)
@@ -642,7 +642,7 @@ class TestSonarrClientCalendarQueueWanted:
         mock_wanted = sonarr_wanted_factory(records=2, include_series=True)
         httpx_mock.add_response(json=mock_wanted)
 
-        result = await sonarr_client.get_wanted_missing(include_series=True)
+        result = await sonarr_client.get_wanted_missing(include_series=True)  # noqa: F841
 
         # Check that series info is included
         assert "series" in result["records"][0]
@@ -668,7 +668,7 @@ class TestSonarrClientSystemStatus:
         mock_status = sonarr_system_status_factory(version="3.0.10.1567")
         httpx_mock.add_response(json=mock_status)
 
-        result = await sonarr_client.get_system_status()
+        result = await sonarr_client.get_system_status()  # noqa: F841
 
         assert result["version"] == "3.0.10.1567"
         assert "osName" in result
@@ -756,7 +756,7 @@ class TestSonarrClientErrorHandling:
         # Second request succeeds
         httpx_mock.add_response(json=[])
 
-        result = await sonarr_client.get_series()
+        result = await sonarr_client.get_series()  # noqa: F841
 
         assert result is not None
         assert len(httpx_mock.get_requests()) == 2
@@ -792,7 +792,7 @@ class TestSonarrClientAuthentication:
         """Test that all requests include X-Api-Key header."""
         httpx_mock.add_response(json=[])
 
-        client = SonarrClient(url=sonarr_url, api_key=sonarr_api_key)
+        client = SonarrClient(url=sonarr_url, api_key=sonarr_api_key)  # noqa: F841
         await client.get_series()
 
         request = httpx_mock.get_request()
@@ -820,7 +820,7 @@ class TestSonarrClientAuthentication:
         """Test that API URLs are built with /api/v3/ prefix."""
         httpx_mock.add_response(json=[])
 
-        client = SonarrClient(url=sonarr_url, api_key=sonarr_api_key)
+        client = SonarrClient(url=sonarr_url, api_key=sonarr_api_key)  # noqa: F841
         await client.get_series()
 
         request = httpx_mock.get_request()
@@ -913,7 +913,7 @@ class TestSonarrClientEdgeCases:
         """Test handling of empty series list."""
         httpx_mock.add_response(json=[])
 
-        result = await sonarr_client.get_series()
+        result = await sonarr_client.get_series()  # noqa: F841
 
         assert isinstance(result, list)
         assert len(result) == 0
@@ -926,7 +926,7 @@ class TestSonarrClientEdgeCases:
         mock_series = [sonarr_series_factory(series_id=i) for i in range(150)]
         httpx_mock.add_response(json=mock_series)
 
-        result = await sonarr_client.get_series()
+        result = await sonarr_client.get_series()  # noqa: F841
 
         assert len(result) == 150
 
@@ -938,7 +938,9 @@ class TestSonarrClientEdgeCases:
         mock_series = sonarr_series_factory(title="Test: The Series (2020) - Part 1")
         httpx_mock.add_response(json=[mock_series])
 
-        result = await sonarr_client.search_series(term="Test: The Series (2020) - Part 1")
+        result = await sonarr_client.search_series(
+            term="Test: The Series (2020) - Part 1"
+        )  # noqa: F841
 
         assert len(result) > 0
 
@@ -950,7 +952,7 @@ class TestSonarrClientEdgeCases:
         minimal_series = {"id": 1, "title": "Minimal Series", "tvdbId": 12345, "monitored": True}
         httpx_mock.add_response(json=[minimal_series])
 
-        result = await sonarr_client.get_series()
+        result = await sonarr_client.get_series()  # noqa: F841
 
         assert len(result) == 1
         assert result[0]["id"] == 1
@@ -966,7 +968,7 @@ class TestSonarrClientEdgeCases:
 
         httpx_mock.add_response(json=[episode])
 
-        result = await sonarr_client.get_episodes(series_id=1)
+        result = await sonarr_client.get_episodes(series_id=1)  # noqa: F841
 
         assert len(result) == 1
         assert result[0]["airDate"] is None

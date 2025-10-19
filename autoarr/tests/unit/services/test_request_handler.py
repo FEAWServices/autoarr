@@ -83,7 +83,7 @@ class TestNaturalLanguageParsing:
         user_input = "  Add Inception  "
 
         # Act
-        result = request_handler.preprocess_query(user_input)
+        result = request_handler.preprocess_query(user_input)  # noqa: F841
 
         # Assert
         assert isinstance(result, str)
@@ -96,7 +96,7 @@ class TestNaturalLanguageParsing:
         query = "Add Inception"
 
         # Act
-        result = request_handler.extract_title(query)
+        result = request_handler.extract_title(query)  # noqa: F841
 
         # Assert
         assert "Inception" in result or "inception" in result.lower()
@@ -108,10 +108,10 @@ class TestNaturalLanguageParsing:
         query = "The Matrix 1999"
 
         # Act
-        result = request_handler.extract_year(query)
+        result = request_handler.extract_year(query)  # noqa: F841
 
         # Assert
-        assert result == 1999
+        assert result == 1999  # noqa: F841
 
     @pytest.mark.asyncio
     async def test_extract_year_in_parentheses(self, request_handler) -> None:
@@ -120,10 +120,10 @@ class TestNaturalLanguageParsing:
         query = "The Matrix (1999)"
 
         # Act
-        result = request_handler.extract_year(query)
+        result = request_handler.extract_year(query)  # noqa: F841
 
         # Assert
-        assert result == 1999
+        assert result == 1999  # noqa: F841
 
     @pytest.mark.asyncio
     async def test_extract_quality(self, request_handler) -> None:
@@ -132,7 +132,7 @@ class TestNaturalLanguageParsing:
         query = "Inception 1080p"
 
         # Act
-        result = request_handler.extract_quality(query)
+        result = request_handler.extract_quality(query)  # noqa: F841
 
         # Assert
         assert result in ["1080p", "HD-1080p", None]
@@ -144,7 +144,7 @@ class TestNaturalLanguageParsing:
         query = "Breaking Bad S03E13"
 
         # Act
-        result = request_handler.extract_tv_metadata(query)
+        result = request_handler.extract_tv_metadata(query)  # noqa: F841
 
         # Assert
         assert isinstance(result, dict)
@@ -164,7 +164,7 @@ class TestMediaTypeClassification:
         query = "Add Inception movie"
 
         # Act
-        result = request_handler.classify_content_simple(query)
+        result = request_handler.classify_content_simple(query)  # noqa: F841
 
         # Assert
         assert isinstance(result, ContentClassification)
@@ -177,7 +177,7 @@ class TestMediaTypeClassification:
         query = "Add Breaking Bad TV show"
 
         # Act
-        result = request_handler.classify_content_simple(query)
+        result = request_handler.classify_content_simple(query)  # noqa: F841
 
         # Assert
         assert isinstance(result, ContentClassification)
@@ -190,7 +190,7 @@ class TestMediaTypeClassification:
         query = "Add Breaking Bad season 3"
 
         # Act
-        result = request_handler.classify_content_simple(query)
+        result = request_handler.classify_content_simple(query)  # noqa: F841
 
         # Assert
         assert isinstance(result, ContentClassification)

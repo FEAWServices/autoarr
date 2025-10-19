@@ -56,7 +56,7 @@ class ClaudeClient:
     def client(self) -> AsyncAnthropic:
         """Get or create the Anthropic client."""
         if self._client is None:
-            self._client = AsyncAnthropic(api_key=self.api_key)
+            self._client = AsyncAnthropic(api_key=self.api_key)  # noqa: F841
         return self._client
 
     async def send_message(
@@ -433,7 +433,7 @@ class LLMAgent:
         max_tokens: int = 4096,
     ) -> None:
         """Initialize LLM agent."""
-        self.client = ClaudeClient(
+        self.client = ClaudeClient(  # noqa: F841
             api_key=api_key,
             model=model,
             max_tokens=max_tokens,

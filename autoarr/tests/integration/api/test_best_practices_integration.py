@@ -5,8 +5,9 @@ Tests the complete flow from database creation to seeding to querying.
 """
 
 import pytest
-from autoarr.api.database import Database, BestPracticesRepository
-from autoarr.api.seed_data import seed_best_practices, get_best_practices_seed_data
+
+from autoarr.api.database import BestPracticesRepository, Database
+from autoarr.api.seed_data import get_best_practices_seed_data, seed_best_practices
 
 
 @pytest.fixture
@@ -215,7 +216,7 @@ class TestBestPracticesDatabaseIntegration:
         practice_id = first_practice.id
 
         # Soft delete it
-        result = await repository.soft_delete(practice_id)
+        result = await repository.soft_delete(practice_id)  # noqa: F841
         assert result is True
 
         # It should still exist but be disabled

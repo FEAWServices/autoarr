@@ -7,6 +7,7 @@ This module provides endpoints for managing TV shows via Sonarr.
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends
+
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
@@ -36,7 +37,7 @@ async def list_shows(
         }
         ```
     """
-    result = await orchestrator.call_tool("sonarr", "get_series", {})
+    result = await orchestrator.call_tool("sonarr", "get_series", {})  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -69,7 +70,9 @@ async def get_show(
         }
         ```
     """
-    result = await orchestrator.call_tool("sonarr", "get_series_by_id", {"series_id": series_id})
+    result = await orchestrator.call_tool(
+        "sonarr", "get_series_by_id", {"series_id": series_id}
+    )  # noqa: F841
     return result
 
 
@@ -100,7 +103,9 @@ async def add_show(
         }
         ```
     """
-    result = await orchestrator.call_tool("sonarr", "add_series", request.model_dump())
+    result = await orchestrator.call_tool(
+        "sonarr", "add_series", request.model_dump()
+    )  # noqa: F841
     return result
 
 
@@ -129,7 +134,7 @@ async def delete_show(
         }
         ```
     """
-    result = await orchestrator.call_tool(
+    result = await orchestrator.call_tool(  # noqa: F841
         "sonarr", "delete_series", {"series_id": series_id, "delete_files": delete_files}
     )
     return result
@@ -162,7 +167,7 @@ async def search_shows(
         ]
         ```
     """
-    result = await orchestrator.call_tool("sonarr", "search_series", {"query": query})
+    result = await orchestrator.call_tool("sonarr", "search_series", {"query": query})  # noqa: F841
     return result if isinstance(result, list) else []
 
 
@@ -201,7 +206,7 @@ async def get_calendar(
     if end_date:
         params["end_date"] = end_date
 
-    result = await orchestrator.call_tool("sonarr", "get_calendar", params)
+    result = await orchestrator.call_tool("sonarr", "get_calendar", params)  # noqa: F841
     return result if isinstance(result, list) else []
 
 
@@ -226,7 +231,7 @@ async def get_queue(
         }
         ```
     """
-    result = await orchestrator.call_tool("sonarr", "get_queue", {})
+    result = await orchestrator.call_tool("sonarr", "get_queue", {})  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -257,7 +262,7 @@ async def search_series_episodes(
         }
         ```
     """
-    result = await orchestrator.call_tool(
+    result = await orchestrator.call_tool(  # noqa: F841
         "sonarr", "trigger_series_search", {"series_id": series_id}
     )
     return result
@@ -286,7 +291,7 @@ async def search_episode(
         }
         ```
     """
-    result = await orchestrator.call_tool(
+    result = await orchestrator.call_tool(  # noqa: F841
         "sonarr", "trigger_episode_search", {"episode_id": episode_id}
     )
     return result

@@ -12,7 +12,7 @@ Tests the complete download recovery workflow:
 """
 
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import AsyncClient
@@ -99,7 +99,7 @@ class TestDownloadRecoveryFlow:
                 pytest.skip("Download retry endpoint not implemented yet")
 
             assert response.status_code in [200, 201]
-            result = response.json()
+            result = response.json()  # noqa: F841
             assert result.get("status") == "retry_initiated" or result.get("success") is True
 
     async def test_quality_fallback_strategy(
@@ -245,7 +245,7 @@ class TestDownloadRecoveryFlow:
 
             # Step 2: Get failed item details
             failed_item = failed_items[0]
-            nzo_id = failed_item.get("nzo_id")
+            failed_item.get("nzo_id")
 
             # Step 3: Check activity log for this failure
             response = await api_client.get(
@@ -391,7 +391,7 @@ class TestDownloadRecoveryFlow:
             pytest.skip("Correlation ID filtering not implemented yet")
 
         assert response.status_code == 200
-        activities_result = response.json()
+        activities_result = response.json()  # noqa: F841
 
         # Should return all correlated events
         if isinstance(activities_result, list):

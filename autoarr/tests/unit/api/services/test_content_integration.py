@@ -8,7 +8,7 @@ This module tests the content integration service including:
 - Service availability checks
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -47,7 +47,7 @@ class TestAddMovieToRadarr:
             {"id": 123, "title": "Dune"},  # add_movie
         ]
 
-        result = await integration_service.add_movie_to_radarr(
+        result = await integration_service.add_movie_to_radarr(  # noqa: F841
             tmdb_id=438631,
             quality_profile_id=1,
             root_folder="/movies",
@@ -114,7 +114,7 @@ class TestAddMovieToRadarr:
         )
 
         # Verify search_for_movie param was passed
-        calls = mock_orchestrator.call_tool.call_args_list
+        calls = mock_orchestrator.call_tool.call_args_list  # noqa: F841
         add_call = calls[2]
         assert add_call[1]["params"]["search_for_movie"] is True
 
@@ -132,7 +132,7 @@ class TestAddSeriesToSonarr:
             {"id": 456, "title": "Breaking Bad"},  # add_series
         ]
 
-        result = await integration_service.add_series_to_sonarr(
+        result = await integration_service.add_series_to_sonarr(  # noqa: F841
             tvdb_id=81189,
             quality_profile_id=1,
             root_folder="/tv",
@@ -196,7 +196,7 @@ class TestAddSeriesToSonarr:
         )
 
         # Verify season_folder param was passed
-        calls = mock_orchestrator.call_tool.call_args_list
+        calls = mock_orchestrator.call_tool.call_args_list  # noqa: F841
         add_call = calls[2]
         assert add_call[1]["params"]["season_folder"] is True
 
@@ -212,7 +212,7 @@ class TestQualityProfiles:
         mock_profiles = {"profiles": [{"id": 1, "name": "HD-1080p"}, {"id": 2, "name": "4K"}]}
         mock_orchestrator.call_tool.return_value = mock_profiles
 
-        result = await integration_service.get_radarr_quality_profiles()
+        result = await integration_service.get_radarr_quality_profiles()  # noqa: F841
 
         assert len(result) == 2
         assert result[0]["id"] == 1
@@ -234,7 +234,7 @@ class TestQualityProfiles:
         mock_profiles = {"profiles": [{"id": 1, "name": "HD-1080p"}, {"id": 2, "name": "4K"}]}
         mock_orchestrator.call_tool.return_value = mock_profiles
 
-        result = await integration_service.get_sonarr_quality_profiles()
+        result = await integration_service.get_sonarr_quality_profiles()  # noqa: F841
 
         assert len(result) == 2
         assert result[0]["id"] == 1
@@ -258,7 +258,7 @@ class TestRootFolders:
         mock_folders = {"folders": [{"path": "/movies", "freeSpace": 1000000}]}
         mock_orchestrator.call_tool.return_value = mock_folders
 
-        result = await integration_service.get_radarr_root_folders()
+        result = await integration_service.get_radarr_root_folders()  # noqa: F841
 
         assert len(result) == 1
         assert result[0]["path"] == "/movies"
@@ -277,7 +277,7 @@ class TestRootFolders:
         mock_folders = {"folders": [{"path": "/tv", "freeSpace": 2000000}]}
         mock_orchestrator.call_tool.return_value = mock_folders
 
-        result = await integration_service.get_sonarr_root_folders()
+        result = await integration_service.get_sonarr_root_folders()  # noqa: F841
 
         assert len(result) == 1
         assert result[0]["path"] == "/tv"

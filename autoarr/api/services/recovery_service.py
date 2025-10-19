@@ -29,7 +29,7 @@ class RetryStrategy(str, Enum):
     """Retry strategy enumeration."""
 
     IMMEDIATE = "immediate"
-    EXPONENTIAL_BACKOFF = "exponential_backoff"
+    EXPONENTIAL_BACKOFF = "exponential_backof"
     QUALITY_FALLBACK = "quality_fallback"
 
 
@@ -190,7 +190,7 @@ class RecoveryService:
                 retry_triggered=False,
                 strategy=None,
                 message=(
-                    f"Exceeded max retry attempts " f"(maximum: {self.config.max_retry_attempts})"
+                    "Exceeded max retry attempts " f"(maximum: {self.config.max_retry_attempts})"
                 ),
                 retry_attempt_number=failed_download.retry_count,
             )
@@ -224,19 +224,19 @@ class RecoveryService:
 
                 # Execute retry based on strategy
                 if strategy == RetryStrategy.IMMEDIATE:
-                    result = await self._execute_immediate_retry(
+                    result = await self._execute_immediate_retry(  # noqa: F841
                         failed_download, retry_attempt_number, correlation_id
                     )
                 elif strategy == RetryStrategy.EXPONENTIAL_BACKOFF:
-                    result = await self._execute_backoff_retry(
+                    result = await self._execute_backoff_retry(  # noqa: F841
                         failed_download, retry_attempt_number, correlation_id
                     )
                 elif strategy == RetryStrategy.QUALITY_FALLBACK:
-                    result = await self._execute_quality_fallback(
+                    result = await self._execute_quality_fallback(  # noqa: F841
                         failed_download, retry_attempt_number, correlation_id, quality
                     )
                 else:
-                    result = RecoveryResult(
+                    result = RecoveryResult(  # noqa: F841
                         success=False,
                         retry_triggered=False,
                         strategy=strategy,
@@ -342,7 +342,7 @@ class RecoveryService:
         """
         try:
             # Retry immediately via SABnzbd
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server="sabnzbd",
                 tool="retry_download",
                 arguments={"nzo_id": failed_download.nzo_id},
@@ -390,7 +390,7 @@ class RecoveryService:
 
             # Schedule retry (in real implementation, would use task scheduler)
             # For now, we'll trigger immediately and return scheduled info
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server="sabnzbd",
                 tool="retry_download",
                 arguments={"nzo_id": failed_download.nzo_id},
@@ -464,7 +464,7 @@ class RecoveryService:
                 arguments = {"movie_name": movie_info[0], "year": movie_info[1]}
 
             # Call search tool
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server=server, tool=tool, arguments=arguments
             )
 

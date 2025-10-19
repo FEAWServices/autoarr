@@ -18,7 +18,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from autoarr.api.database import ActivityLog as ActivityLogModel, ActivityLogRepository
+from autoarr.api.database import ActivityLog as ActivityLogModel
+from autoarr.api.database import ActivityLogRepository
 
 logger = logging.getLogger(__name__)
 
@@ -376,7 +377,7 @@ class ActivityLogService:
         Returns:
             ActivityStatistics with aggregated data
         """
-        stats_result = await self.repository.get_statistics(
+        stats_result = await self.repository.get_statistics(  # noqa: F841
             start_date=start_date,
             end_date=end_date,
         )

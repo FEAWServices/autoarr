@@ -22,19 +22,12 @@ Test Strategy:
 
 import asyncio
 from datetime import datetime
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, call
+from typing import Any, Dict
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from autoarr.api.services.event_bus import (
-    DeadLetterQueue,
-    Event,
-    EventBus,
-    EventHandler,
-    EventSubscription,
-    EventType,
-)
+from autoarr.api.services.event_bus import Event, EventBus, EventType
 
 # ============================================================================
 # Test Fixtures

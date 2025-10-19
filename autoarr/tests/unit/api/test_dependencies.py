@@ -5,16 +5,17 @@ This module tests the dependency injection functions for the orchestrator
 and configuration management.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from autoarr.api.dependencies import (
-    get_orchestrator_config,
-    get_orchestrator,
-    shutdown_orchestrator,
-    reset_orchestrator,
-)
+import pytest
+
 from autoarr.api.config import Settings
+from autoarr.api.dependencies import (
+    get_orchestrator,
+    get_orchestrator_config,
+    reset_orchestrator,
+    shutdown_orchestrator,
+)
 from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
 
 
@@ -189,7 +190,7 @@ class TestGetOrchestratorConfig:
         with patch("autoarr.api.dependencies.get_settings", return_value=test_settings):
             config = get_orchestrator_config(None)
 
-            assert config.max_parallel_calls == 10
+            assert config.max_parallel_calls == 10  # noqa: F841
             assert config.parallel_timeout is None
 
     def test_health_check_settings(self, test_settings):

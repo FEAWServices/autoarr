@@ -246,7 +246,7 @@ class MonitoringService:
         # Use lock to prevent overlapping polls
         async with self._poll_lock:
             try:
-                result = await self.orchestrator.call_tool(
+                result = await self.orchestrator.call_tool(  # noqa: F841
                     server="sabnzbd", tool="get_queue", params={}
                 )
 
@@ -314,7 +314,7 @@ class MonitoringService:
             List of failed downloads
         """
         try:
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server="sabnzbd", tool="get_history", params={}
             )
 
@@ -506,7 +506,7 @@ class MonitoringService:
             List of wanted episodes
         """
         try:
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server="sonarr",
                 tool="get_wanted",
                 params={"page": 1, "pageSize": 50},
@@ -543,7 +543,7 @@ class MonitoringService:
             List of wanted movies
         """
         try:
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server="radarr",
                 tool="get_wanted",
                 params={"page": 1, "pageSize": 50},

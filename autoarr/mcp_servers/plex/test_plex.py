@@ -18,14 +18,13 @@ import asyncio
 import json
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from plex.client import PlexClient, PlexClientError, PlexConnectionError
+from plex.client import PlexClient
 from plex.server import PlexMCPServer
-
 
 # ============================================================================
 # Color Output Utilities
@@ -90,12 +89,14 @@ async def test_client_initialization(url: str, token: str) -> bool:
     try:
         # Test basic initialization
         print_info("Creating Plex client...")
-        client = PlexClient(url=url, token=token)
+        client = PlexClient(url=url, token=token)  # noqa: F841
         print_success(f"Client created with URL: {client.url}")
 
         # Test validation during creation
         print_info("Creating client with connection validation...")
-        validated_client = await PlexClient.create(url=url, token=token, validate_connection=True)
+        validated_client = await PlexClient.create(
+            url=url, token=token, validate_connection=True
+        )  # noqa: F841
         print_success("Client created and validated successfully")
 
         await validated_client.close()
@@ -162,7 +163,7 @@ async def test_get_libraries(client: PlexClient) -> bool:
             print_success(f"Found {len(libraries)} libraries")
             for lib in libraries:
                 print_info(
-                    f"  - {lib.get('title', 'Unknown')} (Type: {lib.get('type', 'Unknown')}, Key: {lib.get('key', 'N/A')})"
+                    f"  - {lib.get('title', 'Unknown')} (Type: {lib.get('type', 'Unknown')}, Key: {lib.get('key', 'N/A')})"  # noqa: E501
                 )
             return True
         else:
@@ -353,7 +354,7 @@ async def test_mcp_server(client: PlexClient) -> bool:
 
         # Test a simple tool call
         print_info("Testing plex_get_libraries tool...")
-        result = await server.call_tool("plex_get_libraries", {})
+        result = await server.call_tool("plex_get_libraries", {})  # noqa: F841
 
         if not result.isError:
             print_success("Tool call successful")
@@ -381,9 +382,9 @@ async def run_all_tests(url: str, token: str) -> None:
     results = []
 
     # Create client for tests
-    client = None
+    client = None  # noqa: F841
     try:
-        client = PlexClient(url=url, token=token)
+        client = PlexClient(url=url, token=token)  # noqa: F841
 
         # Run all tests
         results.append(("Client Initialization", await test_client_initialization(url, token)))

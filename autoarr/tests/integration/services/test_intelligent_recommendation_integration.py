@@ -5,12 +5,11 @@ These tests verify the full end-to-end workflow of the recommendation engine,
 including interaction with real (mocked) LLM responses and data sources.
 """
 
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import patch
 
-from autoarr.api.services.intelligent_recommendation_engine import (
-    IntelligentRecommendationEngine,
-)
+import pytest
+
+from autoarr.api.services.intelligent_recommendation_engine import IntelligentRecommendationEngine
 from autoarr.api.services.llm_agent import LLMRecommendation
 from autoarr.api.services.models import Priority
 
@@ -87,7 +86,7 @@ class TestIntelligentRecommendationIntegration:
             "results": [
                 {
                     "title": "SABnzbd Security Best Practices",
-                    "snippet": "Always enable SSL verification to prevent man-in-the-middle attacks",
+                    "snippet": "Always enable SSL verification to prevent man-in-the-middle attacks",  # noqa: E501
                     "url": "https://sabnzbd.org/wiki/advanced/ssl-certs",
                 },
                 {

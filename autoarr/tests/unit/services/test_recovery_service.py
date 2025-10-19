@@ -21,16 +21,15 @@ Test Strategy:
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, Mock, call, patch
+from datetime import datetime
+from typing import Optional
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from autoarr.api.services.event_bus import Event, EventBus, EventType
+from autoarr.api.services.event_bus import EventBus, EventType
 from autoarr.api.services.monitoring_service import DownloadStatus, FailedDownload
 from autoarr.api.services.recovery_service import (
-    FailureReason,
     RecoveryConfig,
     RecoveryResult,
     RecoveryService,
@@ -142,7 +141,7 @@ async def test_trigger_retry_on_failed_download(recovery_service, mock_orchestra
     mock_orchestrator.call_tool.return_value = {"status": True, "nzo_id": "nzo_retry_1"}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.success is True
@@ -159,7 +158,7 @@ async def test_trigger_retry_respects_max_attempts(recovery_service):
     )
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.success is False
@@ -175,7 +174,7 @@ async def test_trigger_retry_increments_attempt_counter(recovery_service, mock_o
     mock_orchestrator.call_tool.return_value = {"status": True, "nzo_id": "nzo_retry_1"}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.retry_attempt_number == 2
@@ -223,7 +222,7 @@ async def test_immediate_retry_for_transient_failure(recovery_service, mock_orch
     mock_orchestrator.call_tool.return_value = {"status": True}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.success is True
@@ -265,7 +264,7 @@ async def test_immediate_retry_executes_without_delay(recovery_service, mock_orc
 
     # Act
     start_time = datetime.now()
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
     duration = (datetime.now() - start_time).total_seconds()
 
     # Assert
@@ -346,7 +345,7 @@ async def test_backoff_retry_schedules_future_attempt(recovery_service, mock_orc
     mock_orchestrator.call_tool.return_value = {"status": True}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.strategy == RetryStrategy.EXPONENTIAL_BACKOFF
@@ -366,8 +365,8 @@ async def test_scheduled_retry_executes_at_correct_time(recovery_service, mock_o
     mock_orchestrator.call_tool.return_value = {"status": True}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
-    schedule_time = result.scheduled_time
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
+    result.scheduled_time
 
     # Wait for scheduled time
     await asyncio.sleep(2.5)
@@ -401,7 +400,7 @@ async def test_quality_fallback_when_high_quality_fails(recovery_service, mock_o
     }
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.strategy == RetryStrategy.QUALITY_FALLBACK
@@ -467,7 +466,7 @@ async def test_quality_fallback_for_tv_show(recovery_service, mock_orchestrator)
     mock_orchestrator.call_tool.return_value = {"status": True, "command_id": 123}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.strategy == RetryStrategy.QUALITY_FALLBACK
@@ -490,7 +489,7 @@ async def test_quality_fallback_for_movie(recovery_service, mock_orchestrator):
     mock_orchestrator.call_tool.return_value = {"status": True, "command_id": 456}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.strategy == RetryStrategy.QUALITY_FALLBACK
@@ -552,7 +551,7 @@ async def test_configurable_max_retry_limit(recovery_service, mock_orchestrator)
     mock_orchestrator.call_tool.return_value = {"status": True}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert - Should still be allowed (4 < 5)
     assert result.success is True
@@ -571,7 +570,7 @@ async def test_track_successful_retry(recovery_service, mock_orchestrator, mock_
     mock_orchestrator.call_tool.return_value = {"status": True}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    await recovery_service.trigger_retry(failed_download)
 
     # Assert - Should emit success event
     mock_event_bus.publish.assert_called()
@@ -588,7 +587,7 @@ async def test_track_failed_retry(recovery_service, mock_orchestrator, mock_even
     mock_orchestrator.call_tool.side_effect = Exception("Retry failed")
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    await recovery_service.trigger_retry(failed_download)
 
     # Assert - Should emit failure event
     mock_event_bus.publish.assert_called()
@@ -652,7 +651,7 @@ async def test_coordinate_with_sonarr_for_episode_search(recovery_service, mock_
     mock_orchestrator.call_tool.return_value = {"status": True, "command_id": 123}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    await recovery_service.trigger_retry(failed_download)
 
     # Assert - Should call Sonarr's episode search
     call_args = mock_orchestrator.call_tool.call_args
@@ -673,7 +672,7 @@ async def test_coordinate_with_radarr_for_movie_search(recovery_service, mock_or
     mock_orchestrator.call_tool.return_value = {"status": True, "command_id": 456}
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    await recovery_service.trigger_retry(failed_download)
 
     # Assert - Should call Radarr's movie search
     call_args = mock_orchestrator.call_tool.call_args
@@ -806,7 +805,7 @@ async def test_handle_orchestrator_error_during_retry(recovery_service, mock_orc
     mock_orchestrator.call_tool.side_effect = Exception("SABnzbd unreachable")
 
     # Act
-    result = await recovery_service.trigger_retry(failed_download)
+    result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert - Should handle gracefully
     assert result.success is False
@@ -829,7 +828,7 @@ async def test_handle_invalid_download_data(recovery_service):
     )
 
     # Act
-    result = await recovery_service.trigger_retry(invalid_download)
+    result = await recovery_service.trigger_retry(invalid_download)  # noqa: F841
 
     # Assert - Should handle gracefully
     assert result.success is False

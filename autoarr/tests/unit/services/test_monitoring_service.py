@@ -18,13 +18,13 @@ Test Strategy:
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, call, patch
+from datetime import datetime
+from typing import Any, Dict
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from autoarr.api.services.event_bus import Event, EventBus, EventType
+from autoarr.api.services.event_bus import EventBus, EventType
 from autoarr.api.services.monitoring_service import (
     DownloadStatus,
     FailurePattern,

@@ -12,7 +12,7 @@ Tests the complete content request workflow:
 8. Complete workflow with activity logging
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import AsyncClient
@@ -88,7 +88,7 @@ class TestContentRequestFlow:
                 pytest.skip("Content request endpoint not implemented yet")
 
             assert response.status_code in [200, 201]
-            result = response.json()
+            result = response.json()  # noqa: F841
             assert result.get("type") == "movie" or "Matrix" in str(result)
 
     async def test_natural_language_tv_request(
@@ -153,7 +153,7 @@ class TestContentRequestFlow:
                 pytest.skip("Content request endpoint not implemented yet")
 
             assert response.status_code in [200, 201]
-            result = response.json()
+            result = response.json()  # noqa: F841
             assert result.get("type") == "tv" or "Breaking" in str(result)
 
     async def test_ambiguous_request_requires_clarification(
@@ -196,7 +196,7 @@ class TestContentRequestFlow:
 
             # Should return clarification options
             if response.status_code in [200, 201]:
-                result = response.json()
+                result = response.json()  # noqa: F841
                 # Check for clarification response
                 assert "options" in result or "clarification" in str(result).lower()
 
@@ -314,7 +314,7 @@ class TestContentRequestFlow:
                 pytest.skip("Add movie endpoint not fully implemented")
 
             if response.status_code in [200, 201]:
-                result = response.json()
+                result = response.json()  # noqa: F841
                 # Verify quality profile applied
                 assert result.get("qualityProfileId") == 1 or "quality" in str(result).lower()
 
@@ -409,7 +409,7 @@ class TestContentRequestFlow:
                 pytest.skip("Batch request endpoint not implemented yet")
 
             if response.status_code in [200, 201]:
-                result = response.json()
+                result = response.json()  # noqa: F841
                 # Should process all items
                 assert "results" in result or isinstance(result, list)
 

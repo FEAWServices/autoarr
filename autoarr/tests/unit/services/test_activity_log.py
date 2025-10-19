@@ -22,8 +22,8 @@ Test Strategy:
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, Mock, call
+from typing import Any, Dict, Optional
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -640,7 +640,7 @@ async def test_paginate_activities(activity_log_service, mock_activity_repo):
     mock_activity_repo.count_activities.return_value = 50  # Total count
 
     # Act
-    result = await activity_log_service.get_activities_paginated(page=1, page_size=20)
+    result = await activity_log_service.get_activities_paginated(page=1, page_size=20)  # noqa: F841
 
     # Assert
     assert len(result.items) == 20
@@ -659,7 +659,7 @@ async def test_paginate_activities_second_page(activity_log_service, mock_activi
     mock_activity_repo.count_activities.return_value = 50
 
     # Act
-    result = await activity_log_service.get_activities_paginated(page=2, page_size=20)
+    result = await activity_log_service.get_activities_paginated(page=2, page_size=20)  # noqa: F841
 
     # Assert
     assert len(result.items) == 20
@@ -677,7 +677,7 @@ async def test_paginate_activities_last_page(activity_log_service, mock_activity
     mock_activity_repo.count_activities.return_value = 50
 
     # Act
-    result = await activity_log_service.get_activities_paginated(page=3, page_size=20)
+    result = await activity_log_service.get_activities_paginated(page=3, page_size=20)  # noqa: F841
 
     # Assert
     assert len(result.items) == 10
@@ -699,7 +699,7 @@ async def test_pagination_with_filters(activity_log_service, mock_activity_repo)
     activity_filter = create_activity_filter(severity=ActivitySeverity.ERROR)
 
     # Act
-    result = await activity_log_service.get_activities_paginated(
+    result = await activity_log_service.get_activities_paginated(  # noqa: F841
         filter=activity_filter, page=1, page_size=10
     )
 
@@ -966,7 +966,7 @@ async def test_pagination_performance(activity_log_service, mock_activity_repo):
 
     # Act
     start_time = datetime.now()
-    result = await activity_log_service.get_activities_paginated(page=1, page_size=20)
+    result = await activity_log_service.get_activities_paginated(page=1, page_size=20)  # noqa: F841
     duration = (datetime.now() - start_time).total_seconds()
 
     # Assert - Should only load page size, not all 10000
@@ -1006,5 +1006,5 @@ async def test_handle_invalid_filter_parameters(activity_log_service, mock_activ
 
     # Act & Assert - Should either validate or handle gracefully
     # Implementation may raise ValueError or return empty results
-    result = await activity_log_service.get_activities(filter=activity_filter)
+    result = await activity_log_service.get_activities(filter=activity_filter)  # noqa: F841
     assert isinstance(result, list)  # Should return list, possibly empty

@@ -188,6 +188,21 @@ files = [
 ]
 
 [[package]]
+name = "autoflake"
+version = "2.3.1"
+description = "Removes unused imports and unused variables"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "autoflake-2.3.1-py3-none-any.whl", hash = "sha256:3ae7495db9084b7b32818b4140e6dc4fc280b712fb414f5b8fe57b0a8e85a840"},
+    {file = "autoflake-2.3.1.tar.gz", hash = "sha256:c98b75dc5b0a86459c4f01a1d32ac7eb4338ec4317a4469515ff1e687ecd909e"},
+]
+
+[package.dependencies]
+pyflakes = ">=3.0.0"
+
+[[package]]
 name = "bandit"
 version = "1.8.6"
 description = "Security oriented static analyser for python code."
@@ -3854,4 +3869,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "2933ab12222f9fee83d6fccbbfa9a058e29c4d19f0c55fc19e7bcf11dbeb4723"
+content-hash = "e9df1695deb6dfb870f1c7da1765ef3a8876a3a216b0a30fa4f7a4f3bd72021b"

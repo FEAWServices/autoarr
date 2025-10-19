@@ -16,12 +16,9 @@ Target Coverage: 90%+ for the Radarr client class
 """
 
 import json
-from datetime import datetime
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from httpx import AsyncClient, HTTPError, HTTPStatusError, Response
+from httpx import HTTPError
 from pytest_httpx import HTTPXMock
 
 # Import the actual client - using new repository structure
@@ -30,7 +27,6 @@ from autoarr.mcp_servers.mcp_servers.radarr.client import (
     RadarrClientError,
     RadarrConnectionError,
 )
-
 
 # ============================================================================
 # Test Fixtures
@@ -75,12 +71,12 @@ class TestRadarrClientInitialization:
 
     def test_client_normalizes_url(self, radarr_api_key: str) -> None:
         """Test that client normalizes URLs (removes trailing slash)."""
-        client = RadarrClient(url="http://localhost:7878/", api_key=radarr_api_key)
+        client = RadarrClient(url="http://localhost:7878/", api_key=radarr_api_key)  # noqa: F841
         assert client.url == "http://localhost:7878"
 
     def test_client_accepts_custom_timeout(self, radarr_url: str, radarr_api_key: str) -> None:
         """Test that client accepts custom timeout values."""
-        client = RadarrClient(url=radarr_url, api_key=radarr_api_key, timeout=60.0)
+        client = RadarrClient(url=radarr_url, api_key=radarr_api_key, timeout=60.0)  # noqa: F841
         assert client.timeout == 60.0
 
     @pytest.mark.asyncio
@@ -95,7 +91,7 @@ class TestRadarrClientInitialization:
         mock_status = radarr_system_status_factory()
         httpx_mock.add_response(url=f"{radarr_url}/api/v3/system/status", json=mock_status)
 
-        client = await RadarrClient.create(
+        client = await RadarrClient.create(  # noqa: F841
             url=radarr_url, api_key=radarr_api_key, validate_connection=True
         )
         assert client is not None
@@ -156,7 +152,7 @@ class TestRadarrClientMovieOperations:
         mock_movies = [radarr_movie_factory(movie_id=i) for i in range(1, 4)]
         httpx_mock.add_response(json=mock_movies)
 
-        result = await radarr_client.get_movies()
+        result = await radarr_client.get_movies()  # noqa: F841
 
         assert isinstance(result, list)
         assert len(result) == 3
@@ -171,7 +167,7 @@ class TestRadarrClientMovieOperations:
         """Test that get_movies returns empty list when no movies exist."""
         httpx_mock.add_response(json=[])
 
-        result = await radarr_client.get_movies()
+        result = await radarr_client.get_movies()  # noqa: F841
 
         assert isinstance(result, list)
         assert len(result) == 0
@@ -184,7 +180,7 @@ class TestRadarrClientMovieOperations:
         mock_movie = radarr_movie_factory(movie_id=5, title="The Matrix")
         httpx_mock.add_response(json=mock_movie)
 
-        result = await radarr_client.get_movie_by_id(movie_id=5)
+        result = await radarr_client.get_movie_by_id(movie_id=5)  # noqa: F841
 
         assert result["id"] == 5
         assert result["title"] == "The Matrix"
@@ -220,7 +216,7 @@ class TestRadarrClientMovieOperations:
             "minimumAvailability": "released",
         }
 
-        result = await radarr_client.add_movie(movie_data)
+        result = await radarr_client.add_movie(movie_data)  # noqa: F841
 
         # Verify POST request was made
         request = httpx_mock.get_request()
@@ -281,7 +277,7 @@ class TestRadarrClientMovieOperations:
         ]
         httpx_mock.add_response(json=mock_results)
 
-        result = await radarr_client.search_movie_lookup(term="The Matrix")
+        result = await radarr_client.search_movie_lookup(term="The Matrix")  # noqa: F841
 
         # Verify search endpoint
         request = httpx_mock.get_request()
@@ -296,10 +292,10 @@ class TestRadarrClientMovieOperations:
         self, httpx_mock: HTTPXMock, radarr_client: RadarrClient, radarr_movie_factory: callable
     ) -> None:
         """Test that search_movie_lookup can lookup by TMDb ID."""
-        mock_result = [radarr_movie_factory(tmdb_id=603)]
+        mock_result = [radarr_movie_factory(tmdb_id=603)]  # noqa: F841
         httpx_mock.add_response(json=mock_result)
 
-        result = await radarr_client.search_movie_lookup(term="tmdb:603")
+        result = await radarr_client.search_movie_lookup(term="tmdb:603")  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "term=tmdb%3A603" in str(request.url) or "term=tmdb:603" in str(request.url)
@@ -358,7 +354,9 @@ class TestRadarrClientCommandOperations:
         mock_command = radarr_command_factory(name="TestCommand")
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await radarr_client._execute_command("TestCommand", {"param": "value"})
+        result = await radarr_client._execute_command(
+            "TestCommand", {"param": "value"}
+        )  # noqa: F841
 
         request = httpx_mock.get_request()
         assert request.method == "POST"
@@ -378,7 +376,7 @@ class TestRadarrClientCommandOperations:
         )
         httpx_mock.add_response(json=mock_command)
 
-        result = await radarr_client.get_command(command_id=50)
+        result = await radarr_client.get_command(command_id=50)  # noqa: F841
 
         assert result["id"] == 50
         assert result["status"] == "completed"
@@ -395,7 +393,7 @@ class TestRadarrClientCommandOperations:
         mock_command = radarr_command_factory(name="MoviesSearch", body={"movieIds": [3]})
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await radarr_client.search_movie(movie_id=3)
+        result = await radarr_client.search_movie(movie_id=3)  # noqa: F841
 
         request = httpx_mock.get_request()
         payload = json.loads(request.content)
@@ -410,7 +408,7 @@ class TestRadarrClientCommandOperations:
         mock_command = radarr_command_factory(command_id=123)
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await radarr_client.search_movie(movie_id=10)
+        result = await radarr_client.search_movie(movie_id=10)  # noqa: F841
 
         assert "id" in result
         assert result["id"] == 123
@@ -423,7 +421,7 @@ class TestRadarrClientCommandOperations:
         mock_command = radarr_command_factory(name="RefreshMovie", body={"movieId": 7})
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await radarr_client.refresh_movie(movie_id=7)
+        result = await radarr_client.refresh_movie(movie_id=7)  # noqa: F841
 
         request = httpx_mock.get_request()
         payload = json.loads(request.content)
@@ -438,7 +436,7 @@ class TestRadarrClientCommandOperations:
         mock_command = radarr_command_factory(name="RescanMovie")
         httpx_mock.add_response(status_code=201, json=mock_command)
 
-        result = await radarr_client.rescan_movie(movie_id=4)
+        result = await radarr_client.rescan_movie(movie_id=4)  # noqa: F841
 
         request = httpx_mock.get_request()
         payload = json.loads(request.content)
@@ -462,7 +460,9 @@ class TestRadarrClientCalendarQueueWanted:
         mock_calendar = radarr_calendar_factory(days=7, movies_per_day=2)
         httpx_mock.add_response(json=mock_calendar)
 
-        result = await radarr_client.get_calendar(start_date="2020-01-01", end_date="2020-01-07")
+        result = await radarr_client.get_calendar(
+            start_date="2020-01-01", end_date="2020-01-07"
+        )  # noqa: F841
 
         assert len(result) == 14  # 7 days * 2 movies per day
 
@@ -491,7 +491,7 @@ class TestRadarrClientCalendarQueueWanted:
         mock_queue = radarr_queue_factory(records=3)
         httpx_mock.add_response(json=mock_queue)
 
-        result = await radarr_client.get_queue()
+        result = await radarr_client.get_queue()  # noqa: F841
 
         assert "records" in result
         assert len(result["records"]) == 3
@@ -508,7 +508,7 @@ class TestRadarrClientCalendarQueueWanted:
         mock_queue = radarr_queue_factory(records=5, page=2, page_size=20)
         httpx_mock.add_response(json=mock_queue)
 
-        result = await radarr_client.get_queue(page=2, page_size=20)
+        result = await radarr_client.get_queue(page=2, page_size=20)  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "page=2" in str(request.url)
@@ -525,7 +525,7 @@ class TestRadarrClientCalendarQueueWanted:
         mock_wanted = radarr_wanted_factory(records=10)
         httpx_mock.add_response(json=mock_wanted)
 
-        result = await radarr_client.get_wanted_missing()
+        result = await radarr_client.get_wanted_missing()  # noqa: F841
 
         assert "records" in result
         assert len(result["records"]) == 10
@@ -542,7 +542,7 @@ class TestRadarrClientCalendarQueueWanted:
         mock_wanted = radarr_wanted_factory(records=5, page=3, page_size=10)
         httpx_mock.add_response(json=mock_wanted)
 
-        result = await radarr_client.get_wanted_missing(page=3, page_size=10)
+        result = await radarr_client.get_wanted_missing(page=3, page_size=10)  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "page=3" in str(request.url)
@@ -568,7 +568,7 @@ class TestRadarrClientSystemStatus:
         mock_status = radarr_system_status_factory(version="4.5.0.7244")
         httpx_mock.add_response(json=mock_status)
 
-        result = await radarr_client.get_system_status()
+        result = await radarr_client.get_system_status()  # noqa: F841
 
         assert result["version"] == "4.5.0.7244"
         assert "osName" in result
@@ -656,7 +656,7 @@ class TestRadarrClientErrorHandling:
         # Second request succeeds
         httpx_mock.add_response(json=[])
 
-        result = await radarr_client.get_movies()
+        result = await radarr_client.get_movies()  # noqa: F841
 
         assert result is not None
         assert len(httpx_mock.get_requests()) == 2
@@ -692,7 +692,7 @@ class TestRadarrClientAuthentication:
         """Test that all requests include X-Api-Key header."""
         httpx_mock.add_response(json=[])
 
-        client = RadarrClient(url=radarr_url, api_key=radarr_api_key)
+        client = RadarrClient(url=radarr_url, api_key=radarr_api_key)  # noqa: F841
         await client.get_movies()
 
         request = httpx_mock.get_request()
@@ -720,7 +720,7 @@ class TestRadarrClientAuthentication:
         """Test that API URLs are built with /api/v3/ prefix."""
         httpx_mock.add_response(json=[])
 
-        client = RadarrClient(url=radarr_url, api_key=radarr_api_key)
+        client = RadarrClient(url=radarr_url, api_key=radarr_api_key)  # noqa: F841
         await client.get_movies()
 
         request = httpx_mock.get_request()
@@ -813,7 +813,7 @@ class TestRadarrClientEdgeCases:
         """Test handling of empty movie list."""
         httpx_mock.add_response(json=[])
 
-        result = await radarr_client.get_movies()
+        result = await radarr_client.get_movies()  # noqa: F841
 
         assert isinstance(result, list)
         assert len(result) == 0
@@ -826,7 +826,7 @@ class TestRadarrClientEdgeCases:
         mock_movies = [radarr_movie_factory(movie_id=i) for i in range(150)]
         httpx_mock.add_response(json=mock_movies)
 
-        result = await radarr_client.get_movies()
+        result = await radarr_client.get_movies()  # noqa: F841
 
         assert len(result) == 150
 
@@ -838,7 +838,9 @@ class TestRadarrClientEdgeCases:
         mock_movie = radarr_movie_factory(title="Test: The Movie (2020) - Part 1")
         httpx_mock.add_response(json=[mock_movie])
 
-        result = await radarr_client.search_movie_lookup(term="Test: The Movie (2020) - Part 1")
+        result = await radarr_client.search_movie_lookup(
+            term="Test: The Movie (2020) - Part 1"
+        )  # noqa: F841
 
         assert len(result) > 0
 
@@ -850,7 +852,7 @@ class TestRadarrClientEdgeCases:
         minimal_movie = {"id": 1, "title": "Minimal Movie", "tmdbId": 12345, "monitored": True}
         httpx_mock.add_response(json=[minimal_movie])
 
-        result = await radarr_client.get_movies()
+        result = await radarr_client.get_movies()  # noqa: F841
 
         assert len(result) == 1
         assert result[0]["id"] == 1
@@ -866,7 +868,7 @@ class TestRadarrClientEdgeCases:
 
         httpx_mock.add_response(json=[movie])
 
-        result = await radarr_client.get_movies()
+        result = await radarr_client.get_movies()  # noqa: F841
 
         assert len(result) == 1
         assert result[0]["inCinemas"] is None

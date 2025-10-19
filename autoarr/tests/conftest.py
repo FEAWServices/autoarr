@@ -4,11 +4,10 @@ Root conftest.py for pytest configuration and shared fixtures.
 This file provides global test configuration and fixtures used across all test modules.
 """
 
-import asyncio
 import json
 import sys
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, Generator
+from typing import Any, AsyncGenerator, Dict
 
 # IMPORTANT: Add paths BEFORE any other imports to ensure modules can be found
 # Note: With the new repository structure, autoarr is a package and should be
@@ -21,9 +20,8 @@ import pytest
 from httpx import AsyncClient, Response
 from pytest_httpx import HTTPXMock
 
-
 # Configure pytest-asyncio
-# Note: With asyncio_mode = "auto" in pyproject.toml, pytest-asyncio handles event loops automatically.
+# Note: With asyncio_mode = "auto" in pyproject.toml, pytest-asyncio handles event loops automatically.  # noqa: E501
 # Custom event_loop fixture removed as it's deprecated and unnecessary with auto mode.
 
 
@@ -94,7 +92,6 @@ def httpx_mock(httpx_mock: HTTPXMock) -> HTTPXMock:
 def pytest_configure(config):
     """Configure pytest before collection starts."""
     # Paths should already be set from module-level code above
-    pass
 
 
 # Import fixture factories from tests/fixtures/

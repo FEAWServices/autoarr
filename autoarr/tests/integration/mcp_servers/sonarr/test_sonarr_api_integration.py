@@ -15,19 +15,10 @@ Test Coverage Strategy:
 Target Coverage: 20% of total test suite (integration layer)
 """
 
-import json
-from datetime import datetime, timedelta
-from typing import Any, Dict
-
 import pytest
 from pytest_httpx import HTTPXMock
 
-from autoarr.mcp_servers.mcp_servers.sonarr.client import (
-    SonarrClient,
-    SonarrClientError,
-    SonarrConnectionError,
-)
-
+from autoarr.mcp_servers.mcp_servers.sonarr.client import SonarrClient, SonarrClientError
 
 # ============================================================================
 # Integration Test Fixtures
@@ -51,7 +42,9 @@ async def sonarr_integration_client(
     sonarr_base_url: str, sonarr_integration_api_key: str
 ) -> SonarrClient:
     """Create Sonarr client for integration testing."""
-    client = SonarrClient(url=sonarr_base_url, api_key=sonarr_integration_api_key, timeout=30.0)
+    client = SonarrClient(
+        url=sonarr_base_url, api_key=sonarr_integration_api_key, timeout=30.0
+    )  # noqa: F841
     yield client
     await client.close()
 
@@ -342,7 +335,7 @@ class TestSonarrErrorScenarios:
     ) -> None:
         """Test handling of 401 Unauthorized with invalid API key."""
         # Create client with invalid API key
-        client = SonarrClient(url=sonarr_base_url, api_key="invalid_key")
+        client = SonarrClient(url=sonarr_base_url, api_key="invalid_key")  # noqa: F841
 
         sonarr_401_response = {"message": "Unauthorized", "statusCode": 401}
         httpx_mock.add_response(status_code=401, json=sonarr_401_response)
@@ -362,9 +355,9 @@ class TestSonarrErrorScenarios:
         # Second attempt: Success
         httpx_mock.add_response(json=[])
 
-        result = await sonarr_integration_client.get_series()
+        result = await sonarr_integration_client.get_series()  # noqa: F841
 
-        assert result == []
+        assert result == []  # noqa: F841
         assert len(httpx_mock.get_requests()) == 2
 
 
@@ -387,7 +380,7 @@ class TestSonarrDataIntegrity:
         complex_series = sonarr_series_factory(series_id=1, title="Complex Series", season_count=5)
         httpx_mock.add_response(json=[complex_series])
 
-        result = await sonarr_integration_client.get_series()
+        result = await sonarr_integration_client.get_series()  # noqa: F841
 
         assert len(result) == 1
         series = result[0]
@@ -436,7 +429,7 @@ class TestSonarrDataIntegrity:
         )
         httpx_mock.add_response(json=[series_with_unicode])
 
-        result = await sonarr_integration_client.search_series(term="Café: L'Été")
+        result = await sonarr_integration_client.search_series(term="Café: L'Été")  # noqa: F841
 
         assert len(result) == 1
         assert result[0]["title"] == "Café: L'Été (2020) – Part 1 & 2"
@@ -491,7 +484,7 @@ class TestSonarrPerformance:
         ]
         httpx_mock.add_response(json=large_series_list)
 
-        result = await sonarr_integration_client.get_series()
+        result = await sonarr_integration_client.get_series()  # noqa: F841
 
         assert len(result) == 150
         assert result[0]["id"] == 1
@@ -520,7 +513,7 @@ class TestSonarrCalendarAndQueue:
         calendar_data = sonarr_calendar_factory(days=7, episodes_per_day=2, start_date=start_date)
         httpx_mock.add_response(json=calendar_data)
 
-        result = await sonarr_integration_client.get_calendar(
+        result = await sonarr_integration_client.get_calendar(  # noqa: F841
             start_date=start_date, end_date=end_date
         )
 

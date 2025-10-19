@@ -7,6 +7,7 @@ This module provides endpoints for managing downloads via SABnzbd.
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
+
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
@@ -37,7 +38,7 @@ async def get_download_queue(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "get_queue", {})
+    result = await orchestrator.call_tool("sabnzbd", "get_queue", {})  # noqa: F841
     return result
 
 
@@ -64,7 +65,7 @@ async def get_download_history(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "get_history", {"limit": limit})
+    result = await orchestrator.call_tool("sabnzbd", "get_history", {"limit": limit})  # noqa: F841
     return result
 
 
@@ -91,7 +92,9 @@ async def retry_download(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "retry_download", {"nzo_id": nzo_id})
+    result = await orchestrator.call_tool(
+        "sabnzbd", "retry_download", {"nzo_id": nzo_id}
+    )  # noqa: F841
     return result
 
 
@@ -114,7 +117,7 @@ async def pause_queue(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "pause_queue", {})
+    result = await orchestrator.call_tool("sabnzbd", "pause_queue", {})  # noqa: F841
     return result
 
 
@@ -137,7 +140,7 @@ async def resume_queue(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "resume_queue", {})
+    result = await orchestrator.call_tool("sabnzbd", "resume_queue", {})  # noqa: F841
     return result
 
 
@@ -164,7 +167,9 @@ async def delete_download(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "delete_download", {"nzo_id": nzo_id})
+    result = await orchestrator.call_tool(
+        "sabnzbd", "delete_download", {"nzo_id": nzo_id}
+    )  # noqa: F841
     return result
 
 
@@ -191,5 +196,5 @@ async def get_status(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "get_status", {})
+    result = await orchestrator.call_tool("sabnzbd", "get_status", {})  # noqa: F841
     return result

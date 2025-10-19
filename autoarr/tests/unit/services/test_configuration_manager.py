@@ -8,10 +8,8 @@ This module tests the Configuration Manager's ability to:
 - Track audit history
 """
 
-import json
 from datetime import datetime
-from typing import Any, Dict
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -22,13 +20,7 @@ from autoarr.api.database import (
     Database,
 )
 from autoarr.api.services.configuration_manager import ConfigurationManager
-from autoarr.api.services.models import (
-    ApplyRecommendationRequest,
-    ConfigurationAudit,
-    Priority,
-    Recommendation,
-    RecommendationType,
-)
+from autoarr.api.services.models import ApplyRecommendationRequest, Priority, RecommendationType
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 
@@ -439,7 +431,7 @@ async def test_audit_saves_results_to_database(
     mock_audit_repo.save_audit_result.return_value = Mock()
 
     # Act
-    audit = await configuration_manager.audit_application("sabnzbd", mock_config)
+    await configuration_manager.audit_application("sabnzbd", mock_config)
 
     # Assert
     mock_audit_repo.save_audit_result.assert_called_once()

@@ -11,10 +11,11 @@ Tests all API endpoints integration:
 - Test error responses
 """
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from unittest.mock import AsyncMock, patch
 
 
 @pytest.mark.asyncio
@@ -90,7 +91,7 @@ class TestAPIIntegration:
         """
         response = await api_client.get("/ping")
         assert response.status_code == 200
-        result = response.json()
+        result = response.json()  # noqa: F841
         assert result.get("message") == "pong"
 
     async def test_cors_headers(

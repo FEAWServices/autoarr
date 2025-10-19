@@ -28,7 +28,7 @@ async def example_1_basic_client_usage():
     print("=" * 80 + "\n")
 
     # Create client
-    client = await PlexClient.create(
+    client = await PlexClient.create(  # noqa: F841
         url=os.getenv("PLEX_URL", "http://localhost:32400"),
         token=os.getenv("PLEX_TOKEN", ""),
         validate_connection=True,
@@ -57,7 +57,7 @@ async def example_2_browse_content():
     print("Example 2: Browse Content")
     print("=" * 80 + "\n")
 
-    client = await PlexClient.create(
+    client = await PlexClient.create(  # noqa: F841
         url=os.getenv("PLEX_URL", "http://localhost:32400"),
         token=os.getenv("PLEX_TOKEN", ""),
     )
@@ -89,7 +89,7 @@ async def example_3_recently_added_and_on_deck():
     print("Example 3: Recently Added & On Deck")
     print("=" * 80 + "\n")
 
-    client = await PlexClient.create(
+    client = await PlexClient.create(  # noqa: F841
         url=os.getenv("PLEX_URL", "http://localhost:32400"),
         token=os.getenv("PLEX_TOKEN", ""),
     )
@@ -118,7 +118,7 @@ async def example_4_monitor_playback():
     print("Example 4: Monitor Playback")
     print("=" * 80 + "\n")
 
-    client = await PlexClient.create(
+    client = await PlexClient.create(  # noqa: F841
         url=os.getenv("PLEX_URL", "http://localhost:32400"),
         token=os.getenv("PLEX_TOKEN", ""),
     )
@@ -137,7 +137,7 @@ async def example_4_monitor_playback():
                 print(f"  Title: {session.get('title', 'Unknown')}")
                 print(f"  Type: {session.get('type', 'Unknown')}")
                 print(
-                    f"  Player: {player.get('product', 'Unknown')} on {player.get('platform', 'Unknown')}"
+                    f"  Player: {player.get('product', 'Unknown')} on {player.get('platform', 'Unknown')}"  # noqa: E501
                 )
 
                 # Progress
@@ -162,7 +162,7 @@ async def example_5_search_content():
     print("Example 5: Search Content")
     print("=" * 80 + "\n")
 
-    client = await PlexClient.create(
+    client = await PlexClient.create(  # noqa: F841
         url=os.getenv("PLEX_URL", "http://localhost:32400"),
         token=os.getenv("PLEX_TOKEN", ""),
     )
@@ -190,7 +190,7 @@ async def example_6_watch_history():
     print("Example 6: Watch History")
     print("=" * 80 + "\n")
 
-    client = await PlexClient.create(
+    client = await PlexClient.create(  # noqa: F841
         url=os.getenv("PLEX_URL", "http://localhost:32400"),
         token=os.getenv("PLEX_TOKEN", ""),
     )
@@ -217,7 +217,7 @@ async def example_7_mcp_tools():
     print("Example 7: MCP Tools")
     print("=" * 80 + "\n")
 
-    client = await PlexClient.create(
+    client = await PlexClient.create(  # noqa: F841
         url=os.getenv("PLEX_URL", "http://localhost:32400"),
         token=os.getenv("PLEX_TOKEN", ""),
     )
@@ -237,7 +237,7 @@ async def example_7_mcp_tools():
 
         # Call a tool: get_libraries
         print("Calling tool: plex_get_libraries")
-        result = await server.call_tool("plex_get_libraries", {})
+        result = await server.call_tool("plex_get_libraries", {})  # noqa: F841
 
         if not result.isError:
             # Parse the result
@@ -264,7 +264,7 @@ async def example_8_library_refresh():
     print("Example 8: Library Refresh")
     print("=" * 80 + "\n")
 
-    client = await PlexClient.create(
+    client = await PlexClient.create(  # noqa: F841
         url=os.getenv("PLEX_URL", "http://localhost:32400"),
         token=os.getenv("PLEX_TOKEN", ""),
     )
@@ -280,7 +280,7 @@ async def example_8_library_refresh():
 
             print(f"Refreshing library: {lib_title} (ID: {lib_id})")
 
-            result = await client.refresh_library(library_id=lib_id)
+            result = await client.refresh_library(library_id=lib_id)  # noqa: F841
 
             if result.get("success"):
                 print("Library refresh triggered successfully!")

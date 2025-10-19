@@ -322,7 +322,7 @@ class RequestHandler:
             raise ValueError("Query cannot be empty")
 
         # Preprocess query
-        processed_query = self.preprocess_query(query)
+        self.preprocess_query(query)
 
         # If LLM agent is available, use it
         if self.llm_agent:
