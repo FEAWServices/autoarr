@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "autoarr"
-version = "0.1.0"
+version = "1.0.0"
 description = "An intelligent media automation orchestrator using MCP servers and LLM-powered assistance"
 authors = ["AutoArr Team"]
 license = "MIT"
