@@ -224,6 +224,49 @@ Please provide a detailed analysis and recommendation."""
             user_template=user_template,
         )
 
+    @classmethod
+    def content_classification(cls) -> "PromptTemplate":
+        """
+        Get the content classification template.
+
+        This template is used for classifying user content requests
+        (movie vs TV show) and extracting metadata.
+
+        Returns:
+            PromptTemplate for content classification
+        """
+        system_template = (
+            "You are a media content classifier for a home media "
+            "automation system.\n"
+            "Your role is to analyze user requests for movies or TV shows "
+            "and extract key metadata.\n\n"
+            "When analyzing requests:\n"
+            "1. Determine if this is a movie or TV show request\n"
+            "2. Extract the title (clean, without metadata)\n"
+            "3. Identify the year if mentioned\n"
+            "4. Identify quality preferences (4K, 1080p, etc.) if mentioned\n"
+            "5. For TV shows, extract season and episode numbers if mentioned\n"
+            "6. Provide a confidence score (0.0-1.0) based on clarity\n\n"
+            "Return your analysis in JSON format with these fields:\n"
+            "- content_type: Either 'movie' or 'tv'\n"
+            "- title: The extracted title (without year, quality, or episode info)\n"
+            "- year: Release year as integer (or null)\n"
+            "- quality: Quality preference like '4K', '1080p', etc. (or null)\n"
+            "- season: Season number as integer for TV shows (or null)\n"
+            "- episode: Episode number as integer for TV shows (or null)\n"
+            "- confidence: Confidence score from 0.0 to 1.0"
+        )
+
+        user_template = """User request: "{query}"
+
+Please classify this request and extract all metadata."""
+
+        return cls(
+            name="content_classification",
+            system_template=system_template,
+            user_template=user_template,
+        )
+
 
 class StructuredOutputParser:
     """
@@ -462,6 +505,76 @@ class LLMAgent:
         )
 
         return recommendation
+
+    async def classify_content_request(self, query: str) -> Any:
+        """
+        Classify a content request and extract metadata.
+
+        Uses Claude to intelligently determine if the request is for a movie
+        or TV show, and extracts relevant metadata like title, year, quality, etc.
+
+        Args:
+            query: User's content request
+
+        Returns:
+            ContentClassification with extracted metadata
+
+        Raises:
+            APIError: If Claude API call fails
+            ValueError: If response cannot be parsed
+        """
+        # Import here to avoid circular dependency
+        from autoarr.api.services.request_handler import ContentClassification
+
+        # Get prompt template
+        template = PromptTemplate.content_classification()
+
+        # Render prompts
+        system_prompt = template.render_system()
+        user_message = template.render_user(query=query)
+
+        # Send to Claude
+        response = await self.client.send_message(
+            system_prompt=system_prompt,
+            user_message=user_message,
+            temperature=0.3,  # Lower temperature for more consistent classification
+        )
+
+        # Track token usage
+        usage = response["usage"]
+        self.token_tracker.record_usage(
+            input_tokens=usage["input_tokens"],
+            output_tokens=usage["output_tokens"],
+        )
+
+        # Parse structured output
+        classification_parser = StructuredOutputParser(
+            required_fields=["content_type", "title", "confidence"]
+        )
+        parsed = classification_parser.parse(response["content"])
+
+        # Validate content type
+        content_type = parsed["content_type"].lower()
+        if content_type not in ["movie", "tv"]:
+            raise ValueError(f"Invalid content type: {content_type}")
+
+        # Validate confidence
+        confidence = float(parsed["confidence"])
+        if not 0.0 <= confidence <= 1.0:
+            confidence = 0.5  # Default to medium confidence if invalid
+
+        # Create classification object
+        classification = ContentClassification(
+            content_type=content_type,
+            title=parsed["title"],
+            year=parsed.get("year"),
+            quality=parsed.get("quality"),
+            season=parsed.get("season"),
+            episode=parsed.get("episode"),
+            confidence=confidence,
+        )
+
+        return classification
 
     def get_token_usage_stats(self) -> Dict[str, Any]:
         """
