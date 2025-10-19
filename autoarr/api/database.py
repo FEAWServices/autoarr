@@ -7,10 +7,21 @@ for persisting application settings, best practices, and audit results.
 
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import AsyncGenerator, Optional
 
-from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text, create_engine, select
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    Integer,
+    String,
+    Text,
+    JSON,
+    Index,
+    create_engine,
+    select,
+)
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -116,6 +127,96 @@ class AuditResult(Base):
     low_priority: Mapped[int] = mapped_column(Integer, default=0)
     configuration_snapshot: Mapped[str] = mapped_column(Text, nullable=False)
     recommendations: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+# ============================================================================
+# Activity Log Model
+# ============================================================================
+
+
+class ActivityLog(Base):
+    """
+    Database model for activity log entries.
+
+    Tracks all system activities including download failures, recovery attempts,
+    configuration changes, and user requests. Supports correlation IDs for
+    tracking related events and comprehensive filtering by service, type, severity,
+    and date range.
+    """
+
+    __tablename__ = "activity_log"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Event identification
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    service: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+
+    # Content
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    event_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Correlation tracking
+    correlation_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+
+    # Timestamps
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Optional user tracking for future multi-user support
+    user_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+
+    # Composite indexes for common query patterns
+    __table_args__ = (
+        Index("ix_activity_log_service_timestamp", "service", "timestamp"),
+        Index("ix_activity_log_severity_timestamp", "severity", "timestamp"),
+        Index("ix_activity_log_event_type_timestamp", "event_type", "timestamp"),
+    )
+
+
+# ============================================================================
+# Recovery Attempts Model
+# ============================================================================
+
+
+class RecoveryAttempt(Base):
+    """
+    Database model for tracking download recovery attempts.
+
+    Stores information about each retry attempt for failed downloads,
+    including the strategy used, success/failure status, and timing.
+    """
+
+    __tablename__ = "recovery_attempts"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Download identification
+    download_id: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+
+    # Service that initiated the download (sonarr, radarr)
+    service: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    # Retry strategy used
+    strategy: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+
+    # Attempt tracking
+    attempt_number: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Status: pending, in_progress, success, failed
+    status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Error information
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 
 # ============================================================================
@@ -756,3 +857,346 @@ class AuditResultsRepository:
             )
             result = await session.execute(query)
             return list(result.scalars().all())
+
+
+# ============================================================================
+# Activity Log Repository
+# ============================================================================
+
+
+class ActivityLogRepository:
+    """
+    Repository for activity log database operations.
+
+    Provides comprehensive CRUD operations, filtering, searching, pagination,
+    and statistics aggregation for activity logs.
+    """
+
+    def __init__(self, db: Database):
+        """
+        Initialize repository.
+
+        Args:
+            db: Database instance
+        """
+        self.db = db
+
+    async def create_activity(
+        self,
+        service: str,
+        event_type: str,
+        severity: str,
+        message: str,
+        correlation_id: Optional[str] = None,
+        metadata: Optional[dict] = None,
+        user_id: Optional[str] = None,
+        timestamp: Optional[datetime] = None,
+    ) -> ActivityLog:
+        """
+        Create a new activity log entry.
+
+        Args:
+            service: Service name (e.g., "monitoring_service", "recovery_service")
+            event_type: Event type (e.g., "download_failed", "recovery_attempted")
+            severity: Severity level (info, warning, error, critical)
+            message: Human-readable message
+            correlation_id: Optional correlation ID for tracking related events
+            metadata: Optional metadata dictionary
+            user_id: Optional user ID for multi-user tracking
+            timestamp: Optional timestamp (defaults to now)
+
+        Returns:
+            Created ActivityLog instance
+        """
+        async with self.db.session() as session:
+            activity = ActivityLog(
+                service=service,
+                event_type=event_type,
+                severity=severity,
+                message=message,
+                correlation_id=correlation_id,
+                event_metadata=metadata or {},
+                user_id=user_id,
+                timestamp=timestamp or datetime.utcnow(),
+            )
+            session.add(activity)
+            await session.commit()
+            await session.refresh(activity)
+            return activity
+
+    async def get_activity_by_id(self, activity_id: int) -> Optional[ActivityLog]:
+        """
+        Get an activity by ID.
+
+        Args:
+            activity_id: Activity ID
+
+        Returns:
+            ActivityLog if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(ActivityLog).where(ActivityLog.id == activity_id))
+            return result.scalar_one_or_none()
+
+    async def get_activities(
+        self,
+        service: Optional[str] = None,
+        services: Optional[list[str]] = None,
+        event_type: Optional[str] = None,
+        event_types: Optional[list[str]] = None,
+        severity: Optional[str] = None,
+        severities: Optional[list[str]] = None,
+        min_severity: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        correlation_id: Optional[str] = None,
+        search_query: Optional[str] = None,
+        order_by: str = "timestamp",
+        order: str = "desc",
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[ActivityLog]:
+        """
+        Get activities with optional filters.
+
+        Args:
+            service: Filter by specific service
+            services: Filter by multiple services
+            event_type: Filter by specific event type
+            event_types: Filter by multiple event types
+            severity: Filter by specific severity
+            severities: Filter by multiple severities
+            min_severity: Filter by minimum severity level
+            start_date: Filter by start date (inclusive)
+            end_date: Filter by end date (inclusive)
+            correlation_id: Filter by correlation ID
+            search_query: Search in message and metadata
+            order_by: Field to order by (default: timestamp)
+            order: Order direction (asc/desc, default: desc)
+            limit: Maximum number of results
+            offset: Offset for pagination
+
+        Returns:
+            List of ActivityLog instances
+        """
+        async with self.db.session() as session:
+            query = select(ActivityLog)
+
+            # Apply filters
+            if service:
+                query = query.where(ActivityLog.service == service)
+            if services:
+                query = query.where(ActivityLog.service.in_(services))
+            if event_type:
+                query = query.where(ActivityLog.event_type == event_type)
+            if event_types:
+                query = query.where(ActivityLog.event_type.in_(event_types))
+            if severity:
+                query = query.where(ActivityLog.severity == severity)
+            if severities:
+                query = query.where(ActivityLog.severity.in_(severities))
+            if min_severity:
+                # Map severity to numeric level for comparison
+                severity_order = {"info": 0, "warning": 1, "error": 2, "critical": 3}
+                min_level = severity_order.get(min_severity, 0)
+                valid_severities = [s for s, l in severity_order.items() if l >= min_level]
+                query = query.where(ActivityLog.severity.in_(valid_severities))
+            if start_date:
+                query = query.where(ActivityLog.timestamp >= start_date)
+            if end_date:
+                query = query.where(ActivityLog.timestamp <= end_date)
+            if correlation_id:
+                query = query.where(ActivityLog.correlation_id == correlation_id)
+            if search_query:
+                search_pattern = f"%{search_query}%"
+                query = query.where(ActivityLog.message.ilike(search_pattern))
+
+            # Apply ordering
+            order_column = getattr(ActivityLog, order_by, ActivityLog.timestamp)
+            if order.lower() == "desc":
+                query = query.order_by(order_column.desc())
+            else:
+                query = query.order_by(order_column.asc())
+
+            # Apply pagination
+            if offset:
+                query = query.offset(offset)
+            if limit:
+                query = query.limit(limit)
+
+            result = await session.execute(query)
+            return list(result.scalars().all())
+
+    async def count_activities(
+        self,
+        service: Optional[str] = None,
+        services: Optional[list[str]] = None,
+        event_type: Optional[str] = None,
+        event_types: Optional[list[str]] = None,
+        severity: Optional[str] = None,
+        severities: Optional[list[str]] = None,
+        min_severity: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        correlation_id: Optional[str] = None,
+        search_query: Optional[str] = None,
+    ) -> int:
+        """
+        Count activities with optional filters.
+
+        Args:
+            service: Filter by specific service
+            services: Filter by multiple services
+            event_type: Filter by specific event type
+            event_types: Filter by multiple event types
+            severity: Filter by specific severity
+            severities: Filter by multiple severities
+            min_severity: Filter by minimum severity level
+            start_date: Filter by start date (inclusive)
+            end_date: Filter by end date (inclusive)
+            correlation_id: Filter by correlation ID
+            search_query: Search in message and metadata
+
+        Returns:
+            Count of matching activities
+        """
+        from sqlalchemy import func
+
+        async with self.db.session() as session:
+            query = select(func.count(ActivityLog.id))
+
+            # Apply same filters as get_activities
+            if service:
+                query = query.where(ActivityLog.service == service)
+            if services:
+                query = query.where(ActivityLog.service.in_(services))
+            if event_type:
+                query = query.where(ActivityLog.event_type == event_type)
+            if event_types:
+                query = query.where(ActivityLog.event_type.in_(event_types))
+            if severity:
+                query = query.where(ActivityLog.severity == severity)
+            if severities:
+                query = query.where(ActivityLog.severity.in_(severities))
+            if min_severity:
+                severity_order = {"info": 0, "warning": 1, "error": 2, "critical": 3}
+                min_level = severity_order.get(min_severity, 0)
+                valid_severities = [s for s, l in severity_order.items() if l >= min_level]
+                query = query.where(ActivityLog.severity.in_(valid_severities))
+            if start_date:
+                query = query.where(ActivityLog.timestamp >= start_date)
+            if end_date:
+                query = query.where(ActivityLog.timestamp <= end_date)
+            if correlation_id:
+                query = query.where(ActivityLog.correlation_id == correlation_id)
+            if search_query:
+                search_pattern = f"%{search_query}%"
+                query = query.where(ActivityLog.message.ilike(search_pattern))
+
+            result = await session.execute(query)
+            return result.scalar_one()
+
+    async def get_statistics(
+        self,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> dict:
+        """
+        Get activity statistics with aggregations.
+
+        Args:
+            start_date: Optional start date filter
+            end_date: Optional end date filter
+
+        Returns:
+            Dictionary with statistics
+        """
+        from sqlalchemy import func
+
+        async with self.db.session() as session:
+            # Build base query
+            query = select(ActivityLog)
+            if start_date:
+                query = query.where(ActivityLog.timestamp >= start_date)
+            if end_date:
+                query = query.where(ActivityLog.timestamp <= end_date)
+
+            # Get all matching activities
+            result = await session.execute(query)
+            activities = result.scalars().all()
+
+            # Calculate statistics
+            total_count = len(activities)
+            by_type: dict[str, int] = {}
+            by_service: dict[str, int] = {}
+            by_severity: dict[str, int] = {}
+
+            for activity in activities:
+                by_type[activity.event_type] = by_type.get(activity.event_type, 0) + 1
+                by_service[activity.service] = by_service.get(activity.service, 0) + 1
+                by_severity[activity.severity] = by_severity.get(activity.severity, 0) + 1
+
+            return {
+                "total_count": total_count,
+                "by_type": by_type,
+                "by_service": by_service,
+                "by_severity": by_severity,
+            }
+
+    async def get_trend(
+        self,
+        days: int = 7,
+        event_type: Optional[str] = None,
+        service: Optional[str] = None,
+    ) -> dict[str, int]:
+        """
+        Get activity trend over time.
+
+        Args:
+            days: Number of days to include
+            event_type: Optional event type filter
+            service: Optional service filter
+
+        Returns:
+            Dictionary mapping dates (YYYY-MM-DD) to counts
+        """
+        from sqlalchemy import func
+
+        async with self.db.session() as session:
+            start_date = datetime.utcnow() - timedelta(days=days)
+
+            query = select(
+                func.date(ActivityLog.timestamp).label("date"),
+                func.count(ActivityLog.id).label("count"),
+            ).where(ActivityLog.timestamp >= start_date)
+
+            if event_type:
+                query = query.where(ActivityLog.event_type == event_type)
+            if service:
+                query = query.where(ActivityLog.service == service)
+
+            query = query.group_by(func.date(ActivityLog.timestamp))
+
+            result = await session.execute(query)
+            rows = result.all()
+
+            return {str(row.date): row.count for row in rows}
+
+    async def delete_old_activities(self, cutoff_date: datetime) -> int:
+        """
+        Delete activities older than cutoff date.
+
+        Args:
+            cutoff_date: Delete activities before this date
+
+        Returns:
+            Number of activities deleted
+        """
+        from sqlalchemy import delete as sql_delete
+
+        async with self.db.session() as session:
+            result = await session.execute(
+                sql_delete(ActivityLog).where(ActivityLog.timestamp < cutoff_date)
+            )
+            await session.commit()
+            return result.rowcount
