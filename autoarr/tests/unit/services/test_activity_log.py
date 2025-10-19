@@ -27,16 +27,15 @@ from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 
+from autoarr.api.database import ActivityLogRepository, Database
 from autoarr.api.services.activity_log import (
+    ActivityFilter,
     ActivityLog,
     ActivityLogService,
-    ActivityType,
     ActivitySeverity,
-    ActivityFilter,
     ActivityStatistics,
+    ActivityType,
 )
-from autoarr.api.database import Database, ActivityLogRepository
-
 
 # ============================================================================
 # Test Fixtures
@@ -203,9 +202,7 @@ async def test_create_activity_with_correlation_id(activity_log_service, mock_ac
     """Test creating activity with correlation ID for tracking."""
     # Arrange
     correlation_id = "workflow_abc123"
-    mock_activity_repo.create_activity.return_value = create_activity(
-        correlation_id=correlation_id
-    )
+    mock_activity_repo.create_activity.return_value = create_activity(correlation_id=correlation_id)
 
     # Act
     activity = await activity_log_service.create_activity(
@@ -439,11 +436,10 @@ async def test_filter_by_minimum_severity(activity_log_service, mock_activity_re
 
     # Assert
     assert len(activities) == 3
-    assert all(a.severity in [
-        ActivitySeverity.WARNING,
-        ActivitySeverity.ERROR,
-        ActivitySeverity.CRITICAL
-    ] for a in activities)
+    assert all(
+        a.severity in [ActivitySeverity.WARNING, ActivitySeverity.ERROR, ActivitySeverity.CRITICAL]
+        for a in activities
+    )
 
 
 # ============================================================================
@@ -527,9 +523,15 @@ async def test_filter_activities_by_correlation_id(activity_log_service, mock_ac
     # Arrange
     correlation_id = "workflow_abc123"
     mock_activities = [
-        create_activity(1, correlation_id=correlation_id, activity_type=ActivityType.DOWNLOAD_FAILED),
-        create_activity(2, correlation_id=correlation_id, activity_type=ActivityType.RECOVERY_ATTEMPTED),
-        create_activity(3, correlation_id=correlation_id, activity_type=ActivityType.RECOVERY_SUCCESS),
+        create_activity(
+            1, correlation_id=correlation_id, activity_type=ActivityType.DOWNLOAD_FAILED
+        ),
+        create_activity(
+            2, correlation_id=correlation_id, activity_type=ActivityType.RECOVERY_ATTEMPTED
+        ),
+        create_activity(
+            3, correlation_id=correlation_id, activity_type=ActivityType.RECOVERY_SUCCESS
+        ),
     ]
     mock_activity_repo.get_activities.return_value = mock_activities
 
@@ -688,7 +690,9 @@ async def test_paginate_activities_last_page(activity_log_service, mock_activity
 async def test_pagination_with_filters(activity_log_service, mock_activity_repo):
     """Test pagination combined with filters."""
     # Arrange
-    filtered_activities = [create_activity(i, severity=ActivitySeverity.ERROR) for i in range(1, 11)]
+    filtered_activities = [
+        create_activity(i, severity=ActivitySeverity.ERROR) for i in range(1, 11)
+    ]
     mock_activity_repo.get_activities.return_value = filtered_activities
     mock_activity_repo.count_activities.return_value = 10
 
@@ -696,9 +700,7 @@ async def test_pagination_with_filters(activity_log_service, mock_activity_repo)
 
     # Act
     result = await activity_log_service.get_activities_paginated(
-        filter=activity_filter,
-        page=1,
-        page_size=10
+        filter=activity_filter, page=1, page_size=10
     )
 
     # Assert
@@ -927,10 +929,14 @@ async def test_concurrent_reads_and_writes(activity_log_service, mock_activity_r
     # Act - Mix reads and writes
     tasks = []
     for i in range(5):
-        tasks.append(activity_log_service.create_activity(
-            service="test", activity_type=ActivityType.SYSTEM_INFO,
-            severity=ActivitySeverity.INFO, message=f"Write {i}"
-        ))
+        tasks.append(
+            activity_log_service.create_activity(
+                service="test",
+                activity_type=ActivityType.SYSTEM_INFO,
+                severity=ActivitySeverity.INFO,
+                message=f"Write {i}",
+            )
+        )
         tasks.append(activity_log_service.get_activities())
 
     results = await asyncio.gather(*tasks)

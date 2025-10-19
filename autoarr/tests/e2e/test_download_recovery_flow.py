@@ -11,11 +11,12 @@ Tests the complete download recovery workflow:
 7. Verify WebSocket events emitted
 """
 
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from unittest.mock import AsyncMock, patch, MagicMock
-from datetime import datetime
 
 from autoarr.api.models import ActivityLog
 
@@ -213,9 +214,10 @@ class TestDownloadRecoveryFlow:
         6. Log all events with correlation ID
         7. Verify activity log entries
         """
-        with patch("autoarr.api.routers.downloads.get_orchestrator") as mock_orch_sab, patch(
-            "autoarr.api.routers.shows.get_orchestrator"
-        ) as mock_orch_sonarr:
+        with (
+            patch("autoarr.api.routers.downloads.get_orchestrator") as mock_orch_sab,
+            patch("autoarr.api.routers.shows.get_orchestrator") as mock_orch_sonarr,
+        ):
             # Mock SABnzbd
             mock_sab = AsyncMock()
             mock_orch_sab.return_value = mock_sab
@@ -269,9 +271,10 @@ class TestDownloadRecoveryFlow:
         3. Monitor new download
         4. Verify completion
         """
-        with patch("autoarr.api.routers.downloads.get_orchestrator") as mock_orch_sab, patch(
-            "autoarr.api.routers.movies.get_orchestrator"
-        ) as mock_orch_radarr:
+        with (
+            patch("autoarr.api.routers.downloads.get_orchestrator") as mock_orch_sab,
+            patch("autoarr.api.routers.movies.get_orchestrator") as mock_orch_radarr,
+        ):
             # Mock SABnzbd
             mock_sab = AsyncMock()
             mock_orch_sab.return_value = mock_sab
@@ -348,7 +351,6 @@ class TestDownloadRecoveryFlow:
         # so they can be traced through the system
 
         # Create activity log entries with correlation ID
-        from autoarr.api.models import ActivityLog
 
         activities = [
             ActivityLog(

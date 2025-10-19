@@ -23,22 +23,21 @@ Test Strategy:
 import asyncio
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, Mock, patch, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
-from autoarr.api.services.recovery_service import (
-    RecoveryService,
-    RetryStrategy,
-    RetryAttempt,
-    RecoveryConfig,
-    FailureReason,
-    RecoveryResult,
-)
-from autoarr.api.services.event_bus import EventBus, Event, EventType
+from autoarr.api.services.event_bus import Event, EventBus, EventType
 from autoarr.api.services.monitoring_service import DownloadStatus, FailedDownload
+from autoarr.api.services.recovery_service import (
+    FailureReason,
+    RecoveryConfig,
+    RecoveryResult,
+    RecoveryService,
+    RetryAttempt,
+    RetryStrategy,
+)
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
-
 
 # ============================================================================
 # Test Fixtures
@@ -252,9 +251,7 @@ async def test_immediate_retry_categories(recovery_service):
         )
 
         # Assert
-        assert strategy == RetryStrategy.IMMEDIATE, (
-            f"Should use IMMEDIATE for '{failure_reason}'"
-        )
+        assert strategy == RetryStrategy.IMMEDIATE, f"Should use IMMEDIATE for '{failure_reason}'"
 
 
 @pytest.mark.asyncio
@@ -320,9 +317,7 @@ async def test_backoff_delay_calculation(recovery_service):
         delay = recovery_service._calculate_backoff_delay(retry_count)
 
         # Assert
-        assert delay == expected_delay, (
-            f"Retry #{retry_count} should have {expected_delay}s delay"
-        )
+        assert delay == expected_delay, f"Retry #{retry_count} should have {expected_delay}s delay"
 
 
 @pytest.mark.asyncio
@@ -453,9 +448,9 @@ async def test_quality_fallback_selects_lower_quality(recovery_service):
         fallback_quality = recovery_service._get_fallback_quality(current_quality)
 
         # Assert
-        assert fallback_quality == expected_fallback, (
-            f"Quality fallback from {current_quality} should be {expected_fallback}"
-        )
+        assert (
+            fallback_quality == expected_fallback
+        ), f"Quality fallback from {current_quality} should be {expected_fallback}"
 
 
 @pytest.mark.asyncio
@@ -863,16 +858,11 @@ async def test_handle_invalid_download_data(recovery_service):
 async def test_handle_concurrent_retry_requests(recovery_service, mock_orchestrator):
     """Test handling of concurrent retry requests for different downloads."""
     # Arrange
-    downloads = [
-        create_failed_download(f"nzo_{i}", f"Test{i}.mkv")
-        for i in range(5)
-    ]
+    downloads = [create_failed_download(f"nzo_{i}", f"Test{i}.mkv") for i in range(5)]
     mock_orchestrator.call_tool.return_value = {"status": True}
 
     # Act - Trigger multiple concurrent retries
-    results = await asyncio.gather(
-        *[recovery_service.trigger_retry(d) for d in downloads]
-    )
+    results = await asyncio.gather(*[recovery_service.trigger_retry(d) for d in downloads])
 
     # Assert - All should succeed independently
     assert all(r.success for r in results)
@@ -904,9 +894,9 @@ async def test_strategy_selection_based_on_failure_reason(recovery_service):
         )
 
         # Assert
-        assert strategy == expected_strategy, (
-            f"Failed for '{failure_reason}' at attempt {retry_count}"
-        )
+        assert (
+            strategy == expected_strategy
+        ), f"Failed for '{failure_reason}' at attempt {retry_count}"
 
 
 @pytest.mark.asyncio

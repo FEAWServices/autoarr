@@ -11,12 +11,13 @@ Tests the complete configuration audit workflow:
 7. Check activity log entries
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from unittest.mock import AsyncMock, patch, MagicMock
 
-from autoarr.api.models import ConfigAudit, ActivityLog
+from autoarr.api.models import ActivityLog, ConfigAudit
 
 
 @pytest.mark.asyncio
@@ -196,9 +197,12 @@ class TestConfigurationAuditFlow:
         - Recommendation quality and relevance
         - Recommendation storage
         """
-        with patch("autoarr.api.routers.configuration.get_orchestrator") as mock_orch, patch(
-            "autoarr.api.services.intelligent_recommendation_engine.IntelligentRecommendationEngine"
-        ) as mock_llm:
+        with (
+            patch("autoarr.api.routers.configuration.get_orchestrator") as mock_orch,
+            patch(
+                "autoarr.api.services.intelligent_recommendation_engine.IntelligentRecommendationEngine"  # noqa: E501
+            ) as mock_llm,
+        ):
             # Mock MCP orchestrator
             mock_instance = AsyncMock()
             mock_orch.return_value = mock_instance

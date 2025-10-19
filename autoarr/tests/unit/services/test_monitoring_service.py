@@ -20,19 +20,18 @@ Test Strategy:
 import asyncio
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
+from autoarr.api.services.event_bus import Event, EventBus, EventType
 from autoarr.api.services.monitoring_service import (
-    MonitoringService,
     DownloadStatus,
     FailurePattern,
     MonitoringConfig,
+    MonitoringService,
 )
-from autoarr.api.services.event_bus import EventBus, Event, EventType
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
-
 
 # ============================================================================
 # Test Fixtures
@@ -233,9 +232,7 @@ async def test_poll_queue_malformed_response(monitoring_service, mock_orchestrat
 async def test_poll_queue_periodic_polling(monitoring_service, mock_orchestrator):
     """Test that polling occurs at configured intervals."""
     # Arrange
-    mock_orchestrator.call_tool.return_value = {
-        "queue": {"status": "Downloading", "slots": []}
-    }
+    mock_orchestrator.call_tool.return_value = {"queue": {"status": "Downloading", "slots": []}}
     monitoring_service.config.poll_interval = 1  # 1 second for testing
 
     # Act - Start monitoring in background
@@ -448,9 +445,7 @@ async def test_recognize_quality_issue_pattern(monitoring_service):
     failure_history = [
         create_history_item("nzo_1", "File.1", status="Failed", fail_message="CRC error"),
         create_history_item("nzo_2", "File.2", status="Failed", fail_message="PAR2 repair failed"),
-        create_history_item(
-            "nzo_3", "File.3", status="Failed", fail_message="Verification failed"
-        ),
+        create_history_item("nzo_3", "File.3", status="Failed", fail_message="Verification failed"),
     ]
 
     # Act
@@ -565,7 +560,9 @@ async def test_no_alert_when_disabled(monitoring_service, mock_orchestrator, moc
 
 
 @pytest.mark.asyncio
-async def test_alert_throttling_prevents_spam(monitoring_service, mock_orchestrator, mock_event_bus):
+async def test_alert_throttling_prevents_spam(
+    monitoring_service, mock_orchestrator, mock_event_bus
+):
     """Test that repeated alerts for the same failure are throttled."""
     # Arrange
     mock_history_data = {
@@ -654,9 +651,7 @@ async def test_monitor_radarr_wanted_list(monitoring_service, mock_orchestrator)
 async def test_correlate_wanted_with_failed_downloads(monitoring_service, mock_orchestrator):
     """Test correlation between wanted items and failed downloads."""
     # Arrange - Setup wanted episode
-    mock_wanted_data = {
-        "records": [create_wanted_episode(1, 1, 1, "Show.S01E01")]
-    }
+    mock_wanted_data = {"records": [create_wanted_episode(1, 1, 1, "Show.S01E01")]}
 
     # Setup failed download for the same episode
     mock_history_data = {
@@ -754,11 +749,7 @@ async def test_handle_malformed_queue_data(monitoring_service, mock_orchestrator
     """Test handling of malformed queue data from SABnzbd."""
     # Arrange
     mock_orchestrator.call_tool.return_value = {
-        "queue": {
-            "slots": [
-                {"invalid": "data", "missing": "required_fields"}
-            ]
-        }
+        "queue": {"slots": [{"invalid": "data", "missing": "required_fields"}]}
     }
 
     # Act
@@ -884,10 +875,7 @@ async def test_polling_performance_with_large_queue(monitoring_service, mock_orc
     large_queue = {
         "queue": {
             "status": "Downloading",
-            "slots": [
-                create_queue_item(f"nzo_{i}", f"File_{i}.mkv")
-                for i in range(100)
-            ],
+            "slots": [create_queue_item(f"nzo_{i}", f"File_{i}.mkv") for i in range(100)],
         }
     }
     mock_orchestrator.call_tool.return_value = large_queue

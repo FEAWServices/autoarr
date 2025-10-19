@@ -12,7 +12,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from autoarr.api.services.event_bus import Event, EventBus, EventType
 from autoarr.api.services.monitoring_service import FailedDownload
@@ -139,7 +139,7 @@ class RecoveryService:
     - Success/failure tracking
     """
 
-    def __init__(self, orchestrator, event_bus: EventBus, config: RecoveryConfig):
+    def __init__(self, orchestrator: Any, event_bus: EventBus, config: RecoveryConfig):
         """
         Initialize recovery service.
 
@@ -189,7 +189,9 @@ class RecoveryService:
                 success=False,
                 retry_triggered=False,
                 strategy=None,
-                message=f"Exceeded maximum allowed max retry attempts ({self.config.max_retry_attempts})",
+                message=(
+                    f"Exceeded max retry attempts " f"(maximum: {self.config.max_retry_attempts})"
+                ),
                 retry_attempt_number=failed_download.retry_count,
             )
 
@@ -253,9 +255,7 @@ class RecoveryService:
 
             except Exception as e:
                 logger.error(f"Error during retry for {nzo_id}: {e}", exc_info=True)
-                await self._emit_recovery_attempted(
-                    failed_download, None, False, correlation_id
-                )
+                await self._emit_recovery_attempted(failed_download, None, False, correlation_id)
                 return RecoveryResult(
                     success=False,
                     retry_triggered=False,
@@ -496,7 +496,7 @@ class RecoveryService:
             Delay in seconds
         """
         delay = self.config.backoff_base_delay * (self.config.backoff_multiplier**retry_count)
-        return min(delay, self.config.backoff_max_delay)
+        return min(delay, self.config.backoff_max_delay)  # type: ignore[no-any-return]
 
     def _extract_quality_from_filename(self, filename: str) -> Optional[str]:
         """

@@ -18,7 +18,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from anthropic import APIError
 
-from autoarr.api.services.request_handler import ParsedRequest, RequestHandler, SearchResult
+from autoarr.api.services.request_handler import (
+    ContentClassification,
+    ContentSearchResult,
+    RequestHandler,
+)
 
 # ============================================================================
 # Fixtures
@@ -152,7 +156,7 @@ class TestNaturalLanguageParsing:
         result = await request_handler.parse_request(user_input)
 
         # Assert
-        assert isinstance(result, ParsedRequest)
+        assert isinstance(result, ContentClassification)
         assert result.title == "Inception"
         assert result.media_type is None  # Will be inferred later
         assert result.year is None
@@ -456,7 +460,7 @@ class TestMediaTypeClassification:
     async def test_classify_respects_explicit_type(self, request_handler, mock_tmdb_client) -> None:
         """Test that explicit media type is respected."""
         # Arrange
-        parsed_request = ParsedRequest(
+        parsed_request = ContentClassification(
             user_input="Add Fargo movie",
             title="Fargo",
             media_type="movie",
@@ -654,7 +658,7 @@ class TestRequestTracking:
         """Test creating ContentRequest database record."""
         # Arrange
         user_input = "Add Inception"
-        parsed_request = ParsedRequest(
+        parsed_request = ContentClassification(
             user_input=user_input,
             title="Inception",
             media_type="movie",
@@ -774,4 +778,4 @@ class TestPerformance:
 
         # Assert
         assert len(results) == 5
-        assert all(isinstance(r, ParsedRequest) for r in results)
+        assert all(isinstance(r, ContentClassification) for r in results)
