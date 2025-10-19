@@ -68,14 +68,7 @@ jobs:
         run: poetry run isort --check-only autoarr/
 
       - name: Run Flake8 (linting)
-        run: |
-          poetry run flake8 autoarr/ \
-            --max-line-length=100 \
-            --extend-ignore=E203,W503 \
-            --exclude=autoarr/tests/,autoarr/__pycache__/,autoarr/ui/ \
-            --max-complexity=15 \
-            --show-source \
-            --statistics
+        run: poetry run flake8 autoarr/
 
       - name: Run Pylint (additional linting)
         run: |
