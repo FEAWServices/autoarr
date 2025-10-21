@@ -1,22 +1,14 @@
 name: Docker Build & Deploy
 
 on:
-  push:
+  # Run after CI completes successfully
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
     branches:
       - main # Production deployment
       - develop # Staging deployment
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
-      - ".github/workflows/python-ci.yml"
-      - ".github/workflows/frontend-ci.yml"
-  pull_request:
-    branches:
-      - main
-      - develop
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
 
 # Cancel in-progress runs when a new workflow is triggered
 concurrency:
@@ -31,6 +23,8 @@ jobs:
   build-and-push:
     name: Build & Push Docker Image
     runs-on: [self-hosted, alienware]
+    # Only run if Python CI succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: read
       packages: write
@@ -38,6 +32,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -56,15 +52,16 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             # For main branch (production)
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=stable,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ github.event.workflow_run.head_branch == 'main' }}
+            type=raw,value=stable,enable=${{ github.event.workflow_run.head_branch == 'main' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             # For develop branch (staging)
-            type=raw,value=staging,enable=${{ github.ref == 'refs/heads/develop' }}
-            type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
-            # SHA for branch pushes only (not PRs)
-            type=sha,prefix={{branch}}-,enable=${{ github.event_name == 'push' }}
+            type=raw,value=staging,enable=${{ github.event.workflow_run.head_branch == 'develop' }}
+            type=raw,value=develop,enable=${{ github.event.workflow_run.head_branch == 'develop' }}
+            # SHA for main/develop pushes
+            type=sha,prefix=main-,enable=${{ github.event.workflow_run.head_branch == 'main' }}
+            type=sha,prefix=develop-,enable=${{ github.event.workflow_run.head_branch == 'develop' }}
           labels: |
             org.opencontainers.image.title=AutoArr
             org.opencontainers.image.description=Intelligent orchestration layer for media automation
@@ -76,18 +73,17 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true  # Always push when CI succeeds on main/develop
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            BUILD_DATE=${{ github.event.head_commit.timestamp }}
-            VCS_REF=${{ github.sha }}
-            VERSION=${{ github.ref_name }}
+            BUILD_DATE=${{ github.event.workflow_run.created_at }}
+            VCS_REF=${{ github.event.workflow_run.head_sha }}
+            VERSION=${{ github.event.workflow_run.head_branch }}
 
       - name: Run Trivy security scanner
-        if: github.event_name == 'push'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
@@ -103,24 +99,25 @@ jobs:
 
       - name: Generate deployment summary
         run: |
-          echo "## 🐳 Docker Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "## 🐳 Docker Image Published (After CI Success)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.event.workflow_run.head_branch }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.event.workflow_run.head_sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** Python CI workflow success" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Tags" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ github.ref_name }}" == "main" ]; then
+          if [ "${{ github.event.workflow_run.head_branch }}" == "main" ]; then
             echo "### 🚀 Production Deployment" >> $GITHUB_STEP_SUMMARY
             echo "Pull and run with:" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
             echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
             echo "docker-compose -f docker/docker-compose.yml up -d" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ github.ref_name }}" == "develop" ]; then
+          elif [ "${{ github.event.workflow_run.head_branch }}" == "develop" ]; then
             echo "### 🧪 Staging Deployment" >> $GITHUB_STEP_SUMMARY
             echo "Pull and run with:" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
@@ -132,7 +129,7 @@ jobs:
   deploy-synology-staging:
     name: Deploy to Synology Staging
     needs: build-and-push
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    if: ${{ github.event.workflow_run.head_branch == 'develop' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: [self-hosted, alienware]
     steps:
       - name: Deploy notification
@@ -142,6 +139,8 @@ jobs:
           echo "The staging image is ready for deployment to Synology NAS." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.event.workflow_run.head_branch }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.event.workflow_run.head_sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Manual Deployment Steps:" >> $GITHUB_STEP_SUMMARY
           echo "1. SSH into Synology NAS" >> $GITHUB_STEP_SUMMARY
@@ -163,7 +162,7 @@ jobs:
   deploy-production:
     name: Production Deployment Gate
     needs: build-and-push
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: ${{ github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: [self-hosted, alienware]
     environment:
       name: production
@@ -176,6 +175,8 @@ jobs:
           echo "The production image is available for deployment." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.event.workflow_run.head_branch }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.event.workflow_run.head_sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Deployment Options:" >> $GITHUB_STEP_SUMMARY
           echo "- **Docker Compose:** \`docker-compose -f docker/docker-compose.yml up -d\`" >> $GITHUB_STEP_SUMMARY
