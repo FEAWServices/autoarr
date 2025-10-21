@@ -11,18 +11,13 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from autoarr.api.middleware import (
-    ErrorHandlerMiddleware,
-    RequestLoggingMiddleware,
-    add_security_headers,
-)
-from autoarr.shared.core.exceptions import (
-    CircuitBreakerOpenError,
-    MCPConnectionError,
-    MCPOrchestratorError,
-    MCPTimeoutError,
-    MCPToolError,
-)
+from autoarr.api.middleware import (ErrorHandlerMiddleware,
+                                    RequestLoggingMiddleware,
+                                    add_security_headers)
+from autoarr.shared.core.exceptions import (CircuitBreakerOpenError,
+                                            MCPConnectionError,
+                                            MCPOrchestratorError,
+                                            MCPTimeoutError, MCPToolError)
 
 # Create test app
 app = FastAPI()

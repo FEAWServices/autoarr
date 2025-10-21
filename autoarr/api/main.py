@@ -7,22 +7,20 @@ and sets up all API routes.
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 
 from .config import get_settings
-from .database import init_database, get_database
+from .database import get_database, init_database
 from .dependencies import shutdown_orchestrator
-from .middleware import (
-    ErrorHandlerMiddleware,
-    RequestLoggingMiddleware,
-    add_security_headers,
-)
-from .routers import configuration, downloads, health, media, mcp, movies, shows
+from .middleware import (ErrorHandlerMiddleware, RequestLoggingMiddleware,
+                         add_security_headers)
+from .routers import configuration, downloads, health, mcp, media, movies
 from .routers import settings as settings_router
+from .routers import shows
 
 # Configure logging
 logging.basicConfig(

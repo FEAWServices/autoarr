@@ -11,11 +11,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from autoarr.api.services.intelligent_recommendation_engine import (
-    ContextBuilder,
-    IntelligentRecommendationEngine,
-    PriorityAssessor,
-    RecommendationContext,
-)
+    ContextBuilder, IntelligentRecommendationEngine, PriorityAssessor,
+    RecommendationContext)
 from autoarr.api.services.llm_agent import LLMRecommendation
 from autoarr.api.services.models import Priority
 

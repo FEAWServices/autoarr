@@ -10,16 +10,12 @@ from typing import AsyncGenerator, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from ..models_config import (
-    ApplyConfigRequest,
-    ApplyConfigResponse,
-    AuditHistoryResponse,
-    ConfigAuditRequest,
-    ConfigAuditResponse,
-    DetailedRecommendation,
-    RecommendationsListResponse,
-)
-from ..services.config_manager import ConfigurationManager, get_config_manager_instance
+from ..models_config import (ApplyConfigRequest, ApplyConfigResponse,
+                             AuditHistoryResponse, ConfigAuditRequest,
+                             ConfigAuditResponse, DetailedRecommendation,
+                             RecommendationsListResponse)
+from ..services.config_manager import (ConfigurationManager,
+                                       get_config_manager_instance)
 
 logger = logging.getLogger(__name__)
 

@@ -10,12 +10,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from autoarr.api.config import Settings
-from autoarr.api.dependencies import (
-    get_orchestrator,
-    get_orchestrator_config,
-    reset_orchestrator,
-    shutdown_orchestrator,
-)
+from autoarr.api.dependencies import (get_orchestrator,
+                                      get_orchestrator_config,
+                                      reset_orchestrator,
+                                      shutdown_orchestrator)
 from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
 
 

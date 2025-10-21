@@ -24,10 +24,7 @@ from mcp.types import TextContent, Tool
 
 # Import the actual server - using new repository structure
 from autoarr.mcp_servers.mcp_servers.radarr.client import (
-    RadarrClient,
-    RadarrClientError,
-    RadarrConnectionError,
-)
+    RadarrClient, RadarrClientError, RadarrConnectionError)
 from autoarr.mcp_servers.mcp_servers.radarr.server import RadarrMCPServer
 
 # ============================================================================

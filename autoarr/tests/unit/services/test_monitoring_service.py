@@ -25,12 +25,10 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from autoarr.api.services.event_bus import EventBus, EventType
-from autoarr.api.services.monitoring_service import (
-    DownloadStatus,
-    FailurePattern,
-    MonitoringConfig,
-    MonitoringService,
-)
+from autoarr.api.services.monitoring_service import (DownloadStatus,
+                                                     FailurePattern,
+                                                     MonitoringConfig,
+                                                     MonitoringService)
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 # ============================================================================

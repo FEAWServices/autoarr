@@ -22,11 +22,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from autoarr.mcp_servers.mcp_servers.sabnzbd.client import (
-    SABnzbdClient,
-    SABnzbdClientError,
-    SABnzbdConnectionError,
-)
-
+    SABnzbdClient, SABnzbdClientError, SABnzbdConnectionError)
 # Import the actual MCP server and client
 from autoarr.mcp_servers.mcp_servers.sabnzbd.server import SABnzbdMCPServer
 

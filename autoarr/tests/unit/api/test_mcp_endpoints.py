@@ -5,12 +5,13 @@ This module tests the MCP proxy API endpoints for calling tools,
 batch operations, and tool discovery.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from fastapi.testclient import TestClient
 
+from autoarr.api.dependencies import get_orchestrator, reset_orchestrator
 from autoarr.api.main import app
-from autoarr.api.dependencies import reset_orchestrator, get_orchestrator
 
 
 @pytest.fixture

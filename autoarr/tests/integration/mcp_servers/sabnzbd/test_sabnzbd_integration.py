@@ -20,10 +20,7 @@ import os
 import pytest
 
 from autoarr.mcp_servers.mcp_servers.sabnzbd.client import (
-    SABnzbdClient,
-    SABnzbdClientError,
-    SABnzbdConnectionError,
-)
+    SABnzbdClient, SABnzbdClientError, SABnzbdConnectionError)
 from autoarr.mcp_servers.mcp_servers.sabnzbd.server import SABnzbdMCPServer
 
 # ============================================================================

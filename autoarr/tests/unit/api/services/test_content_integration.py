@@ -13,11 +13,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from autoarr.api.services.content_integration import (
-    ContentAlreadyExistsError,
-    ContentIntegrationError,
-    ContentIntegrationService,
-    ServiceUnavailableError,
-)
+    ContentAlreadyExistsError, ContentIntegrationError,
+    ContentIntegrationService, ServiceUnavailableError)
 
 
 @pytest.fixture

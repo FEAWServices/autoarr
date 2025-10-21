@@ -16,11 +16,9 @@ from slowapi.util import get_remote_address
 
 from autoarr.api.database import ContentRequestRepository, get_database
 from autoarr.api.services.content_integration import ContentIntegrationService
-from autoarr.api.services.request_handler import (
-    ContentClassification,
-    ContentSearchResult,
-    RequestHandler,
-)
+from autoarr.api.services.request_handler import (ContentClassification,
+                                                  ContentSearchResult,
+                                                  RequestHandler)
 
 # Create router
 router = APIRouter(prefix="/api/v1/requests", tags=["requests"])

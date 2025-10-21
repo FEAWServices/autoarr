@@ -26,10 +26,7 @@ from mcp.types import TextContent
 
 # Import the actual MCP server and client
 from autoarr.mcp_servers.mcp_servers.sonarr.client import (
-    SonarrClient,
-    SonarrClientError,
-    SonarrConnectionError,
-)
+    SonarrClient, SonarrClientError, SonarrConnectionError)
 from autoarr.mcp_servers.mcp_servers.sonarr.server import SonarrMCPServer
 
 # ============================================================================

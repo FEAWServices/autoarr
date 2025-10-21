@@ -28,14 +28,12 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from autoarr.api.services.event_bus import EventBus, EventType
-from autoarr.api.services.monitoring_service import DownloadStatus, FailedDownload
-from autoarr.api.services.recovery_service import (
-    RecoveryConfig,
-    RecoveryResult,
-    RecoveryService,
-    RetryAttempt,
-    RetryStrategy,
-)
+from autoarr.api.services.monitoring_service import (DownloadStatus,
+                                                     FailedDownload)
+from autoarr.api.services.recovery_service import (RecoveryConfig,
+                                                   RecoveryResult,
+                                                   RecoveryService,
+                                                   RetryAttempt, RetryStrategy)
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 # ============================================================================

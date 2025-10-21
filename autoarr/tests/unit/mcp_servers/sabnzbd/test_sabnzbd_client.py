@@ -21,10 +21,7 @@ from pytest_httpx import HTTPXMock
 
 # Import the actual client - using new repository structure
 from autoarr.mcp_servers.mcp_servers.sabnzbd.client import (
-    SABnzbdClient,
-    SABnzbdClientError,
-    SABnzbdConnectionError,
-)
+    SABnzbdClient, SABnzbdClientError, SABnzbdConnectionError)
 
 # ============================================================================
 # Test Fixtures

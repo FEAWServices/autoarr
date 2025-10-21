@@ -10,7 +10,8 @@ This module tests the request handler service including:
 
 import pytest
 
-from autoarr.api.services.request_handler import ContentClassification, RequestHandler
+from autoarr.api.services.request_handler import (ContentClassification,
+                                                  RequestHandler)
 
 
 class TestPreprocessing:
