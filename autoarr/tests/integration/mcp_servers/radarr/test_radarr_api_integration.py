@@ -20,8 +20,7 @@ import json
 import pytest
 from pytest_httpx import HTTPXMock
 
-from autoarr.mcp_servers.mcp_servers.radarr.client import (RadarrClient,
-                                                           RadarrClientError)
+from autoarr.mcp_servers.mcp_servers.radarr.client import RadarrClient, RadarrClientError
 
 # ============================================================================
 # Integration Test Fixtures

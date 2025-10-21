@@ -21,9 +21,11 @@ from unittest.mock import AsyncMock
 import pytest
 
 # Import the MCP server and client
-from autoarr.mcp_servers.mcp_servers.plex.client import (PlexClient,
-                                                         PlexClientError,
-                                                         PlexConnectionError)
+from autoarr.mcp_servers.mcp_servers.plex.client import (
+    PlexClient,
+    PlexClientError,
+    PlexConnectionError,
+)
 from autoarr.mcp_servers.mcp_servers.plex.server import PlexMCPServer
 
 # ============================================================================

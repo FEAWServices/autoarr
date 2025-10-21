@@ -14,9 +14,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from autoarr.api.services.web_search_service import (BestPractice, SearchQuery,
-                                                     SearchResult,
-                                                     WebSearchService)
+from autoarr.api.services.web_search_service import (
+    BestPractice,
+    SearchQuery,
+    SearchResult,
+    WebSearchService,
+)
 
 
 class TestSearchQuery:

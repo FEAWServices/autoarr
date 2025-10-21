@@ -10,13 +10,16 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from autoarr.api.database import (AuditResultsRepository, BestPractice,
-                                  BestPracticesRepository)
-from autoarr.api.services.models import (ApplyRecommendationRequest,
-                                         ApplyRecommendationResponse,
-                                         AuditSummary, ConfigurationAudit,
-                                         Priority, Recommendation,
-                                         RecommendationType)
+from autoarr.api.database import AuditResultsRepository, BestPractice, BestPracticesRepository
+from autoarr.api.services.models import (
+    ApplyRecommendationRequest,
+    ApplyRecommendationResponse,
+    AuditSummary,
+    ConfigurationAudit,
+    Priority,
+    Recommendation,
+    RecommendationType,
+)
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 logger = logging.getLogger(__name__)

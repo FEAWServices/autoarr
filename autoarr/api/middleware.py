@@ -13,10 +13,13 @@ from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from autoarr.shared.core.exceptions import (CircuitBreakerOpenError,
-                                            MCPConnectionError,
-                                            MCPOrchestratorError,
-                                            MCPTimeoutError, MCPToolError)
+from autoarr.shared.core.exceptions import (
+    CircuitBreakerOpenError,
+    MCPConnectionError,
+    MCPOrchestratorError,
+    MCPTimeoutError,
+    MCPToolError,
+)
 
 from .models import ErrorResponse
 

@@ -32,12 +32,14 @@ import pytest
 # These imports will fail until we implement the orchestrator
 # That's expected - this is TDD!
 try:
-    from autoarr.shared.core.mcp_orchestrator import (CircuitBreakerOpenError,
-                                                      MCPConnectionError,
-                                                      MCPOrchestrator,
-                                                      MCPOrchestratorError,
-                                                      MCPTimeoutError,
-                                                      MCPToolError)
+    from autoarr.shared.core.mcp_orchestrator import (
+        CircuitBreakerOpenError,
+        MCPConnectionError,
+        MCPOrchestrator,
+        MCPOrchestratorError,
+        MCPTimeoutError,
+        MCPToolError,
+    )
 except ImportError:
     # Placeholder until implementation
     pytest.skip("MCP Orchestrator not yet implemented", allow_module_level=True)

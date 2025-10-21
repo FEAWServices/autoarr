@@ -13,11 +13,14 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from autoarr.api.database import (AuditResultsRepository, BestPractice,
-                                  BestPracticesRepository, Database)
+from autoarr.api.database import (
+    AuditResultsRepository,
+    BestPractice,
+    BestPracticesRepository,
+    Database,
+)
 from autoarr.api.services.configuration_manager import ConfigurationManager
-from autoarr.api.services.models import (ApplyRecommendationRequest, Priority,
-                                         RecommendationType)
+from autoarr.api.services.models import ApplyRecommendationRequest, Priority, RecommendationType
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 

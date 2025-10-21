@@ -20,9 +20,11 @@ from httpx import HTTPError
 from pytest_httpx import HTTPXMock
 
 # Import the actual client
-from autoarr.mcp_servers.mcp_servers.plex.client import (PlexClient,
-                                                         PlexClientError,
-                                                         PlexConnectionError)
+from autoarr.mcp_servers.mcp_servers.plex.client import (
+    PlexClient,
+    PlexClientError,
+    PlexConnectionError,
+)
 
 # ============================================================================
 # Test Fixtures

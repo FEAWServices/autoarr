@@ -7,8 +7,7 @@ Tests the complete flow from database creation to seeding to querying.
 import pytest
 
 from autoarr.api.database import BestPracticesRepository, Database
-from autoarr.api.seed_data import (get_best_practices_seed_data,
-                                   seed_best_practices)
+from autoarr.api.seed_data import get_best_practices_seed_data, seed_best_practices
 
 
 @pytest.fixture
@@ -285,8 +284,7 @@ class TestBestPracticesResponseModels:
     @pytest.mark.asyncio
     async def test_list_response_model(self, seeded_db: Database) -> None:
         """Test BestPracticeListResponse model."""
-        from autoarr.api.models import (BestPracticeListResponse,
-                                        BestPracticeResponse)
+        from autoarr.api.models import BestPracticeListResponse, BestPracticeResponse
 
         repository = BestPracticesRepository(seeded_db)
         practices = await repository.get_by_application("sabnzbd")

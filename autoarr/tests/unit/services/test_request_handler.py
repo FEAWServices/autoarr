@@ -9,8 +9,7 @@ This module tests the RequestHandler's ability to:
 
 import pytest
 
-from autoarr.api.services.request_handler import (ContentClassification,
-                                                  RequestHandler)
+from autoarr.api.services.request_handler import ContentClassification, RequestHandler
 
 # ============================================================================
 # Fixtures

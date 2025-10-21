@@ -23,7 +23,10 @@ from pytest_httpx import HTTPXMock
 
 # Import the actual client - using new repository structure
 from autoarr.mcp_servers.mcp_servers.radarr.client import (
-    RadarrClient, RadarrClientError, RadarrConnectionError)
+    RadarrClient,
+    RadarrClientError,
+    RadarrConnectionError,
+)
 
 # ============================================================================
 # Test Fixtures

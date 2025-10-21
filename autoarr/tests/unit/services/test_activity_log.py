@@ -28,11 +28,14 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from autoarr.api.database import ActivityLogRepository, Database
-from autoarr.api.services.activity_log import (ActivityFilter, ActivityLog,
-                                               ActivityLogService,
-                                               ActivitySeverity,
-                                               ActivityStatistics,
-                                               ActivityType)
+from autoarr.api.services.activity_log import (
+    ActivityFilter,
+    ActivityLog,
+    ActivityLogService,
+    ActivitySeverity,
+    ActivityStatistics,
+    ActivityType,
+)
 
 # ============================================================================
 # Test Fixtures

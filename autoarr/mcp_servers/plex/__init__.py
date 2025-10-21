@@ -6,8 +6,14 @@ enabling LLM-based interactions with Plex media management and playback.
 """
 
 from .client import PlexClient, PlexClientError, PlexConnectionError
-from .models import (ErrorResponse, PlexHistoryRecord, PlexLibrary,
-                     PlexMediaItem, PlexServerIdentity, PlexSession)
+from .models import (
+    ErrorResponse,
+    PlexHistoryRecord,
+    PlexLibrary,
+    PlexMediaItem,
+    PlexServerIdentity,
+    PlexSession,
+)
 from .server import PlexMCPServer
 
 __all__ = [

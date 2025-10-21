@@ -11,10 +11,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from anthropic import APIError, RateLimitError
 
-from autoarr.api.services.llm_agent import (ClaudeClient, LLMAgent,
-                                            PromptTemplate,
-                                            StructuredOutputParser,
-                                            TokenUsageTracker)
+from autoarr.api.services.llm_agent import (
+    ClaudeClient,
+    LLMAgent,
+    PromptTemplate,
+    StructuredOutputParser,
+    TokenUsageTracker,
+)
 from autoarr.api.services.models import Priority
 
 

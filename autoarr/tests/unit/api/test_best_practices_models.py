@@ -264,8 +264,7 @@ class TestBestPracticeQueryModels:
 
     def test_best_practice_list_response(self) -> None:
         """Test BestPracticeListResponse model."""
-        from autoarr.api.models import (BestPracticeListResponse,
-                                        BestPracticeResponse)
+        from autoarr.api.models import BestPracticeListResponse, BestPracticeResponse
 
         practices = [
             BestPracticeResponse(
