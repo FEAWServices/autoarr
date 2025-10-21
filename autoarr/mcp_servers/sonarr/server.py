@@ -271,9 +271,9 @@ class SonarrMCPServer:
             ),
         ]
 
-    async def _call_tool(
+    async def _call_tool(  # noqa: C901
         self, name: str, arguments: Dict[str, Any]
-    ) -> List[TextContent]:  # noqa: C901, E501
+    ) -> List[TextContent]:
         """
         Execute a tool by name.
 
