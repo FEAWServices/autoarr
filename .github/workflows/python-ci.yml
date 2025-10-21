@@ -64,7 +64,7 @@ jobs:
         run: poetry run black --check autoarr/
 
       - name: Run isort (import sorting check)
-        run: poetry run isort --check-only autoarr/
+        run: poetry run isort --check-only --profile black autoarr/
 
       - name: Run Flake8 (linting)
         run: poetry run flake8 autoarr/

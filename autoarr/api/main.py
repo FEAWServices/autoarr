@@ -16,7 +16,11 @@ from fastapi.staticfiles import StaticFiles
 from .config import get_settings
 from .database import get_database, init_database
 from .dependencies import shutdown_orchestrator
-from .middleware import ErrorHandlerMiddleware, RequestLoggingMiddleware, add_security_headers
+from .middleware import (
+    ErrorHandlerMiddleware,
+    RequestLoggingMiddleware,
+    add_security_headers,
+)
 from .routers import configuration, downloads, health, mcp, media, movies
 from .routers import settings as settings_router
 from .routers import shows

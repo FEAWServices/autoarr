@@ -12,7 +12,12 @@ from fastapi import APIRouter, Depends
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
-from ..models import BatchToolCallRequest, ToolCallRequest, ToolCallResponse, ToolListResponse
+from ..models import (
+    BatchToolCallRequest,
+    ToolCallRequest,
+    ToolCallResponse,
+    ToolListResponse,
+)
 
 router = APIRouter()
 

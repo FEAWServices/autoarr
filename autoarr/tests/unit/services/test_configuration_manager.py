@@ -20,7 +20,11 @@ from autoarr.api.database import (
     Database,
 )
 from autoarr.api.services.configuration_manager import ConfigurationManager
-from autoarr.api.services.models import ApplyRecommendationRequest, Priority, RecommendationType
+from autoarr.api.services.models import (
+    ApplyRecommendationRequest,
+    Priority,
+    RecommendationType,
+)
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 

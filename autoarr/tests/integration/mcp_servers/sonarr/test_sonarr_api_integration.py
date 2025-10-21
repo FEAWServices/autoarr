@@ -18,7 +18,10 @@ Target Coverage: 20% of total test suite (integration layer)
 import pytest
 from pytest_httpx import HTTPXMock
 
-from autoarr.mcp_servers.mcp_servers.sonarr.client import SonarrClient, SonarrClientError
+from autoarr.mcp_servers.mcp_servers.sonarr.client import (
+    SonarrClient,
+    SonarrClientError,
+)
 
 # ============================================================================
 # Integration Test Fixtures
