@@ -6,7 +6,7 @@ managing the MCP Orchestrator lifecycle and providing it to endpoints.
 """
 
 from functools import lru_cache
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
 from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
@@ -15,7 +15,7 @@ from .config import Settings, get_settings
 
 
 @lru_cache()
-def get_orchestrator_config(settings: Settings = None) -> MCPOrchestratorConfig:
+def get_orchestrator_config(settings: Optional[Settings] = None) -> MCPOrchestratorConfig:
     """
     Create MCP Orchestrator configuration from application settings.
 

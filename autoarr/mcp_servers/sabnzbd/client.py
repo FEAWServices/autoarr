@@ -7,23 +7,17 @@ It handles authentication, request formatting, response parsing, and error handl
 
 import json
 from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin
 
-import httpx
-from httpx import AsyncClient, HTTPError, HTTPStatusError, Response
+from httpx import AsyncClient, HTTPError
 
 
 # Custom exceptions
 class SABnzbdClientError(Exception):
     """Base exception for SABnzbd client errors."""
 
-    pass
-
 
 class SABnzbdConnectionError(SABnzbdClientError):
     """Exception raised when connection to SABnzbd fails."""
-
-    pass
 
 
 class SABnzbdClient:
@@ -72,14 +66,14 @@ class SABnzbdClient:
     def _get_client(self) -> AsyncClient:
         """Get or create the HTTP client."""
         if self._client is None:
-            self._client = AsyncClient(timeout=self.timeout)
+            self._client = AsyncClient(timeout=self.timeout)  # noqa: F841
         return self._client
 
     async def close(self) -> None:
         """Close the HTTP client and cleanup resources."""
         if self._client is not None:
             await self._client.aclose()
-            self._client = None
+            self._client = None  # noqa: F841
 
     async def __aenter__(self) -> "SABnzbdClient":
         """Async context manager entry."""
@@ -113,7 +107,7 @@ class SABnzbdClient:
             SABnzbdConnectionError: If validation fails
             ValueError: If url or api_key is invalid
         """
-        client = cls(url, api_key, timeout)
+        client = cls(url, api_key, timeout)  # noqa: F841
         if validate_connection:
             try:
                 is_healthy = await client.health_check()
@@ -178,7 +172,7 @@ class SABnzbdClient:
             SABnzbdClientError: If API returns an error
         """
         url = self._build_url(mode, **params)
-        client = self._get_client()
+        client = self._get_client()  # noqa: F841
 
         last_error: Optional[Exception] = None
         for attempt in range(max_retries):

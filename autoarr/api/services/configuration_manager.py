@@ -309,7 +309,6 @@ class ConfigurationManager:
         except Exception as e:
             logger.error(f"Failed to save audit result: {e}")
             # Don't fail the audit if saving fails
-            pass
 
     async def audit_all_applications(self) -> Dict[str, ConfigurationAudit]:
         """
@@ -373,7 +372,7 @@ class ConfigurationManager:
                 )
 
             # Actually apply the configuration
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server=request.application,
                 tool="set_config",
                 params={

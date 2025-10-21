@@ -13,10 +13,9 @@ Following TDD Principles:
 
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
-
 
 # ============================================================================
 # Data Classes for Type Safety
@@ -138,8 +137,8 @@ def mock_mcp_client_factory():
     Factory to create mock MCP client objects.
 
     Usage:
-        client = mock_mcp_client_factory("sabnzbd")
-        failing_client = mock_mcp_client_factory("sonarr", connection_fails=True)
+        client = mock_mcp_client_factory("sabnzbd")  # noqa: F841
+        failing_client = mock_mcp_client_factory("sonarr", connection_fails=True)  # noqa: F841
     """
 
     def _create(
@@ -149,7 +148,7 @@ def mock_mcp_client_factory():
         available_tools: Optional[List[str]] = None,
     ) -> AsyncMock:
         """Create a mock MCP client."""
-        client = AsyncMock()
+        client = AsyncMock()  # noqa: F841
         client.server_name = server_name
 
         # Connection management
@@ -233,7 +232,7 @@ def mcp_tool_call_factory():
 
     Usage:
         call = mcp_tool_call_factory("sabnzbd", "get_queue")
-        call_with_params = mcp_tool_call_factory("sonarr", "search_series", {"query": "Breaking Bad"})
+        call_with_params = mcp_tool_call_factory("sonarr", "search_series", {"query": "Breaking Bad"})  # noqa: E501
     """
 
     def _create(
@@ -259,8 +258,8 @@ def mcp_tool_result_factory():
     Factory to create MCP tool result objects.
 
     Usage:
-        result = mcp_tool_result_factory(success=True, data={"slots": []})
-        error_result = mcp_tool_result_factory(success=False, error="Connection timeout")
+        result = mcp_tool_result_factory(success=True, data={"slots": []})  # noqa: F841
+        error_result = mcp_tool_result_factory(success=False, error="Connection timeout")  # noqa: F841
     """
 
     def _create(
@@ -288,8 +287,8 @@ def mcp_batch_tool_calls_factory(mcp_tool_call_factory):
     Factory to create batch tool calls for parallel execution testing.
 
     Usage:
-        calls = mcp_batch_tool_calls_factory(count=5)
-        mixed_calls = mcp_batch_tool_calls_factory(servers=["sabnzbd", "sonarr"])
+        calls = mcp_batch_tool_calls_factory(count=5)  # noqa: F841
+        mixed_calls = mcp_batch_tool_calls_factory(servers=["sabnzbd", "sonarr"])  # noqa: F841
     """
 
     def _create(
@@ -301,7 +300,7 @@ def mcp_batch_tool_calls_factory(mcp_tool_call_factory):
         server_list = servers or ["sabnzbd", "sonarr", "radarr", "plex"]
         tool_list = tools or ["get_queue", "get_status", "health_check"]
 
-        calls = []
+        calls = []  # noqa: F841
         for i in range(count):
             server = server_list[i % len(server_list)]
             tool = tool_list[i % len(tool_list)]

@@ -11,11 +11,12 @@ Tests the complete download recovery workflow:
 7. Verify WebSocket events emitted
 """
 
+from datetime import datetime
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from unittest.mock import AsyncMock, patch, MagicMock
-from datetime import datetime
 
 from autoarr.api.models import ActivityLog
 
@@ -98,7 +99,7 @@ class TestDownloadRecoveryFlow:
                 pytest.skip("Download retry endpoint not implemented yet")
 
             assert response.status_code in [200, 201]
-            result = response.json()
+            result = response.json()  # noqa: F841
             assert result.get("status") == "retry_initiated" or result.get("success") is True
 
     async def test_quality_fallback_strategy(
@@ -213,9 +214,10 @@ class TestDownloadRecoveryFlow:
         6. Log all events with correlation ID
         7. Verify activity log entries
         """
-        with patch("autoarr.api.routers.downloads.get_orchestrator") as mock_orch_sab, patch(
-            "autoarr.api.routers.shows.get_orchestrator"
-        ) as mock_orch_sonarr:
+        with (
+            patch("autoarr.api.routers.downloads.get_orchestrator") as mock_orch_sab,
+            patch("autoarr.api.routers.shows.get_orchestrator") as mock_orch_sonarr,
+        ):
             # Mock SABnzbd
             mock_sab = AsyncMock()
             mock_orch_sab.return_value = mock_sab
@@ -243,7 +245,7 @@ class TestDownloadRecoveryFlow:
 
             # Step 2: Get failed item details
             failed_item = failed_items[0]
-            nzo_id = failed_item.get("nzo_id")
+            failed_item.get("nzo_id")
 
             # Step 3: Check activity log for this failure
             response = await api_client.get(
@@ -269,9 +271,10 @@ class TestDownloadRecoveryFlow:
         3. Monitor new download
         4. Verify completion
         """
-        with patch("autoarr.api.routers.downloads.get_orchestrator") as mock_orch_sab, patch(
-            "autoarr.api.routers.movies.get_orchestrator"
-        ) as mock_orch_radarr:
+        with (
+            patch("autoarr.api.routers.downloads.get_orchestrator") as mock_orch_sab,
+            patch("autoarr.api.routers.movies.get_orchestrator") as mock_orch_radarr,
+        ):
             # Mock SABnzbd
             mock_sab = AsyncMock()
             mock_orch_sab.return_value = mock_sab
@@ -348,7 +351,6 @@ class TestDownloadRecoveryFlow:
         # so they can be traced through the system
 
         # Create activity log entries with correlation ID
-        from autoarr.api.models import ActivityLog
 
         activities = [
             ActivityLog(
@@ -389,7 +391,7 @@ class TestDownloadRecoveryFlow:
             pytest.skip("Correlation ID filtering not implemented yet")
 
         assert response.status_code == 200
-        activities_result = response.json()
+        activities_result = response.json()  # noqa: F841
 
         # Should return all correlated events
         if isinstance(activities_result, list):

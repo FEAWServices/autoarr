@@ -7,6 +7,7 @@ This module provides endpoints for managing movies via Radarr.
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends
+
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
@@ -37,7 +38,7 @@ async def list_movies(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("radarr", "get_movies", {})
+    result = await orchestrator.call_tool("radarr", "get_movies", {})  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -71,7 +72,9 @@ async def get_movie(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("radarr", "get_movie_by_id", {"movie_id": movie_id})
+    result = await orchestrator.call_tool(
+        "radarr", "get_movie_by_id", {"movie_id": movie_id}
+    )  # noqa: F841
     return result
 
 
@@ -102,7 +105,7 @@ async def add_movie(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("radarr", "add_movie", request.model_dump())
+    result = await orchestrator.call_tool("radarr", "add_movie", request.model_dump())  # noqa: F841
     return result
 
 
@@ -132,7 +135,7 @@ async def delete_movie(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool(
+    result = await orchestrator.call_tool(  # noqa: F841
         "radarr", "delete_movie", {"movie_id": movie_id, "delete_files": delete_files}
     )
     return result
@@ -166,7 +169,7 @@ async def search_movies(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("radarr", "search_movies", {"query": query})
+    result = await orchestrator.call_tool("radarr", "search_movies", {"query": query})  # noqa: F841
     return result if isinstance(result, list) else []
 
 
@@ -205,7 +208,7 @@ async def get_calendar(
     if end_date:
         params["end_date"] = end_date
 
-    result = await orchestrator.call_tool("radarr", "get_calendar", params)
+    result = await orchestrator.call_tool("radarr", "get_calendar", params)  # noqa: F841
     return result if isinstance(result, list) else []
 
 
@@ -231,7 +234,7 @@ async def get_queue(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("radarr", "get_queue", {})
+    result = await orchestrator.call_tool("radarr", "get_queue", {})  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -263,7 +266,9 @@ async def search_movie(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("radarr", "trigger_movie_search", {"movie_id": movie_id})
+    result = await orchestrator.call_tool(
+        "radarr", "trigger_movie_search", {"movie_id": movie_id}
+    )  # noqa: F841
     return result
 
 
@@ -291,7 +296,9 @@ async def refresh_movie(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("radarr", "refresh_movie", {"movie_id": movie_id})
+    result = await orchestrator.call_tool(
+        "radarr", "refresh_movie", {"movie_id": movie_id}
+    )  # noqa: F841
     return result
 
 
@@ -315,7 +322,7 @@ async def get_missing_movies(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("radarr", "get_missing_movies", {})
+    result = await orchestrator.call_tool("radarr", "get_missing_movies", {})  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):

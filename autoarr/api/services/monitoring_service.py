@@ -246,7 +246,7 @@ class MonitoringService:
         # Use lock to prevent overlapping polls
         async with self._poll_lock:
             try:
-                result = await self.orchestrator.call_tool(
+                result = await self.orchestrator.call_tool(  # noqa: F841
                     server="sabnzbd", tool="get_queue", params={}
                 )
 
@@ -262,9 +262,7 @@ class MonitoringService:
                         item = QueueItem(
                             nzo_id=slot.get("nzo_id", ""),
                             filename=slot.get("filename", ""),
-                            status=DownloadStatus.from_sabnzbd_status(
-                                slot.get("status", "Queued")
-                            ),
+                            status=DownloadStatus.from_sabnzbd_status(slot.get("status", "Queued")),
                             percentage=slot.get("percentage", 0),
                             mb_left=float(slot.get("mbleft", 0)),
                             mb_total=float(slot.get("mb", 0)),
@@ -316,7 +314,7 @@ class MonitoringService:
             List of failed downloads
         """
         try:
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server="sabnzbd", tool="get_history", params={}
             )
 
@@ -392,6 +390,7 @@ class MonitoringService:
         if content_identifiers:
             # Find most common identifier
             from collections import Counter
+
             counter = Counter(content_identifiers)
             most_common = counter.most_common(1)[0]
             if most_common[1] >= 2:  # At least 2 failures for same content
@@ -407,7 +406,8 @@ class MonitoringService:
         # Check for disk space issues
         disk_space_keywords = ["disk", "space", "full", "write error"]
         disk_space_count = sum(
-            1 for reason in failure_reasons
+            1
+            for reason in failure_reasons
             if any(keyword in reason for keyword in disk_space_keywords)
         )
         if disk_space_count >= 2:
@@ -420,7 +420,8 @@ class MonitoringService:
         # Check for network issues
         network_keywords = ["connection", "timeout", "reset", "failed to connect"]
         network_count = sum(
-            1 for reason in failure_reasons
+            1
+            for reason in failure_reasons
             if any(keyword in reason for keyword in network_keywords)
         )
         if network_count >= 2:
@@ -433,7 +434,8 @@ class MonitoringService:
         # Check for quality/corruption issues
         quality_keywords = ["crc", "par2", "verification", "corrupt"]
         quality_count = sum(
-            1 for reason in failure_reasons
+            1
+            for reason in failure_reasons
             if any(keyword in reason for keyword in quality_keywords)
         )
         if quality_count >= 2:
@@ -504,7 +506,7 @@ class MonitoringService:
             List of wanted episodes
         """
         try:
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server="sonarr",
                 tool="get_wanted",
                 params={"page": 1, "pageSize": 50},
@@ -541,7 +543,7 @@ class MonitoringService:
             List of wanted movies
         """
         try:
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server="radarr",
                 tool="get_wanted",
                 params={"page": 1, "pageSize": 50},
@@ -586,10 +588,7 @@ class MonitoringService:
             season_ep = f"S{episode.season_number:02d}E{episode.episode_number:02d}"
 
             # Check if any failed downloads match
-            matching_failures = [
-                f for f in failed_downloads
-                if season_ep.lower() in f.name.lower()
-            ]
+            matching_failures = [f for f in failed_downloads if season_ep.lower() in f.name.lower()]
 
             if matching_failures:
                 # Extract show name from the first matching failure
@@ -601,7 +600,9 @@ class MonitoringService:
                         break
 
                 # Create content name with show name
-                content_name = f"{show_name}.S{episode.season_number:02d}E{episode.episode_number:02d}"
+                content_name = (
+                    f"{show_name}.S{episode.season_number:02d}E{episode.episode_number:02d}"
+                )
 
                 correlation = WantedFailureCorrelation(
                     content_name=content_name,
@@ -627,9 +628,7 @@ class MonitoringService:
         """
         self._tracked_downloads[nzo_id] = status
 
-    async def _handle_state_change(
-        self, nzo_id: str, new_status: DownloadStatus
-    ) -> None:
+    async def _handle_state_change(self, nzo_id: str, new_status: DownloadStatus) -> None:
         """
         Handle state change for a download.
 
@@ -678,9 +677,7 @@ class MonitoringService:
         Polls queue at configured intervals and detects failures.
         """
         self._stop_monitoring = False
-        logger.info(
-            f"Starting monitoring service (poll interval: {self.config.poll_interval}s)"
-        )
+        logger.info(f"Starting monitoring service (poll interval: {self.config.poll_interval}s)")
 
         while not self._stop_monitoring:
             try:

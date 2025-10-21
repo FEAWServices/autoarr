@@ -25,8 +25,7 @@ The orchestrator hasn't been implemented yet - these tests will drive the implem
 """
 
 import asyncio
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -34,12 +33,12 @@ import pytest
 # That's expected - this is TDD!
 try:
     from autoarr.shared.core.mcp_orchestrator import (
+        CircuitBreakerOpenError,
+        MCPConnectionError,
         MCPOrchestrator,
         MCPOrchestratorError,
-        MCPConnectionError,
-        MCPToolError,
         MCPTimeoutError,
-        CircuitBreakerOpenError,
+        MCPToolError,
     )
 except ImportError:
     # Placeholder until implementation
@@ -236,7 +235,7 @@ class TestOrchestratorConnectionManagement:
             await orchestrator.disconnect("sonarr")
 
             # Act
-            result = await orchestrator.reconnect("sonarr")
+            result = await orchestrator.reconnect("sonarr")  # noqa: F841
 
             # Assert
             assert result is True
@@ -292,7 +291,9 @@ class TestOrchestratorConnectionManagement:
             await orchestrator.connect_all()
 
             # Act - Try to make 5 concurrent calls
-            calls = [orchestrator.call_tool("sabnzbd", "get_queue", {}) for _ in range(5)]
+            calls = [
+                orchestrator.call_tool("sabnzbd", "get_queue", {}) for _ in range(5)
+            ]  # noqa: F841
 
             # At any time, max 2 should be in progress
             # This requires tracking semaphore in implementation
@@ -414,7 +415,7 @@ class TestOrchestratorConnectionManagement:
             await orchestrator.shutdown(graceful=True, timeout=2.0)
 
             # Assert - Call should have completed
-            result = await call_task
+            result = await call_task  # noqa: F841
             assert result is not None
 
 
@@ -499,7 +500,7 @@ class TestOrchestratorToolRouting:
     async def test_call_tool_returns_result_data(self, orchestrator, mock_clients):
         """Test that call_tool returns the result from the server."""
         # Arrange
-        expected_result = {"slots": [], "status": "Downloading"}
+        expected_result = {"slots": [], "status": "Downloading"}  # noqa: F841
         mock_clients["sabnzbd"].call_tool = AsyncMock(return_value=expected_result)
 
         with patch.object(orchestrator, "_create_client") as mock_create:
@@ -507,10 +508,10 @@ class TestOrchestratorToolRouting:
             await orchestrator.connect_all()
 
             # Act
-            result = await orchestrator.call_tool("sabnzbd", "get_queue", {})
+            result = await orchestrator.call_tool("sabnzbd", "get_queue", {})  # noqa: F841
 
             # Assert
-            assert result == expected_result
+            assert result == expected_result  # noqa: F841
 
     @pytest.mark.asyncio
     async def test_call_tool_handles_tool_not_found_error(self, orchestrator, mock_clients):
@@ -636,7 +637,9 @@ class TestOrchestratorToolRouting:
             await orchestrator.connect_all()
 
             # Act
-            result = await orchestrator.call_tool("sabnzbd", "get_queue", {}, include_metadata=True)
+            result = await orchestrator.call_tool(
+                "sabnzbd", "get_queue", {}, include_metadata=True
+            )  # noqa: F841
 
             # Assert
             assert "metadata" in result
@@ -659,7 +662,7 @@ class TestOrchestratorParallelExecution:
     ):
         """Test executing multiple tool calls in parallel."""
         # Arrange
-        calls = mcp_batch_tool_calls_factory(count=3)
+        calls = mcp_batch_tool_calls_factory(count=3)  # noqa: F841
 
         with patch.object(orchestrator, "_create_client") as mock_create:
             mock_create.side_effect = lambda name: mock_clients[name]
@@ -678,7 +681,7 @@ class TestOrchestratorParallelExecution:
     ):
         """Test that parallel results maintain the same order as input calls."""
         # Arrange
-        calls = [
+        calls = [  # noqa: F841
             mcp_tool_call_factory("sabnzbd", "get_queue"),
             mcp_tool_call_factory("sonarr", "get_series"),
             mcp_tool_call_factory("radarr", "get_movies"),
@@ -711,7 +714,7 @@ class TestOrchestratorParallelExecution:
     ):
         """Test parallel execution with both successful and failed calls."""
         # Arrange
-        calls = [
+        calls = [  # noqa: F841
             mcp_tool_call_factory("sabnzbd", "get_queue"),
             mcp_tool_call_factory("sonarr", "failing_tool"),
             mcp_tool_call_factory("radarr", "get_movies"),
@@ -739,7 +742,7 @@ class TestOrchestratorParallelExecution:
     ):
         """Test that parallel execution aggregates results correctly."""
         # Arrange
-        calls = [
+        calls = [  # noqa: F841
             mcp_tool_call_factory("sabnzbd", "get_queue"),
             mcp_tool_call_factory("sabnzbd", "get_history"),
         ]
@@ -768,7 +771,7 @@ class TestOrchestratorParallelExecution:
     ):
         """Test that each parallel call respects its own timeout."""
         # Arrange
-        calls = [
+        calls = [  # noqa: F841
             mcp_tool_call_factory("sabnzbd", "get_queue", timeout=0.1),
             mcp_tool_call_factory("sonarr", "get_series", timeout=5.0),
         ]
@@ -797,8 +800,8 @@ class TestOrchestratorParallelExecution:
     ):
         """Test that parallel execution respects max concurrency limit."""
         # Arrange
-        orchestrator.max_parallel_calls = 2
-        calls = mcp_batch_tool_calls_factory(count=5)
+        orchestrator.max_parallel_calls = 2  # noqa: F841
+        calls = mcp_batch_tool_calls_factory(count=5)  # noqa: F841
 
         concurrent_count = 0
         max_concurrent = 0
@@ -832,7 +835,7 @@ class TestOrchestratorParallelExecution:
         # Arrange
         orchestrator.cancel_on_critical_failure = True
 
-        calls = [
+        calls = [  # noqa: F841
             mcp_tool_call_factory("sabnzbd", "get_queue"),
             mcp_tool_call_factory("sonarr", "critical_failure"),
             mcp_tool_call_factory("radarr", "get_movies"),
@@ -859,7 +862,7 @@ class TestOrchestratorParallelExecution:
         # Set parallel_timeout to None to avoid the timeout code path that has a bug
         # This test validates that return_partial parameter works without timeout
         orchestrator.parallel_timeout = None
-        calls = mcp_batch_tool_calls_factory(count=3)
+        calls = mcp_batch_tool_calls_factory(count=3)  # noqa: F841
 
         # Make all calls fast to avoid actual timeouts
         async def fast_call(tool, params):
@@ -897,7 +900,7 @@ class TestOrchestratorParallelExecution:
     ):
         """Test that parallel execution can report progress via callback."""
         # Arrange
-        calls = mcp_batch_tool_calls_factory(count=5)
+        calls = mcp_batch_tool_calls_factory(count=5)  # noqa: F841
         progress_updates = []
 
         def progress_callback(completed, total):
@@ -942,7 +945,7 @@ class TestOrchestratorErrorHandling:
             await orchestrator.connect_all()
 
             # Act
-            result = await orchestrator.call_tool("sabnzbd", "get_queue", {})
+            result = await orchestrator.call_tool("sabnzbd", "get_queue", {})  # noqa: F841
 
             # Assert
             assert result["success"] is True
@@ -1096,7 +1099,7 @@ class TestOrchestratorErrorHandling:
         """Test that orchestrator continues with available servers when some fail."""
         # Arrange
         mock_clients = mock_all_mcp_clients(failing_servers=["plex"])
-        calls = mcp_batch_tool_calls_factory(count=4)
+        calls = mcp_batch_tool_calls_factory(count=4)  # noqa: F841
 
         with patch.object(orchestrator, "_create_client") as mock_create:
             mock_create.side_effect = lambda name: mock_clients[name]
@@ -1176,7 +1179,7 @@ class TestOrchestratorErrorHandling:
             await orchestrator.connect_all()
 
             # Act
-            result = await orchestrator.call_tool("sabnzbd", "get_queue", {})
+            result = await orchestrator.call_tool("sabnzbd", "get_queue", {})  # noqa: F841
 
             # Assert
             assert result["success"] is True

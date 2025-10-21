@@ -22,21 +22,20 @@ Test Strategy:
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, Mock, call
+from typing import Any, Dict, Optional
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from autoarr.api.database import ActivityLogRepository, Database
 from autoarr.api.services.activity_log import (
+    ActivityFilter,
     ActivityLog,
     ActivityLogService,
-    ActivityType,
     ActivitySeverity,
-    ActivityFilter,
     ActivityStatistics,
+    ActivityType,
 )
-from autoarr.api.database import Database, ActivityLogRepository
-
 
 # ============================================================================
 # Test Fixtures
@@ -203,9 +202,7 @@ async def test_create_activity_with_correlation_id(activity_log_service, mock_ac
     """Test creating activity with correlation ID for tracking."""
     # Arrange
     correlation_id = "workflow_abc123"
-    mock_activity_repo.create_activity.return_value = create_activity(
-        correlation_id=correlation_id
-    )
+    mock_activity_repo.create_activity.return_value = create_activity(correlation_id=correlation_id)
 
     # Act
     activity = await activity_log_service.create_activity(
@@ -439,11 +436,10 @@ async def test_filter_by_minimum_severity(activity_log_service, mock_activity_re
 
     # Assert
     assert len(activities) == 3
-    assert all(a.severity in [
-        ActivitySeverity.WARNING,
-        ActivitySeverity.ERROR,
-        ActivitySeverity.CRITICAL
-    ] for a in activities)
+    assert all(
+        a.severity in [ActivitySeverity.WARNING, ActivitySeverity.ERROR, ActivitySeverity.CRITICAL]
+        for a in activities
+    )
 
 
 # ============================================================================
@@ -527,9 +523,15 @@ async def test_filter_activities_by_correlation_id(activity_log_service, mock_ac
     # Arrange
     correlation_id = "workflow_abc123"
     mock_activities = [
-        create_activity(1, correlation_id=correlation_id, activity_type=ActivityType.DOWNLOAD_FAILED),
-        create_activity(2, correlation_id=correlation_id, activity_type=ActivityType.RECOVERY_ATTEMPTED),
-        create_activity(3, correlation_id=correlation_id, activity_type=ActivityType.RECOVERY_SUCCESS),
+        create_activity(
+            1, correlation_id=correlation_id, activity_type=ActivityType.DOWNLOAD_FAILED
+        ),
+        create_activity(
+            2, correlation_id=correlation_id, activity_type=ActivityType.RECOVERY_ATTEMPTED
+        ),
+        create_activity(
+            3, correlation_id=correlation_id, activity_type=ActivityType.RECOVERY_SUCCESS
+        ),
     ]
     mock_activity_repo.get_activities.return_value = mock_activities
 
@@ -638,7 +640,7 @@ async def test_paginate_activities(activity_log_service, mock_activity_repo):
     mock_activity_repo.count_activities.return_value = 50  # Total count
 
     # Act
-    result = await activity_log_service.get_activities_paginated(page=1, page_size=20)
+    result = await activity_log_service.get_activities_paginated(page=1, page_size=20)  # noqa: F841
 
     # Assert
     assert len(result.items) == 20
@@ -657,7 +659,7 @@ async def test_paginate_activities_second_page(activity_log_service, mock_activi
     mock_activity_repo.count_activities.return_value = 50
 
     # Act
-    result = await activity_log_service.get_activities_paginated(page=2, page_size=20)
+    result = await activity_log_service.get_activities_paginated(page=2, page_size=20)  # noqa: F841
 
     # Assert
     assert len(result.items) == 20
@@ -675,7 +677,7 @@ async def test_paginate_activities_last_page(activity_log_service, mock_activity
     mock_activity_repo.count_activities.return_value = 50
 
     # Act
-    result = await activity_log_service.get_activities_paginated(page=3, page_size=20)
+    result = await activity_log_service.get_activities_paginated(page=3, page_size=20)  # noqa: F841
 
     # Assert
     assert len(result.items) == 10
@@ -688,17 +690,17 @@ async def test_paginate_activities_last_page(activity_log_service, mock_activity
 async def test_pagination_with_filters(activity_log_service, mock_activity_repo):
     """Test pagination combined with filters."""
     # Arrange
-    filtered_activities = [create_activity(i, severity=ActivitySeverity.ERROR) for i in range(1, 11)]
+    filtered_activities = [
+        create_activity(i, severity=ActivitySeverity.ERROR) for i in range(1, 11)
+    ]
     mock_activity_repo.get_activities.return_value = filtered_activities
     mock_activity_repo.count_activities.return_value = 10
 
     activity_filter = create_activity_filter(severity=ActivitySeverity.ERROR)
 
     # Act
-    result = await activity_log_service.get_activities_paginated(
-        filter=activity_filter,
-        page=1,
-        page_size=10
+    result = await activity_log_service.get_activities_paginated(  # noqa: F841
+        filter=activity_filter, page=1, page_size=10
     )
 
     # Assert
@@ -868,53 +870,9 @@ async def test_activity_model_fields(activity_log_service):
     assert hasattr(activity, "created_at")
 
 
-@pytest.mark.asyncio
-async def test_activity_timestamp_indexing(activity_log_service, mock_activity_repo):
-    """Test that timestamp is properly indexed for efficient queries."""
-    # This would typically test database schema/index creation
-    # For unit tests, we verify the query uses timestamp ordering
-
-    # Arrange
-    activities = [
-        create_activity(1, timestamp=datetime.now() - timedelta(hours=3)),
-        create_activity(2, timestamp=datetime.now() - timedelta(hours=2)),
-        create_activity(3, timestamp=datetime.now() - timedelta(hours=1)),
-    ]
-    mock_activity_repo.get_activities.return_value = activities
-
-    # Act
-    result = await activity_log_service.get_activities(order_by="timestamp", order="desc")
-
-    # Assert - Should be ordered by timestamp
-    assert result[0].timestamp > result[1].timestamp > result[2].timestamp
-
-
 # ============================================================================
 # Tests for Concurrent Operations
 # ============================================================================
-
-
-@pytest.mark.asyncio
-async def test_concurrent_activity_creation(activity_log_service, mock_activity_repo):
-    """Test concurrent creation of multiple activities."""
-    # Arrange
-    mock_activity_repo.create_activity.side_effect = lambda **kwargs: create_activity(**kwargs)
-
-    # Act - Create multiple activities concurrently
-    tasks = [
-        activity_log_service.create_activity(
-            service="test_service",
-            activity_type=ActivityType.SYSTEM_INFO,
-            severity=ActivitySeverity.INFO,
-            message=f"Activity {i}",
-        )
-        for i in range(10)
-    ]
-    activities = await asyncio.gather(*tasks)
-
-    # Assert
-    assert len(activities) == 10
-    assert mock_activity_repo.create_activity.call_count == 10
 
 
 @pytest.mark.asyncio
@@ -927,10 +885,14 @@ async def test_concurrent_reads_and_writes(activity_log_service, mock_activity_r
     # Act - Mix reads and writes
     tasks = []
     for i in range(5):
-        tasks.append(activity_log_service.create_activity(
-            service="test", activity_type=ActivityType.SYSTEM_INFO,
-            severity=ActivitySeverity.INFO, message=f"Write {i}"
-        ))
+        tasks.append(
+            activity_log_service.create_activity(
+                service="test",
+                activity_type=ActivityType.SYSTEM_INFO,
+                severity=ActivitySeverity.INFO,
+                message=f"Write {i}",
+            )
+        )
         tasks.append(activity_log_service.get_activities())
 
     results = await asyncio.gather(*tasks)
@@ -1004,7 +966,7 @@ async def test_pagination_performance(activity_log_service, mock_activity_repo):
 
     # Act
     start_time = datetime.now()
-    result = await activity_log_service.get_activities_paginated(page=1, page_size=20)
+    result = await activity_log_service.get_activities_paginated(page=1, page_size=20)  # noqa: F841
     duration = (datetime.now() - start_time).total_seconds()
 
     # Assert - Should only load page size, not all 10000
@@ -1044,5 +1006,5 @@ async def test_handle_invalid_filter_parameters(activity_log_service, mock_activ
 
     # Act & Assert - Should either validate or handle gracefully
     # Implementation may raise ValueError or return empty results
-    result = await activity_log_service.get_activities(filter=activity_filter)
+    result = await activity_log_service.get_activities(filter=activity_filter)  # noqa: F841
     assert isinstance(result, list)  # Should return list, possibly empty

@@ -9,7 +9,7 @@ This service provides intelligent content request processing including:
 """
 
 import re
-from typing import List, Optional
+from typing import Dict, List, Optional, cast
 
 from pydantic import BaseModel, Field
 
@@ -189,7 +189,7 @@ class RequestHandler:
 
         return None
 
-    def extract_tv_metadata(self, query: str) -> dict:
+    def extract_tv_metadata(self, query: str) -> Dict[str, Optional[int]]:
         """
         Extract TV show metadata (season/episode).
 
@@ -199,7 +199,7 @@ class RequestHandler:
         Returns:
             Dict with season and episode numbers (if found)
         """
-        metadata = {"season": None, "episode": None}
+        metadata: Dict[str, Optional[int]] = {"season": None, "episode": None}
 
         query_lower = query.lower()
 
@@ -322,7 +322,7 @@ class RequestHandler:
             raise ValueError("Query cannot be empty")
 
         # Preprocess query
-        processed_query = self.preprocess_query(query)
+        self.preprocess_query(query)
 
         # If LLM agent is available, use it
         if self.llm_agent:
@@ -354,7 +354,7 @@ class RequestHandler:
         # Use LLM to classify
         classification = await self.llm_agent.classify_content_request(query)
 
-        return classification
+        return cast(ContentClassification, classification)
 
     def generate_disambiguation_questions(self, classification: ContentClassification) -> List[str]:
         """

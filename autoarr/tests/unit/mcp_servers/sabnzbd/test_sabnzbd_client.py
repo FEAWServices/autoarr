@@ -15,12 +15,8 @@ Test Coverage Strategy:
 Target Coverage: 95%+ for the SABnzbd client class
 """
 
-import json
-from typing import Any, Dict
-from unittest.mock import AsyncMock, Mock, patch
-
 import pytest
-from httpx import AsyncClient, HTTPError, HTTPStatusError, Response
+from httpx import HTTPError
 from pytest_httpx import HTTPXMock
 
 # Import the actual client - using new repository structure
@@ -29,7 +25,6 @@ from autoarr.mcp_servers.mcp_servers.sabnzbd.client import (
     SABnzbdClientError,
     SABnzbdConnectionError,
 )
-
 
 # ============================================================================
 # Test Fixtures
@@ -74,12 +69,12 @@ class TestSABnzbdClientInitialization:
 
     def test_client_normalizes_url(self, sabnzbd_api_key: str) -> None:
         """Test that client normalizes URLs (removes trailing slash)."""
-        client = SABnzbdClient(url="http://localhost:8080/", api_key=sabnzbd_api_key)
+        client = SABnzbdClient(url="http://localhost:8080/", api_key=sabnzbd_api_key)  # noqa: F841
         assert client.url == "http://localhost:8080"
 
     def test_client_accepts_custom_timeout(self, sabnzbd_url: str, sabnzbd_api_key: str) -> None:
         """Test that client accepts custom timeout values."""
-        client = SABnzbdClient(url=sabnzbd_url, api_key=sabnzbd_api_key, timeout=60.0)
+        client = SABnzbdClient(url=sabnzbd_url, api_key=sabnzbd_api_key, timeout=60.0)  # noqa: F841
         assert client.timeout == 60.0
 
     @pytest.mark.asyncio
@@ -91,7 +86,7 @@ class TestSABnzbdClientInitialization:
             url=f"{sabnzbd_url}/api?mode=version&output=json&apikey={sabnzbd_api_key}",
             json={"version": "4.1.0"},
         )
-        client = await SABnzbdClient.create(
+        client = await SABnzbdClient.create(  # noqa: F841
             url=sabnzbd_url, api_key=sabnzbd_api_key, validate_connection=True
         )
         assert client is not None
@@ -113,7 +108,7 @@ class TestSABnzbdClientQueue:
         mock_queue = sabnzbd_queue_factory(slots=3)
         httpx_mock.add_response(json=mock_queue)
 
-        result = await sabnzbd_client.get_queue()
+        result = await sabnzbd_client.get_queue()  # noqa: F841
 
         assert "queue" in result
         assert result["queue"]["noofslots"] == 3
@@ -127,7 +122,7 @@ class TestSABnzbdClientQueue:
         mock_queue = sabnzbd_queue_factory(slots=0)
         httpx_mock.add_response(json=mock_queue)
 
-        result = await sabnzbd_client.get_queue()
+        result = await sabnzbd_client.get_queue()  # noqa: F841
 
         assert result["queue"]["noofslots"] == 0
         assert result["queue"]["slots"] == []
@@ -164,7 +159,7 @@ class TestSABnzbdClientQueue:
         """Test that pause_queue sends the correct API command."""
         httpx_mock.add_response(json={"status": True})
 
-        result = await sabnzbd_client.pause_queue()
+        result = await sabnzbd_client.pause_queue()  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "mode=pause" in str(request.url)
@@ -177,7 +172,7 @@ class TestSABnzbdClientQueue:
         """Test that resume_queue sends the correct API command."""
         httpx_mock.add_response(json={"status": True})
 
-        result = await sabnzbd_client.resume_queue()
+        await sabnzbd_client.resume_queue()
 
         request = httpx_mock.get_request()
         assert "mode=resume" in str(request.url)
@@ -199,7 +194,7 @@ class TestSABnzbdClientHistory:
         mock_history = sabnzbd_history_factory(entries=5, failed=2)
         httpx_mock.add_response(json=mock_history)
 
-        result = await sabnzbd_client.get_history()
+        result = await sabnzbd_client.get_history()  # noqa: F841
 
         assert "history" in result
         assert result["history"]["noofslots"] == 5
@@ -255,7 +250,7 @@ class TestSABnzbdClientDownloadManagement:
         """Test retrying a failed download by NZO ID."""
         httpx_mock.add_response(json={"status": True, "nzo_ids": ["new_id"]})
 
-        result = await sabnzbd_client.retry_download(nzo_id="failed_nzo_123")
+        result = await sabnzbd_client.retry_download(nzo_id="failed_nzo_123")  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "mode=retry" in str(request.url)
@@ -273,7 +268,9 @@ class TestSABnzbdClientDownloadManagement:
         """Test deleting a download by NZO ID."""
         httpx_mock.add_response(json={"status": True})
 
-        result = await sabnzbd_client.delete_download(nzo_id="nzo_123", delete_files=True)
+        result = await sabnzbd_client.delete_download(
+            nzo_id="nzo_123", delete_files=True
+        )  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "mode=queue" in str(request.url)
@@ -286,7 +283,7 @@ class TestSABnzbdClientDownloadManagement:
         """Test pausing a specific download."""
         httpx_mock.add_response(json={"status": True})
 
-        result = await sabnzbd_client.pause_download(nzo_id="nzo_123")
+        result = await sabnzbd_client.pause_download(nzo_id="nzo_123")  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "mode=queue" in str(request.url)
@@ -298,7 +295,7 @@ class TestSABnzbdClientDownloadManagement:
         """Test resuming a paused download."""
         httpx_mock.add_response(json={"status": True})
 
-        result = await sabnzbd_client.resume_download(nzo_id="nzo_123")
+        result = await sabnzbd_client.resume_download(nzo_id="nzo_123")  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "mode=queue" in str(request.url)
@@ -321,7 +318,7 @@ class TestSABnzbdClientConfiguration:
         mock_config = sabnzbd_config_factory()
         httpx_mock.add_response(json=mock_config)
 
-        result = await sabnzbd_client.get_config()
+        result = await sabnzbd_client.get_config()  # noqa: F841
 
         assert "config" in result
         assert "misc" in result["config"]
@@ -336,7 +333,7 @@ class TestSABnzbdClientConfiguration:
         mock_config = sabnzbd_config_factory()
         httpx_mock.add_response(json=mock_config)
 
-        result = await sabnzbd_client.get_config(section="misc")
+        result = await sabnzbd_client.get_config(section="misc")  # noqa: F841
 
         assert "misc" in result["config"]
 
@@ -347,7 +344,7 @@ class TestSABnzbdClientConfiguration:
         """Test updating a single configuration value."""
         httpx_mock.add_response(json={"status": True})
 
-        result = await sabnzbd_client.set_config(
+        result = await sabnzbd_client.set_config(  # noqa: F841
             section="misc", keyword="cache_limit", value="1000M"
         )
 
@@ -374,7 +371,7 @@ class TestSABnzbdClientConfiguration:
             "misc.cache_limit": "1000M",
             "misc.refresh_rate": 2,
         }
-        result = await sabnzbd_client.set_config_batch(config_updates)
+        result = await sabnzbd_client.set_config_batch(config_updates)  # noqa: F841
 
         assert result["status"] is True
 
@@ -394,7 +391,7 @@ class TestSABnzbdClientStatus:
         """Test that get_version returns SABnzbd version."""
         httpx_mock.add_response(json={"version": "4.1.0"})
 
-        result = await sabnzbd_client.get_version()
+        result = await sabnzbd_client.get_version()  # noqa: F841
 
         assert result["version"] == "4.1.0"
 
@@ -406,7 +403,7 @@ class TestSABnzbdClientStatus:
         mock_status = sabnzbd_status_factory()
         httpx_mock.add_response(json=mock_status)
 
-        result = await sabnzbd_client.get_status()
+        result = await sabnzbd_client.get_status()  # noqa: F841
 
         assert "status" in result
         assert "version" in result["status"]
@@ -493,7 +490,7 @@ class TestSABnzbdClientErrorHandling:
         httpx_mock.add_response(status_code=503)
         httpx_mock.add_response(json={"queue": {"slots": []}})
 
-        result = await sabnzbd_client.get_queue()
+        result = await sabnzbd_client.get_queue()  # noqa: F841
 
         assert result is not None
         assert len(httpx_mock.get_requests()) == 2  # Two attempts
@@ -525,7 +522,7 @@ class TestSABnzbdClientRequestBuilding:
         """Test that API URLs are built correctly."""
         httpx_mock.add_response(json={"queue": {"slots": []}})
 
-        client = SABnzbdClient(url=sabnzbd_url, api_key=sabnzbd_api_key)
+        client = SABnzbdClient(url=sabnzbd_url, api_key=sabnzbd_api_key)  # noqa: F841
         await client.get_queue()
 
         request = httpx_mock.get_request()

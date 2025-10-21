@@ -25,8 +25,8 @@ import { test, expect } from "@playwright/test";
 // Test Configuration
 // ============================================================================
 
-const BASE_URL = "http://localhost:3001";
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const BASE_URL = "http://localhost:3000";
+const API_BASE_URL = "http://localhost:8088/api/v1";
 
 // Mock data for testing
 const mockContentRequestResponse = {
@@ -73,39 +73,6 @@ const mockConfirmationResponse = {
   message: "Added to download queue",
   status: "downloading",
 };
-
-const mockWebSocketEvents = [
-  {
-    type: "request-submitted",
-    requestId: "req_test_123",
-    data: { status: "submitted", title: "Inception" },
-    timestamp: new Date().toISOString(),
-  },
-  {
-    type: "request-classified",
-    requestId: "req_test_123",
-    data: { status: "classified", title: "Inception" },
-    timestamp: new Date().toISOString(),
-  },
-  {
-    type: "request-downloading",
-    requestId: "req_test_123",
-    data: { status: "downloading", progress: 25, eta: "10 minutes" },
-    timestamp: new Date().toISOString(),
-  },
-  {
-    type: "download-progress",
-    requestId: "req_test_123",
-    data: { status: "downloading", progress: 75, eta: "3 minutes" },
-    timestamp: new Date().toISOString(),
-  },
-  {
-    type: "request-completed",
-    requestId: "req_test_123",
-    data: { status: "completed", title: "Inception" },
-    timestamp: new Date().toISOString(),
-  },
-];
 
 // ============================================================================
 // Test Suite: Chat Interface Loading and Rendering
@@ -322,9 +289,6 @@ test.describe("Chat - Message Input Interactions", () => {
   });
 
   test("cannot send empty message", async ({ page }) => {
-    const input = page.getByRole("textbox", {
-      name: /message input|request a movie/i,
-    });
     const sendButton = page.getByRole("button", { name: /send/i });
 
     // Try to send empty message
@@ -1367,7 +1331,7 @@ test.describe("Chat - Error Handling", () => {
   });
 
   test("handles API timeout gracefully", async ({ page }) => {
-    await page.route(`${API_BASE_URL}/request/content`, async (route) => {
+    await page.route(`${API_BASE_URL}/request/content`, async () => {
       // Never fulfill the request to simulate timeout
       await new Promise(() => {});
     });

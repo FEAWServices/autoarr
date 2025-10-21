@@ -7,10 +7,10 @@ Following TDD (Red-Green-Refactor):
 - They should all FAIL initially until implementation is complete
 """
 
-import pytest
 import json
-from datetime import datetime
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator
+
+import pytest
 
 
 @pytest.fixture
@@ -328,7 +328,7 @@ class TestBestPracticesRepositoryUpdate:
     @pytest.mark.asyncio
     async def test_update_non_existing_practice(self, best_practices_repository) -> None:
         """Test updating a practice that doesn't exist."""
-        result = await best_practices_repository.update(99999, {"priority": "low"})
+        result = await best_practices_repository.update(99999, {"priority": "low"})  # noqa: F841
 
         assert result is None
 
@@ -357,7 +357,7 @@ class TestBestPracticesRepositoryDelete:
         """Test deleting an existing practice."""
         created = await best_practices_repository.create(sample_practice_data)
 
-        result = await best_practices_repository.delete(created.id)
+        result = await best_practices_repository.delete(created.id)  # noqa: F841
 
         assert result is True
 
@@ -368,7 +368,7 @@ class TestBestPracticesRepositoryDelete:
     @pytest.mark.asyncio
     async def test_delete_non_existing_practice(self, best_practices_repository) -> None:
         """Test deleting a practice that doesn't exist."""
-        result = await best_practices_repository.delete(99999)
+        result = await best_practices_repository.delete(99999)  # noqa: F841
 
         assert result is False
 
@@ -379,7 +379,7 @@ class TestBestPracticesRepositoryDelete:
         """Test soft delete (disabling) a practice."""
         created = await best_practices_repository.create(sample_practice_data)
 
-        result = await best_practices_repository.soft_delete(created.id)
+        result = await best_practices_repository.soft_delete(created.id)  # noqa: F841
 
         assert result is True
 

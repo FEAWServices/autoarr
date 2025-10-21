@@ -12,7 +12,6 @@ import type {
   ApplyConfigResponse,
 } from "../types/config";
 
-// @ts-ignore - Vite env
 const API_BASE_URL = import.meta.env?.VITE_API_URL || "/api/v1";
 
 // ============================================================================

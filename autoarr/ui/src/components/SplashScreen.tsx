@@ -10,7 +10,7 @@ export const SplashScreen = ({
   onComplete,
   minDisplayTime = 2000,
 }: SplashScreenProps) => {
-  const [progress, setProgress] = useState(0);
+  const [, setProgress] = useState(0);
 
   useEffect(() => {
     // Simulate loading progress

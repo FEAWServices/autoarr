@@ -6,17 +6,17 @@ enabling LLM-based interactions with Sonarr TV show management.
 """
 
 from .client import SonarrClient, SonarrClientError, SonarrConnectionError
-from .server import SonarrMCPServer
 from .models import (
-    Series,
-    Episode,
     Command,
+    Episode,
+    ErrorResponse,
     Queue,
     QueueRecord,
-    WantedMissing,
+    Series,
     SystemStatus,
-    ErrorResponse,
+    WantedMissing,
 )
+from .server import SonarrMCPServer
 
 __all__ = [
     "SonarrClient",

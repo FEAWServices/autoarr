@@ -5,13 +5,13 @@ This module tests the configuration audit API endpoints following TDD principles
 Tests are written BEFORE implementation to drive the design.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 
-from autoarr.api.main import app
 from autoarr.api.dependencies import get_orchestrator
+from autoarr.api.main import app
 
 
 @pytest.fixture

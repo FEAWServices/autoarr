@@ -27,7 +27,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 from fastapi import WebSocket
 
-
 # ============================================================================
 # ContentRequest Factory
 # ============================================================================
@@ -669,4 +668,6 @@ def create_timestamp(days_ago: int = 0, hours_ago: int = 0, minutes_ago: int = 0
     Returns:
         datetime object
     """
-    return datetime.now(timezone.utc) - timedelta(days=days_ago, hours=hours_ago, minutes=minutes_ago)
+    return datetime.now(timezone.utc) - timedelta(
+        days=days_ago, hours=hours_ago, minutes=minutes_ago
+    )

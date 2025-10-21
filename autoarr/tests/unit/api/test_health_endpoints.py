@@ -5,13 +5,13 @@ This module tests the health check API endpoints for overall system health
 and individual service health monitoring.
 """
 
-import pytest
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from fastapi.testclient import TestClient
 
+from autoarr.api.dependencies import get_orchestrator, reset_orchestrator
 from autoarr.api.main import app
-from autoarr.api.dependencies import reset_orchestrator, get_orchestrator
 
 
 @pytest.fixture

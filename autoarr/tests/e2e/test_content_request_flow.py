@@ -12,10 +12,11 @@ Tests the complete content request workflow:
 8. Complete workflow with activity logging
 """
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from unittest.mock import AsyncMock, patch, MagicMock
 
 
 @pytest.mark.asyncio
@@ -39,9 +40,12 @@ class TestContentRequestFlow:
         5. Trigger search
         6. Verify activity log
         """
-        with patch("autoarr.api.routers.movies.get_orchestrator") as mock_orch, patch(
-            "autoarr.api.services.intelligent_recommendation_engine.IntelligentRecommendationEngine"
-        ) as mock_llm:
+        with (
+            patch("autoarr.api.routers.movies.get_orchestrator") as mock_orch,
+            patch(
+                "autoarr.api.services.intelligent_recommendation_engine.IntelligentRecommendationEngine"  # noqa: E501
+            ) as mock_llm,
+        ):
             # Mock LLM classification
             mock_llm_instance = AsyncMock()
             mock_llm.return_value = mock_llm_instance
@@ -84,7 +88,7 @@ class TestContentRequestFlow:
                 pytest.skip("Content request endpoint not implemented yet")
 
             assert response.status_code in [200, 201]
-            result = response.json()
+            result = response.json()  # noqa: F841
             assert result.get("type") == "movie" or "Matrix" in str(result)
 
     async def test_natural_language_tv_request(
@@ -104,9 +108,12 @@ class TestContentRequestFlow:
         5. Trigger search
         6. Monitor downloads
         """
-        with patch("autoarr.api.routers.shows.get_orchestrator") as mock_orch, patch(
-            "autoarr.api.services.intelligent_recommendation_engine.IntelligentRecommendationEngine"
-        ) as mock_llm:
+        with (
+            patch("autoarr.api.routers.shows.get_orchestrator") as mock_orch,
+            patch(
+                "autoarr.api.services.intelligent_recommendation_engine.IntelligentRecommendationEngine"  # noqa: E501
+            ) as mock_llm,
+        ):
             # Mock LLM classification
             mock_llm_instance = AsyncMock()
             mock_llm.return_value = mock_llm_instance
@@ -146,7 +153,7 @@ class TestContentRequestFlow:
                 pytest.skip("Content request endpoint not implemented yet")
 
             assert response.status_code in [200, 201]
-            result = response.json()
+            result = response.json()  # noqa: F841
             assert result.get("type") == "tv" or "Breaking" in str(result)
 
     async def test_ambiguous_request_requires_clarification(
@@ -189,7 +196,7 @@ class TestContentRequestFlow:
 
             # Should return clarification options
             if response.status_code in [200, 201]:
-                result = response.json()
+                result = response.json()  # noqa: F841
                 # Check for clarification response
                 assert "options" in result or "clarification" in str(result).lower()
 
@@ -213,11 +220,13 @@ class TestContentRequestFlow:
         6. Track completion
         7. Verify all events logged with correlation ID
         """
-        with patch("autoarr.api.routers.movies.get_orchestrator") as mock_orch_radarr, patch(
-            "autoarr.api.routers.downloads.get_orchestrator"
-        ) as mock_orch_sab, patch(
-            "autoarr.api.services.intelligent_recommendation_engine.IntelligentRecommendationEngine"
-        ) as mock_llm:
+        with (
+            patch("autoarr.api.routers.movies.get_orchestrator") as mock_orch_radarr,
+            patch("autoarr.api.routers.downloads.get_orchestrator") as mock_orch_sab,
+            patch(
+                "autoarr.api.services.intelligent_recommendation_engine.IntelligentRecommendationEngine"  # noqa: E501
+            ) as mock_llm,
+        ):
             # Mock LLM
             mock_llm_instance = AsyncMock()
             mock_llm.return_value = mock_llm_instance
@@ -305,7 +314,7 @@ class TestContentRequestFlow:
                 pytest.skip("Add movie endpoint not fully implemented")
 
             if response.status_code in [200, 201]:
-                result = response.json()
+                result = response.json()  # noqa: F841
                 # Verify quality profile applied
                 assert result.get("qualityProfileId") == 1 or "quality" in str(result).lower()
 
@@ -364,9 +373,10 @@ class TestContentRequestFlow:
         - Each item processed correctly
         - Results returned for all items
         """
-        with patch("autoarr.api.routers.movies.get_orchestrator") as mock_orch_radarr, patch(
-            "autoarr.api.routers.shows.get_orchestrator"
-        ) as mock_orch_sonarr:
+        with (
+            patch("autoarr.api.routers.movies.get_orchestrator") as mock_orch_radarr,
+            patch("autoarr.api.routers.shows.get_orchestrator") as mock_orch_sonarr,
+        ):
             # Mock Radarr
             mock_radarr = AsyncMock()
             mock_orch_radarr.return_value = mock_radarr
@@ -399,7 +409,7 @@ class TestContentRequestFlow:
                 pytest.skip("Batch request endpoint not implemented yet")
 
             if response.status_code in [200, 201]:
-                result = response.json()
+                result = response.json()  # noqa: F841
                 # Should process all items
                 assert "results" in result or isinstance(result, list)
 

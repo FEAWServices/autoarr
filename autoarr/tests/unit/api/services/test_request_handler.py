@@ -10,10 +10,7 @@ This module tests the request handler service including:
 
 import pytest
 
-from autoarr.api.services.request_handler import (
-    ContentClassification,
-    RequestHandler,
-)
+from autoarr.api.services.request_handler import ContentClassification, RequestHandler
 
 
 class TestPreprocessing:
@@ -23,7 +20,7 @@ class TestPreprocessing:
         """Test that filler words are removed."""
         handler = RequestHandler()
         query = "Please can you add the movie Inception"
-        result = handler.preprocess_query(query)
+        result = handler.preprocess_query(query)  # noqa: F841
 
         # Filler words should be removed
         assert "please" not in result
@@ -40,7 +37,7 @@ class TestPreprocessing:
         """Test that whitespace is normalized."""
         handler = RequestHandler()
         query = "Add    Dune     in   4K"
-        result = handler.preprocess_query(query)
+        result = handler.preprocess_query(query)  # noqa: F841
 
         # Should have single spaces
         assert "  " not in result
@@ -49,16 +46,16 @@ class TestPreprocessing:
         """Test that text is lowercased."""
         handler = RequestHandler()
         query = "Add INCEPTION in 4K"
-        result = handler.preprocess_query(query)
+        result = handler.preprocess_query(query)  # noqa: F841
 
         assert result.islower()
 
     def test_preprocess_empty_query(self):
         """Test that empty query returns empty string."""
         handler = RequestHandler()
-        result = handler.preprocess_query("")
+        result = handler.preprocess_query("")  # noqa: F841
 
-        assert result == ""
+        assert result == ""  # noqa: F841
 
 
 class TestMetadataExtraction:
@@ -171,7 +168,7 @@ class TestSimpleClassification:
         """Test movie classification with 'movie' keyword."""
         handler = RequestHandler()
 
-        result = handler.classify_content_simple("Add the movie Inception")
+        result = handler.classify_content_simple("Add the movie Inception")  # noqa: F841
 
         assert result.content_type == "movie"
         assert "Inception" in result.title
@@ -181,7 +178,7 @@ class TestSimpleClassification:
         """Test movie classification with 'film' keyword."""
         handler = RequestHandler()
 
-        result = handler.classify_content_simple("Add the film Dune")
+        result = handler.classify_content_simple("Add the film Dune")  # noqa: F841
 
         assert result.content_type == "movie"
         assert "Dune" in result.title
@@ -190,7 +187,7 @@ class TestSimpleClassification:
         """Test TV classification with season metadata."""
         handler = RequestHandler()
 
-        result = handler.classify_content_simple("Add Breaking Bad season 3")
+        result = handler.classify_content_simple("Add Breaking Bad season 3")  # noqa: F841
 
         assert result.content_type == "tv"
         assert "Breaking Bad" in result.title
@@ -201,7 +198,7 @@ class TestSimpleClassification:
         """Test TV classification with S01E01 pattern."""
         handler = RequestHandler()
 
-        result = handler.classify_content_simple("Add Breaking Bad S01E01")
+        result = handler.classify_content_simple("Add Breaking Bad S01E01")  # noqa: F841
 
         assert result.content_type == "tv"
         assert "Breaking Bad" in result.title
@@ -213,7 +210,7 @@ class TestSimpleClassification:
         """Test TV classification with 'series' keyword."""
         handler = RequestHandler()
 
-        result = handler.classify_content_simple("Add the series The Office")
+        result = handler.classify_content_simple("Add the series The Office")  # noqa: F841
 
         assert result.content_type == "tv"
         assert "Office" in result.title
@@ -222,7 +219,7 @@ class TestSimpleClassification:
         """Test movie classification extracts quality."""
         handler = RequestHandler()
 
-        result = handler.classify_content_simple("Add Dune in 4K")
+        result = handler.classify_content_simple("Add Dune in 4K")  # noqa: F841
 
         assert result.content_type == "movie"
         assert result.quality == "4K"
@@ -231,7 +228,7 @@ class TestSimpleClassification:
         """Test movie classification extracts year."""
         handler = RequestHandler()
 
-        result = handler.classify_content_simple("Add Inception 2010")
+        result = handler.classify_content_simple("Add Inception 2010")  # noqa: F841
 
         assert result.content_type == "movie"
         assert result.year == 2010
@@ -240,7 +237,7 @@ class TestSimpleClassification:
         """Test ambiguous classification defaults to movie."""
         handler = RequestHandler()
 
-        result = handler.classify_content_simple("Add Dune")
+        result = handler.classify_content_simple("Add Dune")  # noqa: F841
 
         assert result.content_type == "movie"
         assert result.confidence < 0.7  # Lower confidence for ambiguous
@@ -261,7 +258,7 @@ class TestAsyncClassification:
         """Test classification without LLM falls back to simple."""
         handler = RequestHandler()
 
-        result = await handler.classify_content("Add Dune in 4K")
+        result = await handler.classify_content("Add Dune in 4K")  # noqa: F841
 
         assert isinstance(result, ContentClassification)
         assert result.content_type == "movie"

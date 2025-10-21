@@ -9,7 +9,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from mcp.server import Server
-from mcp.types import Tool, TextContent
+from mcp.types import TextContent, Tool
 
 from .client import PlexClient, PlexClientError, PlexConnectionError
 
@@ -45,7 +45,7 @@ class PlexMCPServer:
         if client is None:
             raise ValueError("Plex client is required")
 
-        self.client = client
+        self.client = client  # noqa: F841
         self.name = "plex"
         self.version = "0.1.0"
         self._server = Server(self.name)
@@ -111,7 +111,7 @@ class PlexMCPServer:
                     "properties": {
                         "limit": {
                             "type": "integer",
-                            "description": "Maximum number of items to return (optional, default: 50)",
+                            "description": "Maximum number of items to return (optional, default: 50)",  # noqa: E501
                         },
                     },
                     "required": [],
@@ -125,7 +125,7 @@ class PlexMCPServer:
                     "properties": {
                         "limit": {
                             "type": "integer",
-                            "description": "Maximum number of items to return (optional, default: 12)",
+                            "description": "Maximum number of items to return (optional, default: 12)",  # noqa: E501
                         },
                     },
                     "required": [],
@@ -184,7 +184,7 @@ class PlexMCPServer:
                     "properties": {
                         "limit": {
                             "type": "integer",
-                            "description": "Maximum number of items to return (optional, default: 50)",
+                            "description": "Maximum number of items to return (optional, default: 50)",  # noqa: E501
                         },
                         "offset": {
                             "type": "integer",
@@ -210,21 +210,21 @@ class PlexMCPServer:
         try:
             # Dispatch to appropriate handler
             if name == "plex_get_libraries":
-                result = await self._handle_get_libraries(arguments)
+                result = await self._handle_get_libraries(arguments)  # noqa: F841
             elif name == "plex_get_library_items":
-                result = await self._handle_get_library_items(arguments)
+                result = await self._handle_get_library_items(arguments)  # noqa: F841
             elif name == "plex_get_recently_added":
-                result = await self._handle_get_recently_added(arguments)
+                result = await self._handle_get_recently_added(arguments)  # noqa: F841
             elif name == "plex_get_on_deck":
-                result = await self._handle_get_on_deck(arguments)
+                result = await self._handle_get_on_deck(arguments)  # noqa: F841
             elif name == "plex_get_sessions":
-                result = await self._handle_get_sessions(arguments)
+                result = await self._handle_get_sessions(arguments)  # noqa: F841
             elif name == "plex_search":
-                result = await self._handle_search(arguments)
+                result = await self._handle_search(arguments)  # noqa: F841
             elif name == "plex_refresh_library":
-                result = await self._handle_refresh_library(arguments)
+                result = await self._handle_refresh_library(arguments)  # noqa: F841
             elif name == "plex_get_history":
-                result = await self._handle_get_history(arguments)
+                result = await self._handle_get_history(arguments)  # noqa: F841
             else:
                 return [
                     TextContent(

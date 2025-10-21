@@ -19,8 +19,7 @@ Target Coverage: 95%+ for the Sonarr MCP server class
 """
 
 import json
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from mcp.types import TextContent
@@ -33,7 +32,6 @@ from autoarr.mcp_servers.mcp_servers.sonarr.client import (
 )
 from autoarr.mcp_servers.mcp_servers.sonarr.server import SonarrMCPServer
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================
@@ -42,7 +40,7 @@ from autoarr.mcp_servers.mcp_servers.sonarr.server import SonarrMCPServer
 @pytest.fixture
 def mock_sonarr_client():
     """Create a mock Sonarr client for testing."""
-    client = AsyncMock(spec=SonarrClient)
+    client = AsyncMock(spec=SonarrClient)  # noqa: F841
     client.url = "http://localhost:8989"
     client.api_key = "test_api_key_sonarr"
     client.timeout = 30.0
@@ -106,7 +104,7 @@ class TestSonarrMCPServerInitialization:
         """Test that server initializes correctly with a client."""
         server = SonarrMCPServer(client=mock_sonarr_client)
 
-        assert server.client == mock_sonarr_client
+        assert server.client == mock_sonarr_client  # noqa: F841
         assert server.name == "sonarr"
         assert server.version == "0.1.0"
 
@@ -212,7 +210,7 @@ class TestSonarrMCPServerSeriesOperations:
         """Test that sonarr_get_series calls the client correctly."""
         mock_sonarr_client.get_series.return_value = [sonarr_series_data]
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})  # noqa: F841
 
         mock_sonarr_client.get_series.assert_called_once_with(limit=None, page=None)
         assert not result.isError
@@ -233,7 +231,9 @@ class TestSonarrMCPServerSeriesOperations:
         """Test that sonarr_get_series_by_id returns series data."""
         mock_sonarr_client.get_series_by_id.return_value = sonarr_series_data
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_series_by_id", {"series_id": 1})
+        result = await sonarr_mcp_server.call_tool(
+            "sonarr_get_series_by_id", {"series_id": 1}
+        )  # noqa: F841
 
         mock_sonarr_client.get_series_by_id.assert_called_once_with(series_id=1)
         assert not result.isError
@@ -241,7 +241,7 @@ class TestSonarrMCPServerSeriesOperations:
     @pytest.mark.asyncio
     async def test_get_series_by_id_validates_series_id(self, sonarr_mcp_server) -> None:
         """Test that sonarr_get_series_by_id validates series_id."""
-        result = await sonarr_mcp_server.call_tool("sonarr_get_series_by_id", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_series_by_id", {})  # noqa: F841
 
         assert result.isError
         # Parse the error response
@@ -265,7 +265,7 @@ class TestSonarrMCPServerSeriesOperations:
             "season_folder": True,
         }
 
-        result = await sonarr_mcp_server.call_tool("sonarr_add_series", arguments)
+        result = await sonarr_mcp_server.call_tool("sonarr_add_series", arguments)  # noqa: F841
 
         # Verify the call
         mock_sonarr_client.add_series.assert_called_once()
@@ -283,7 +283,9 @@ class TestSonarrMCPServerSeriesOperations:
     async def test_search_series_validates_term(self, sonarr_mcp_server) -> None:
         """Test that sonarr_search_series validates search term."""
         # Empty term
-        result = await sonarr_mcp_server.call_tool("sonarr_search_series", {"term": ""})
+        result = await sonarr_mcp_server.call_tool(
+            "sonarr_search_series", {"term": ""}
+        )  # noqa: F841
 
         assert result.isError
         error_text = result.content[0].text
@@ -297,7 +299,9 @@ class TestSonarrMCPServerSeriesOperations:
         """Test that sonarr_search_series calls client correctly."""
         mock_sonarr_client.search_series.return_value = [sonarr_series_data]
 
-        result = await sonarr_mcp_server.call_tool("sonarr_search_series", {"term": "Breaking Bad"})
+        result = await sonarr_mcp_server.call_tool(
+            "sonarr_search_series", {"term": "Breaking Bad"}
+        )  # noqa: F841
 
         mock_sonarr_client.search_series.assert_called_once_with(term="Breaking Bad")
         assert not result.isError
@@ -305,7 +309,7 @@ class TestSonarrMCPServerSeriesOperations:
     @pytest.mark.asyncio
     async def test_delete_series_validates_series_id(self, sonarr_mcp_server) -> None:
         """Test that sonarr_delete_series validates series_id."""
-        result = await sonarr_mcp_server.call_tool("sonarr_delete_series", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_delete_series", {})  # noqa: F841
 
         assert result.isError
         error_text = result.content[0].text
@@ -338,7 +342,7 @@ class TestSonarrMCPServerEpisodeOperations:
     @pytest.mark.asyncio
     async def test_get_episodes_requires_series_id(self, sonarr_mcp_server) -> None:
         """Test that sonarr_get_episodes requires series_id."""
-        result = await sonarr_mcp_server.call_tool("sonarr_get_episodes", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_episodes", {})  # noqa: F841
 
         assert result.isError
         error_text = result.content[0].text
@@ -352,7 +356,9 @@ class TestSonarrMCPServerEpisodeOperations:
         """Test that sonarr_get_episodes calls client correctly."""
         mock_sonarr_client.get_episodes.return_value = [sonarr_episode_data]
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_episodes", {"series_id": 1})
+        result = await sonarr_mcp_server.call_tool(
+            "sonarr_get_episodes", {"series_id": 1}
+        )  # noqa: F841
 
         mock_sonarr_client.get_episodes.assert_called_once_with(series_id=1, season_number=None)
         assert not result.isError
@@ -373,7 +379,7 @@ class TestSonarrMCPServerEpisodeOperations:
     @pytest.mark.asyncio
     async def test_search_episode_requires_episode_id(self, sonarr_mcp_server) -> None:
         """Test that sonarr_search_episode requires episode_id."""
-        result = await sonarr_mcp_server.call_tool("sonarr_search_episode", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_search_episode", {})  # noqa: F841
 
         assert result.isError
         error_text = result.content[0].text
@@ -391,7 +397,9 @@ class TestSonarrMCPServerEpisodeOperations:
             "status": "queued",
         }
 
-        result = await sonarr_mcp_server.call_tool("sonarr_search_episode", {"episode_id": 42})
+        result = await sonarr_mcp_server.call_tool(
+            "sonarr_search_episode", {"episode_id": 42}
+        )  # noqa: F841
 
         mock_sonarr_client.search_episode.assert_called_once_with(episode_id=42)
         assert not result.isError
@@ -418,7 +426,7 @@ class TestSonarrMCPServerQueueCalendarWanted:
         }
         mock_sonarr_client.get_queue.return_value = mock_queue
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_queue", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_queue", {})  # noqa: F841
 
         mock_sonarr_client.get_queue.assert_called_once_with(page=None, page_size=None)
         assert not result.isError
@@ -439,7 +447,7 @@ class TestSonarrMCPServerQueueCalendarWanted:
         """Test that sonarr_get_calendar returns upcoming episodes."""
         mock_sonarr_client.get_calendar.return_value = []
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_calendar", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_calendar", {})  # noqa: F841
 
         mock_sonarr_client.get_calendar.assert_called_once_with(start_date=None, end_date=None)
         assert not result.isError
@@ -473,7 +481,7 @@ class TestSonarrMCPServerQueueCalendarWanted:
         }
         mock_sonarr_client.get_wanted_missing.return_value = mock_wanted
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_wanted", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_wanted", {})  # noqa: F841
 
         mock_sonarr_client.get_wanted_missing.assert_called_once_with(
             page=None, page_size=None, include_series=None
@@ -506,7 +514,7 @@ class TestSonarrMCPServerErrorHandling:
     @pytest.mark.asyncio
     async def test_handles_unknown_tool(self, sonarr_mcp_server) -> None:
         """Test handling of unknown tool names."""
-        result = await sonarr_mcp_server.call_tool("unknown_tool", {})
+        result = await sonarr_mcp_server.call_tool("unknown_tool", {})  # noqa: F841
 
         assert result.isError
         error_text = result.content[0].text
@@ -518,7 +526,7 @@ class TestSonarrMCPServerErrorHandling:
         """Test handling of SonarrClientError."""
         mock_sonarr_client.get_series.side_effect = SonarrClientError("Server error: 500")
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})  # noqa: F841
 
         assert result.isError
         error_text = result.content[0].text
@@ -530,7 +538,7 @@ class TestSonarrMCPServerErrorHandling:
         """Test handling of SonarrConnectionError."""
         mock_sonarr_client.get_series.side_effect = SonarrConnectionError("Connection refused")
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})  # noqa: F841
 
         assert result.isError
         error_text = result.content[0].text
@@ -541,7 +549,7 @@ class TestSonarrMCPServerErrorHandling:
     async def test_handles_validation_error(self, sonarr_mcp_server) -> None:
         """Test handling of validation errors."""
         # Try to add series without required fields
-        result = await sonarr_mcp_server.call_tool("sonarr_add_series", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_add_series", {})  # noqa: F841
 
         assert result.isError
         error_text = result.content[0].text
@@ -553,7 +561,7 @@ class TestSonarrMCPServerErrorHandling:
         """Test handling of unexpected errors."""
         mock_sonarr_client.get_series.side_effect = RuntimeError("Unexpected error")
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})  # noqa: F841
 
         assert result.isError
         error_text = result.content[0].text
@@ -576,7 +584,7 @@ class TestSonarrMCPServerResponseFormatting:
         """Test that successful responses are properly formatted."""
         mock_sonarr_client.get_series.return_value = [sonarr_series_data]
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})  # noqa: F841
 
         assert not result.isError
         assert isinstance(result.content, list)
@@ -599,7 +607,7 @@ class TestSonarrMCPServerResponseFormatting:
         """Test that error responses are properly formatted."""
         mock_sonarr_client.get_series.side_effect = SonarrClientError("Test error")
 
-        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})
+        result = await sonarr_mcp_server.call_tool("sonarr_get_series", {})  # noqa: F841
 
         assert result.isError
         assert isinstance(result.content, list)
@@ -621,7 +629,9 @@ class TestSonarrMCPServerResponseFormatting:
         """Test that delete_series handles empty response correctly."""
         mock_sonarr_client.delete_series.return_value = {}
 
-        result = await sonarr_mcp_server.call_tool("sonarr_delete_series", {"series_id": 1})
+        result = await sonarr_mcp_server.call_tool(
+            "sonarr_delete_series", {"series_id": 1}
+        )  # noqa: F841
 
         assert not result.isError
         response_text = result.content[0].text
@@ -653,7 +663,7 @@ class TestSonarrMCPServerIntegration:
             }
         ]
 
-        search_result = await sonarr_mcp_server.call_tool(
+        search_result = await sonarr_mcp_server.call_tool(  # noqa: F841
             "sonarr_search_series", {"term": "Breaking Bad"}
         )
         assert not search_result.isError
@@ -665,7 +675,7 @@ class TestSonarrMCPServerIntegration:
             "tvdbId": 81189,
         }
 
-        add_result = await sonarr_mcp_server.call_tool(
+        add_result = await sonarr_mcp_server.call_tool(  # noqa: F841
             "sonarr_add_series",
             {
                 "tvdb_id": 81189,
@@ -687,7 +697,9 @@ class TestSonarrMCPServerIntegration:
             }
         ]
 
-        episodes_result = await sonarr_mcp_server.call_tool("sonarr_get_episodes", {"series_id": 1})
+        episodes_result = await sonarr_mcp_server.call_tool(
+            "sonarr_get_episodes", {"series_id": 1}
+        )  # noqa: F841
         assert not episodes_result.isError
 
         # Step 4: Search for episode
@@ -696,7 +708,7 @@ class TestSonarrMCPServerIntegration:
             "name": "EpisodeSearch",
         }
 
-        search_ep_result = await sonarr_mcp_server.call_tool(
+        search_ep_result = await sonarr_mcp_server.call_tool(  # noqa: F841
             "sonarr_search_episode", {"episode_id": 1}
         )
         assert not search_ep_result.isError
@@ -735,7 +747,7 @@ class TestSonarrMCPServerIntegration:
                 args["root_folder_path"] = "/tv"
 
             # Call the tool
-            result = await sonarr_mcp_server.call_tool(tool.name, args)
+            result = await sonarr_mcp_server.call_tool(tool.name, args)  # noqa: F841
 
             # Should not crash (may error if args are invalid, but shouldn't crash)
             assert result is not None

@@ -10,7 +10,7 @@ For manual testing with real API, set ANTHROPIC_API_KEY environment variable.
 
 import json
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -45,10 +45,10 @@ class TestLLMAgentIntegration:
         mock_claude_response = {
             "content": json.dumps(
                 {
-                    "explanation": "Having multiple Usenet servers provides redundancy and improves download reliability. If one server is down or missing articles, the downloader can automatically fail over to another server. Additionally, using a separate incomplete directory prevents partially downloaded files from being processed by media management tools.",
+                    "explanation": "Having multiple Usenet servers provides redundancy and improves download reliability. If one server is down or missing articles, the downloader can automatically fail over to another server. Additionally, using a separate incomplete directory prevents partially downloaded files from being processed by media management tools.",  # noqa: E501
                     "priority": "high",
-                    "impact": "Single server creates a single point of failure. Without redundancy, failed downloads are more likely and manual intervention is required. Mixed complete/incomplete files can cause processing errors.",
-                    "reasoning": "Redundant servers significantly improve download success rates, especially for older or less popular content. Separate directories prevent media tools from attempting to process incomplete files, which can cause crashes or corruption.",
+                    "impact": "Single server creates a single point of failure. Without redundancy, failed downloads are more likely and manual intervention is required. Mixed complete/incomplete files can cause processing errors.",  # noqa: E501
+                    "reasoning": "Redundant servers significantly improve download success rates, especially for older or less popular content. Separate directories prevent media tools from attempting to process incomplete files, which can cause crashes or corruption.",  # noqa: E501
                 }
             ),
             "usage": {"input_tokens": 250, "output_tokens": 120},
@@ -86,10 +86,10 @@ class TestLLMAgentIntegration:
         mock_response = {
             "content": json.dumps(
                 {
-                    "explanation": "Enabling episode renaming provides consistent file naming across your library, making it easier to organize and identify episodes.",
+                    "explanation": "Enabling episode renaming provides consistent file naming across your library, making it easier to organize and identify episodes.",  # noqa: E501
                     "priority": "medium",
-                    "impact": "Inconsistent naming can make library browsing more difficult and may affect media player metadata matching.",
-                    "reasoning": "While not critical to functionality, consistent naming improves user experience and media management.",
+                    "impact": "Inconsistent naming can make library browsing more difficult and may affect media player metadata matching.",  # noqa: E501
+                    "reasoning": "While not critical to functionality, consistent naming improves user experience and media management.",  # noqa: E501
                 }
             ),
             "usage": {"input_tokens": 150, "output_tokens": 80},
@@ -118,7 +118,7 @@ class TestLLMAgentIntegration:
         mock_response = {
             "content": json.dumps(
                 {
-                    "explanation": "Your configuration already follows the best practice for completed download handling.",
+                    "explanation": "Your configuration already follows the best practice for completed download handling.",  # noqa: E501
                     "priority": "low",
                     "impact": "No impact - configuration is optimal.",
                     "reasoning": "This setting is correctly configured.",

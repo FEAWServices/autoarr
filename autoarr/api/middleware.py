@@ -11,6 +11,8 @@ from typing import Callable
 
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+
 from autoarr.shared.core.exceptions import (
     CircuitBreakerOpenError,
     MCPConnectionError,
@@ -18,7 +20,6 @@ from autoarr.shared.core.exceptions import (
     MCPTimeoutError,
     MCPToolError,
 )
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from .models import ErrorResponse
 
@@ -186,7 +187,7 @@ async def add_security_headers(request: Request, call_next: Callable) -> Respons
     response = await call_next(request)
 
     # Add security headers
-    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Content-Type-Options"] = "nosnif"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"

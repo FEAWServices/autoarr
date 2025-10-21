@@ -15,7 +15,6 @@ Features:
 import hashlib
 import json
 import re
-from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from urllib.parse import urlparse
 
@@ -143,13 +142,13 @@ class WebSearchService:
     ) -> None:
         """Initialize the Web Search Service."""
         self.brave_api_key = brave_api_key
-        self.redis_client = redis_client
+        self.redis_client = redis_client  # noqa: F841
         self.cache_ttl = cache_ttl
         self.best_practices_ttl = best_practices_ttl
         self.base_url = "https://api.search.brave.com/res/v1/web/search"
 
         # HTTP client for API requests
-        self.http_client = httpx.AsyncClient(timeout=30.0)
+        self.http_client = httpx.AsyncClient(timeout=30.0)  # noqa: F841
 
     async def search(self, query: SearchQuery) -> List[SearchResult]:
         """
@@ -208,7 +207,7 @@ class WebSearchService:
                 parsed_url = urlparse(item["url"])
                 source = parsed_url.netloc.replace("www.", "")
 
-                result = SearchResult(
+                result = SearchResult(  # noqa: F841
                     title=item.get("title", ""),
                     url=item["url"],
                     snippet=item.get("description", ""),
@@ -488,7 +487,7 @@ class WebSearchService:
 
         # Pattern 2: "Enable X" or "Disable Y"
         enable_pattern = re.compile(
-            r"(?:enable|disable|turn on|turn off|activate|deactivate)\s+([a-z_]+(?:_[a-z]+)*)",
+            r"(?:enable|disable|turn on|turn of|activate|deactivate)\s+([a-z_]+(?:_[a-z]+)*)",
             re.IGNORECASE,
         )
 
@@ -705,7 +704,7 @@ class WebSearchService:
             results = []
 
             for item in data.get("results", [])[:10]:  # Limit to top 10
-                result = ContentSearchResult(
+                result = ContentSearchResult(  # noqa: F841
                     tmdb_id=item.get("id"),
                     imdb_id=None,  # TMDB search doesn't include IMDb ID
                     title=item.get("title", ""),
@@ -778,7 +777,7 @@ class WebSearchService:
             results = []
 
             for item in data.get("results", [])[:10]:  # Limit to top 10
-                result = ContentSearchResult(
+                result = ContentSearchResult(  # noqa: F841
                     tmdb_id=item.get("id"),
                     imdb_id=None,
                     title=item.get("name", ""),
