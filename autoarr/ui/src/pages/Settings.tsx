@@ -100,7 +100,7 @@ export const Settings = () => {
       const response = await fetch(`/health/${service}`);
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         setTestResults({ ...testResults, [service]: "success" });
         setTestErrors({ ...testErrors, [service]: "" });
       } else {
@@ -138,7 +138,7 @@ export const Settings = () => {
     title: string;
     service: string;
     config: ServiceConfig & { token?: string };
-    onChange: (updates: Partial<ServiceConfig>) => void;
+    onChange: (updates: Partial<ServiceConfig> | { token: string }) => void;
     showToken?: boolean;
   }) => (
     <div className="bg-gray-800 rounded-lg p-6 space-y-4">

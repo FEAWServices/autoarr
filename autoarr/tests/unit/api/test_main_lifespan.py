@@ -5,14 +5,13 @@ This module tests the application startup and shutdown lifecycle,
 including database initialization and orchestrator management.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from contextlib import asynccontextmanager
 
+import pytest
 from fastapi import FastAPI
 
-from autoarr.api.main import lifespan, app
 from autoarr.api.config import Settings
+from autoarr.api.main import app, lifespan
 
 
 @pytest.fixture
@@ -56,7 +55,9 @@ class TestLifespanStartup:
                             pass
 
                         # Check startup logs
-                        calls = [str(call) for call in mock_logger.info.call_args_list]
+                        calls = [
+                            str(call) for call in mock_logger.info.call_args_list
+                        ]  # noqa: F841
                         assert any("Starting AutoArr" in call for call in calls)
                         assert any("Environment: test" in call for call in calls)
                         assert any("Log level: INFO" in call for call in calls)
@@ -97,7 +98,9 @@ class TestLifespanStartup:
                         async with lifespan(test_app):
                             pass
 
-                        calls = [str(call) for call in mock_logger.info.call_args_list]
+                        calls = [
+                            str(call) for call in mock_logger.info.call_args_list
+                        ]  # noqa: F841
                         assert any("Initializing database" in call for call in calls)
                         assert any("Database initialized successfully" in call for call in calls)
 
@@ -146,7 +149,7 @@ class TestLifespanShutdown:
                         pass
 
                     # Check shutdown logs
-                    calls = [str(call) for call in mock_logger.info.call_args_list]
+                    calls = [str(call) for call in mock_logger.info.call_args_list]  # noqa: F841
                     assert any("Shutting down AutoArr" in call for call in calls)
                     assert any("Shutdown complete" in call for call in calls)
 
@@ -202,7 +205,9 @@ class TestLifespanShutdown:
                             async with lifespan(test_app):
                                 pass
 
-                            calls = [str(call) for call in mock_logger.info.call_args_list]
+                            calls = [
+                                str(call) for call in mock_logger.info.call_args_list
+                            ]  # noqa: F841
                             assert any("Database connections closed" in call for call in calls)
 
     @pytest.mark.asyncio

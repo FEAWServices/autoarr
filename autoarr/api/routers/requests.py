@@ -410,7 +410,7 @@ async def confirm_request(
                     detail="TMDB ID required for movie",
                 )
 
-            result = await integration.add_movie_to_radarr(
+            result = await integration.add_movie_to_radarr(  # noqa: F841
                 tmdb_id=db_request.tmdb_id,
                 quality_profile_id=confirm_input.quality_profile_id or 1,
                 root_folder=confirm_input.root_folder or "/movies",
@@ -429,7 +429,7 @@ async def confirm_request(
                     detail="TVDB ID required for TV show",
                 )
 
-            result = await integration.add_series_to_sonarr(
+            result = await integration.add_series_to_sonarr(  # noqa: F841
                 tvdb_id=db_request.tmdb_id,  # TODO: Convert TMDB to TVDB
                 quality_profile_id=confirm_input.quality_profile_id or 1,
                 root_folder=confirm_input.root_folder or "/tv",

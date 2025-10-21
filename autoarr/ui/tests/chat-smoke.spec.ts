@@ -5,7 +5,7 @@
 
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:3003";
+const BASE_URL = "http://localhost:3000";
 
 test.describe("Chat - Smoke Tests", () => {
   test("should load chat page successfully", async ({ page }) => {

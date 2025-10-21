@@ -63,8 +63,8 @@ jobs:
             # For develop branch (staging)
             type=raw,value=staging,enable=${{ github.ref == 'refs/heads/develop' }}
             type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
-            # SHA for all builds
-            type=sha,prefix={{branch}}-
+            # SHA for branch pushes only (not PRs)
+            type=sha,prefix={{branch}}-,enable=${{ github.event_name == 'push' }}
           labels: |
             org.opencontainers.image.title=AutoArr
             org.opencontainers.image.description=Intelligent orchestration layer for media automation
@@ -87,6 +87,7 @@ jobs:
             VERSION=${{ github.ref_name }}
 
       - name: Run Trivy security scanner
+        if: github.event_name == 'push'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}

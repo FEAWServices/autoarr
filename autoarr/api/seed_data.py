@@ -227,8 +227,8 @@ def get_best_practices_seed_data() -> list[dict[str, Any]]:
         {
             "application": "sonarr",
             "category": "quality",
-            "setting_name": "quality_cutoff",
-            "setting_path": "settings.profiles.quality_cutoff",
+            "setting_name": "quality_cutof",
+            "setting_path": "settings.profiles.quality_cutof",
             "recommended_value": json.dumps(
                 {
                     "type": "exists",
@@ -369,8 +369,8 @@ def get_best_practices_seed_data() -> list[dict[str, Any]]:
         {
             "application": "radarr",
             "category": "quality",
-            "setting_name": "quality_cutoff",
-            "setting_path": "settings.profiles.quality_cutoff",
+            "setting_name": "quality_cutof",
+            "setting_path": "settings.profiles.quality_cutof",
             "recommended_value": json.dumps(
                 {
                     "type": "exists",

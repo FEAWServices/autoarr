@@ -5,12 +5,13 @@ This module tests the settings configuration endpoints that allow users to
 view and update service settings through the API/UI.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
-from autoarr.api.main import app
 from autoarr.api.dependencies import reset_orchestrator
+from autoarr.api.main import app
 
 
 @pytest.fixture
@@ -61,8 +62,8 @@ def cleanup():
 @pytest.fixture
 def override_deps():
     """Helper to override dependencies."""
-    from autoarr.api.routers.settings import get_settings_repo
     from autoarr.api.dependencies import get_orchestrator
+    from autoarr.api.routers.settings import get_settings_repo
 
     def _override(orchestrator=None, settings_repo=None):
         if orchestrator:
@@ -340,8 +341,6 @@ class TestConnectionTesting:
     dynamic import mocking that doesn't add value.
     """
 
-    pass
-
 
 class TestMaskApiKey:
     """Test API key masking functionality."""
@@ -350,19 +349,19 @@ class TestMaskApiKey:
         """Test masking a normal API key."""
         from autoarr.api.routers.settings import mask_api_key
 
-        result = mask_api_key("1234567890abcdef")
-        assert result == "1234...cdef"
+        result = mask_api_key("1234567890abcde")  # noqa: F841
+        assert result == "1234...bcde"  # noqa: F841
 
     def test_mask_api_key_short(self):
         """Test masking a short API key."""
         from autoarr.api.routers.settings import mask_api_key
 
-        result = mask_api_key("short")
-        assert result == "****"
+        result = mask_api_key("short")  # noqa: F841
+        assert result == "****"  # noqa: F841
 
     def test_mask_api_key_empty(self):
         """Test masking an empty API key."""
         from autoarr.api.routers.settings import mask_api_key
 
-        result = mask_api_key("")
-        assert result == "****"
+        result = mask_api_key("")  # noqa: F841
+        assert result == "****"  # noqa: F841

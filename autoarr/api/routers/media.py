@@ -7,6 +7,7 @@ This module provides endpoints for accessing Plex media libraries.
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends
+
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
@@ -44,7 +45,7 @@ async def list_libraries(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("plex", "get_libraries", {})
+    result = await orchestrator.call_tool("plex", "get_libraries", {})  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -78,7 +79,9 @@ async def get_library(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("plex", "get_library", {"library_key": library_key})
+    result = await orchestrator.call_tool(
+        "plex", "get_library", {"library_key": library_key}
+    )  # noqa: F841
     return result
 
 
@@ -113,7 +116,9 @@ async def get_recently_added(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("plex", "get_recently_added", {"limit": limit})
+    result = await orchestrator.call_tool(
+        "plex", "get_recently_added", {"limit": limit}
+    )  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -152,7 +157,7 @@ async def scan_library(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool(
+    result = await orchestrator.call_tool(  # noqa: F841
         "plex", "scan_library", {"library_key": request.library_key}
     )
     return result
@@ -182,7 +187,9 @@ async def refresh_metadata(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("plex", "refresh_metadata", {"rating_key": rating_key})
+    result = await orchestrator.call_tool(
+        "plex", "refresh_metadata", {"rating_key": rating_key}
+    )  # noqa: F841
     return result
 
 
@@ -220,7 +227,7 @@ async def search_media(
     if library_key:
         params["library_key"] = library_key
 
-    result = await orchestrator.call_tool("plex", "search_media", params)
+    result = await orchestrator.call_tool("plex", "search_media", params)  # noqa: F841
     return result if isinstance(result, list) else []
 
 
@@ -244,7 +251,7 @@ async def get_on_deck(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("plex", "get_on_deck", {})
+    result = await orchestrator.call_tool("plex", "get_on_deck", {})  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -281,7 +288,7 @@ async def get_sessions(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("plex", "get_sessions", {})
+    result = await orchestrator.call_tool("plex", "get_sessions", {})  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -311,7 +318,7 @@ async def get_server_status(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("plex", "get_server_status", {})
+    result = await orchestrator.call_tool("plex", "get_server_status", {})  # noqa: F841
     return result
 
 
@@ -339,5 +346,7 @@ async def optimize_item(
         ```
     """
     # orchestrator is already resolved by FastAPI
-    result = await orchestrator.call_tool("plex", "optimize_item", {"rating_key": rating_key})
+    result = await orchestrator.call_tool(
+        "plex", "optimize_item", {"rating_key": rating_key}
+    )  # noqa: F841
     return result

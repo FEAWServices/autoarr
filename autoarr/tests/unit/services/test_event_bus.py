@@ -22,20 +22,12 @@ Test Strategy:
 
 import asyncio
 from datetime import datetime
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, call
+from typing import Any, Dict
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from autoarr.api.services.event_bus import (
-    EventBus,
-    Event,
-    EventType,
-    EventHandler,
-    EventSubscription,
-    DeadLetterQueue,
-)
-
+from autoarr.api.services.event_bus import Event, EventBus, EventType
 
 # ============================================================================
 # Test Fixtures
@@ -120,8 +112,7 @@ async def test_publish_multiple_events_sequentially(event_bus, mock_handler):
     # Arrange
     event_bus.subscribe(EventType.DOWNLOAD_FAILED, mock_handler)
     events = [
-        create_event(EventType.DOWNLOAD_FAILED, data={"nzo_id": f"test_{i}"})
-        for i in range(3)
+        create_event(EventType.DOWNLOAD_FAILED, data={"nzo_id": f"test_{i}"}) for i in range(3)
     ]
 
     # Act
@@ -382,15 +373,11 @@ async def test_track_event_chain_by_correlation_id(event_bus):
     correlation_id = "chain_abc123"
 
     # Act - Publish chain of related events
-    await event_bus.publish(
-        create_event(EventType.DOWNLOAD_FAILED, correlation_id=correlation_id)
-    )
+    await event_bus.publish(create_event(EventType.DOWNLOAD_FAILED, correlation_id=correlation_id))
     await event_bus.publish(
         create_event(EventType.RECOVERY_ATTEMPTED, correlation_id=correlation_id)
     )
-    await event_bus.publish(
-        create_event(EventType.RECOVERY_SUCCESS, correlation_id=correlation_id)
-    )
+    await event_bus.publish(create_event(EventType.RECOVERY_SUCCESS, correlation_id=correlation_id))
 
     # Assert - All events in chain have same correlation ID
     assert len(events_received) == 3
@@ -679,6 +666,7 @@ async def test_mixed_sync_async_handlers(event_bus):
 @pytest.mark.asyncio
 async def test_handle_handler_exception(event_bus):
     """Test graceful handling of handler exceptions."""
+
     # Arrange
     async def failing_handler(event: Event):
         raise RuntimeError("Handler failed")
@@ -703,6 +691,7 @@ async def test_handle_invalid_event_type(event_bus):
 @pytest.mark.asyncio
 async def test_handle_handler_timeout(event_bus):
     """Test handling of slow/hanging handlers."""
+
     # Arrange
     async def slow_handler(event: Event):
         await asyncio.sleep(10)  # Very slow handler
@@ -724,10 +713,7 @@ async def test_handle_concurrent_publishes(event_bus, mock_handler):
     """Test handling of concurrent event publishes."""
     # Arrange
     event_bus.subscribe(EventType.DOWNLOAD_FAILED, mock_handler)
-    events = [
-        create_event(EventType.DOWNLOAD_FAILED, data={"id": i})
-        for i in range(10)
-    ]
+    events = [create_event(EventType.DOWNLOAD_FAILED, data={"id": i}) for i in range(10)]
 
     # Act - Publish concurrently
     await asyncio.gather(*[event_bus.publish(e) for e in events])
@@ -827,10 +813,7 @@ async def test_subscribe_unsubscribe_performance(event_bus):
 
     # Act - Subscribe many handlers
     start_time = datetime.now()
-    subscriptions = [
-        event_bus.subscribe(EventType.DOWNLOAD_FAILED, h)
-        for h in handlers
-    ]
+    subscriptions = [event_bus.subscribe(EventType.DOWNLOAD_FAILED, h) for h in handlers]
     subscribe_duration = (datetime.now() - start_time).total_seconds()
 
     # Unsubscribe all
@@ -876,21 +859,17 @@ async def test_event_routing_by_pattern(event_bus):
     event_bus.subscribe(
         EventType.DOWNLOAD_COMPLETED,
         tv_handler,
-        event_filter=lambda e: e.data.get("category") == "tv"
+        event_filter=lambda e: e.data.get("category") == "tv",
     )
     event_bus.subscribe(
         EventType.DOWNLOAD_COMPLETED,
         movie_handler,
-        event_filter=lambda e: e.data.get("category") == "movies"
+        event_filter=lambda e: e.data.get("category") == "movies",
     )
 
     # Act
-    await event_bus.publish(
-        create_event(EventType.DOWNLOAD_COMPLETED, data={"category": "tv"})
-    )
-    await event_bus.publish(
-        create_event(EventType.DOWNLOAD_COMPLETED, data={"category": "movies"})
-    )
+    await event_bus.publish(create_event(EventType.DOWNLOAD_COMPLETED, data={"category": "tv"}))
+    await event_bus.publish(create_event(EventType.DOWNLOAD_COMPLETED, data={"category": "movies"}))
 
     # Assert
     tv_handler.assert_called_once()
@@ -910,14 +889,10 @@ async def test_event_priority_handling(event_bus):
         execution_order.append("normal")
 
     event_bus.subscribe(
-        EventType.DOWNLOAD_FAILED,
-        high_priority_handler,
-        priority=10  # High priority
+        EventType.DOWNLOAD_FAILED, high_priority_handler, priority=10  # High priority
     )
     event_bus.subscribe(
-        EventType.DOWNLOAD_FAILED,
-        normal_priority_handler,
-        priority=1  # Normal priority
+        EventType.DOWNLOAD_FAILED, normal_priority_handler, priority=1  # Normal priority
     )
 
     # Act
@@ -935,6 +910,7 @@ async def test_event_priority_handling(event_bus):
 @pytest.mark.asyncio
 async def test_thread_safe_subscribe_unsubscribe(event_bus):
     """Test thread-safe subscribe/unsubscribe operations."""
+
     # Arrange & Act - Concurrent subscribe/unsubscribe
     async def subscribe_many():
         handlers = [AsyncMock() for _ in range(50)]

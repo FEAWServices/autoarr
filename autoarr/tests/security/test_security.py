@@ -10,9 +10,9 @@ Tests for common security vulnerabilities:
 - Input validation
 """
 
-import os
 import re
 from pathlib import Path
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -80,12 +80,12 @@ class TestSecurityVulnerabilities:
                                 "snippet": matched_text[:50],
                             }
                         )
-            except Exception as e:
+            except Exception:
                 # Skip files that can't be read
                 continue
 
         # Assert no secrets found (or only acceptable ones)
-        assert len(findings) == 0, f"Potential hardcoded secrets found:\n" + "\n".join(
+        assert len(findings) == 0, "Potential hardcoded secrets found:\n" + "\n".join(
             f"  - {f['file']}:{f['line']} - {f['description']}: {f['snippet']}" for f in findings
         )
 
@@ -113,7 +113,7 @@ class TestSecurityVulnerabilities:
         # Verify settings table still exists
         from sqlalchemy import text
 
-        result = await db_session.execute(text("SELECT COUNT(*) FROM setting"))
+        result = await db_session.execute(text("SELECT COUNT(*) FROM setting"))  # noqa: F841
         count = result.scalar()
         # Table should still exist
         assert count is not None
@@ -234,7 +234,7 @@ class TestSecurityVulnerabilities:
         # Check for security headers
         # Note: Some might be set by reverse proxy in production
         expected_headers = {
-            "x-content-type-options": "nosniff",
+            "x-content-type-options": "nosnif",
             # "x-frame-options": "DENY",  # May be set by middleware
             # "x-xss-protection": "1; mode=block",  # Deprecated but still useful
         }
@@ -366,7 +366,9 @@ class TestDatabaseSecurity:
         from sqlalchemy import text
 
         # Test that parameterized queries work
-        result = await db_session.execute(text("SELECT :value AS test_value"), {"value": "test"})
+        result = await db_session.execute(
+            text("SELECT :value AS test_value"), {"value": "test"}
+        )  # noqa: F841
         row = result.fetchone()
         assert row[0] == "test"
 

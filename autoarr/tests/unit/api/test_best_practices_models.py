@@ -7,8 +7,9 @@ Following TDD (Red-Green-Refactor):
 - They should all FAIL initially until implementation is complete
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
 
@@ -159,8 +160,9 @@ class TestBestPracticePydanticModel:
 
     def test_recommended_value_is_valid_json_string(self, sample_best_practice_data: dict) -> None:
         """Test that recommended_value must be a valid JSON string."""
-        from autoarr.api.models import BestPracticeBase
         import json
+
+        from autoarr.api.models import BestPracticeBase
 
         practice = BestPracticeBase(**sample_best_practice_data)
 

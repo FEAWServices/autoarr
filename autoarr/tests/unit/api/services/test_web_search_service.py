@@ -9,12 +9,10 @@ Following TDD (Red-Green-Refactor):
 
 import json
 import re
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
-from httpx import AsyncClient, Response
 
 from autoarr.api.services.web_search_service import (
     BestPractice,
@@ -53,7 +51,7 @@ class TestSearchResult:
 
     def test_search_result_creation(self) -> None:
         """Test creating a search result with all fields."""
-        result = SearchResult(
+        result = SearchResult(  # noqa: F841
             title="SABnzbd Best Practices",
             url="https://example.com/sabnzbd-guide",
             snippet="This is a guide to SABnzbd configuration...",

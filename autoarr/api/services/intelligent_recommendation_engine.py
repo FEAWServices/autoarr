@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from autoarr.api.services.llm_agent import LLMAgent, LLMRecommendation
+from autoarr.api.services.llm_agent import LLMAgent
 from autoarr.api.services.models import Priority
 
 

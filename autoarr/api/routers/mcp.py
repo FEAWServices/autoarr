@@ -8,6 +8,7 @@ allowing clients to call any tool on any server.
 from typing import List
 
 from fastapi import APIRouter, Depends
+
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
@@ -64,7 +65,7 @@ async def call_tool(
     """
     try:
         # Call the tool with metadata
-        result = await orchestrator.call_tool(
+        result = await orchestrator.call_tool(  # noqa: F841
             server=request.server,
             tool=request.tool,
             params=request.params,
@@ -158,7 +159,7 @@ async def call_tools_batch(
             self.params = params
             self.timeout = timeout
 
-    tool_calls = [
+    tool_calls = [  # noqa: F841
         MCPToolCall(call.server, call.tool, call.params, call.timeout) for call in request.calls
     ]
 

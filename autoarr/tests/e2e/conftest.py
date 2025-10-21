@@ -11,8 +11,6 @@ This module provides fixtures for E2E tests including:
 """
 
 import asyncio
-import json
-import os
 import time
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, Generator
@@ -20,15 +18,11 @@ from typing import Any, AsyncGenerator, Dict, Generator
 import pytest
 import websockets
 from httpx import AsyncClient
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from autoarr.api.config import Settings, get_settings
+from autoarr.api.config import Settings
 from autoarr.api.database import Database
 from autoarr.api.main import app
-from autoarr.api.models import Base
-
 
 # ============================================================================
 # Test Settings Fixture
@@ -123,7 +117,7 @@ async def seed_test_data(db_session: AsyncSession) -> None:
     - Sample activity logs
     - Sample settings
     """
-    from autoarr.api.models import BestPractice, ConfigAudit, ActivityLog, Setting
+    from autoarr.api.models import BestPractice, Setting
 
     # Seed best practices
     best_practices = [
@@ -194,7 +188,7 @@ async def api_client(test_settings: Settings) -> AsyncGenerator[AsyncClient, Non
 
     with TestClient(app) as client:
         # Convert synchronous TestClient to async wrapper
-        async_client = AsyncClient(app=app, base_url="http://testserver")
+        async_client = AsyncClient(app=app, base_url="http://testserver")  # noqa: F841
         yield async_client
         await async_client.aclose()
 
@@ -417,7 +411,7 @@ def docker_services(docker_compose_file: Path) -> Generator[None, None, None]:
 
     # Start services
     subprocess.run(
-        ["docker-compose", "-f", str(docker_compose_file), "up", "-d"],
+        ["docker-compose", "-", str(docker_compose_file), "up", "-d"],
         check=True,
     )
 
@@ -428,7 +422,7 @@ def docker_services(docker_compose_file: Path) -> Generator[None, None, None]:
 
     # Cleanup: stop services
     subprocess.run(
-        ["docker-compose", "-f", str(docker_compose_file), "down"],
+        ["docker-compose", "-", str(docker_compose_file), "down"],
         check=False,
     )
 
