@@ -11,6 +11,7 @@ Modified the Docker Build & Deploy workflow to only run after the Python CI work
 ### 1. Workflow Trigger Change
 
 **Before:**
+
 ```yaml
 on:
   push:
@@ -24,6 +25,7 @@ on:
 ```
 
 **After:**
+
 ```yaml
 on:
   workflow_run:
@@ -36,6 +38,7 @@ on:
 ```
 
 **Impact:**
+
 - ✅ Docker workflow now waits for Python CI to complete
 - ✅ No more Docker builds on failing tests
 - ✅ Automatic CI/CD pipeline orchestration
@@ -45,11 +48,13 @@ on:
 ### 2. Success Check Added
 
 **Added to `build-and-push` job:**
+
 ```yaml
 if: ${{ github.event.workflow_run.conclusion == 'success' }}
 ```
 
 **Impact:**
+
 - ✅ Only builds Docker images when Python CI succeeds
 - ✅ Skips builds on failed CI runs
 - ✅ Prevents deploying broken code
@@ -59,6 +64,7 @@ if: ${{ github.event.workflow_run.conclusion == 'success' }}
 ### 3. Checkout Reference Update
 
 **Updated checkout step:**
+
 ```yaml
 - name: Checkout code
   uses: actions/checkout@v4
@@ -67,6 +73,7 @@ if: ${{ github.event.workflow_run.conclusion == 'success' }}
 ```
 
 **Impact:**
+
 - ✅ Checks out the correct branch from workflow_run event
 - ✅ Ensures Docker builds use the same code that passed CI
 
@@ -76,14 +83,15 @@ if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
 **Updated all references from direct event to workflow_run event:**
 
-| Before | After | Purpose |
-|--------|-------|---------|
-| `github.ref` | `github.event.workflow_run.head_branch` | Branch name |
-| `github.sha` | `github.event.workflow_run.head_sha` | Commit SHA |
-| `github.event_name` | Always `workflow_run` | Event type |
-| `github.ref_name` | `github.event.workflow_run.head_branch` | Branch reference |
+| Before              | After                                   | Purpose          |
+| ------------------- | --------------------------------------- | ---------------- |
+| `github.ref`        | `github.event.workflow_run.head_branch` | Branch name      |
+| `github.sha`        | `github.event.workflow_run.head_sha`    | Commit SHA       |
+| `github.event_name` | Always `workflow_run`                   | Event type       |
+| `github.ref_name`   | `github.event.workflow_run.head_branch` | Branch reference |
 
 **Updated locations:**
+
 - Docker metadata tags
 - Build arguments
 - Deployment job conditions
@@ -94,16 +102,19 @@ if: ${{ github.event.workflow_run.conclusion == 'success' }}
 ### 5. Push Behavior Change
 
 **Before:**
+
 ```yaml
 push: ${{ github.event_name != 'pull_request' }}
 ```
 
 **After:**
+
 ```yaml
-push: true  # Always push when CI succeeds on main/develop
+push: true # Always push when CI succeeds on main/develop
 ```
 
 **Rationale:**
+
 - The workflow only runs after successful CI on main/develop
 - No need to check event type - if we're here, we should push
 - Simpler and more explicit
@@ -115,17 +126,20 @@ push: true  # Always push when CI succeeds on main/develop
 **Fixed invalid Docker tag format:**
 
 **Before (caused `-84bf688` invalid tag):**
+
 ```yaml
 type=sha,prefix={{branch}}-,enable=${{ github.event_name == 'push' }}
 ```
 
 **After (explicit prefixes):**
+
 ```yaml
 type=sha,prefix=main-,enable=${{ github.event.workflow_run.head_branch == 'main' }}
 type=sha,prefix=develop-,enable=${{ github.event.workflow_run.head_branch == 'develop' }}
 ```
 
 **Tags Generated:**
+
 - Main branch: `latest`, `stable`, `main-<sha>`
 - Develop branch: `staging`, `develop`, `develop-<sha>`
 
@@ -178,26 +192,31 @@ type=sha,prefix=develop-,enable=${{ github.event.workflow_run.head_branch == 'de
 ## Benefits
 
 ### 1. **Prevents Broken Builds**
+
 - No Docker images built from failing code
 - Guarantees all images pass CI tests
 - Reduces wasted build time and resources
 
 ### 2. **Automatic Pipeline**
+
 - No manual intervention needed
 - Automatic progression: CI → Docker → Deploy
 - Single push triggers entire pipeline
 
 ### 3. **Clear Workflow Status**
+
 - Docker workflow shows in GitHub Actions UI
 - Easy to see if CI passed before Docker build
 - Summary shows which CI run triggered the build
 
 ### 4. **Resource Optimization**
+
 - No unnecessary Docker builds on failed CI
 - Self-hosted runner only used when needed
 - Cache efficiency maintained with BuildKit
 
 ### 5. **Better Security**
+
 - No images pushed without security scans (CI)
 - Trivy scan still runs on Docker image
 - Two layers of security validation
@@ -207,6 +226,7 @@ type=sha,prefix=develop-,enable=${{ github.event.workflow_run.head_branch == 'de
 ## Testing Workflow
 
 ### On Feature Branch
+
 ```bash
 git checkout -b feature/my-feature
 git commit -am "My changes"
@@ -214,11 +234,13 @@ git push origin feature/my-feature
 ```
 
 **What happens:**
-1. Python CI runs (because feature/** matches)
+
+1. Python CI runs (because feature/\*\* matches)
 2. Docker Build does NOT run (not main/develop)
 3. Only CI checks show in PR
 
 ### On Develop Branch
+
 ```bash
 git checkout develop
 git merge feature/my-feature
@@ -226,12 +248,14 @@ git push origin develop
 ```
 
 **What happens:**
+
 1. ✅ Python CI runs
 2. ⏳ If CI succeeds → Docker Build runs
 3. ⏳ If Docker succeeds → Staging deployment ready
 4. ❌ If CI fails → Docker Build skipped
 
 ### On Main Branch
+
 ```bash
 git checkout main
 git merge develop
@@ -239,6 +263,7 @@ git push origin main
 ```
 
 **What happens:**
+
 1. ✅ Python CI runs
 2. ⏳ If CI succeeds → Docker Build runs
 3. ⏳ If Docker succeeds → Production deployment gate
@@ -249,11 +274,13 @@ git push origin main
 ## Migration Notes
 
 ### What Changed
+
 - Docker workflow no longer triggers on `push` or `pull_request`
 - Now triggers on `workflow_run` event from "Python CI"
 - All job conditions updated to use `workflow_run` event context
 
 ### What Stayed the Same
+
 - Same Docker build process
 - Same image tags and labels
 - Same multi-platform builds (amd64, arm64)
@@ -261,6 +288,7 @@ git push origin main
 - Same security scanning (Trivy)
 
 ### Breaking Changes
+
 - **None** - This is purely workflow orchestration
 - Existing Docker images unchanged
 - Deployment process unchanged
@@ -273,11 +301,13 @@ git push origin main
 ### Docker Build Doesn't Run
 
 **Check:**
+
 1. Did Python CI complete successfully?
 2. Is the branch `main` or `develop`?
 3. Check GitHub Actions logs for workflow_run event
 
 **View workflow_run trigger in logs:**
+
 ```json
 {
   "workflow_run": {
@@ -291,18 +321,22 @@ git push origin main
 ### Docker Build Runs but Uses Wrong Code
 
 **Check:**
+
 ```yaml
 ref: ${{ github.event.workflow_run.head_branch }}
 ```
+
 Should match the branch that triggered Python CI.
 
 ### Tags Not Generated Correctly
 
 **Verify:**
+
 - Main branch should get: `latest`, `stable`, `main-<sha>`
 - Develop branch should get: `staging`, `develop`, `develop-<sha>`
 
 **Check metadata-action output in logs:**
+
 ```
 tags: |
   ghcr.io/feawservices/autoarr:develop
@@ -350,20 +384,24 @@ ${{ github.event.workflow_run.id }}            # Workflow run ID
 ## Best Practices
 
 ### 1. Monitor Both Workflows
+
 - Check Python CI first
 - Then check Docker Build (triggered by CI)
 - Deployment summary shows which CI run triggered it
 
 ### 2. Use Workflow Run ID
+
 - Summary now shows: "Triggered by: Python CI workflow success"
 - Links CI run to Docker build for debugging
 
 ### 3. Failed CI = No Docker Build
+
 - Expected behavior
 - Saves resources
 - Fix CI first, then Docker will run automatically
 
 ### 4. Re-run CI to Trigger Docker
+
 - Re-running Python CI will re-trigger Docker Build
 - No need to re-run Docker Build manually
 - Pipeline is fully automatic
@@ -394,6 +432,7 @@ And revert all `github.event.workflow_run.*` references back to original event c
 ## Future Enhancements
 
 ### 1. Add Frontend CI Dependency
+
 ```yaml
 workflow_run:
   workflows: ["Python CI", "Frontend CI"]
@@ -403,21 +442,23 @@ workflow_run:
 Wait for both CI workflows to succeed before Docker build.
 
 ### 2. Add Workflow Dispatch
+
 ```yaml
 on:
   workflow_run:
     workflows: ["Python CI"]
     types: [completed]
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch: # Allow manual trigger
     inputs:
       branch:
-        description: 'Branch to build'
+        description: "Branch to build"
         required: true
 ```
 
 Allow manual Docker builds when needed.
 
 ### 3. Add Approval for Production
+
 Currently uses GitHub environment protection.
 Could add manual approval step:
 
@@ -437,6 +478,7 @@ The Docker Build & Deploy workflow now properly orchestrates with Python CI, ens
 **Status:** ✅ **READY FOR PRODUCTION**
 
 **Next Steps:**
+
 1. Test the workflow on develop branch
 2. Verify Docker image tags are correct
 3. Monitor first few CI runs

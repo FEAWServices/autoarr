@@ -7,6 +7,7 @@ This document details the optimizations made to the AutoArr Dockerfile to minimi
 ## Optimization Strategies Implemented
 
 ### 1. **Alpine Linux Base Images**
+
 - **Change**: Switched from `python:3.11-slim` to `python:3.11-alpine`
 - **Impact**: ~60-70% size reduction in base image
 - **Details**:
@@ -15,6 +16,7 @@ This document details the optimizations made to the AutoArr Dockerfile to minimi
   - Savings: ~80-100MB
 
 ### 2. **Three-Stage Build Pattern**
+
 - **Stage 1 (frontend-builder)**: Build React/TypeScript UI
   - Node.js 24 Alpine
   - pnpm package manager
@@ -32,11 +34,13 @@ This document details the optimizations made to the AutoArr Dockerfile to minimi
   - Only compiled packages and binaries
 
 ### 3. **Reduced Layer Count**
+
 - **Before**: 15+ layers with separate RUN commands
 - **After**: 8 layers with combined RUN commands
 - **Benefit**: Smaller image size, faster pulls/pushes
 
 ### 4. **Build Cache Optimization**
+
 - **Added**: `--mount=type=cache` for pnpm and Poetry
 - **Benefit**: Faster rebuilds (caches persist between builds)
 - **Example**:
@@ -46,6 +50,7 @@ This document details the optimizations made to the AutoArr Dockerfile to minimi
   ```
 
 ### 5. **Removed Unnecessary Files**
+
 - **Frontend**: Deleted source maps from production build
   ```dockerfile
   find dist -name "*.map" -delete
@@ -53,6 +58,7 @@ This document details the optimizations made to the AutoArr Dockerfile to minimi
 - **Backend**: Excluded dev dependencies, tests, and documentation via `.dockerignore`
 
 ### 6. **Optimized Runtime Dependencies**
+
 - **Before (slim)**: Full apt packages including recommends
 - **After (alpine)**: Only minimal runtime libraries
   - `postgresql-libs` (for asyncpg)
@@ -61,6 +67,7 @@ This document details the optimizations made to the AutoArr Dockerfile to minimi
   - `ca-certificates` (for HTTPS)
 
 ### 7. **Removed Build Tools from Final Image**
+
 - **Not included in runtime**:
   - gcc, musl-dev (C compiler and headers)
   - rust, cargo (Rust toolchain)
@@ -69,6 +76,7 @@ This document details the optimizations made to the AutoArr Dockerfile to minimi
   - pip cache and setuptools
 
 ### 8. **Aggressive Cache Cleanup**
+
 - Alpine package cache: `rm -rf /var/cache/apk/*`
 - pip cache: `--no-cache-dir` flag
 - Poetry cache: Mounted, not included in image
@@ -76,12 +84,14 @@ This document details the optimizations made to the AutoArr Dockerfile to minimi
 ## Expected Size Improvements
 
 ### Before Optimization (Dockerfile)
+
 ```
 REPOSITORY    TAG         SIZE
 autoarr       original    ~800-900MB
 ```
 
 **Breakdown**:
+
 - Python 3.11-slim base: ~150MB
 - Python packages: ~200-300MB
 - Build tools (gcc, etc.): ~100MB
@@ -90,12 +100,14 @@ autoarr       original    ~800-900MB
 - Poetry: ~50MB
 
 ### After Optimization (Dockerfile.optimized)
+
 ```
 REPOSITORY    TAG         SIZE
 autoarr       optimized   ~250-350MB
 ```
 
 **Breakdown**:
+
 - Python 3.11-alpine base: ~50MB
 - Python packages: ~150-200MB
 - Runtime libs only: ~20MB
@@ -107,10 +119,12 @@ autoarr       optimized   ~250-350MB
 ## Build Time Comparison
 
 ### Initial Build (no cache)
+
 - **Original**: ~8-12 minutes
 - **Optimized**: ~10-15 minutes (slightly longer due to alpine compilation)
 
 ### Rebuild (with cache)
+
 - **Original**: ~5-8 minutes
 - **Optimized**: ~2-4 minutes (cache mounts significantly speed up)
 
@@ -126,17 +140,20 @@ autoarr       optimized   ~250-350MB
 ### Alpine vs. Slim Differences
 
 **Alpine Advantages**:
+
 - 60-70% smaller base image
 - Security-focused (musl libc vs glibc)
 - Minimal package set
 
 **Alpine Considerations**:
+
 - Uses `musl libc` instead of `glibc`
   - Some binary wheels may not work (compile from source instead)
 - Package manager is `apk` instead of `apt`
 - Slightly longer build times (more compilation)
 
 ### Tested Compatibility
+
 - ✅ FastAPI/Uvicorn
 - ✅ SQLAlchemy with asyncpg (PostgreSQL)
 - ✅ Pydantic
@@ -150,21 +167,25 @@ autoarr       optimized   ~250-350MB
 ## Usage
 
 ### Build the optimized image
+
 ```bash
 docker build -t autoarr:latest -f Dockerfile.optimized .
 ```
 
 ### Build with BuildKit cache
+
 ```bash
 DOCKER_BUILDKIT=1 docker build -t autoarr:latest -f Dockerfile.optimized .
 ```
 
 ### Compare image sizes
+
 ```bash
 docker images autoarr
 ```
 
 ### Run the optimized image
+
 ```bash
 docker run -p 8088:8088 -v /data:/data autoarr:latest
 ```
@@ -172,6 +193,7 @@ docker run -p 8088:8088 -v /data:/data autoarr:latest
 ## Additional Optimization Opportunities
 
 ### Future Improvements
+
 1. **Distroless base**: Google's distroless Python images (even smaller)
 2. **Static linking**: Build fully static binaries for scratch base
 3. **Multi-arch builds**: Optimize for arm64/amd64 separately
@@ -179,7 +201,9 @@ docker run -p 8088:8088 -v /data:/data autoarr:latest
 5. **Compression**: Use `--squash` flag (experimental)
 
 ### Aggressive Optimization (Advanced)
+
 For ultra-minimal images (~100-150MB):
+
 ```dockerfile
 # Use distroless (Google)
 FROM gcr.io/distroless/python3-debian11
@@ -189,11 +213,13 @@ FROM gcr.io/distroless/python3-debian11
 ## Recommendations
 
 ### For Production
+
 - ✅ Use `Dockerfile.optimized` (best size/compatibility balance)
 - ✅ Enable BuildKit for cache mounts
 - ✅ Use multi-platform builds if deploying to ARM
 
 ### For Development
+
 - ✅ Keep using `Dockerfile` (original) for easier debugging
 - ✅ Shell access and tools available
 - ✅ Faster iteration without compilation
