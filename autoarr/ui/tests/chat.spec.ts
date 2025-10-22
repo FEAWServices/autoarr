@@ -96,7 +96,7 @@ test.describe("Chat - Loading and Initial State", () => {
     const messagesList = page.getByTestId("messages-list");
     await expect(messagesList).toBeVisible();
 
-    const messages = page.getByTestId("chat-message");
+    const messages = page.locator(".chat-message");
     await expect(messages).toHaveCount(0);
   });
 
@@ -303,7 +303,7 @@ test.describe("Chat - Message Input Interactions", () => {
     await expect(sendButton).toBeDisabled();
 
     // No message should be added
-    const messages = page.getByTestId("chat-message");
+    const messages = page.locator(".chat-message");
     await expect(messages).toHaveCount(0);
   });
 
@@ -319,7 +319,7 @@ test.describe("Chat - Message Input Interactions", () => {
     await expect(sendButton).toBeDisabled();
 
     // No message should be added
-    const messages = page.getByTestId("chat-message");
+    const messages = page.locator(".chat-message");
     await expect(messages).toHaveCount(0);
   });
 });
@@ -419,7 +419,7 @@ test.describe("Chat - Message Display", () => {
     }
 
     // Get the last message
-    const messages = page.getByTestId("chat-message");
+    const messages = page.locator(".chat-message");
     const lastMessage = messages.last();
 
     // Last message should be in viewport
@@ -936,7 +936,7 @@ test.describe.skip("Chat - History Management", () => {
     }
 
     // Messages should be cleared
-    const messages = page.getByTestId("chat-message");
+    const messages = page.locator(".chat-message");
     await expect(messages).toHaveCount(0);
   });
 
@@ -979,7 +979,7 @@ test.describe.skip("Chat - History Management", () => {
     // Should show only matching messages
     await page.waitForTimeout(500);
 
-    const visibleMessages = page.getByTestId("chat-message");
+    const visibleMessages = page.locator(".chat-message");
     const count = await visibleMessages.count();
     expect(count).toBeGreaterThan(0);
   });

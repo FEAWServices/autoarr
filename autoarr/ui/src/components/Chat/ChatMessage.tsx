@@ -21,8 +21,8 @@ export const ChatMessage = ({
   if (isSystem) {
     return (
       <div
-        data-testid="chat-message system-message"
-        className="flex justify-center my-4"
+        data-testid="system-message"
+        className="chat-message flex justify-center my-4"
       >
         <div className="flex items-center gap-2 px-4 py-2 bg-background-tertiary rounded-full text-text-muted text-sm">
           <Info className="w-4 h-4" />
@@ -34,8 +34,8 @@ export const ChatMessage = ({
 
   return (
     <div
-      data-testid={`chat-message ${message.type}-message`}
-      className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}
+      data-testid={`${message.type}-message`}
+      className={`chat-message flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div
         className={`flex gap-3 max-w-[85%] ${
