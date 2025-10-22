@@ -155,8 +155,8 @@ export const RequestStatus = ({
             className="w-full h-2 bg-background-tertiary rounded-full overflow-hidden"
           >
             <div
-              className="h-full bg-gradient-primary transition-all duration-300 ease-out"
-              style={{ width: `${request.progress}%` }}
+              className="h-full bg-gradient-primary transition-all duration-300 ease-out progress-bar"
+              data-progress={request.progress}
               role="progressbar"
               aria-valuenow={request.progress}
               aria-valuemin={0}

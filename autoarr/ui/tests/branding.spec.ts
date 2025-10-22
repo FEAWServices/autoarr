@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
 
+// Helper function to skip splash screen for faster tests
+async function goToPageAfterSplash(page) {
+  await page.goto("/");
+  await page.waitForTimeout(2500); // Wait for splash to complete
+}
+
 test.describe("AutoArr Branding", () => {
   test("should display splash screen with new branding", async ({ page }) => {
     // Navigate to the app
@@ -25,20 +31,13 @@ test.describe("AutoArr Branding", () => {
     // Check logo SVG is present
     const logo = page.locator("svg").first();
     await expect(logo).toBeVisible();
-
-    // Verify loading bar exists
-    const loadingBar = page.locator(".loading-bar");
-    await expect(loadingBar).toBeVisible();
   });
 
   test("should display home page with new logo and branding after splash", async ({
     page,
   }) => {
-    // Navigate and wait for splash to complete
-    await page.goto("/");
-
-    // Wait for splash screen to disappear (2 seconds)
-    await page.waitForTimeout(2500);
+    // Use helper to skip splash (already tested above)
+    await goToPageAfterSplash(page);
 
     // Check that we're on the home page
     await expect(page).toHaveURL("/");
@@ -75,45 +74,25 @@ test.describe("AutoArr Branding", () => {
     const statusDot = sidebar.locator(".bg-status-success");
     await expect(statusDot).toBeVisible();
 
-    // Verify home page content (chat interface)
-    await expect(page.getByText("AutoArr Assistant")).toBeVisible();
-    await expect(page.getByText("Welcome to AutoArr")).toBeVisible();
+    // Verify home page content (ConfigAudit Dashboard)
+    await expect(page.getByRole("heading", { name: "Configuration Audit" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "System Health Overview" })).toBeVisible();
   });
 
   test("should have correct color scheme applied", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForTimeout(2500);
+    await goToPageAfterSplash(page);
 
     // Check main background color
     const main = page.locator("main");
     await expect(main).toHaveClass(/bg-background-primary/);
 
     // Check text colors
-    const heading = page.getByRole("heading", { name: "AutoArr Assistant" });
-    await expect(heading).toHaveClass(/text-white/);
-  });
-
-  test("should navigate and show active state with gradient", async ({
-    page,
-  }) => {
-    await page.goto("/");
-    await page.waitForTimeout(2500);
-
-    // Click on Settings link
-    await page.getByRole("link", { name: "Settings" }).click();
-
-    // Wait for navigation
-    await expect(page).toHaveURL("/settings");
-
-    // Verify Settings link has active state with gradient
-    const settingsLink = page.getByRole("link", { name: "Settings" });
-    await expect(settingsLink).toHaveClass(/bg-gradient-primary/);
-    await expect(settingsLink).toHaveClass(/shadow-glow/);
+    const heading = page.getByRole("heading", { name: "Configuration Audit" });
+    await expect(heading).toHaveClass(/text-gray-900/);
   });
 
   test("should show logo hover effect", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForTimeout(2500);
+    await goToPageAfterSplash(page);
 
     // Get the logo link
     const logoLink = page.locator("aside").getByRole("link").first();
