@@ -43,10 +43,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
 
       - name: Install dependencies
         working-directory: autoarr/ui
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Run ESLint
         working-directory: autoarr/ui
@@ -83,10 +85,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
 
       - name: Install dependencies
         working-directory: autoarr/ui
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build application
         working-directory: autoarr/ui
@@ -131,6 +135,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
@@ -143,14 +148,22 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-e2e-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
 
       - name: Install backend dependencies
         run: poetry install --no-interaction --no-root
 
       - name: Install dependencies
         working-directory: autoarr/ui
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('autoarr/ui/pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers
         working-directory: autoarr/ui
@@ -226,10 +239,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
 
       - name: Install dependencies
         working-directory: autoarr/ui
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('autoarr/ui/pnpm-lock.yaml') }}
 
       - name: Install Playwright
         working-directory: autoarr/ui
@@ -260,10 +281,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
 
       - name: Install dependencies
         working-directory: autoarr/ui
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build and analyze bundle
         working-directory: autoarr/ui
