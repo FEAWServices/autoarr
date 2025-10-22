@@ -17,18 +17,9 @@ export const TypingIndicator = () => {
         {/* Typing Animation */}
         <div className="flex items-center px-4 py-3 bg-background-secondary rounded-lg">
           <div className="flex gap-1.5">
-            <div
-              className="w-2 h-2 bg-text-muted rounded-full animate-bounce"
-              style={{ animationDelay: "0ms", animationDuration: "1.4s" }}
-            />
-            <div
-              className="w-2 h-2 bg-text-muted rounded-full animate-bounce"
-              style={{ animationDelay: "200ms", animationDuration: "1.4s" }}
-            />
-            <div
-              className="w-2 h-2 bg-text-muted rounded-full animate-bounce"
-              style={{ animationDelay: "400ms", animationDuration: "1.4s" }}
-            />
+            <div className="w-2 h-2 bg-text-muted rounded-full typing-dot-1" />
+            <div className="w-2 h-2 bg-text-muted rounded-full typing-dot-2" />
+            <div className="w-2 h-2 bg-text-muted rounded-full typing-dot-3" />
           </div>
         </div>
       </div>

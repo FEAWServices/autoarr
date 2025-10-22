@@ -43,10 +43,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
 
       - name: Install dependencies
         working-directory: autoarr/ui
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Run ESLint
         working-directory: autoarr/ui
@@ -83,10 +85,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
 
       - name: Install dependencies
         working-directory: autoarr/ui
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build application
         working-directory: autoarr/ui
@@ -127,19 +131,77 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-e2e-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+
+      - name: Install backend dependencies
+        run: poetry install --no-interaction --no-root
+
       - name: Install dependencies
         working-directory: autoarr/ui
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('autoarr/ui/pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers
         working-directory: autoarr/ui
         run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start backend API server
+        run: |
+          export APP_ENV=development
+          export LOG_LEVEL=INFO
+          export DATABASE_URL=sqlite:///./data/autoarr.db
+          export REDIS_URL=memory://
+          export HOST=0.0.0.0
+          export PORT=8088
+          mkdir -p ./data
+          poetry run uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &
+          echo $! > backend.pid
+          echo "Waiting for backend to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8088/health > /dev/null 2>&1; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
 
       - name: Run Playwright tests
         working-directory: autoarr/ui
         run: pnpm exec playwright test
         env:
           CI: true
+
+      - name: Stop backend API server
+        if: always()
+        run: |
+          if [ -f backend.pid ]; then
+            kill $(cat backend.pid) || true
+            rm backend.pid
+          fi
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -176,10 +238,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
 
       - name: Install dependencies
         working-directory: autoarr/ui
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('autoarr/ui/pnpm-lock.yaml') }}
 
       - name: Install Playwright
         working-directory: autoarr/ui
@@ -210,10 +280,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
 
       - name: Install dependencies
         working-directory: autoarr/ui
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build and analyze bundle
         working-directory: autoarr/ui
@@ -224,3 +296,24 @@ jobs:
           du -sh dist >> $GITHUB_STEP_SUMMARY
           find dist -type f -name "*.js" -exec du -h {} \; | sort -h >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  all-checks-passed:
+    name: All Checks Passed
+    runs-on: [self-hosted, alienware]
+    needs: [lint, build, e2e, accessibility, bundle-size]
+    if: always()
+    timeout-minutes: 1
+
+    steps:
+      - name: Check all jobs status
+        run: |
+          # Check if any required job failed
+          if [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.build.result }}" != "success" ]] || \
+             [[ "${{ needs.e2e.result }}" != "success" ]] || \
+             [[ "${{ needs.accessibility.result }}" != "success" ]] || \
+             [[ "${{ needs.bundle-size.result }}" != "success" && "${{ needs.bundle-size.result }}" != "skipped" ]]; then
+            echo "❌ One or more checks failed"
+            exit 1
+          fi
+          echo "✅ All checks passed successfully!"

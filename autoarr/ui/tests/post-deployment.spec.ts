@@ -47,34 +47,28 @@ test.describe("Post-Deployment Tests", () => {
   });
 
   test("should display dashboard with all sections", async ({ page }) => {
-    // Verify we're on home/dashboard
+    // Verify we're on home/dashboard with Configuration Audit
     await expect(
-      page.getByRole("heading", { name: "Dashboard" }),
+      page.getByRole("heading", { name: "Configuration Audit" }),
     ).toBeVisible();
 
-    // Verify System Status section
-    await expect(page.getByText("System Status")).toBeVisible();
+    // Verify System Health Overview section
+    await expect(page.getByText("System Health Overview")).toBeVisible();
+
+    // Verify Service Status section
     await expect(
-      page.getByRole("heading", { name: "Sonarr", level: 3 }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Radarr", level: 3 }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Plex", level: 3 }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "SABnzbd", level: 3 }),
+      page.getByRole("heading", { name: "Service Status" }),
     ).toBeVisible();
 
-    // Verify Next Up section
-    await expect(page.getByText("Next Up")).toBeVisible();
+    // Verify service cards are present (they use h2 headings inside ServiceCard)
+    await expect(page.getByRole("heading", { name: "Sonarr" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Radarr" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Plex" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "SABnzbd" })).toBeVisible();
 
-    // Verify Unified Download Queue section
-    await expect(page.getByText("Unified Download Queue")).toBeVisible();
-
-    // Verify Library Overview section
-    await expect(page.getByText("Library Overview")).toBeVisible();
+    // Verify health metrics are displayed
+    await expect(page.getByText("Overall Health")).toBeVisible();
+    await expect(page.getByText("Total Recommendations")).toBeVisible();
   });
 
   test("should navigate to search page", async ({ page }) => {
@@ -95,36 +89,41 @@ test.describe("Post-Deployment Tests", () => {
 
   test("should navigate between all pages without errors", async ({ page }) => {
     const pages = [
-      { name: "Search", expectedText: "Search and Add to Your Library" },
-      { name: "Downloads", expectedText: "Downloads" },
-      { name: "TV Shows", expectedText: "TV Shows" },
-      { name: "Movies", expectedText: "Movies" },
-      { name: "Media Server", expectedText: "Media Server" },
-      { name: "Activity", expectedText: "Activity" },
-      { name: "Settings", expectedText: "Settings" },
+      {
+        name: "Search",
+        expectedText: "Search and Add to Your Library",
+        level: 1,
+      },
+      { name: "Downloads", expectedText: "Downloads", level: 2 },
+      { name: "TV Shows", expectedText: "TV Shows", level: 2 },
+      { name: "Movies", expectedText: "Movies", level: 2 },
+      { name: "Media Server", expectedText: "Media Server", level: 2 },
+      { name: "Activity", expectedText: "Activity", level: 2 },
+      { name: "Settings", expectedText: "Settings", level: 1 },
     ];
 
-    for (const { name, expectedText } of pages) {
+    // Collect JavaScript errors
+    const errors: string[] = [];
+    page.on("pageerror", (error) => {
+      errors.push(error.message);
+    });
+
+    for (const { name, expectedText, level } of pages) {
       await page.getByRole("link", { name }).click();
-      // Use more flexible heading matcher
+
+      // Wait for navigation and content to load
+      await page.waitForTimeout(500);
+
+      // Use role-based heading matcher with proper level
       await expect(
-        page
-          .locator(
-            `h1:has-text("${expectedText}"), h2:has-text("${expectedText}")`,
-          )
-          .first(),
+        page.getByRole("heading", { name: expectedText, level }),
       ).toBeVisible({
         timeout: 10000,
       });
-
-      // Check for JavaScript errors
-      const errors: string[] = [];
-      page.on("pageerror", (error) => {
-        errors.push(error.message);
-      });
-
-      expect(errors).toHaveLength(0);
     }
+
+    // Verify no JavaScript errors occurred during navigation
+    expect(errors).toHaveLength(0);
   });
 
   test("should display logo correctly", async ({ page }) => {
@@ -164,7 +163,7 @@ test.describe("Post-Deployment Tests", () => {
     await page.locator('aside a[href="/"]').click();
     await expect(page).toHaveURL("/");
     await expect(
-      page.getByRole("heading", { name: "Dashboard" }),
+      page.getByRole("heading", { name: "Configuration Audit" }),
     ).toBeVisible();
   });
 
@@ -208,20 +207,23 @@ test.describe("Post-Deployment Tests", () => {
   });
 
   test("should have responsive header on dashboard", async ({ page }) => {
-    // Verify header elements
+    // Verify dashboard header elements
     await expect(
-      page.getByRole("heading", { name: "Dashboard" }),
+      page.getByRole("heading", { name: "Configuration Audit" }),
     ).toBeVisible();
 
-    // Verify header action buttons
-    const headerButtons = page.locator("header button");
-    const buttonCount = await headerButtons.count();
-    expect(buttonCount).toBeGreaterThanOrEqual(3); // Plus, Search, Bell icons
+    // Verify Run Audit button is present
+    const runAuditButton = page.getByRole("button", { name: /Run Audit/i });
+    await expect(runAuditButton).toBeVisible();
   });
 
-  test("should display Add Media button", async ({ page }) => {
-    // Verify Add Media button is present
-    const addMediaButton = page.getByRole("button", { name: /Add Media/i });
-    await expect(addMediaButton).toBeVisible();
+  test("should display Run Audit button", async ({ page }) => {
+    // Verify Run Audit button is present on dashboard
+    const runAuditButton = page.getByRole("button", { name: /Run Audit/i });
+    await expect(runAuditButton).toBeVisible();
+
+    // Verify it's accessible
+    const ariaLabel = await runAuditButton.getAttribute("aria-label");
+    expect(ariaLabel).toBe("Run configuration audit");
   });
 });
