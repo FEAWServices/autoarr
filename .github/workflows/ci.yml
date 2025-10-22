@@ -308,7 +308,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
 
@@ -331,7 +331,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "pnpm"
@@ -373,7 +373,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
 
@@ -396,7 +396,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "pnpm"
@@ -442,7 +442,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
 
@@ -465,13 +465,13 @@ jobs:
 
       - name: Setup Node.js
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
 
       - name: Setup Python
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -577,7 +577,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
 
@@ -600,7 +600,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "pnpm"
@@ -641,7 +641,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -650,7 +650,7 @@ jobs:
           run_install: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "pnpm"
