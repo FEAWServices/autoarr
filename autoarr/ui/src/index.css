@@ -533,12 +533,10 @@ body {
   animation-delay: 0ms;
 }
 
-
 .typing-dot-2 {
   animation: bounce 1.4s infinite;
   animation-delay: 200ms;
 }
-
 
 .typing-dot-3 {
   animation: bounce 1.4s infinite;
