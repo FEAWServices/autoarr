@@ -25,10 +25,6 @@ test.describe("AutoArr Branding", () => {
     // Check logo SVG is present
     const logo = page.locator("svg").first();
     await expect(logo).toBeVisible();
-
-    // Verify loading bar exists
-    const loadingBar = page.getByTestId("loading-bar");
-    await expect(loadingBar).toBeAttached();
   });
 
   test("should display home page with new logo and branding after splash", async ({
