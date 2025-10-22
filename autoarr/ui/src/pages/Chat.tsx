@@ -417,12 +417,8 @@ export const Chat = () => {
             onKeyDown={handleKeyDown}
             disabled={isProcessing}
             placeholder="Request a movie or show..."
-            className="flex-1 bg-background-tertiary text-text-primary placeholder-text-muted px-4 py-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary-default disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-background-tertiary text-text-primary placeholder-text-muted px-4 py-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary-default disabled:opacity-50 disabled:cursor-not-allowed textarea-auto-size"
             rows={1}
-            style={{
-              minHeight: "48px",
-              maxHeight: "200px",
-            }}
             aria-label="Message input"
             role="textbox"
             aria-multiline="true"
