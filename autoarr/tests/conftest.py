@@ -93,9 +93,7 @@ def configure_httpx_mock_defaults(request):
     """
     # Apply the marker to all tests unless they override it
     if "httpx_mock" not in [marker.name for marker in request.node.iter_markers()]:
-        request.node.add_marker(
-            pytest.mark.httpx_mock(can_send_already_matched_responses=True)
-        )
+        request.node.add_marker(pytest.mark.httpx_mock(can_send_already_matched_responses=True))
 
 
 @pytest.fixture
