@@ -51,7 +51,7 @@ RUN pnpm run build && \
 # =============================================================================
 # Stage 2: Build Python dependencies
 # =============================================================================
-FROM python:3.14-alpine AS python-builder
+FROM python:3.11-alpine AS python-builder
 
 WORKDIR /build
 
@@ -91,7 +91,7 @@ RUN poetry install --no-interaction --no-ansi --only-root
 # =============================================================================
 # Stage 3: Final runtime image
 # =============================================================================
-FROM python:3.14-alpine
+FROM python:3.11-alpine
 
 WORKDIR /app
 
