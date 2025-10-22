@@ -83,8 +83,15 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest.fixture
+@pytest.mark.httpx_mock(can_send_already_matched_responses=True)
 def httpx_mock(httpx_mock: HTTPXMock) -> HTTPXMock:
-    """Provide HTTPXMock fixture from pytest-httpx."""
+    """
+    Provide HTTPXMock fixture from pytest-httpx.
+
+    Note: pytest-httpx 0.32.0+ changed behavior to not reuse matched responses by default.
+    We enable can_send_already_matched_responses=True to maintain backward compatibility
+    with our existing tests that expect responses to be reusable.
+    """
     return httpx_mock
 
 
