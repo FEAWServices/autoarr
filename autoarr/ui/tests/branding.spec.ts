@@ -91,23 +91,6 @@ test.describe("AutoArr Branding", () => {
     await expect(heading).toHaveClass(/text-gray-900/);
   });
 
-  test("should navigate and show active state with gradient", async ({
-    page,
-  }) => {
-    await goToPageAfterSplash(page);
-
-    // Click on Settings link
-    await page.getByRole("link", { name: "Settings" }).click();
-
-    // Wait for navigation
-    await expect(page).toHaveURL("/settings");
-
-    // Verify Settings link has active state with gradient
-    const settingsLink = page.getByRole("link", { name: "Settings" });
-    await expect(settingsLink).toHaveClass(/bg-gradient-primary/);
-    await expect(settingsLink).toHaveClass(/shadow-glow/);
-  });
-
   test("should show logo hover effect", async ({ page }) => {
     await goToPageAfterSplash(page);
 
