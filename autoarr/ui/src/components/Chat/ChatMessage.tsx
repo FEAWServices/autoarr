@@ -20,7 +20,10 @@ export const ChatMessage = ({
 
   if (isSystem) {
     return (
-      <div data-testid="system-message" className="flex justify-center my-4">
+      <div
+        data-testid="chat-message system-message"
+        className="flex justify-center my-4"
+      >
         <div className="flex items-center gap-2 px-4 py-2 bg-background-tertiary rounded-full text-text-muted text-sm">
           <Info className="w-4 h-4" />
           <span>{message.content}</span>
@@ -31,7 +34,7 @@ export const ChatMessage = ({
 
   return (
     <div
-      data-testid={`${message.type}-message`}
+      data-testid={`chat-message ${message.type}-message`}
       className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div

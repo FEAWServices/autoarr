@@ -147,7 +147,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
           {priority === "high" && (
             <AlertTriangle className="h-3 w-3 mr-1" aria-hidden="true" />
           )}
-          {priority}
+          {priority.toUpperCase()}
         </span>
       </div>
 
