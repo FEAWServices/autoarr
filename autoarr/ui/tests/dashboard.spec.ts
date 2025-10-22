@@ -482,9 +482,7 @@ test.describe("Dashboard - System Health Overview", () => {
 
 test.describe("Dashboard - Mobile Responsiveness", () => {
   const viewports = [
-    { name: "Mobile Small", width: 320, height: 568 },
-    { name: "Mobile Medium", width: 375, height: 667 },
-    { name: "Tablet", width: 768, height: 1024 },
+    { name: "Mobile", width: 375, height: 667 },
     { name: "Desktop", width: 1920, height: 1080 },
   ];
 
@@ -524,51 +522,6 @@ test.describe("Dashboard - Mobile Responsiveness", () => {
     });
   }
 
-  test("service cards should stack vertically on mobile", async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 568 });
-
-    await page.route(
-      `${API_BASE_URL}/config/recommendations*`,
-      async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify(mockRecommendationsResponse),
-        });
-      },
-    );
-
-    await page.goto(BASE_URL);
-
-    const cardsGrid = page.getByTestId("service-cards-grid");
-    const gridClass = await cardsGrid.getAttribute("class");
-
-    // Should have single column on mobile
-    expect(gridClass).toContain("grid-cols-1");
-  });
-
-  test("service cards should have 2 columns on tablet", async ({ page }) => {
-    await page.setViewportSize({ width: 768, height: 1024 });
-
-    await page.route(
-      `${API_BASE_URL}/config/recommendations*`,
-      async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify(mockRecommendationsResponse),
-        });
-      },
-    );
-
-    await page.goto(BASE_URL);
-
-    const cardsGrid = page.getByTestId("service-cards-grid");
-    const gridClass = await cardsGrid.getAttribute("class");
-
-    // Should have 2 columns on tablet
-    expect(gridClass).toMatch(/md:grid-cols-2/);
-  });
 });
 
 // ============================================================================

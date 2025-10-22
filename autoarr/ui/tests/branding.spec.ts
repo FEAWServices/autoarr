@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
 
+// Helper function to skip splash screen for faster tests
+async function goToPageAfterSplash(page) {
+  await page.goto("/");
+  await page.waitForTimeout(2500); // Wait for splash to complete
+}
+
 test.describe("AutoArr Branding", () => {
   test("should display splash screen with new branding", async ({ page }) => {
     // Navigate to the app
@@ -30,11 +36,8 @@ test.describe("AutoArr Branding", () => {
   test("should display home page with new logo and branding after splash", async ({
     page,
   }) => {
-    // Navigate and wait for splash to complete
-    await page.goto("/");
-
-    // Wait for splash screen to disappear (2 seconds)
-    await page.waitForTimeout(2500);
+    // Use helper to skip splash (already tested above)
+    await goToPageAfterSplash(page);
 
     // Check that we're on the home page
     await expect(page).toHaveURL("/");
@@ -77,8 +80,7 @@ test.describe("AutoArr Branding", () => {
   });
 
   test("should have correct color scheme applied", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForTimeout(2500);
+    await goToPageAfterSplash(page);
 
     // Check main background color
     const main = page.locator("main");
@@ -92,8 +94,7 @@ test.describe("AutoArr Branding", () => {
   test("should navigate and show active state with gradient", async ({
     page,
   }) => {
-    await page.goto("/");
-    await page.waitForTimeout(2500);
+    await goToPageAfterSplash(page);
 
     // Click on Settings link
     await page.getByRole("link", { name: "Settings" }).click();
@@ -108,8 +109,7 @@ test.describe("AutoArr Branding", () => {
   });
 
   test("should show logo hover effect", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForTimeout(2500);
+    await goToPageAfterSplash(page);
 
     // Get the logo link
     const logoLink = page.locator("aside").getByRole("link").first();

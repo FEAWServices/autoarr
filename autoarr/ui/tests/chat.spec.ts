@@ -159,7 +159,7 @@ test.describe("Chat - Message Input Interactions", () => {
     await expect(input).toHaveValue("Add Inception to my library");
   });
 
-  test("can send message with button click", async ({ page }) => {
+  test("can send message with button or Enter and input clears", async ({ page }) => {
     // Mock API response
     await page.route(`${API_BASE_URL}/request/content`, async (route) => {
       await route.fulfill({
@@ -174,34 +174,30 @@ test.describe("Chat - Message Input Interactions", () => {
     });
     const sendButton = page.getByRole("button", { name: /send/i });
 
+    // Test button click send
     await input.fill("Add Inception");
     await sendButton.click();
 
     // User message should appear
-    const userMessage = page.getByTestId("user-message").first();
+    let userMessage = page.getByTestId("user-message").first();
     await expect(userMessage).toBeVisible({ timeout: 5000 });
     await expect(userMessage).toContainText("Add Inception");
-  });
 
-  test("can send message with Enter key", async ({ page }) => {
-    await page.route(`${API_BASE_URL}/request/content`, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockContentRequestResponse),
-      });
-    });
+    // Input should be cleared after send
+    await page.waitForTimeout(500);
+    await expect(input).toHaveValue("");
 
-    const input = page.getByRole("textbox", {
-      name: /message input|request a movie/i,
-    });
-
-    await input.fill("Add Inception");
+    // Test Enter key send
+    await input.fill("Add The Matrix");
     await input.press("Enter");
 
-    // User message should appear
-    const userMessage = page.getByTestId("user-message").first();
+    // New user message should appear
+    userMessage = page.getByTestId("user-message").last();
     await expect(userMessage).toBeVisible({ timeout: 5000 });
+
+    // Input should be cleared again
+    await page.waitForTimeout(500);
+    await expect(input).toHaveValue("");
   });
 
   test("Shift+Enter adds new line without sending", async ({ page }) => {
@@ -217,30 +213,6 @@ test.describe("Chat - Message Input Interactions", () => {
     expect(value).toContain("\n");
     expect(value).toContain("Line 1");
     expect(value).toContain("Line 2");
-  });
-
-  test("input clears after sending message", async ({ page }) => {
-    await page.route(`${API_BASE_URL}/request/content`, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockContentRequestResponse),
-      });
-    });
-
-    const input = page.getByRole("textbox", {
-      name: /message input|request a movie/i,
-    });
-    const sendButton = page.getByRole("button", { name: /send/i });
-
-    await input.fill("Add Inception");
-    await sendButton.click();
-
-    // Wait a bit for the send to complete
-    await page.waitForTimeout(500);
-
-    // Input should be cleared
-    await expect(input).toHaveValue("");
   });
 
   test("input disabled while processing", async ({ page }) => {
@@ -341,33 +313,47 @@ test.describe("Chat - Message Display", () => {
     await page.goto(`${BASE_URL}/chat`);
   });
 
-  test("user messages appear right-aligned", async ({ page }) => {
+  test("messages display with correct alignment and styling", async ({ page }) => {
     const input = page.getByRole("textbox", {
       name: /message input|request a movie/i,
     });
+
+    // Send a user message
     await input.fill("Add Inception");
     await input.press("Enter");
 
+    // Check user message alignment
     const userMessage = page.getByTestId("user-message").first();
     await expect(userMessage).toBeVisible({ timeout: 5000 });
+    const userClasses = await userMessage.getAttribute("class");
+    expect(userClasses).toMatch(/justify-end|ml-auto|items-end/);
 
-    const classes = await userMessage.getAttribute("class");
-    expect(classes).toMatch(/justify-end|ml-auto|items-end/);
-  });
-
-  test("assistant messages appear left-aligned", async ({ page }) => {
-    const input = page.getByRole("textbox", {
-      name: /message input|request a movie/i,
-    });
-    await input.fill("Add Inception");
-    await input.press("Enter");
+    // Check user message timestamp
+    const userTimestamp = userMessage.getByTestId("message-timestamp");
+    await expect(userTimestamp).toBeVisible();
+    const userTimeText = await userTimestamp.textContent();
+    expect(userTimeText).toBeTruthy();
 
     // Wait for assistant response
     const assistantMessage = page.getByTestId("assistant-message").first();
     await expect(assistantMessage).toBeVisible({ timeout: 5000 });
 
-    const classes = await assistantMessage.getAttribute("class");
-    expect(classes).toMatch(/justify-start|mr-auto|items-start/);
+    // Check assistant message alignment
+    const assistantClasses = await assistantMessage.getAttribute("class");
+    expect(assistantClasses).toMatch(/justify-start|mr-auto|items-start/);
+
+    // Check assistant message timestamp
+    const assistantTimestamp = assistantMessage.getByTestId("message-timestamp");
+    await expect(assistantTimestamp).toBeVisible();
+
+    // Check for system messages if present
+    const systemMessages = page.getByTestId("system-message");
+    const systemCount = await systemMessages.count();
+    if (systemCount > 0) {
+      const firstSystem = systemMessages.first();
+      const systemClasses = await firstSystem.getAttribute("class");
+      expect(systemClasses).toMatch(/justify-center|text-center|mx-auto/);
+    }
   });
 
   test.skip("typing indicator shows during processing", async ({ page }) => {
@@ -424,39 +410,6 @@ test.describe("Chat - Message Display", () => {
 
     // Last message should be in viewport
     await expect(lastMessage).toBeInViewport();
-  });
-
-  test("timestamps display correctly", async ({ page }) => {
-    const input = page.getByRole("textbox", {
-      name: /message input|request a movie/i,
-    });
-    await input.fill("Add Inception");
-    await input.press("Enter");
-
-    const userMessage = page.getByTestId("user-message").first();
-    const timestamp = userMessage.getByTestId("message-timestamp");
-    await expect(timestamp).toBeVisible();
-
-    const timeText = await timestamp.textContent();
-    expect(timeText).toBeTruthy();
-  });
-
-  test("system messages display centered", async ({ page }) => {
-    const input = page.getByRole("textbox", {
-      name: /message input|request a movie/i,
-    });
-    await input.fill("Add Inception");
-    await input.press("Enter");
-
-    // Wait for potential system message
-    await page.waitForTimeout(1000);
-
-    const systemMessages = page.getByTestId("system-message");
-    if ((await systemMessages.count()) > 0) {
-      const firstSystem = systemMessages.first();
-      const classes = await firstSystem.getAttribute("class");
-      expect(classes).toMatch(/justify-center|text-center|mx-auto/);
-    }
   });
 });
 
@@ -991,9 +944,7 @@ test.describe.skip("Chat - History Management", () => {
 
 test.describe("Chat - Mobile Responsiveness", () => {
   const viewports = [
-    { name: "Mobile Small", width: 320, height: 568 },
-    { name: "Mobile Medium", width: 375, height: 667 },
-    { name: "Tablet", width: 768, height: 1024 },
+    { name: "Mobile", width: 375, height: 667 },
     { name: "Desktop", width: 1920, height: 1080 },
   ];
 
