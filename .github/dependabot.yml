@@ -21,16 +21,13 @@ updates:
       - "dependencies"
       - "python"
     groups:
-      # Group all patch and minor updates together
-      non-breaking:
+      # Group ALL Python dependencies together to avoid poetry.lock conflicts
+      python-all:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
-      # Keep major updates separate for careful review
-      breaking:
-        update-types:
           - "major"
 
   # Frontend dependencies (pnpm)
@@ -54,16 +51,13 @@ updates:
       - "dependencies"
       - "frontend"
     groups:
-      # Group all patch and minor updates together
-      non-breaking:
+      # Group ALL npm dependencies together to avoid pnpm-lock.yaml conflicts
+      npm-all:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
-      # Keep major updates separate for careful review
-      breaking:
-        update-types:
           - "major"
 
   # GitHub Actions

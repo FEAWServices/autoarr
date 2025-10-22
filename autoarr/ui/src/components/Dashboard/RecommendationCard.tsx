@@ -66,7 +66,7 @@ export function RecommendationCard({
           data-testid="priority-badge"
           aria-label={`${recommendation.priority} priority`}
         >
-          {recommendation.priority}
+          {recommendation.priority.toUpperCase()}
         </span>
       </div>
 
