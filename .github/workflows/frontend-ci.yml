@@ -274,3 +274,24 @@ jobs:
           du -sh dist >> $GITHUB_STEP_SUMMARY
           find dist -type f -name "*.js" -exec du -h {} \; | sort -h >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  all-checks-passed:
+    name: All Checks Passed
+    runs-on: [self-hosted, alienware]
+    needs: [lint, build, e2e, accessibility, bundle-size]
+    if: always()
+    timeout-minutes: 1
+
+    steps:
+      - name: Check all jobs status
+        run: |
+          # Check if any required job failed
+          if [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.build.result }}" != "success" ]] || \
+             [[ "${{ needs.e2e.result }}" != "success" ]] || \
+             [[ "${{ needs.accessibility.result }}" != "success" ]] || \
+             [[ "${{ needs.bundle-size.result }}" != "success" && "${{ needs.bundle-size.result }}" != "skipped" ]]; then
+            echo "❌ One or more checks failed"
+            exit 1
+          fi
+          echo "✅ All checks passed successfully!"
