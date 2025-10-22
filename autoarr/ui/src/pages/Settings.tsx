@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Save, AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react";
 
 interface ServiceConfig {
@@ -51,22 +51,22 @@ export const Settings = () => {
   >({});
   const [testErrors, setTestErrors] = useState<Record<string, string>>({});
 
-  const loadSettings = useCallback(async () => {
-    try {
-      const response = await fetch("/api/v1/settings");
-      if (response.ok) {
-        const data = await response.json();
-        setSettings(data);
-      }
-    } catch (error) {
-      console.error("Failed to load settings:", error);
-    }
-  }, []);
-
   useEffect(() => {
     // Load settings from backend
+    const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/v1/settings");
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+      }
+    };
+
     loadSettings();
-  }, [loadSettings]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
     setSaveStatus("saving");
