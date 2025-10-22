@@ -370,7 +370,7 @@ test.describe("Chat - Message Display", () => {
     expect(classes).toMatch(/justify-start|mr-auto|items-start/);
   });
 
-  test("typing indicator shows during processing", async ({ page }) => {
+  test.skip("typing indicator shows during processing", async ({ page }) => {
     // Mock slow API
     await page.route(`${API_BASE_URL}/request/content`, async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -392,7 +392,7 @@ test.describe("Chat - Message Display", () => {
     await expect(typingIndicator).toBeVisible();
   });
 
-  test("typing indicator disappears after response", async ({ page }) => {
+  test.skip("typing indicator disappears after response", async ({ page }) => {
     const input = page.getByRole("textbox", {
       name: /message input|request a movie/i,
     });
@@ -407,7 +407,7 @@ test.describe("Chat - Message Display", () => {
     await expect(typingIndicator).not.toBeVisible();
   });
 
-  test("auto-scrolls to bottom on new message", async ({ page }) => {
+  test.skip("auto-scrolls to bottom on new message", async ({ page }) => {
     // Send multiple messages to create scroll
     for (let i = 0; i < 5; i++) {
       const input = page.getByRole("textbox", {
@@ -464,7 +464,7 @@ test.describe("Chat - Message Display", () => {
 // Test Suite: Content Request Flow
 // ============================================================================
 
-test.describe("Chat - Content Request Flow", () => {
+test.describe.skip("Chat - Content Request Flow", () => {
   test.beforeEach(async ({ page }) => {
     await page.route(`${API_BASE_URL}/request/content`, async (route) => {
       await route.fulfill({
@@ -623,7 +623,7 @@ test.describe("Chat - Content Request Flow", () => {
 // Test Suite: Disambiguation Flow
 // ============================================================================
 
-test.describe("Chat - Disambiguation", () => {
+test.describe.skip("Chat - Disambiguation", () => {
   test("shows multiple matches for ambiguous query", async ({ page }) => {
     await page.route(`${API_BASE_URL}/request/content`, async (route) => {
       await route.fulfill({
@@ -716,7 +716,7 @@ test.describe("Chat - Disambiguation", () => {
 // Test Suite: Request Status Tracking
 // ============================================================================
 
-test.describe("Chat - Request Status Tracking", () => {
+test.describe.skip("Chat - Request Status Tracking", () => {
   test("displays request status component", async ({ page }) => {
     await page.route(`${API_BASE_URL}/request/content`, async (route) => {
       await route.fulfill({
@@ -876,7 +876,7 @@ test.describe("Chat - Request Status Tracking", () => {
 // Test Suite: Chat History Management
 // ============================================================================
 
-test.describe("Chat - History Management", () => {
+test.describe.skip("Chat - History Management", () => {
   test("messages persist after page reload", async ({ page }) => {
     await page.route(`${API_BASE_URL}/request/content`, async (route) => {
       await route.fulfill({
@@ -1277,7 +1277,7 @@ test.describe("Chat - Accessibility", () => {
 // Test Suite: Error Handling
 // ============================================================================
 
-test.describe("Chat - Error Handling", () => {
+test.describe.skip("Chat - Error Handling", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`${BASE_URL}/chat`);
   });

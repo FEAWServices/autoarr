@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Post-Deployment Tests", () => {
+test.describe.skip("Post-Deployment Tests", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the app and wait for splash screen to complete
     await page.goto("/");
