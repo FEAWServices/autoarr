@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Save, AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react";
 
 interface ServiceConfig {
@@ -51,12 +51,7 @@ export const Settings = () => {
   >({});
   const [testErrors, setTestErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    // Load settings from backend
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const response = await fetch("/api/v1/settings");
       if (response.ok) {
@@ -66,7 +61,12 @@ export const Settings = () => {
     } catch (error) {
       console.error("Failed to load settings:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Load settings from backend
+    loadSettings();
+  }, [loadSettings]);
 
   const handleSave = async () => {
     setSaveStatus("saving");
