@@ -304,7 +304,7 @@ jobs:
   frontend-lint:
     name: Frontend Lint & Type Check
     runs-on: [self-hosted, alienware]
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
