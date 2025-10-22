@@ -311,10 +311,10 @@ test.describe("Configuration Audit UI", () => {
 
       await page.goto("/config-audit");
 
-      // Should show error message
+      // Should show error message - wait longer for React Query retries to complete
       await expect(
         page.getByText(/failed to load recommendations/i),
-      ).toBeVisible();
+      ).toBeVisible({ timeout: 10000 });
     });
   });
 
@@ -324,11 +324,8 @@ test.describe("Configuration Audit UI", () => {
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
-      // Open service filter
-      await page.click('[data-testid="filter-service"]');
-
-      // Select SABnzbd
-      await page.click('[data-value="sabnzbd"]');
+      // Select SABnzbd from dropdown
+      await page.selectOption('[data-testid="filter-service"]', 'sabnzbd');
 
       // Should only show SABnzbd recommendations
       await page.waitForTimeout(500); // Wait for filter to apply
@@ -346,11 +343,8 @@ test.describe("Configuration Audit UI", () => {
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
-      // Open priority filter
-      await page.click('[data-testid="filter-priority"]');
-
-      // Select HIGH
-      await page.click('[data-value="high"]');
+      // Select HIGH priority from dropdown
+      await page.selectOption('[data-testid="filter-priority"]', 'high');
 
       // Should only show high priority recommendations
       await page.waitForTimeout(500);
@@ -372,11 +366,8 @@ test.describe("Configuration Audit UI", () => {
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
-      // Open category filter
-      await page.click('[data-testid="filter-category"]');
-
-      // Select performance
-      await page.click('[data-value="performance"]');
+      // Select performance category from dropdown
+      await page.selectOption('[data-testid="filter-category"]', 'performance');
 
       // Should only show performance recommendations
       await page.waitForTimeout(500);
@@ -392,13 +383,11 @@ test.describe("Configuration Audit UI", () => {
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Filter by service: SABnzbd
-      await page.click('[data-testid="filter-service"]');
-      await page.click('[data-value="sabnzbd"]');
+      await page.selectOption('[data-testid="filter-service"]', 'sabnzbd');
       await page.waitForTimeout(300);
 
       // Filter by priority: HIGH
-      await page.click('[data-testid="filter-priority"]');
-      await page.click('[data-value="high"]');
+      await page.selectOption('[data-testid="filter-priority"]', 'high');
       await page.waitForTimeout(300);
 
       // Should show only SABnzbd high priority recommendations
@@ -414,8 +403,7 @@ test.describe("Configuration Audit UI", () => {
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Apply a filter
-      await page.click('[data-testid="filter-service"]');
-      await page.click('[data-value="sabnzbd"]');
+      await page.selectOption('[data-testid="filter-service"]', 'sabnzbd');
       await page.waitForTimeout(300);
 
       // Clear filters
@@ -446,9 +434,8 @@ test.describe("Configuration Audit UI", () => {
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
-      // Select service sort
-      await page.click('[data-testid="sort-select"]');
-      await page.click('[data-value="service"]');
+      // Select service sort from dropdown
+      await page.selectOption('[data-testid="sort-select"]', 'service');
 
       await page.waitForTimeout(300);
 
@@ -462,9 +449,8 @@ test.describe("Configuration Audit UI", () => {
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
-      // Select category sort
-      await page.click('[data-testid="sort-select"]');
-      await page.click('[data-value="category"]');
+      // Select category sort from dropdown
+      await page.selectOption('[data-testid="sort-select"]', 'category');
 
       await page.waitForTimeout(300);
 
