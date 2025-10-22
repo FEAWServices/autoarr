@@ -193,8 +193,8 @@ export const Home = () => {
                       </div>
                       <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-primary rounded-full transition-all"
-                          style={{ width: `${download.progress}%` }}
+                          className="h-full bg-primary rounded-full transition-all progress-bar"
+                          data-progress={download.progress}
                         />
                       </div>
                     </div>
