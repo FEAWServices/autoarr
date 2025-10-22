@@ -59,6 +59,7 @@ export const SplashScreen = ({
             <div
               className="h-full bg-gradient-primary transition-all duration-300 ease-out loading-bar"
               style={{ width: `${progress}%` }}
+              data-testid="loading-bar"
             />
           </div>
           <p className="text-text-muted text-sm mt-3">Loading...</p>

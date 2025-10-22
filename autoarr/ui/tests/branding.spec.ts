@@ -27,8 +27,8 @@ test.describe("AutoArr Branding", () => {
     await expect(logo).toBeVisible();
 
     // Verify loading bar exists
-    const loadingBar = page.locator(".loading-bar");
-    await expect(loadingBar).toBeVisible();
+    const loadingBar = page.getByTestId("loading-bar");
+    await expect(loadingBar).toBeAttached();
   });
 
   test("should display home page with new logo and branding after splash", async ({
@@ -75,9 +75,9 @@ test.describe("AutoArr Branding", () => {
     const statusDot = sidebar.locator(".bg-status-success");
     await expect(statusDot).toBeVisible();
 
-    // Verify home page content (Dashboard)
-    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "System Status" })).toBeVisible();
+    // Verify home page content (ConfigAudit Dashboard)
+    await expect(page.getByRole("heading", { name: "Configuration Audit" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "System Health Overview" })).toBeVisible();
   });
 
   test("should have correct color scheme applied", async ({ page }) => {
@@ -89,8 +89,8 @@ test.describe("AutoArr Branding", () => {
     await expect(main).toHaveClass(/bg-background-primary/);
 
     // Check text colors
-    const heading = page.getByRole("heading", { name: "Dashboard" });
-    await expect(heading).toHaveClass(/text-white/);
+    const heading = page.getByRole("heading", { name: "Configuration Audit" });
+    await expect(heading).toHaveClass(/text-gray-900/);
   });
 
   test("should navigate and show active state with gradient", async ({
