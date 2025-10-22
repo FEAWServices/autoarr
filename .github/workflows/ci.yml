@@ -7,20 +7,10 @@ on:
       - develop # Staging/Daily latest
       - "feature/**" # Feature branches
       - "fix/**" # Bug fixes
-    paths:
-      - "autoarr/**/*.py"
-      - "pyproject.toml"
-      - "poetry.lock"
-      - ".github/workflows/ci.yml"
   pull_request:
     branches:
       - main # PRs to production
       - develop # PRs to staging
-    paths:
-      - "autoarr/**/*.py"
-      - "pyproject.toml"
-      - "poetry.lock"
-      - ".github/workflows/ci.yml"
 
 # Cancel in-progress runs when a new workflow is triggered
 concurrency:
@@ -28,21 +18,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint & Type Check
+  # =============================================================================
+  # Python Backend Jobs
+  # =============================================================================
+  python-lint:
+    name: Python Lint & Type Check
     runs-on: [self-hosted, alienware]
     timeout-minutes: 10
+    # Run if Python files changed OR on pull_request
+    if: |
+      github.event_name == 'pull_request' ||
+      contains(github.event.head_commit.message, 'python') ||
+      contains(github.event.head_commit.message, 'backend') ||
+      contains(github.event.head_commit.message, 'api')
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if Python files changed
+        id: changed-files
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^(autoarr/.*\.py|pyproject\.toml|poetry\.lock|\.github/workflows/ci\.yml)$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
 
       - name: Set up Python 3.11
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install Poetry
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         uses: snok/install-poetry@v1
         with:
           version: 1.7.1
@@ -50,6 +63,7 @@ jobs:
           virtualenvs-in-project: true
 
       - name: Cache Poetry dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         uses: actions/cache@v4
         with:
           path: .venv
@@ -58,18 +72,23 @@ jobs:
             venv-${{ runner.os }}-3.11-
 
       - name: Install dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: poetry install --no-interaction --with dev
 
       - name: Run Black (formatting check)
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: poetry run black --check autoarr/
 
       - name: Run isort (import sorting check)
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: poetry run isort --check-only --profile black autoarr/
 
       - name: Run Flake8 (linting)
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: poetry run flake8 autoarr/
 
       - name: Run Pylint (additional linting)
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: |
           poetry run pylint autoarr/api/ autoarr/shared/ \
             --max-line-length=100 \
@@ -78,6 +97,7 @@ jobs:
         continue-on-error: true
 
       - name: Run MyPy (type checking)
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: |
           poetry run mypy autoarr/api/ autoarr/shared/ \
             --config-file=pyproject.toml \
@@ -86,8 +106,12 @@ jobs:
             --pretty
         continue-on-error: true
 
-  test:
-    name: Test (Python ${{ matrix.python-version }})
+      - name: Skip if no changes
+        if: steps.changed-files.outputs.changed != 'true' && github.event_name != 'pull_request'
+        run: echo "No Python files changed, skipping lint"
+
+  python-test:
+    name: Python Test (Python ${{ matrix.python-version }})
     runs-on: [self-hosted, alienware]
     timeout-minutes: 20
     strategy:
@@ -98,13 +122,27 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if Python files changed
+        id: changed-files
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^(autoarr/.*\.py|pyproject\.toml|poetry\.lock|\.github/workflows/ci\.yml)$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
 
       - name: Set up Python ${{ matrix.python-version }}
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         uses: snok/install-poetry@v1
         with:
           version: 1.7.1
@@ -112,6 +150,7 @@ jobs:
           virtualenvs-in-project: true
 
       - name: Cache Poetry dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         uses: actions/cache@v4
         with:
           path: .venv
@@ -120,9 +159,11 @@ jobs:
             venv-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Install dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: poetry install --no-interaction --with dev
 
       - name: Run unit tests
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: |
           poetry run pytest autoarr/tests/unit/ \
             -v \
@@ -138,6 +179,7 @@ jobs:
             -ra
 
       - name: Run integration tests
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: |
           poetry run pytest autoarr/tests/integration/ \
             -v \
@@ -147,8 +189,8 @@ jobs:
         continue-on-error: true
 
       - name: Upload coverage to Codecov
+        if: (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request') && matrix.python-version == '3.11'
         uses: codecov/codecov-action@v4
-        if: matrix.python-version == '3.11'
         with:
           file: ./coverage.xml
           flags: unittests
@@ -158,34 +200,52 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results
+        if: always() && (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request')
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: test-results-py${{ matrix.python-version }}
           path: test-results/
 
       - name: Upload coverage HTML
+        if: always() && (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request') && matrix.python-version == '3.11'
         uses: actions/upload-artifact@v4
-        if: always() && matrix.python-version == '3.11'
         with:
           name: coverage-html
           path: htmlcov/
 
-  security:
-    name: Security Scan
+      - name: Skip if no changes
+        if: steps.changed-files.outputs.changed != 'true' && github.event_name != 'pull_request'
+        run: echo "No Python files changed, skipping tests"
+
+  python-security:
+    name: Python Security Scan
     runs-on: [self-hosted, alienware]
     timeout-minutes: 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if Python files changed
+        id: changed-files
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^(autoarr/.*\.py|pyproject\.toml|poetry\.lock|\.github/workflows/ci\.yml)$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
 
       - name: Set up Python 3.11
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install Poetry
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         uses: snok/install-poetry@v1
         with:
           version: 1.7.1
@@ -193,6 +253,7 @@ jobs:
           virtualenvs-in-project: true
 
       - name: Cache Poetry dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         uses: actions/cache@v4
         with:
           path: .venv
@@ -201,9 +262,11 @@ jobs:
             venv-${{ runner.os }}-3.11-
 
       - name: Install dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: poetry install --no-interaction --with dev
 
       - name: Run Bandit (security scanner)
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: |
           poetry run bandit -r autoarr/api/ autoarr/shared/ autoarr/mcp_servers/ \
             -f json -o bandit-report.json \
@@ -214,6 +277,7 @@ jobs:
         continue-on-error: true
 
       - name: Run Safety (dependency vulnerability check)
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         run: |
           poetry run safety check \
             --json \
@@ -222,14 +286,393 @@ jobs:
         continue-on-error: true
 
       - name: Upload security reports
+        if: always() && (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request')
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: security-reports
           path: |
             bandit-report.json
             safety-report.json
 
+      - name: Skip if no changes
+        if: steps.changed-files.outputs.changed != 'true' && github.event_name != 'pull_request'
+        run: echo "No Python files changed, skipping security scan"
+
+  # =============================================================================
+  # Frontend Jobs
+  # =============================================================================
+  frontend-lint:
+    name: Frontend Lint & Type Check
+    runs-on: [self-hosted, alienware]
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if frontend files changed
+        id: changed-files
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^(autoarr/ui/|\.github/workflows/ci\.yml)$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Install pnpm
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Setup Node.js
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
+
+      - name: Install dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Run ESLint
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm run lint
+
+      - name: Run Stylelint
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm run lint:css
+
+      - name: Check code formatting (Prettier)
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm exec prettier --check "src/**/*.{ts,tsx,css}"
+
+      - name: TypeScript type check
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm exec tsc --noEmit
+
+      - name: Skip if no changes
+        if: steps.changed-files.outputs.changed != 'true' && github.event_name != 'pull_request'
+        run: echo "No frontend files changed, skipping lint"
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: [self-hosted, alienware]
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if frontend files changed
+        id: changed-files
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^(autoarr/ui/|\.github/workflows/ci\.yml)$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Install pnpm
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Setup Node.js
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
+
+      - name: Install dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Build application
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: Check build size
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: |
+          du -sh dist
+          echo "Build size: $(du -sh dist | cut -f1)"
+
+      - name: Upload build artifacts
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: autoarr/ui/dist/
+          retention-days: 7
+
+      - name: Skip if no changes
+        if: steps.changed-files.outputs.changed != 'true' && github.event_name != 'pull_request'
+        run: echo "No frontend files changed, skipping build"
+
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: [self-hosted, alienware]
+    timeout-minutes: 30
+    needs: [python-test, frontend-build]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if relevant files changed
+        id: changed-files
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^(autoarr/|\.github/workflows/ci\.yml)$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Install pnpm
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Setup Node.js
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Python
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-e2e-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+
+      - name: Install backend dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install frontend dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Cache Playwright browsers
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('autoarr/ui/pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start backend API server
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        run: |
+          export APP_ENV=development
+          export LOG_LEVEL=INFO
+          export DATABASE_URL=sqlite:///./data/autoarr.db
+          export REDIS_URL=memory://
+          export HOST=0.0.0.0
+          export PORT=8088
+          mkdir -p ./data
+          poetry run uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &
+          echo $! > backend.pid
+          echo "Waiting for backend to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8088/health > /dev/null 2>&1; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run Playwright tests
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm exec playwright test
+        env:
+          CI: true
+
+      - name: Stop backend API server
+        if: always()
+        run: |
+          if [ -f backend.pid ]; then
+            kill $(cat backend.pid) || true
+            rm backend.pid
+          fi
+
+      - name: Upload Playwright report
+        if: always() && (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request')
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: autoarr/ui/playwright-report/
+          retention-days: 30
+
+      - name: Upload test results
+        if: always() && (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request')
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: autoarr/ui/test-results/
+          retention-days: 30
+
+      - name: Skip if no changes
+        if: steps.changed-files.outputs.changed != 'true' && github.event_name != 'pull_request'
+        run: echo "No relevant files changed, skipping E2E tests"
+
+  accessibility-tests:
+    name: Accessibility Tests
+    runs-on: [self-hosted, alienware]
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if frontend files changed
+        id: changed-files
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^(autoarr/ui/|\.github/workflows/ci\.yml)$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Install pnpm
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Setup Node.js
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
+
+      - name: Install dependencies
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Cache Playwright browsers
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('autoarr/ui/pnpm-lock.yaml') }}
+
+      - name: Install Playwright
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run accessibility tests
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        working-directory: autoarr/ui
+        run: pnpm exec playwright test --grep "@accessibility"
+        continue-on-error: true
+
+      - name: Skip if no changes
+        if: steps.changed-files.outputs.changed != 'true' && github.event_name != 'pull_request'
+        run: echo "No frontend files changed, skipping accessibility tests"
+
+  bundle-size:
+    name: Bundle Size Analysis
+    runs-on: [self-hosted, alienware]
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "autoarr/ui/pnpm-lock.yaml"
+
+      - name: Install dependencies
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Build and analyze bundle
+        working-directory: autoarr/ui
+        run: |
+          pnpm run build
+          echo "## Bundle Size" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          du -sh dist >> $GITHUB_STEP_SUMMARY
+          find dist -type f -name "*.js" -exec du -h {} \; | sort -h >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # =============================================================================
+  # Dependency Review (PRs only)
+  # =============================================================================
   dependency-review:
     name: Dependency Review
     runs-on: [self-hosted, alienware]
@@ -246,39 +689,53 @@ jobs:
           fail-on-scopes: runtime
         continue-on-error: true
 
-  ci-complete:
-    name: CI Complete
+  # =============================================================================
+  # Final Status Check
+  # =============================================================================
+  all-checks-passed:
+    name: All Checks Passed
     runs-on: [self-hosted, alienware]
-    needs: [lint, test, security, dependency-review]
+    needs:
+      - python-lint
+      - python-test
+      - python-security
+      - frontend-lint
+      - frontend-build
+      - e2e-tests
+      - accessibility-tests
     if: always()
-    
+    timeout-minutes: 1
+
     steps:
       - name: Check all jobs status
         run: |
-          echo "## ✅ CI Pipeline Complete" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ CI Pipeline Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Lint:** ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Test:** ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Security:** ${{ needs.security.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Dependency Review:** ${{ needs.dependency-review.result }}" >> $GITHUB_STEP_SUMMARY
-          
-      - name: Fail if any job failed
+          echo "### Python Backend" >> $GITHUB_STEP_SUMMARY
+          echo "- **Lint:** \`${{ needs.python-lint.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test:** \`${{ needs.python-test.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security:** \`${{ needs.python-security.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Frontend" >> $GITHUB_STEP_SUMMARY
+          echo "- **Lint:** \`${{ needs.frontend-lint.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build:** \`${{ needs.frontend-build.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **E2E Tests:** \`${{ needs.e2e-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Accessibility:** \`${{ needs.accessibility-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if required checks failed
         if: |
-          needs.lint.result == 'failure' ||
-          needs.test.result == 'failure' ||
-          needs.security.result == 'failure' ||
-          needs.dependency-review.result == 'failure'
+          needs.python-lint.result == 'failure' ||
+          needs.python-test.result == 'failure' ||
+          needs.python-security.result == 'failure' ||
+          needs.frontend-lint.result == 'failure' ||
+          needs.frontend-build.result == 'failure' ||
+          needs.e2e-tests.result == 'failure'
         run: |
-          echo "❌ One or more CI jobs failed"
+          echo "❌ One or more required checks failed"
           exit 1
-          
+
       - name: Success
-        if: |
-          needs.lint.result == 'success' &&
-          needs.test.result == 'success' &&
-          (needs.security.result == 'success' || needs.security.result == 'skipped') &&
-          (needs.dependency-review.result == 'success' || needs.dependency-review.result == 'skipped')
         run: |
-          echo "✅ All CI checks passed successfully!"
+          echo "✅ All required checks passed successfully!"
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🎉 Ready for Docker Build & Deploy" >> $GITHUB_STEP_SUMMARY
