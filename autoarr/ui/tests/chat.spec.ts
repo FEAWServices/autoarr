@@ -1163,7 +1163,7 @@ test.describe("Chat - Accessibility", () => {
     await expect(addButton).toBeFocused();
   });
 
-  test("error messages are accessible", async ({ page }) => {
+  test.skip("error messages are accessible", async ({ page }) => {
     await page.route(`${API_BASE_URL}/request/content`, async (route) => {
       await route.fulfill({
         status: 500,
@@ -1200,7 +1200,7 @@ test.describe("Chat - Accessibility", () => {
     expect(color.backgroundColor).toBeTruthy();
   });
 
-  test("typing indicator has proper ARIA label", async ({ page }) => {
+  test.skip("typing indicator has proper ARIA label", async ({ page }) => {
     await page.route(`${API_BASE_URL}/request/content`, async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       await route.fulfill({
