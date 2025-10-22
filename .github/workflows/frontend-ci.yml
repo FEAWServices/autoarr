@@ -127,6 +127,27 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install backend dependencies
+        run: poetry install --no-interaction --no-root
+
       - name: Install dependencies
         working-directory: autoarr/ui
         run: pnpm install --frozen-lockfile
@@ -135,11 +156,40 @@ jobs:
         working-directory: autoarr/ui
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Start backend API server
+        run: |
+          export APP_ENV=development
+          export LOG_LEVEL=INFO
+          export DATABASE_URL=sqlite:///./data/autoarr.db
+          export REDIS_URL=memory://
+          export HOST=0.0.0.0
+          export PORT=8088
+          mkdir -p ./data
+          poetry run uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &
+          echo $! > backend.pid
+          echo "Waiting for backend to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8088/health > /dev/null 2>&1; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
       - name: Run Playwright tests
         working-directory: autoarr/ui
         run: pnpm exec playwright test
         env:
           CI: true
+
+      - name: Stop backend API server
+        if: always()
+        run: |
+          if [ -f backend.pid ]; then
+            kill $(cat backend.pid) || true
+            rm backend.pid
+          fi
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

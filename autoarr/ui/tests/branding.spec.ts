@@ -75,9 +75,9 @@ test.describe("AutoArr Branding", () => {
     const statusDot = sidebar.locator(".bg-status-success");
     await expect(statusDot).toBeVisible();
 
-    // Verify home page content (chat interface)
-    await expect(page.getByText("AutoArr Assistant")).toBeVisible();
-    await expect(page.getByText("Welcome to AutoArr")).toBeVisible();
+    // Verify home page content (Dashboard)
+    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "System Status" })).toBeVisible();
   });
 
   test("should have correct color scheme applied", async ({ page }) => {
@@ -89,7 +89,7 @@ test.describe("AutoArr Branding", () => {
     await expect(main).toHaveClass(/bg-background-primary/);
 
     // Check text colors
-    const heading = page.getByRole("heading", { name: "AutoArr Assistant" });
+    const heading = page.getByRole("heading", { name: "Dashboard" });
     await expect(heading).toHaveClass(/text-white/);
   });
 

@@ -116,7 +116,6 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
           <div
             data-testid="service-icon"
             className="flex-shrink-0 p-2 bg-gray-100 dark:bg-gray-700 rounded-md"
-            aria-label={`${service} service`}
           >
             {getServiceIcon(service)}
           </div>
