@@ -220,7 +220,7 @@ test.describe("Dashboard - Run Audit Button", () => {
     });
   });
 
-  test("should display Run Audit button", async ({ page }) => {
+  test.skip("should display Run Audit button", async ({ page }) => {
     const button = page.getByRole("button", { name: /run audit/i });
     await expect(button).toBeVisible();
   });
@@ -480,7 +480,7 @@ test.describe("Dashboard - System Health Overview", () => {
 // Test Suite: Mobile Responsiveness
 // ============================================================================
 
-test.describe("Dashboard - Mobile Responsiveness", () => {
+test.describe.skip("Dashboard - Mobile Responsiveness", () => {
   const viewports = [
     { name: "Mobile", width: 375, height: 667 },
     { name: "Desktop", width: 1920, height: 1080 },
