@@ -9,8 +9,8 @@
       "path": "/app/.common"
     },
     {
-      "name": "autoarr-paid",
-      "path": "/autoarr-paid"
+      "name": "autoarr_paid",
+      "path": "/autoarr_paid"
     }
   ],
   "settings": {
