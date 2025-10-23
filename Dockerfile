@@ -38,8 +38,41 @@ COPY autoarr/ui ./
 # Build frontend for production
 RUN pnpm run build
 
-# Stage 2: Build backend with frontend assets
-FROM python:3.14-slim
+# Stage 2: Development target (with hot reload)
+FROM python:3.11-slim AS development
+
+WORKDIR /app
+
+# Install system dependencies including dev tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN pip install --no-cache-dir poetry==1.7.1
+
+# Configure poetry
+RUN poetry config virtualenvs.create false
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock* README.md ./
+
+# Install all dependencies including dev dependencies
+RUN poetry install --no-interaction --no-ansi --no-root
+
+# Create data directory
+RUN mkdir -p /data
+
+# Expose API port
+EXPOSE 8088
+
+# Development command (will be overridden by docker-compose)
+CMD ["uvicorn", "autoarr.api.main:app", "--host", "0.0.0.0", "--port", "8088", "--reload"]
+
+# Stage 3: Production backend with frontend assets
+FROM python:3.11-slim AS production
 
 WORKDIR /app
 
@@ -97,4 +130,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8088/health || exit 1
 
 # Run the application
-CMD ["uvicorn", "autoarr.api.main:app", "--host", "0.0.0.0", "--port", "8088"]
+CMD ["poetry", "run", "uvicorn", "autoarr.api.main:app", "--host", "0.0.0.0", "--port", "8088"]
