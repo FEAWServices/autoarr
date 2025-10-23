@@ -2,7 +2,7 @@
 
 > **Intelligent cruise control for your \*arr media automation stack**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL%203.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/autoarr/autoarr)
 [![GitHub](https://img.shields.io/github/stars/autoarr/autoarr)](https://github.com/autoarr/autoarr)
 
@@ -389,16 +389,52 @@ Special thanks to the communities behind **SABnzbd**, **Sonarr**, **Radarr**, an
 
 ## 📄 License
 
-AutoArr is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
+AutoArr is **free and open source software** licensed under the **GNU General Public License v3.0 or later (GPL-3.0-or-later)**. See [LICENSE](LICENSE) for the full license text.
+
+This means you have the freedom to:
+- ✅ Use AutoArr for any purpose
+- ✅ Study and modify the source code
+- ✅ Distribute copies to help others
+- ✅ Distribute your modifications
+
+Any modifications or derivative works must also be released under GPL-3.0, ensuring AutoArr remains free and open source forever.
+
+### 🎁 Free Version vs 💎 Premium Version
+
+AutoArr follows the same model as Sonarr and Radarr:
+
+**Free Version (This Repository)**
+- Full configuration auditing and recommendations
+- Natural language content requests
+- Local LLM support (Ollama with Qwen)
+- All MCP integrations (SABnzbd, Sonarr, Radarr, Plex)
+- Community-driven development
+- GPL-3.0 licensed
+
+**Premium Version** (Coming Soon)
+- Advanced AI with custom-trained models (TV.DB, IMDB, international formats)
+- Autonomous download recovery with intelligent retry strategies
+- SaaS option or self-hosted with license key
+- Priority support
+- Available via subscription ($4.99/month planned)
+
+The free version is fully functional and will always remain free and open source. The premium version offers enhanced AI capabilities and autonomous features for users who want the ultimate hands-off experience.
 
 ```
-Copyright (c) 2025 AutoArr Team
+Copyright (C) 2025 AutoArr Contributors
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software...
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
 ```
 
 ---
