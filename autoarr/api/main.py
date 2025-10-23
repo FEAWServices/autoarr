@@ -281,11 +281,13 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         # Send welcome message
-        await websocket.send_json({
-            "type": "connection",
-            "status": "connected",
-            "message": "Connected to AutoArr WebSocket"
-        })
+        await websocket.send_json(
+            {
+                "type": "connection",
+                "status": "connected",
+                "message": "Connected to AutoArr WebSocket",
+            }
+        )
 
         # Keep connection alive and handle incoming messages
         while True:
@@ -294,10 +296,7 @@ async def websocket_endpoint(websocket: WebSocket):
             logger.debug(f"WebSocket received: {data}")
 
             # For now, just acknowledge receipt
-            await websocket.send_json({
-                "type": "ack",
-                "message": "Message received"
-            })
+            await websocket.send_json({"type": "ack", "message": "Message received"})
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:

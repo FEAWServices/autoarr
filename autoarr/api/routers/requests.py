@@ -11,8 +11,6 @@ from typing import List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from autoarr.api.database import ContentRequestRepository, get_database
 from autoarr.api.services.content_integration import ContentIntegrationService
@@ -25,8 +23,10 @@ from autoarr.api.services.request_handler import (
 # Create router
 router = APIRouter(prefix="/api/v1/requests", tags=["requests"])
 
-# Rate limiter
-limiter = Limiter(key_func=get_remote_address)
+# TODO: Add rate limiting with slowapi when implementing production features
+# from slowapi import Limiter
+# from slowapi.util import get_remote_address
+# limiter = Limiter(key_func=get_remote_address)
 
 
 # ============================================================================
