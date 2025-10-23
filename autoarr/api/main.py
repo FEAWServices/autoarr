@@ -9,7 +9,7 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -21,7 +21,7 @@ from .middleware import (
     RequestLoggingMiddleware,
     add_security_headers,
 )
-from .routers import configuration, downloads, health, mcp, media, movies
+from .routers import configuration, downloads, health, mcp, media, movies, requests
 from .routers import settings as settings_router
 from .routers import shows
 
@@ -175,6 +175,12 @@ app.include_router(
     tags=["configuration"],
 )
 
+# Content request endpoints
+app.include_router(
+    requests.router,
+    tags=["requests"],
+)
+
 
 # ============================================================================
 # Static Files
@@ -218,6 +224,85 @@ async def ping() -> dict:
         dict: Pong response
     """
     return {"message": "pong"}
+
+
+# ============================================================================
+# WebSocket Endpoints
+# ============================================================================
+
+
+class ConnectionManager:
+    """Manages WebSocket connections."""
+
+    def __init__(self):
+        """Initialize connection manager."""
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        """Accept and store new connection."""
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        logger.info(f"WebSocket connected. Active connections: {len(self.active_connections)}")
+
+    def disconnect(self, websocket: WebSocket):
+        """Remove connection from list."""
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        logger.info(f"WebSocket disconnected. Active connections: {len(self.active_connections)}")
+
+    async def send_personal_message(self, message: dict, websocket: WebSocket):
+        """Send message to specific connection."""
+        await websocket.send_json(message)
+
+    async def broadcast(self, message: dict):
+        """Send message to all active connections."""
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception as e:
+                logger.error(f"Error broadcasting to WebSocket: {e}")
+
+
+# Global connection manager
+manager = ConnectionManager()
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time updates.
+
+    Clients can connect to receive real-time notifications about:
+    - Configuration audit results
+    - Download status updates
+    - Content request status changes
+    - Activity log entries
+    """
+    await manager.connect(websocket)
+    try:
+        # Send welcome message
+        await websocket.send_json({
+            "type": "connection",
+            "status": "connected",
+            "message": "Connected to AutoArr WebSocket"
+        })
+
+        # Keep connection alive and handle incoming messages
+        while True:
+            # Receive and echo any client messages (for future use)
+            data = await websocket.receive_text()
+            logger.debug(f"WebSocket received: {data}")
+
+            # For now, just acknowledge receipt
+            await websocket.send_json({
+                "type": "ack",
+                "message": "Message received"
+            })
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        manager.disconnect(websocket)
 
 
 # ============================================================================
