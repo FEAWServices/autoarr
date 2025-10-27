@@ -18,26 +18,26 @@
   "dependencies": {
     "@tanstack/react-query": "^5.90.5",
     "clsx": "^2.0.0",
-    "lucide-react": "^0.546.0",
+    "lucide-react": "^0.548.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^7.9.4",
-    "tailwindcss": "^4.1.15",
+    "tailwindcss": "^4.1.16",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
-    "@tailwindcss/postcss": "^4.1.15",
+    "@tailwindcss/postcss": "^4.1.16",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
-    "@vitejs/plugin-react": "^5.0.4",
+    "@vitejs/plugin-react": "^5.1.0",
     "autoprefixer": "^10.4.16",
     "axe-playwright": "^2.2.2",
     "eslint": "^9.38.0",
-    "eslint-plugin-react-hooks": "^7.0.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "glob": "^11.0.3",
     "globals": "^16.4.0",
@@ -47,7 +47,7 @@
     "stylelint-config-standard": "^39.0.1",
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.46.2",
-    "vite": "^7.1.11"
+    "vite": "^7.1.12"
   },
   "engines": {
     "node": ">=18.0.0",
