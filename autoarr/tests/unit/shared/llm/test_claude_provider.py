@@ -17,11 +17,12 @@
 
 """Tests for ClaudeProvider."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from autoarr.shared.llm.claude_provider import ClaudeProvider
+import pytest
+
 from autoarr.shared.llm.base_provider import LLMMessage
+from autoarr.shared.llm.claude_provider import ClaudeProvider
 
 
 @pytest.fixture

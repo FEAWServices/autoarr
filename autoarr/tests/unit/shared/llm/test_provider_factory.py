@@ -18,12 +18,13 @@
 """Tests for LLMProviderFactory."""
 
 import os
-import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from autoarr.shared.llm.provider_factory import LLMProviderFactory
-from autoarr.shared.llm.ollama_provider import OllamaProvider
+import pytest
+
 from autoarr.shared.llm.claude_provider import ClaudeProvider
+from autoarr.shared.llm.ollama_provider import OllamaProvider
+from autoarr.shared.llm.provider_factory import LLMProviderFactory
 
 
 @pytest.mark.skip(

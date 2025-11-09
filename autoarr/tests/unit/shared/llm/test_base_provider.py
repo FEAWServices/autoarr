@@ -17,8 +17,9 @@
 
 """Tests for BaseLLMProvider interface."""
 
+from typing import Any, AsyncGenerator, Dict, List, Optional
+
 import pytest
-from typing import AsyncGenerator, Dict, Any, List, Optional
 
 from autoarr.shared.llm.base_provider import (
     BaseLLMProvider,

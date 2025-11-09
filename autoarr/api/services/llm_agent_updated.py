@@ -27,7 +27,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from autoarr.api.services.models import Priority
-from autoarr.shared.llm import LLMProviderFactory, LLMMessage, BaseLLMProvider
+from autoarr.shared.llm import BaseLLMProvider, LLMMessage, LLMProviderFactory
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +76,8 @@ class LLMAgent:
 
         # Import helper classes from original module
         from autoarr.api.services.llm_agent import (
-            TokenUsageTracker,
             StructuredOutputParser,
+            TokenUsageTracker,
         )
 
         self.token_tracker = TokenUsageTracker()
@@ -134,7 +134,7 @@ class LLMAgent:
             Exception: If LLM call fails or response cannot be parsed
         """
         # Import classes from original module
-        from autoarr.api.services.llm_agent import PromptTemplate, LLMRecommendation
+        from autoarr.api.services.llm_agent import LLMRecommendation, PromptTemplate
 
         # Ensure provider is ready
         provider = await self._ensure_provider()

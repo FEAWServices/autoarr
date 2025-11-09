@@ -815,7 +815,6 @@ async def activate_license(
 
         # TODO: Implement actual license validation via license server
         # For now, return a mock response
-
         # Validate license format
         if not request.license_key.startswith("AUTOARR-"):
             return LicenseActivateResponse(valid=False, error="Invalid license key format")
