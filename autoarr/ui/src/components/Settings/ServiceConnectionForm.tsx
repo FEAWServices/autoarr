@@ -47,6 +47,7 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
     if (!connection) {
       handleDiscover();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDiscover = async () => {
