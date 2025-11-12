@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Content Request API Endpoints.
 
@@ -193,7 +210,8 @@ async def get_request_repository() -> ContentRequestRepository:
     summary="Submit content request",
     description="Submit a natural language request for movie or TV show content",
 )
-@limiter.limit("10/minute")
+# TODO: Add rate limiting when slowapi is configured
+# @limiter.limit("10/minute")
 async def submit_content_request(
     request_input: ContentRequestInput,
     handler: RequestHandler = Depends(get_request_handler),

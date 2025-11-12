@@ -13,8 +13,9 @@ on:
       - develop # PRs to staging
 
 # Cancel in-progress runs when a new workflow is triggered
+# Use head_ref for PRs, ref for pushes to ensure proper grouping
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:

@@ -1,39 +1,63 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 LLM Agent Service for AutoArr.
 
 This service provides LLM-powered intelligent analysis and recommendations
-using Claude API. It includes:
-- Claude API client with retry logic
+using pluggable LLM providers (Ollama, Claude, or custom). It includes:
+- LLM provider abstraction with automatic selection
 - Prompt template system
 - Structured output parsing
 - Token usage tracking and cost estimation
 - Configuration analysis and recommendation generation
 """
 
-import asyncio
 import json
+import logging
 import re
 from typing import Any, Dict, List, Optional
 
-from anthropic import APIError, AsyncAnthropic, RateLimitError
 from pydantic import BaseModel, Field
 
 from autoarr.api.services.models import Priority
+from autoarr.shared.llm import BaseLLMProvider, LLMMessage, LLMProviderFactory
+
+logger = logging.getLogger(__name__)
+
+
+# DEPRECATED: ClaudeClient has been migrated to autoarr.shared.llm.ClaudeProvider
+# This class is kept for backward compatibility only.
+# New code should use LLMProviderFactory.create_provider() instead.
 
 
 class ClaudeClient:
     """
-    Claude API client with retry logic and error handling.
+    DEPRECATED: Compatibility wrapper around ClaudeProvider.
 
-    This client handles communication with the Anthropic Claude API,
-    including automatic retries with exponential backoff for rate limits.
+    This class is maintained for backward compatibility but is deprecated.
+    New code should use autoarr.shared.llm.ClaudeProvider directly.
 
     Args:
         api_key: Anthropic API key
         model: Claude model to use (default: claude-3-5-sonnet-20241022)
         max_tokens: Maximum tokens in response
-        max_retries: Maximum number of retries on rate limit
-        retry_delay: Initial retry delay in seconds (doubles on each retry)
+        max_retries: Maximum number of retries on rate limit (ignored)
+        retry_delay: Initial retry delay in seconds (ignored, provider handles retries)
     """
 
     def __init__(
@@ -44,20 +68,27 @@ class ClaudeClient:
         max_retries: int = 3,
         retry_delay: float = 1.0,
     ) -> None:
-        """Initialize Claude client."""
+        """Initialize Claude client (wraps ClaudeProvider)."""
+        logger.warning("ClaudeClient is deprecated. Use autoarr.shared.llm.ClaudeProvider instead.")
+
+        from autoarr.shared.llm.claude_provider import ClaudeProvider
+
         self.api_key = api_key
         self.model = model
         self.max_tokens = max_tokens
         self.max_retries = max_retries
         self.retry_delay = retry_delay
-        self._client: Optional[AsyncAnthropic] = None
 
-    @property
-    def client(self) -> AsyncAnthropic:
-        """Get or create the Anthropic client."""
-        if self._client is None:
-            self._client = AsyncAnthropic(api_key=self.api_key)  # noqa: F841
-        return self._client
+        # Create ClaudeProvider instance
+        self._provider = ClaudeProvider(
+            {
+                "api_key": api_key,
+                "default_model": model,
+                "max_tokens": max_tokens,
+                "max_retries": max_retries,
+                "retry_delay": retry_delay,
+            }
+        )
 
     async def send_message(
         self,
@@ -66,10 +97,7 @@ class ClaudeClient:
         temperature: float = 0.7,
     ) -> Dict[str, Any]:
         """
-        Send a message to Claude API with retry logic.
-
-        This method automatically retries on rate limit errors with
-        exponential backoff. Other API errors are raised immediately.
+        Send a message to Claude API (via ClaudeProvider).
 
         Args:
             system_prompt: System prompt (role definition)
@@ -78,50 +106,35 @@ class ClaudeClient:
 
         Returns:
             Dict with 'content' (response text) and 'usage' (token counts)
-
-        Raises:
-            RateLimitError: If rate limit exceeded after all retries
-            APIError: If other API error occurs
         """
-        retry_count = 0
-        current_delay = self.retry_delay
+        # Convert to LLMMessage format
+        messages = [
+            LLMMessage(role="system", content=system_prompt),
+            LLMMessage(role="user", content=user_message),
+        ]
 
-        while retry_count <= self.max_retries:
-            try:
-                response = await self.client.messages.create(
-                    model=self.model,
-                    max_tokens=self.max_tokens,
-                    temperature=temperature,
-                    system=system_prompt,
-                    messages=[{"role": "user", "content": user_message}],
-                )
+        # Call provider
+        response = await self._provider.complete(
+            messages=messages,
+            temperature=temperature,
+            max_tokens=self.max_tokens,
+        )
 
-                # Extract response content and usage
-                content = response.content[0].text
-                usage = {
-                    "input_tokens": response.usage.input_tokens,
-                    "output_tokens": response.usage.output_tokens,
-                }
-
-                return {"content": content, "usage": usage}
-
-            except RateLimitError as e:
-                retry_count += 1
-                if retry_count > self.max_retries:
-                    raise e
-
-                # Exponential backoff
-                await asyncio.sleep(current_delay)
-                current_delay *= 2
-
-            except APIError:
-                # Don't retry on other API errors
-                raise
+        # Convert back to old format for compatibility
+        return {
+            "content": response.content,
+            "usage": {
+                "input_tokens": response.usage.get("prompt_tokens", 0) if response.usage else 0,
+                "output_tokens": (
+                    response.usage.get("completion_tokens", 0) if response.usage else 0
+                ),
+            },
+        }
 
     async def close(self) -> None:
         """Close the API client."""
-        if self._client is not None:
-            await self._client.close()
+        if hasattr(self._provider, "__aexit__"):
+            await self._provider.__aexit__(None, None, None)
 
 
 class PromptTemplate:
@@ -428,20 +441,59 @@ class LLMAgent:
 
     def __init__(
         self,
-        api_key: str,
-        model: str = "claude-3-5-sonnet-20241022",
+        provider: Optional[BaseLLMProvider] = None,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
         max_tokens: int = 4096,
     ) -> None:
-        """Initialize LLM agent."""
-        self.client = ClaudeClient(  # noqa: F841
-            api_key=api_key,
-            model=model,
-            max_tokens=max_tokens,
-        )
+        """
+        Initialize LLM agent.
+
+        Args:
+            provider: Optional pre-configured LLM provider
+            api_key: Optional API key for Claude (backward compatibility)
+            model: Optional model name
+            max_tokens: Maximum tokens in responses
+        """
+        self.max_tokens = max_tokens
+        self.model = model
+        self._provider = provider
+        self._api_key = api_key
+        self._initialized = False
+
         self.token_tracker = TokenUsageTracker()
         self.parser = StructuredOutputParser(
             required_fields=["explanation", "priority", "impact", "reasoning"]
         )
+
+    async def _ensure_provider(self) -> BaseLLMProvider:
+        """Lazy initialization of LLM provider."""
+        if self._initialized and self._provider:
+            return self._provider
+
+        if self._provider is None:
+            if self._api_key:
+                # Backward compatibility: if API key provided, use Claude
+                logger.info("Using Claude provider (API key provided)")
+                from autoarr.shared.llm.claude_provider import ClaudeProvider
+
+                config = {
+                    "api_key": self._api_key,
+                    "default_model": self.model or "claude-3-5-sonnet-20241022",
+                    "max_tokens": self.max_tokens,
+                }
+                self._provider = ClaudeProvider(config)
+            else:
+                # Use factory (Ollama by default, Claude if key in env)
+                logger.info("Auto-selecting LLM provider via factory")
+                self._provider = await LLMProviderFactory.create_provider(
+                    provider_name=None,  # Auto-select
+                    config={"default_model": self.model} if self.model else None,
+                )
+
+        self._initialized = True
+        logger.info(f"LLMAgent using {self._provider.provider_name} provider")
+        return self._provider
 
     async def analyze_configuration(self, context: Dict[str, Any]) -> LLMRecommendation:
         """
@@ -474,22 +526,31 @@ class LLMAgent:
             best_practice=json.dumps(context["best_practice"], indent=2),
         )
 
-        # Send to Claude
-        response = await self.client.send_message(
-            system_prompt=system_prompt,
-            user_message=user_message,
+        # Get provider
+        provider = await self._ensure_provider()
+
+        # Create messages
+        messages = [
+            LLMMessage(role="system", content=system_prompt),
+            LLMMessage(role="user", content=user_message),
+        ]
+
+        # Send to LLM provider
+        response = await provider.complete(
+            messages=messages,
             temperature=0.7,
+            max_tokens=self.max_tokens,
         )
 
         # Track token usage
-        usage = response["usage"]
-        self.token_tracker.record_usage(
-            input_tokens=usage["input_tokens"],
-            output_tokens=usage["output_tokens"],
-        )
+        if response.usage:
+            self.token_tracker.record_usage(
+                input_tokens=response.usage.get("prompt_tokens", 0),
+                output_tokens=response.usage.get("completion_tokens", 0),
+            )
 
         # Parse structured output
-        parsed = self.parser.parse(response["content"])
+        parsed = self.parser.parse(response.content)
 
         # Validate and normalize priority
         priority_str = parsed["priority"].lower()

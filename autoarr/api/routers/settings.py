@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Settings API endpoints for managing application configuration.
 
@@ -6,6 +23,7 @@ settings through the API/UI without needing to edit .env files.
 """
 
 import logging
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -650,4 +668,329 @@ SECRET_KEY={settings.secret_key}
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save settings: {str(e)}",
+        )
+
+
+# ============================================================================
+# SERVICE DISCOVERY ENDPOINT
+# ============================================================================
+
+
+class DiscoveredService(BaseModel):
+    """Auto-discovered service."""
+
+    type: str
+    url: str
+    name: str
+
+
+@router.get("/discover", response_model=list[DiscoveredService])
+async def discover_services() -> list[DiscoveredService]:
+    """
+    Auto-discover services on the local network.
+
+    Scans common ports for SABnzbd, Sonarr, Radarr, and Plex.
+
+    Returns:
+        List of discovered services
+    """
+    import asyncio
+
+    import httpx
+
+    discovered = []
+
+    # Common ports to scan
+    scan_targets = [
+        ("sabnzbd", 8080),
+        ("sabnzbd", 9090),
+        ("sonarr", 8989),
+        ("radarr", 7878),
+        ("plex", 32400),
+    ]
+
+    async def check_service(service_type: str, port: int):
+        """Check if a service is running on localhost:port."""
+        url = f"http://localhost:{port}"
+        try:
+            async with httpx.AsyncClient(timeout=2.0) as client:
+                # Try to access the service
+                if service_type in ["sonarr", "radarr"]:
+                    response = await client.get(f"{url}/api/v3/system/status")
+                elif service_type == "plex":
+                    response = await client.get(f"{url}/web")
+                else:  # sabnzbd
+                    response = await client.get(f"{url}/api?mode=version")
+
+                if response.status_code in [200, 401, 403]:
+                    # Service is responding (even if authentication required)
+                    discovered.append(
+                        DiscoveredService(
+                            type=service_type,
+                            url=url,
+                            name=f"{service_type.title()} ({port})",
+                        )
+                    )
+        except Exception:
+            pass  # Service not found on this port
+
+    # Scan all targets concurrently
+    await asyncio.gather(*[check_service(stype, port) for stype, port in scan_targets])
+
+    return discovered
+
+
+# ============================================================================
+# LICENSE MANAGEMENT ENDPOINTS (Premium)
+# ============================================================================
+
+
+class LicenseActivateRequest(BaseModel):
+    """Request to activate a license."""
+
+    license_key: str = Field(..., pattern="^AUTOARR-[A-Z0-9]{5}(-[A-Z0-9]{5}){4}$")
+
+
+class LicenseActivateResponse(BaseModel):
+    """License activation response."""
+
+    valid: bool
+    error: Optional[str] = None
+    license: Optional[Dict[str, Any]] = None
+    validation: Optional[Dict[str, Any]] = None
+
+
+@router.get("/license/current")
+async def get_current_license() -> Dict[str, Any]:
+    """
+    Get the current active license.
+
+    Returns:
+        Current license and validation status
+    """
+    try:
+        from pathlib import Path
+
+        # Load license from file
+        license_path = Path("data/license.json")
+
+        if not license_path.exists():
+            return {"license": None, "validation": None}
+
+        import json
+
+        with open(license_path) as f:
+            license_data = json.load(f)
+
+        # TODO: Implement actual license validation using validator from autoarr-paid
+        validation_result = {
+            "valid": True,
+            "validation_type": "offline",
+            "validated_at": datetime.utcnow().isoformat(),
+            "days_until_expiry": 30,
+        }
+
+        return {"license": license_data, "validation": validation_result}
+
+    except Exception as e:
+        logger.error(f"Failed to get current license: {e}")
+        return {"license": None, "validation": None}
+
+
+@router.post("/license/activate", response_model=LicenseActivateResponse)
+async def activate_license(
+    request: LicenseActivateRequest,
+) -> LicenseActivateResponse:
+    """
+    Activate a license key.
+
+    Args:
+        request: License activation request
+
+    Returns:
+        License activation result
+    """
+    try:
+        from pathlib import Path
+
+        # TODO: Implement actual license validation via license server
+        # For now, return a mock response
+        # Validate license format
+        if not request.license_key.startswith("AUTOARR-"):
+            return LicenseActivateResponse(valid=False, error="Invalid license key format")
+
+        # Mock license data
+        license_data = {
+            "license_key": request.license_key,
+            "tier": "professional",
+            "customer_id": "customer_123",
+            "customer_email": "user@example.com",
+            "issued_at": "2025-01-01T00:00:00Z",
+            "expires_at": "2026-01-01T00:00:00Z",
+            "features": {
+                "autonomous_recovery": True,
+                "enhanced_monitoring": True,
+                "custom_model": True,
+                "priority_support": True,
+                "advanced_analytics": True,
+                "multi_instance": False,
+                "max_concurrent_downloads": 50,
+                "max_monitored_items": 1000,
+            },
+            "grace_period_days": 7,
+        }
+
+        validation_result = {
+            "valid": True,
+            "validation_type": "online",
+            "validated_at": datetime.utcnow().isoformat(),
+            "days_until_expiry": 365,
+        }
+
+        # Save license to file
+        license_path = Path("data/license.json")
+        license_path.parent.mkdir(parents=True, exist_ok=True)
+
+        import json
+
+        with open(license_path, "w") as f:
+            json.dump(license_data, f, indent=2)
+
+        return LicenseActivateResponse(
+            valid=True, license=license_data, validation=validation_result
+        )
+
+    except Exception as e:
+        logger.error(f"License activation failed: {e}")
+        return LicenseActivateResponse(valid=False, error=str(e))
+
+
+@router.post("/license/deactivate")
+async def deactivate_license() -> Dict[str, str]:
+    """
+    Deactivate the current license.
+
+    Returns:
+        Confirmation message
+    """
+    try:
+        from pathlib import Path
+
+        license_path = Path("data/license.json")
+
+        if license_path.exists():
+            license_path.unlink()
+
+        return {"message": "License deactivated successfully"}
+
+    except Exception as e:
+        logger.error(f"License deactivation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to deactivate license: {str(e)}",
+        )
+
+
+# ============================================================================
+# PREMIUM CONFIGURATION ENDPOINTS
+# ============================================================================
+
+
+class PremiumConfigResponse(BaseModel):
+    """Premium configuration."""
+
+    recovery: Dict[str, Any]
+    monitoring: Dict[str, Any]
+    analytics: Dict[str, Any]
+
+
+@router.get("/premium/config", response_model=PremiumConfigResponse)
+async def get_premium_config() -> PremiumConfigResponse:
+    """
+    Get premium feature configuration.
+
+    Returns:
+        Current premium configuration
+    """
+    try:
+        from pathlib import Path
+
+        config_path = Path("data/premium_config.json")
+
+        if not config_path.exists():
+            # Return default config
+            return PremiumConfigResponse(
+                recovery={
+                    "enabled": False,
+                    "max_retry_attempts": 3,
+                    "retry_strategies": ["immediate", "exponential_backoff"],
+                    "quality_cascade_enabled": False,
+                    "quality_cascade_order": ["1080p", "720p"],
+                    "alternative_search_enabled": False,
+                    "indexer_failover_enabled": False,
+                    "predictive_failure_detection": False,
+                },
+                monitoring={
+                    "enabled": False,
+                    "health_check_interval": 300,
+                    "pattern_detection_enabled": False,
+                    "predictive_analysis_enabled": False,
+                    "notification_threshold": "high",
+                    "detailed_metrics_enabled": False,
+                },
+                analytics={
+                    "enabled": False,
+                    "retention_days": 30,
+                    "success_rate_tracking": False,
+                    "performance_metrics": False,
+                    "trend_analysis": False,
+                },
+            )
+
+        import json
+
+        with open(config_path) as f:
+            config = json.load(f)
+
+        return PremiumConfigResponse(**config)
+
+    except Exception as e:
+        logger.error(f"Failed to get premium config: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get premium config: {str(e)}",
+        )
+
+
+@router.put("/premium/config", response_model=PremiumConfigResponse)
+async def update_premium_config(config: PremiumConfigResponse) -> PremiumConfigResponse:
+    """
+    Update premium feature configuration.
+
+    Args:
+        config: New premium configuration
+
+    Returns:
+        Updated configuration
+    """
+    try:
+        from pathlib import Path
+
+        config_path = Path("data/premium_config.json")
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+
+        import json
+
+        with open(config_path, "w") as f:
+            json.dump(config.dict(), f, indent=2)
+
+        logger.info("Premium configuration updated")
+
+        return config
+
+    except Exception as e:
+        logger.error(f"Failed to update premium config: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update premium config: {str(e)}",
         )

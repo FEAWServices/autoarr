@@ -1,0 +1,140 @@
+# Copyright (C) 2025 AutoArr Contributors
+# This file is part of AutoArr (GPL-3.0-or-later)
+
+# Docker Compose configuration for AutoArr with Ollama local LLM
+# This is the FREE version configuration using local LLM inference
+
+version: '3.8'
+
+services:
+  # Ollama LLM Service (local inference)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: autoarr-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    # GPU support (uncomment if you have NVIDIA GPU)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    networks:
+      - autoarr-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # AutoArr Application
+  autoarr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autoarr-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # LLM Configuration - Ollama (free version)
+      - LLM_PROVIDER=ollama
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=qwen2.5:7b
+      - OLLAMA_AUTO_DOWNLOAD=true
+
+      # Optional: Claude fallback (requires API key)
+      # - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+
+      # Database
+      - DATABASE_URL=postgresql://autoarr:autoarr@postgres:5432/autoarr
+
+      # Redis Cache
+      - REDIS_URL=redis://redis:6379/0
+
+      # SABnzbd
+      - SABNZBD_URL=${SABNZBD_URL}
+      - SABNZBD_API_KEY=${SABNZBD_API_KEY}
+
+      # Sonarr
+      - SONARR_URL=${SONARR_URL}
+      - SONARR_API_KEY=${SONARR_API_KEY}
+
+      # Radarr
+      - RADARR_URL=${RADARR_URL}
+      - RADARR_API_KEY=${RADARR_API_KEY}
+
+      # Plex (optional)
+      - PLEX_URL=${PLEX_URL:-}
+      - PLEX_TOKEN=${PLEX_TOKEN:-}
+    volumes:
+      - ./autoarr:/app/autoarr
+      - autoarr-data:/app/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - autoarr-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: autoarr-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=autoarr
+      - POSTGRES_PASSWORD=autoarr
+      - POSTGRES_DB=autoarr
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - autoarr-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autoarr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: autoarr-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - autoarr-network
+
+networks:
+  autoarr-network:
+    name: autoarr-network
+    driver: bridge
+
+volumes:
+  ollama-data:
+    name: autoarr-ollama-data
+  autoarr-data:
+    name: autoarr-app-data
+  postgres-data:
+    name: autoarr-postgres-data
+  redis-data:
+    name: autoarr-redis-data
