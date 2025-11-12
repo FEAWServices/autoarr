@@ -1,603 +1,970 @@
 # AutoArr Technical Architecture
 
-## System Overview
+**Last Updated:** 2025-01-12
+**Version:** 2.0 (Integrated Single-Container)
 
-AutoArr is a containerized orchestration platform built on a microservices architecture with MCP (Model Context Protocol) as the integration backbone. The system emphasizes modularity, testability, and intelligent decision-making.
+---
 
-## Architecture Diagram
+## Design Philosophy
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         AutoArr Container                      │
-│                                                               │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │                    Web UI Layer                        │ │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐│ │
-│  │  │Dashboard │  │Chat UI   │  │Config Audit UI       ││ │
-│  │  └────┬─────┘  └────┬─────┘  └──────────┬───────────┘│ │
-│  │       │             │                   │             │ │
-│  │       └─────────────┴───────────────────┘             │ │
-│  └────────────────────────┬────────────────────────────────┘ │
-│                           │                                  │
-│  ┌────────────────────────▼────────────────────────────────┐ │
-│  │                   API Gateway                           │ │
-│  │              (FastAPI / Express)                        │ │
-│  └────────────────────────┬────────────────────────────────┘ │
-│                           │                                  │
-│  ┌────────────────────────▼────────────────────────────────┐ │
-│  │                 Core Services Layer                     │ │
-│  │                                                         │ │
-│  │  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐ │ │
-│  │  │Configuration│  │  Monitoring  │  │   Request    │ │ │
-│  │  │   Manager   │  │   Service    │  │   Handler    │ │ │
-│  │  └──────┬──────┘  └──────┬───────┘  └──────┬───────┘ │ │
-│  │         │                │                  │         │ │
-│  │  ┌──────▼────────────────▼──────────────────▼───────┐ │ │
-│  │  │          Intelligence Engine                     │ │ │
-│  │  │  ┌──────────┐  ┌────────────┐  ┌──────────────┐│ │ │
-│  │  │  │LLM Agent │  │Web Search  │  │Decision Tree ││ │ │
-│  │  │  └──────────┘  └────────────┘  └──────────────┘│ │ │
-│  │  └──────────────────────┬──────────────────────────┘ │ │
-│  │                         │                            │ │
-│  │  ┌──────────────────────▼──────────────────────────┐ │ │
-│  │  │            MCP Client Orchestrator               │ │ │
-│  │  └──────┬──────────┬──────────┬───────────┬────────┘ │ │
-│  └─────────┼──────────┼──────────┼───────────┼──────────┘ │
-│            │          │          │           │            │
-│  ┌─────────▼───┐ ┌────▼────┐ ┌──▼─────┐ ┌───▼──────┐    │
-│  │  SABnzbd    │ │ Sonarr  │ │ Radarr │ │  Plex    │    │
-│  │ MCP Server  │ │   MCP   │ │  MCP   │ │   MCP    │    │
-│  └─────────┬───┘ └────┬────┘ └──┬─────┘ └───┬──────┘    │
-└────────────┼──────────┼─────────┼───────────┼────────────┘
-             │          │         │           │
-             │          │         │           │
-    ┌────────▼──────────▼─────────▼───────────▼────────┐
-    │           External Applications                   │
-    │  ┌──────────┐  ┌────────┐  ┌────────┐  ┌─────┐  │
-    │  │ SABnzbd  │  │ Sonarr │  │ Radarr │  │Plex │  │
-    │  └──────────┘  └────────┘  └────────┘  └─────┘  │
-    └───────────────────────────────────────────────────┘
-```
+AutoArr follows a **simplified, integrated architecture** designed for:
 
-## Component Architecture
+- **Easy deployment** - Single container, minimal configuration
+- **Low resource usage** - Optimized for NAS devices (4-8GB RAM)
+- **Privacy-first** - Local LLM, no external dependencies
+- **Reliability** - Direct API integration, fewer failure points
+- **Maintainability** - Simple codebase, easy to understand
 
-### 1. Web UI Layer
+**Inspired by:** Sonarr, Radarr (simple, effective, self-contained)
 
-**Technology**: React 18+ with TypeScript
-**Styling**: Tailwind CSS for mobile-first design
-**State Management**: Zustand (lightweight, ideal for our use case)
-**Build Tool**: Vite
+---
 
-#### Components
-
-- **Dashboard**: Real-time status overview, health indicators
-- **Chat Interface**: Natural language content requests
-- **Configuration Audit**: Interactive checklist with explanations
-- **Settings**: MCP server connections, user preferences
-- **Activity Log**: Transparent action history
-
-#### Responsibilities
-
-- Render responsive, mobile-first UI
-- WebSocket connection for real-time updates
-- Client-side validation
-- Optimistic UI updates
-
-### 2. API Gateway
-
-**Technology**: FastAPI (Python) for rapid development and async support
-**Alternative**: Express.js (TypeScript) if team prefers Node.js
-
-#### Endpoints
+## High-Level Architecture
 
 ```
-POST   /api/v1/config/audit          - Trigger configuration audit
-GET    /api/v1/config/recommendations - Get optimization recommendations
-POST   /api/v1/config/apply           - Apply configuration change
-POST   /api/v1/request/content        - Natural language content request
-GET    /api/v1/monitoring/status      - Get system status
-GET    /api/v1/monitoring/queue       - Get download queue status
-POST   /api/v1/monitoring/retry       - Manually trigger retry
-WS     /api/v1/stream                 - WebSocket for real-time updates
+┌─────────────────────────────────────────────────────────────────┐
+│                     AutoArr Container                           │
+│                     (Python + React)                            │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                  FastAPI Backend                         │  │
+│  │                                                          │  │
+│  │  ┌────────────────────────────────────────────────────┐│  │
+│  │  │         Local LLM Engine                          ││  │
+│  │  │  Qwen 2.5-3B (Quantized, ~3GB RAM)              ││  │
+│  │  │  - Natural language parsing                      ││  │
+│  │  │  - Content classification (movie/TV)            ││  │
+│  │  │  - Configuration analysis                        ││  │
+│  │  └────────────────────────────────────────────────────┘│  │
+│  │                                                          │  │
+│  │  ┌────────────────────────────────────────────────────┐│  │
+│  │  │         API Client Layer                          ││  │
+│  │  │  ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌──────┐ ││  │
+│  │  │  │  Radarr  │ │  Sonarr  │ │ SABnzbd │ │ Plex │ ││  │
+│  │  │  │  Client  │ │  Client  │ │  Client │ │Client│ ││  │
+│  │  │  └──────────┘ └──────────┘ └─────────┘ └──────┘ ││  │
+│  │  └────────────────────────────────────────────────────┘│  │
+│  │                                                          │  │
+│  │  ┌────────────────────────────────────────────────────┐│  │
+│  │  │         Business Logic Services                   ││  │
+│  │  │  - ConfigurationManager                           ││  │
+│  │  │  - MonitoringService                              ││  │
+│  │  │  - RecoveryService                                ││  │
+│  │  │  - RequestHandler                                 ││  │
+│  │  │  - ActivityLogger                                 ││  │
+│  │  └────────────────────────────────────────────────────┘│  │
+│  │                                                          │  │
+│  │  ┌────────────────────────────────────────────────────┐│  │
+│  │  │         SQLite Database                           ││  │
+│  │  │  - Configuration history                          ││  │
+│  │  │  - Activity logs                                  ││  │
+│  │  │  - Content requests                               ││  │
+│  │  │  - Best practices                                 ││  │
+│  │  └────────────────────────────────────────────────────┘│  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                  React Frontend                          │  │
+│  │  - Dashboard (health monitoring)                         │  │
+│  │  - Chat Interface (natural language)                     │  │
+│  │  - Configuration Audit                                   │  │
+│  │  - Activity Feed                                         │  │
+│  │  - Settings                                              │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                           │
+                           │ HTTP/JSON APIs
+                           │
+        ┌──────────────────┴──────────────────┐
+        │                                     │
+   ┌────▼─────┐  ┌─────────┐  ┌──────────┐  ┌──────┐
+   │  Radarr  │  │ Sonarr  │  │ SABnzbd  │  │ Plex │
+   │  :7878   │  │  :8989  │  │  :8080   │  │:32400│
+   └──────────┘  └─────────┘  └──────────┘  └──────┘
 ```
 
-#### Responsibilities
+---
 
-- Request validation
-- Authentication/Authorization (JWT)
+## Component Details
+
+### 1. FastAPI Backend
+
+**Technology Stack:**
+- Python 3.11+
+- FastAPI (async web framework)
+- SQLAlchemy (ORM)
+- aiohttp (async HTTP client)
+- llama-cpp-python (local LLM)
+
+**Key Features:**
+- Async/await throughout
+- Type hints and Pydantic validation
+- Automatic OpenAPI documentation
+- WebSocket support for real-time updates
+- Background task scheduling
+
+**API Structure:**
+```
+/api/v1/
+├── health              # Health check
+├── config/             # Configuration management
+│   ├── audit           # Trigger audit
+│   ├── recommendations # Get recommendations
+│   └── apply           # Apply changes
+├── downloads/          # Download management
+│   ├── queue           # Current queue
+│   ├── history         # Download history
+│   └── retry           # Retry failed download
+├── content/            # Content requests
+│   ├── request         # Natural language request
+│   ├── search          # Search content
+│   └── status          # Request status
+├── activity/           # Activity logs
+│   └── logs            # Get activity logs
+└── settings/           # Application settings
+```
+
+---
+
+### 2. Local LLM Engine
+
+**Model: Qwen 2.5-3B (Quantized)**
+
+```python
+from llama_cpp import Llama
+
+llm = Llama(
+    model_path="/app/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+    n_ctx=2048,        # Context window
+    n_threads=4,       # CPU threads
+    n_gpu_layers=0,    # CPU only
+    verbose=False
+)
+```
+
+**Capabilities:**
+- Natural language understanding
+- Content type classification (movie vs TV)
+- Title and metadata extraction
+- Configuration analysis
+- Reasoning and decision-making
+
+**Performance:**
+- Inference speed: 20-30 tokens/second (CPU)
+- Memory usage: ~3GB RAM
+- Latency: 200-500ms per query
+
+**Quantization:** Q4_K_M (4-bit quantized)
+- 75% smaller than full precision
+- Minimal accuracy loss
+- Optimized for CPU inference
+
+---
+
+### 3. API Client Layer
+
+#### Radarr Client
+
+```python
+class RadarrClient:
+    """Direct API integration with Radarr"""
+
+    async def search_movies(self, query: str) -> List[Movie]:
+        """Search for movies"""
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"{self.base_url}/api/v3/movie/lookup",
+                params={"term": query},
+                headers={"X-Api-Key": self.api_key}
+            ) as resp:
+                return await resp.json()
+
+    async def add_movie(
+        self,
+        tmdb_id: int,
+        quality_profile_id: int,
+        root_folder: str
+    ) -> Movie:
+        """Add movie to Radarr"""
+        # Implementation
+```
+
+**Similar clients for:**
+- Sonarr (TV shows)
+- SABnzbd (downloads)
+- Plex (library management)
+
+**Features:**
+- Async HTTP calls
+- Automatic retry with exponential backoff
+- Connection pooling
 - Rate limiting
-- WebSocket management
-- Error handling and logging
+- Error handling
 
-### 3. Core Services Layer
+---
+
+### 4. Business Logic Services
 
 #### Configuration Manager
 
-**Responsibilities:**
-
-- Connects to MCP servers to fetch current configurations
-- Compares against best practice database
-- Generates audit checklist
-- Applies approved configuration changes
-- Tracks configuration history
-
-**Key Classes:**
-
 ```python
 class ConfigurationManager:
-    async def audit_application(app_name: str) -> AuditResult
-    async def get_recommendations(app_name: str) -> List[Recommendation]
-    async def apply_configuration(app_name: str, changes: Dict) -> bool
-    async def rollback_configuration(app_name: str, version: int) -> bool
+    """Audit and optimize application configurations"""
+
+    async def audit_all(self) -> AuditResult:
+        """Audit all connected applications"""
+        results = []
+
+        # Fetch current configurations
+        radarr_config = await self.radarr.get_config()
+        sonarr_config = await self.sonarr.get_config()
+        sabnzbd_config = await self.sabnzbd.get_config()
+
+        # Compare against best practices
+        recommendations = await self._analyze_configs(
+            radarr_config,
+            sonarr_config,
+            sabnzbd_config
+        )
+
+        return AuditResult(recommendations=recommendations)
+
+    async def _analyze_configs(self, *configs) -> List[Recommendation]:
+        """Use LLM to analyze configurations"""
+        # LLM analysis with best practices context
 ```
 
 #### Monitoring Service
 
-**Responsibilities:**
-
-- Polls MCP servers for queue status (SABnzbd)
-- Monitors wanted lists (Sonarr, Radarr)
-- Detects failed downloads
-- Triggers recovery actions
-- Maintains health metrics
-
-**Key Classes:**
-
 ```python
 class MonitoringService:
-    async def check_download_queue() -> QueueStatus
-    async def check_wanted_lists() -> List[WantedItem]
-    async def detect_failures() -> List[FailedDownload]
-    async def trigger_recovery(item: FailedDownload) -> bool
+    """Monitor download queue and detect failures"""
+
+    async def poll_queue(self):
+        """Poll SABnzbd queue periodically"""
+        queue = await self.sabnzbd.get_queue()
+
+        # Detect failures
+        for item in queue:
+            if item.status == "Failed":
+                await self._handle_failure(item)
+
+    async def _handle_failure(self, item: DownloadItem):
+        """Handle failed download"""
+        # Log failure
+        await self.activity_log.log(
+            service="sabnzbd",
+            event="download_failed",
+            details=item.dict()
+        )
+
+        # Trigger recovery
+        await self.recovery_service.retry(item)
+```
+
+#### Recovery Service
+
+```python
+class RecoveryService:
+    """Intelligent retry strategies for failed downloads"""
+
+    async def retry(self, item: DownloadItem):
+        """Retry failed download with appropriate strategy"""
+        strategy = self._select_strategy(item)
+
+        if strategy == "immediate":
+            await self._immediate_retry(item)
+        elif strategy == "quality_fallback":
+            await self._quality_fallback(item)
+        elif strategy == "exponential_backoff":
+            await self._schedule_retry(item)
+
+    def _select_strategy(self, item: DownloadItem) -> str:
+        """Select retry strategy based on failure reason"""
+        if "connection" in item.fail_message.lower():
+            return "immediate"
+        elif "par2" in item.fail_message.lower():
+            return "quality_fallback"
+        else:
+            return "exponential_backoff"
 ```
 
 #### Request Handler
 
-**Responsibilities:**
-
-- Processes natural language content requests
-- Determines content type (movie vs. TV show)
-- Routes to appropriate MCP server (Radarr/Sonarr)
-- Tracks request status
-- Provides user feedback
-
-**Key Classes:**
-
 ```python
 class RequestHandler:
-    async def process_request(text: str) -> ContentRequest
-    async def classify_content(query: str) -> ContentType
-    async def add_to_application(content: ContentRequest) -> bool
-    async def get_request_status(request_id: str) -> RequestStatus
+    """Process natural language content requests"""
+
+    async def process_request(self, query: str) -> ContentRequest:
+        """Process natural language query"""
+        # Use LLM to classify and extract metadata
+        result = await self.llm.classify_content(query)
+
+        if result.content_type == "movie":
+            # Search Radarr
+            movies = await self.radarr.search_movies(result.title)
+            return ContentRequest(
+                type="movie",
+                matches=movies,
+                confidence=result.confidence
+            )
+        elif result.content_type == "tv":
+            # Search Sonarr
+            shows = await self.sonarr.search_series(result.title)
+            return ContentRequest(
+                type="tv",
+                matches=shows,
+                confidence=result.confidence
+            )
 ```
 
-### 4. Intelligence Engine
+---
 
-**Core Technology**: Claude (Anthropic) via API for reasoning
-**Local Model**: Llama 3.1 8B fine-tuned on \*arr documentation (optional)
-**Vector Database**: ChromaDB for documentation embeddings
+### 5. Database Schema (SQLite)
 
-#### LLM Agent
+```sql
+-- Configuration history
+CREATE TABLE configuration_history (
+    id INTEGER PRIMARY KEY,
+    service VARCHAR(50) NOT NULL,
+    config_json TEXT NOT NULL,
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-**Responsibilities:**
+-- Activity logs
+CREATE TABLE activity_logs (
+    id INTEGER PRIMARY KEY,
+    service VARCHAR(50) NOT NULL,
+    event_type VARCHAR(100) NOT NULL,
+    severity VARCHAR(20) NOT NULL,
+    message TEXT NOT NULL,
+    correlation_id VARCHAR(100),
+    metadata JSON,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_timestamp (timestamp),
+    INDEX idx_correlation (correlation_id)
+);
 
-- Analyzes configuration audit results
-- Generates context-aware recommendations
-- Considers application interactions (e.g., Sonarr → SABnzbd settings)
-- Explains reasoning for recommendations
-- Handles natural language queries
+-- Content requests
+CREATE TABLE content_requests (
+    id INTEGER PRIMARY KEY,
+    query TEXT NOT NULL,
+    content_type VARCHAR(20),
+    title VARCHAR(255),
+    year INTEGER,
+    status VARCHAR(50) NOT NULL,
+    result_json TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP
+);
 
-**Interaction Pattern:**
+-- Best practices
+CREATE TABLE best_practices (
+    id INTEGER PRIMARY KEY,
+    service VARCHAR(50) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    setting_key VARCHAR(100) NOT NULL,
+    recommended_value TEXT NOT NULL,
+    reasoning TEXT NOT NULL,
+    source_url VARCHAR(500),
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-```python
-class LLMAgent:
-    async def analyze_configuration(
-        app: str,
-        current_config: Dict,
-        best_practices: List[Practice]
-    ) -> Analysis
-
-    async def recommend_next_action(
-        context: ConfigurationContext
-    ) -> Recommendation
-
-    async def classify_content_request(
-        query: str
-    ) -> ClassificationResult
+-- Download failures (for tracking retry attempts)
+CREATE TABLE download_failures (
+    id INTEGER PRIMARY KEY,
+    nzo_id VARCHAR(100) NOT NULL UNIQUE,
+    filename VARCHAR(500) NOT NULL,
+    failure_reason TEXT,
+    retry_count INTEGER DEFAULT 0,
+    last_retry_at TIMESTAMP,
+    status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-#### Web Search Integration
+---
 
-**Technology**: Brave Search API or SearxNG (self-hosted)
+### 6. React Frontend
 
-**Responsibilities:**
+**Technology Stack:**
+- React 18
+- TypeScript
+- Tailwind CSS (mobile-first)
+- Zustand (state management)
+- React Query (data fetching)
+- WebSocket (real-time updates)
 
-- Searches for latest best practices
-- Finds release notes for applications
-- Discovers community recommendations (Reddit, forums)
-- Caches results to minimize API calls
+**Key Pages:**
 
-**Key Classes:**
+1. **Dashboard** - System health overview
+2. **Chat** - Natural language interface
+3. **Configuration Audit** - Recommendations
+4. **Activity Feed** - Recent actions
+5. **Settings** - Service connections
 
-```python
-class WebSearchService:
-    async def search_best_practices(app: str, topic: str) -> List[SearchResult]
-    async def get_latest_recommendations(app: str) -> List[Practice]
-    async def check_cache(query: str) -> Optional[CachedResult]
+**State Management:**
+```typescript
+// Zustand store
+interface AutoArrState {
+  services: ServiceStatus[];
+  activities: Activity[];
+  config: Configuration;
+
+  fetchServices: () => Promise<void>;
+  fetchActivities: () => Promise<void>;
+  updateConfig: (config: Configuration) => Promise<void>;
+}
+
+const useAutoArrStore = create<AutoArrState>((set) => ({
+  // Implementation
+}));
 ```
 
-#### Decision Tree
+---
 
-**Responsibilities:**
+## Data Flow Examples
 
-- Fallback for LLM (if API unavailable)
-- Fast path for common scenarios
-- Rule-based recovery logic
-- Priority scoring for wanted items
-
-### 5. MCP Client Orchestrator
-
-**Technology**: MCP Python SDK
-
-**Responsibilities:**
-
-- Manages connections to all MCP servers
-- Handles authentication
-- Provides unified interface to core services
-- Connection pooling
-- Error handling and retries
-
-**Key Classes:**
-
-```python
-class MCPOrchestrator:
-    async def connect_all() -> bool
-    async def call_tool(server: str, tool: str, params: Dict) -> Result
-    async def get_server_status(server: str) -> ServerStatus
-    async def disconnect_all() -> None
-```
-
-### 6. MCP Servers (One per Application)
-
-Each MCP server is a standalone process that wraps the application's API.
-
-#### SABnzbd MCP Server
-
-**Tools:**
-
-- `get_queue` - Current download queue
-- `get_history` - Download history
-- `retry_download` - Retry failed download
-- `get_config` - Current configuration
-- `set_config` - Update configuration
-- `pause_queue` - Pause downloads
-- `resume_queue` - Resume downloads
-
-#### Sonarr MCP Server
-
-**Tools:**
-
-- `get_series` - List all series
-- `get_wanted` - Wanted episodes
-- `add_series` - Add new series
-- `search_series` - Search for series
-- `get_config` - Current configuration
-- `set_config` - Update configuration
-- `trigger_search` - Manual episode search
-
-#### Radarr MCP Server
-
-**Tools:**
-
-- `get_movies` - List all movies
-- `get_wanted` - Wanted movies
-- `add_movie` - Add new movie
-- `search_movie` - Search for movie
-- `get_config` - Current configuration
-- `set_config` - Update configuration
-- `trigger_search` - Manual movie search
-
-#### Plex MCP Server
-
-**Tools:**
-
-- `get_libraries` - List libraries
-- `get_recently_added` - Recent content
-- `scan_library` - Trigger library scan
-- `get_config` - Current configuration
-- `optimize_database` - Optimize Plex DB
-
-## Data Flow
-
-### Configuration Audit Flow
+### Example 1: Natural Language Content Request
 
 ```
-1. User requests audit via UI
-2. API Gateway receives request
-3. Configuration Manager:
-   - Calls MCP servers to get current configs
-   - Fetches best practices from database
-   - Searches web for latest recommendations
-4. Intelligence Engine:
-   - LLM analyzes differences
-   - Generates prioritized recommendations
-5. Results returned to UI
-6. User reviews and approves changes
-7. Configuration Manager applies via MCP
-8. Success/failure returned to user
+User: "Add the new Dune movie in 4K"
+  │
+  ├─> Frontend sends: POST /api/v1/content/request
+  │   { "query": "Add the new Dune movie in 4K" }
+  │
+  ├─> RequestHandler receives query
+  │   │
+  │   ├─> LLM classifies content
+  │   │   Input: "Add the new Dune movie in 4K"
+  │   │   Output: { type: "movie", title: "Dune", quality: "4K" }
+  │   │
+  │   ├─> RadarrClient searches
+  │   │   GET /api/v3/movie/lookup?term=Dune
+  │   │   Returns: [{ tmdbId: 438631, title: "Dune" (2021) }]
+  │   │
+  │   └─> Return matches to user for confirmation
+  │
+  ├─> User confirms: "Yes, add it"
+  │
+  ├─> RadarrClient adds movie
+  │   POST /api/v3/movie
+  │   { tmdbId: 438631, qualityProfileId: 6, ... }
+  │
+  ├─> ActivityLogger logs action
+  │   INSERT INTO activity_logs ...
+  │
+  └─> Frontend shows success message
 ```
 
-### Download Recovery Flow
+### Example 2: Automatic Download Recovery
 
 ```
-1. Monitoring Service polls SABnzbd queue (every 2 minutes)
-2. Detects failed download
-3. Identifies source application (Sonarr/Radarr)
-4. Intelligence Engine:
-   - Analyzes failure reason
-   - Determines retry strategy
-5. Calls appropriate MCP server to trigger new search
-6. Monitors new download
-7. Logs action in Activity Log
-8. Notifies user via WebSocket
+MonitoringService (background task, runs every 60s)
+  │
+  ├─> Poll SABnzbd queue
+  │   GET /api?mode=queue
+  │   Response: [{ nzo_id: "abc123", status: "Failed", ... }]
+  │
+  ├─> Detect failure
+  │   Filter: status == "Failed"
+  │   Found: "Show.S01E01.mkv" failed (PAR2 error)
+  │
+  ├─> ActivityLogger logs failure
+  │   INSERT INTO activity_logs
+  │   (service='sabnzbd', event='download_failed', ...)
+  │
+  ├─> RecoveryService handles
+  │   │
+  │   ├─> Determine strategy
+  │   │   Reason: "PAR2 repair failed"
+  │   │   Strategy: "quality_fallback"
+  │   │
+  │   ├─> Parse filename
+  │   │   Extract: series="Show", season=1, episode=1
+  │   │
+  │   ├─> SonarrClient searches lower quality
+  │   │   POST /api/v3/command
+  │   │   { name: "EpisodeSearch", episodeIds: [123], ... }
+  │   │
+  │   └─> ActivityLogger logs retry
+  │       INSERT INTO activity_logs
+  │       (event='recovery_attempted', ...)
+  │
+  └─> WebSocket notifies frontend
+      ws.send({ type: "recovery_started", nzo_id: "abc123" })
 ```
 
-### Content Request Flow
+### Example 3: Configuration Audit
 
 ```
-1. User sends natural language request via chat
-2. API Gateway validates and queues request
-3. Request Handler:
-   - Sends query to LLM for classification
-   - Determines if movie (Radarr) or TV show (Sonarr)
-   - Extracts title, year, quality preferences
-4. Intelligence Engine:
-   - May search web for disambiguation
-   - Confirms with user if multiple matches
-5. MCP Orchestrator:
-   - Calls appropriate MCP server to add content
-   - Triggers search
-6. Monitoring Service tracks progress
-7. User receives status updates via WebSocket
+User clicks: "Run Audit"
+  │
+  ├─> Frontend: POST /api/v1/config/audit
+  │
+  ├─> ConfigurationManager.audit_all()
+  │   │
+  │   ├─> Fetch current configs (parallel)
+  │   │   ├─> RadarrClient.get_config()
+  │   │   ├─> SonarrClient.get_config()
+  │   │   └─> SABnzbdClient.get_config()
+  │   │
+  │   ├─> Load best practices from DB
+  │   │   SELECT * FROM best_practices
+  │   │
+  │   ├─> LLM analyzes configs
+  │   │   Prompt: "Compare these configs against best practices..."
+  │   │   Response: [{
+  │   │     setting: "radarr.quality_profile",
+  │   │     current: "HD-1080p",
+  │   │     recommended: "Ultra-HD",
+  │   │     priority: "medium",
+  │   │     reasoning: "..."
+  │   │   }]
+  │   │
+  │   └─> Return recommendations
+  │
+  └─> Frontend displays audit results
 ```
 
-## Data Storage
+---
 
-### Database: SQLite (local) or PostgreSQL (SaaS)
+## Deployment Architecture
 
-#### Schema Overview
+### Docker Compose (Recommended)
 
-**configurations**
+```yaml
+version: '3.8'
 
-- id, app_name, config_json, created_at, applied_at, applied_by
+services:
+  autoarr:
+    build: .
+    container_name: autoarr
+    ports:
+      - "8080:8080"
+    environment:
+      # Service connections
+      - RADARR_URL=http://radarr:7878
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - SONARR_URL=http://sonarr:8989
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      - SABNZBD_URL=http://sabnzbd:8080
+      - SABNZBD_API_KEY=${SABNZBD_API_KEY}
+      - PLEX_URL=http://plex:32400
+      - PLEX_TOKEN=${PLEX_TOKEN}
 
-**audit_results**
+      # Application settings
+      - LOG_LEVEL=INFO
+      - DATABASE_PATH=/data/autoarr.db
+      - MODEL_PATH=/models/qwen2.5-3b-instruct-q4_k_m.gguf
+    volumes:
+      - ./data:/data          # Database persistence
+      - ./models:/models      # LLM model (cached)
+    restart: unless-stopped
+    mem_limit: 6g            # 2GB app + 3GB LLM + 1GB buffer
+    cpus: 4.0
+    networks:
+      - media-network
 
-- id, app_name, audit_json, recommendations_json, created_at
+networks:
+  media-network:
+    external: true  # Shared with Radarr, Sonarr, etc.
+```
 
-**recommendations**
+### Dockerfile (Multi-stage)
 
-- id, audit_id, title, description, priority, status, applied_at
+```dockerfile
+# Stage 1: Build frontend
+FROM node:20-alpine AS frontend-build
+WORKDIR /app
+COPY autoarr/ui/package*.json ./
+RUN npm ci --only=production
+COPY autoarr/ui ./
+RUN npm run build
 
-**content_requests**
+# Stage 2: Python backend
+FROM python:3.11-slim
 
-- id, user_query, content_type, title, year, status, created_at, completed_at
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-**activity_log**
+# Install Python packages
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-- id, action_type, app_name, details_json, timestamp
+# Download quantized LLM model
+RUN mkdir -p /models && \
+    curl -L -o /models/qwen2.5-3b-instruct-q4_k_m.gguf \
+    https://huggingface.co/Qwen/Qwen2.5-3B-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf
 
-**best_practices**
+# Copy application
+COPY autoarr /app/autoarr
+COPY --from=frontend-build /app/dist /app/autoarr/ui/dist
 
-- id, app_name, category, practice_text, source_url, last_updated
+# Create non-root user
+RUN useradd -m -u 1000 autoarr && \
+    chown -R autoarr:autoarr /app /models
+USER autoarr
 
-**search_cache**
+WORKDIR /app
+EXPOSE 8080
 
-- id, query, results_json, expires_at
+CMD ["uvicorn", "autoarr.main:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+---
+
+## Resource Usage
+
+### Memory Profile
+
+```
+Component              Memory Usage
+────────────────────────────────────
+Python Runtime         ~200 MB
+FastAPI Application    ~300 MB
+LLM (Qwen 2.5-3B Q4)  ~3000 MB
+SQLite Database        ~50 MB
+Frontend Assets        ~100 MB
+────────────────────────────────────
+Total                  ~3650 MB
+Peak (during LLM)      ~4200 MB
+```
+
+**Recommended:** 6-8GB RAM (leaves headroom for OS and other apps)
+
+### CPU Usage
+
+- **Idle:** 1-2% (background monitoring)
+- **LLM Inference:** 80-100% of allocated cores (brief spikes)
+- **API Calls:** 5-10% (network I/O bound)
+
+### Disk Usage
+
+```
+/app/autoarr          ~500 MB (application code)
+/models               ~2.5 GB (LLM model)
+/data/autoarr.db      ~10-100 MB (grows with history)
+/data/logs            ~50-500 MB (rotated daily)
+────────────────────────────────────
+Total                 ~3-4 GB
+```
+
+---
 
 ## Security Architecture
 
-### Authentication
+### Threat Model
 
-- JWT tokens for API access
-- API keys for MCP server connections (stored encrypted)
-- Optional LDAP/OAuth for enterprise
+**In Scope:**
+- API authentication
+- Service credential storage
+- Input validation
+- CORS protection
+- Rate limiting
 
-### Authorization
+**Out of Scope:**
+- Network security (handled by firewall/proxy)
+- TLS/HTTPS (handled by reverse proxy)
+- Physical security
 
-- Role-based access control (Admin, User, Read-only)
-- Action-level permissions
-- Audit trail for all configuration changes
+### Security Measures
 
-### Data Protection
+1. **API Authentication**
+   - Optional API key for external access
+   - Session-based auth for web UI
+   - No default credentials
 
-- Secrets stored in encrypted vault (HashiCorp Vault or environment variables)
-- TLS for all external communications
-- MCP connections over secure WebSocket (wss://)
+2. **Credential Storage**
+   - Service API keys encrypted at rest
+   - Uses system keyring where available
+   - Environment variables as fallback
 
-### Container Security
+3. **Input Validation**
+   - Pydantic models for all API inputs
+   - Sanitization of user queries before LLM
+   - SQL injection protection (ORM)
 
-- Non-root user
-- Read-only filesystem where possible
-- Minimal base image (Alpine Linux)
-- Regular security scanning
+4. **CORS Configuration**
+   - Whitelist of allowed origins
+   - Credentials allowed only for same-origin
+   - Configurable in settings
 
-## Scalability Considerations
+5. **Rate Limiting**
+   - Per-IP rate limits on API endpoints
+   - Prevents abuse of LLM inference
+   - Configurable thresholds
 
-### Current Design (Single Container)
+---
 
-- Suitable for up to 10,000 media items
-- Single user or small household
-- All services in one container
+## Performance Optimization
 
-### Future SaaS Design
+### LLM Optimization
 
-- Microservices architecture (Kubernetes)
-- Separate pods for UI, API, Intelligence, MCP Orchestrator
-- Horizontal scaling for MCP servers
-- Managed database (PostgreSQL)
-- Message queue for async tasks (RabbitMQ/Redis)
+```python
+# Cache common queries
+@lru_cache(maxsize=100)
+async def classify_content(query: str) -> Classification:
+    # Cache reduces LLM calls for repeated queries
+    pass
 
-## Monitoring and Observability
+# Batch processing
+async def process_batch(queries: List[str]):
+    # Process multiple queries in one LLM call
+    pass
+```
 
-### Metrics (Prometheus)
+### Database Optimization
 
-- API request latency
-- MCP call success rate
-- Download recovery success rate
-- LLM inference time
-- Queue sizes
+```sql
+-- Indexes for common queries
+CREATE INDEX idx_activity_timestamp ON activity_logs(timestamp DESC);
+CREATE INDEX idx_activity_correlation ON activity_logs(correlation_id);
+CREATE INDEX idx_requests_status ON content_requests(status, created_at);
 
-### Logging (Structured JSON)
+-- Query optimization
+PRAGMA journal_mode=WAL;  -- Better concurrency
+PRAGMA synchronous=NORMAL; -- Balance safety/speed
+PRAGMA cache_size=-64000;  -- 64MB cache
+```
 
-- Application logs
-- Access logs
-- Error logs
-- Audit logs
+### API Optimization
 
-### Tracing (OpenTelemetry)
+```python
+# Connection pooling
+connector = aiohttp.TCPConnector(
+    limit=100,           # Max connections
+    limit_per_host=10,   # Per host
+    ttl_dns_cache=300    # DNS cache
+)
 
-- Request flow across services
-- MCP call chains
-- Performance bottlenecks
+# Request caching
+@cache(expire=300)  # 5 minute cache
+async def get_radarr_movies():
+    # Expensive API call cached
+    pass
+```
+
+---
+
+## Monitoring & Observability
 
 ### Health Checks
 
-- `/health` - Overall system health
-- `/health/mcp/{server}` - Individual MCP server health
-- `/health/services` - Core services health
+```python
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "version": "1.0.0",
+        "timestamp": datetime.now().isoformat(),
+        "components": {
+            "database": await check_database(),
+            "llm": await check_llm(),
+            "radarr": await radarr.health_check(),
+            "sonarr": await sonarr.health_check(),
+            "sabnzbd": await sabnzbd.health_check(),
+            "plex": await plex.health_check()
+        }
+    }
+```
 
-## Technology Stack Summary
+### Logging
 
-| Component        | Technology               | Rationale                          |
-| ---------------- | ------------------------ | ---------------------------------- |
-| Container        | Docker                   | Universal deployment               |
-| API Gateway      | FastAPI (Python)         | Async, fast, great docs            |
-| UI Framework     | React + TypeScript       | Industry standard, great ecosystem |
-| Styling          | Tailwind CSS             | Rapid development, mobile-first    |
-| State Management | Zustand                  | Simple, performant                 |
-| Database         | SQLite → PostgreSQL      | Easy start, clear upgrade path     |
-| MCP Servers      | Python (MCP SDK)         | Official SDK, async support        |
-| LLM              | Claude API + Local Llama | Best reasoning + privacy option    |
-| Vector DB        | ChromaDB                 | Lightweight, easy embedding        |
-| Search           | Brave Search API         | Privacy-focused, good results      |
-| Monitoring       | Prometheus + Grafana     | Industry standard                  |
-| Logging          | Structured JSON          | Easy parsing, searchable           |
+```python
+import logging
+import structlog
+
+# Structured logging
+logger = structlog.get_logger()
+
+logger.info(
+    "download_failed",
+    nzo_id="abc123",
+    filename="Show.S01E01.mkv",
+    reason="PAR2 repair failed",
+    retry_count=1
+)
+```
+
+### Metrics
+
+```python
+from prometheus_client import Counter, Histogram
+
+# Track key metrics
+requests_total = Counter('autoarr_requests_total', 'Total requests')
+request_duration = Histogram('autoarr_request_duration_seconds', 'Request duration')
+llm_inference_duration = Histogram('autoarr_llm_inference_seconds', 'LLM inference time')
+```
+
+---
 
 ## Development Environment
 
 ### Prerequisites
 
-- Docker & Docker Compose
 - Python 3.11+
 - Node.js 20+
-- Git
+- Docker & Docker Compose
+- 8GB+ RAM
 
-### Local Setup
+### Setup
 
 ```bash
+# Clone repository
 git clone https://github.com/autoarr/autoarr.git
 cd autoarr
-docker-compose up -d  # Starts all services
-npm install           # UI dependencies
-pip install -r requirements.txt  # API dependencies
+
+# Install Python dependencies
+poetry install
+
+# Install frontend dependencies
+cd autoarr/ui
+pnpm install
+
+# Start development services (Radarr, Sonarr, etc.)
+docker-compose -f docker/docker-compose.dev.yml up -d
+
+# Download LLM model
+mkdir -p models
+curl -L -o models/qwen2.5-3b-instruct-q4_k_m.gguf \
+  https://huggingface.co/Qwen/Qwen2.5-3B-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf
+
+# Start backend
+poetry run uvicorn autoarr.main:app --reload
+
+# Start frontend (separate terminal)
+cd autoarr/ui
+pnpm dev
 ```
 
-### Environment Variables
+### Testing
 
+```bash
+# Run all tests
+poetry run pytest
+
+# Run with coverage
+poetry run pytest --cov=autoarr --cov-report=html
+
+# Run specific tests
+poetry run pytest tests/unit/test_llm.py -v
+
+# Frontend tests
+cd autoarr/ui
+pnpm test
 ```
-CLAUDE_API_KEY=sk-xxx
-BRAVE_SEARCH_API_KEY=xxx
-SABNZBD_URL=http://localhost:8080
-SABNZBD_API_KEY=xxx
-SONARR_URL=http://localhost:8989
-SONARR_API_KEY=xxx
-RADARR_URL=http://localhost:7878
-RADARR_API_KEY=xxx
-PLEX_URL=http://localhost:32400
-PLEX_TOKEN=xxx
-```
-
-## Deployment
-
-### Container Deployment
-
-```yaml
-version: "3.8"
-services:
-  autoarr:
-    image: autoarr/autoarr:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
-    volumes:
-      - ./config:/app/config
-      - ./data:/app/data
-    restart: unless-stopped
-```
-
-### SaaS Deployment (Future)
-
-- Kubernetes cluster (GKE/EKS)
-- Helm charts for deployment
-- Managed database
-- CDN for UI assets
-- Load balancer for API
-
-## Testing Strategy
-
-### Unit Tests
-
-- Each service component isolated
-- Mock MCP server responses
-- Mock LLM responses
-- Target: 80%+ coverage
-
-### Integration Tests
-
-- End-to-end flows
-- Real MCP server interactions (test instances)
-- Database transactions
-- API endpoint tests
-
-### E2E Tests
-
-- Playwright for UI testing
-- Critical user journeys
-- Mobile device testing
-
-### Performance Tests
-
-- Load testing with Locust
-- MCP server response times
-- Database query optimization
-- LLM inference benchmarking
-
-## Documentation
-
-### Developer Docs
-
-- Architecture overview (this document)
-- API reference (OpenAPI/Swagger)
-- MCP server guide
-- Contribution guide
-
-### User Docs
-
-- Installation guide
-- Configuration guide
-- Troubleshooting
-- FAQ
-
-### API Documentation
-
-- Auto-generated from FastAPI
-- Interactive Swagger UI
-- Example requests/responses
 
 ---
 
-_Document Version: 1.0_
-_Last Updated: October 5, 2025_
-_Owner: AutoArr Team_
+## Technology Rationale
+
+### Why Single Container?
+
+**Pros:**
+- ✅ Easy deployment (one command)
+- ✅ Lower resource usage (shared memory)
+- ✅ Simpler networking (no inter-container communication)
+- ✅ Easier to debug (one log stream)
+- ✅ Better for NAS devices (limited Docker support)
+
+**Cons:**
+- ❌ Less scalable (can't scale components independently)
+- ❌ Harder to update one component
+
+**Decision:** Single container for v1.0, microservices later if needed
+
+### Why Local LLM vs API?
+
+**Local (Qwen 2.5-3B):**
+- ✅ Privacy (nothing leaves your server)
+- ✅ No API costs
+- ✅ No rate limits
+- ✅ Works offline
+- ❌ Slower than cloud APIs
+- ❌ Limited capabilities
+
+**Cloud API (Claude/GPT-4):**
+- ✅ More powerful
+- ✅ Faster inference
+- ❌ Privacy concerns
+- ❌ Recurring costs ($20-50/month)
+- ❌ Rate limits
+- ❌ Requires internet
+
+**Decision:** Local LLM for v1.0, optional cloud API later
+
+### Why Direct API vs MCP Protocol?
+
+**Direct API Integration:**
+- ✅ Simpler code
+- ✅ Fewer dependencies
+- ✅ More reliable (fewer failure points)
+- ✅ Better performance (no protocol overhead)
+- ❌ Tightly coupled to specific services
+
+**MCP Protocol:**
+- ✅ Standardized interface
+- ✅ Easier to add new services
+- ❌ Additional complexity
+- ❌ Overhead from protocol layer
+- ❌ Overkill for 4 services
+
+**Decision:** Direct API for v1.0, MCP if we add 10+ services
+
+---
+
+## Future Enhancements (Post-v1.0)
+
+### Potential Features
+
+1. **Mobile App**
+   - React Native
+   - Push notifications
+   - Offline mode
+
+2. **Advanced Analytics**
+   - Download success rates
+   - Performance metrics
+   - Storage trends
+
+3. **Multi-User Support**
+   - User accounts
+   - Permissions
+   - Shared libraries
+
+4. **Plugin System**
+   - Custom integrations
+   - Community plugins
+   - JavaScript API
+
+5. **Larger LLM Models**
+   - Optional GPU support
+   - Cloud fallback
+   - Model switching
+
+---
+
+## Summary
+
+AutoArr uses a **simple, integrated architecture** optimized for self-hosting:
+
+✅ **Single container** - Easy deployment
+✅ **Local LLM** - Privacy-first
+✅ **Direct API integration** - Reliable and fast
+✅ **Minimal resources** - NAS-friendly
+✅ **100% open source** - Community-driven
+
+**Perfect for home media servers running Sonarr, Radarr, SABnzbd, and Plex.**
+
+---
+
+**Related Documentation:**
+- [BUILD-PLAN.md](./BUILD-PLAN.md) - Development roadmap
+- [FEATURE_CLARITY.md](./FEATURE_CLARITY.md) - Product model
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - How to contribute
+- [DEPLOYMENT.md](./DEPLOYMENT.md) - Production deployment

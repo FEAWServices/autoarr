@@ -19,8 +19,6 @@ AutoArr is an **intelligent orchestration layer** that sits above your media aut
 
 Think of it as **cruise control for your media server** — it continuously monitors your setup, learns best practices, and keeps everything running optimally without manual intervention.
 
-**100% Open Source** (GPL-3.0) - Just like Sonarr and Radarr. Self-hosted, privacy-first, no subscriptions required.
-
 ### The Problem We Solve
 
 Managing a \*arr media automation stack is **complex and time-consuming**:
@@ -294,12 +292,12 @@ See [**BUILD-PLAN.md**](docs/BUILD-PLAN.md) for detailed sprint planning.
 
 ### **Competitive Landscape**
 
-| Solution           | Config Mgmt | Download Recovery | NL Interface | Intelligence | License |
+| Solution           | Config Mgmt | Download Recovery | NL Interface | Intelligence |
 | ------------------ | ----------- | ----------------- | ------------ | ------------ |
-| **Manual**         | ❌          | ❌                | ❌           | ❌           | N/A |
-| **Overseerr**      | ❌          | ❌                | ❌           | ❌           | MIT |
-| **Custom Scripts** | ⚠️          | ⚠️                | ❌           | ❌           | N/A |
-| **AutoArr**        | ✅          | ✅                | ✅           | ✅           | **GPL-3.0** |
+| **Manual**         | ❌          | ❌                | ❌           | ❌           |
+| **Overseerr**      | ❌          | ❌                | ❌           | ❌           |
+| **Custom Scripts** | ⚠️          | ⚠️                | ❌           | ❌           |
+| **AutoArr**        | ✅          | ✅                | ✅           | ✅           |
 
 **AutoArr is the only solution** that combines:
 
@@ -308,29 +306,30 @@ See [**BUILD-PLAN.md**](docs/BUILD-PLAN.md) for detailed sprint planning.
 - Natural language interface for content requests
 - Holistic orchestration across the entire stack
 
-### **Open Source Model**
+### **Business Model**
 
-**AutoArr is 100% open source (GPL-3.0)** - Following the same trusted model as Sonarr and Radarr:
+**Open Core** approach for community growth and sustainability:
 
-✅ **All Features Free Forever**
-- Configuration Intelligence with AI
-- Natural language content requests (local LLM)
-- Automatic download recovery
-- All service integrations
-- Beautiful web UI
-- Self-hosted, privacy-first
+#### **Free Tier** (MIT Licensed)
 
-✅ **No Subscriptions, No Premium Tiers**
-- No API keys required (uses local Qwen 2.5-3B LLM)
-- No features locked behind paywalls
-- No cloud dependencies
-- No telemetry or tracking
+- Configuration auditing
+- Basic download recovery
+- REST API access
+- Community support
 
-✅ **Community-Driven Development**
-- Open roadmap
-- Community contributions welcome
-- Transparent development
-- Your data stays on your server
+#### **Premium** ($4.99/month)
+
+- Advanced AI recommendations
+- Natural language interface
+- Priority support
+- Cloud configuration sync
+
+#### **Enterprise** (Custom pricing)
+
+- Multi-location support
+- Advanced analytics
+- Custom integrations
+- SLA support
 
 ---
 
@@ -400,30 +399,26 @@ This means you have the freedom to:
 
 Any modifications or derivative works must also be released under GPL-3.0, ensuring AutoArr remains free and open source forever.
 
-### 🎯 Fully Open Source - No Premium Tiers
+### 🎁 Free Version vs 💎 Premium Version
 
-AutoArr is **100% open source** - there are no premium features, no subscriptions, and no paywalls.
+AutoArr follows the same model as Sonarr and Radarr:
 
-**What You Get (Free Forever)**:
-- ✅ Complete configuration intelligence with AI
-- ✅ Natural language content requests (local Qwen 2.5-3B LLM)
-- ✅ Automatic download monitoring and recovery
-- ✅ Intelligent retry strategies (quality fallback, exponential backoff)
-- ✅ All service integrations (SABnzbd, Sonarr, Radarr, Plex)
-- ✅ Beautiful, accessible web UI
-- ✅ Activity tracking and logs
-- ✅ Real-time WebSocket updates
-- ✅ Self-hosted, privacy-first
-- ✅ No external API dependencies
-- ✅ Community-driven development
+**Free Version (This Repository)**
+- Full configuration auditing and recommendations
+- Natural language content requests
+- Local LLM support (Ollama with Qwen)
+- All MCP integrations (SABnzbd, Sonarr, Radarr, Plex)
+- Community-driven development
+- GPL-3.0 licensed
 
-**Future Premium Services (Optional, Undefined)**:
-- There *may* be optional cloud-based premium services in the future (advanced AI models, enhanced coordination)
-- These would be **completely optional** add-ons
-- The base AutoArr will **always** be fully functional and open source
-- No features will ever be removed from the open source version
+**Premium Version** (Coming Soon)
+- Advanced AI with custom-trained models (TV.DB, IMDB, international formats)
+- Autonomous download recovery with intelligent retry strategies
+- SaaS option or self-hosted with license key
+- Priority support
+- Available via subscription ($4.99/month planned)
 
-**AutoArr follows the Sonarr/Radarr model**: A trusted, transparent, community-first project.
+The free version is fully functional and will always remain free and open source. The premium version offers enhanced AI capabilities and autonomous features for users who want the ultimate hands-off experience.
 
 ```
 Copyright (C) 2025 AutoArr Contributors
