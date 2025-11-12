@@ -4,16 +4,23 @@
  * Displays status and controls for a service connection (SABnzbd, Sonarr, Radarr, Plex)
  */
 
-import React, { useState } from 'react';
-import { Check, X, AlertCircle, Settings, Trash2, RefreshCw } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  Check,
+  X,
+  AlertCircle,
+  Settings,
+  Trash2,
+  RefreshCw,
+} from "lucide-react";
 
 export interface ServiceConnection {
   id: string;
-  type: 'sabnzbd' | 'sonarr' | 'radarr' | 'plex';
+  type: "sabnzbd" | "sonarr" | "radarr" | "plex";
   name: string;
   url: string;
   apiKey: string;
-  status: 'connected' | 'disconnected' | 'error';
+  status: "connected" | "disconnected" | "error";
   lastCheck?: Date;
   errorMessage?: string;
   version?: string;
@@ -27,17 +34,17 @@ interface ServiceConnectionCardProps {
 }
 
 const SERVICE_ICONS: Record<string, string> = {
-  sabnzbd: '📦',
-  sonarr: '📺',
-  radarr: '🎬',
-  plex: '▶️',
+  sabnzbd: "📦",
+  sonarr: "📺",
+  radarr: "🎬",
+  plex: "▶️",
 };
 
 const SERVICE_NAMES: Record<string, string> = {
-  sabnzbd: 'SABnzbd',
-  sonarr: 'Sonarr',
-  radarr: 'Radarr',
-  plex: 'Plex',
+  sabnzbd: "SABnzbd",
+  sonarr: "Sonarr",
+  radarr: "Radarr",
+  plex: "Plex",
 };
 
 export const ServiceConnectionCard: React.FC<ServiceConnectionCardProps> = ({
@@ -59,22 +66,22 @@ export const ServiceConnectionCard: React.FC<ServiceConnectionCardProps> = ({
 
   const getStatusColor = () => {
     switch (connection.status) {
-      case 'connected':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'disconnected':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'error':
-        return 'bg-red-100 text-red-800 border-red-200';
+      case "connected":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "disconnected":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      case "error":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getStatusIcon = () => {
     switch (connection.status) {
-      case 'connected':
+      case "connected":
         return <Check className="w-4 h-4" />;
-      case 'error':
+      case "error":
         return <X className="w-4 h-4" />;
       default:
         return <AlertCircle className="w-4 h-4" />;
@@ -143,8 +150,8 @@ export const ServiceConnectionCard: React.FC<ServiceConnectionCardProps> = ({
           disabled={testing}
           className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          <RefreshCw className={`w-4 h-4 ${testing ? 'animate-spin' : ''}`} />
-          {testing ? 'Testing...' : 'Test Connection'}
+          <RefreshCw className={`w-4 h-4 ${testing ? "animate-spin" : ""}`} />
+          {testing ? "Testing..." : "Test Connection"}
         </button>
 
         <button
@@ -157,7 +164,11 @@ export const ServiceConnectionCard: React.FC<ServiceConnectionCardProps> = ({
 
         <button
           onClick={() => {
-            if (window.confirm(`Delete ${SERVICE_NAMES[connection.type]} connection?`)) {
+            if (
+              window.confirm(
+                `Delete ${SERVICE_NAMES[connection.type]} connection?`,
+              )
+            ) {
               onDelete(connection.id);
             }
           }}

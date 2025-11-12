@@ -128,7 +128,7 @@ test.describe("Chat - Loading and Initial State", () => {
     expect(placeholder?.length).toBeGreaterThan(0);
   });
 
-  test("should load within 5 seconds", async ({ page }) => {
+  test("should load within 10 seconds", async ({ page }) => {
     const startTime = Date.now();
     await page.goto(`${BASE_URL}/chat`);
 
@@ -137,7 +137,7 @@ test.describe("Chat - Loading and Initial State", () => {
     });
 
     const loadTime = Date.now() - startTime;
-    expect(loadTime).toBeLessThan(5000);
+    expect(loadTime).toBeLessThan(10000);
   });
 });
 

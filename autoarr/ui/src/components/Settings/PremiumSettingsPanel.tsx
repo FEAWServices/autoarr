@@ -4,7 +4,7 @@
  * Configuration panel for premium features (autonomous recovery, enhanced monitoring)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Loader,
   Save,
@@ -15,7 +15,7 @@ import {
   Activity,
   TrendingUp,
   Lock,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface RecoveryConfig {
   enabled: boolean;
@@ -53,19 +53,31 @@ interface PremiumConfig {
 
 interface PremiumSettingsPanelProps {
   licenseValid: boolean;
-  licenseTier: 'free' | 'personal' | 'professional' | 'enterprise';
+  licenseTier: "free" | "personal" | "professional" | "enterprise";
 }
 
-const QUALITY_PROFILES = ['4K/2160p', '1080p', '720p', '480p'];
+const QUALITY_PROFILES = ["4K/2160p", "1080p", "720p", "480p"];
 
 const RETRY_STRATEGIES = [
-  { value: 'immediate', label: 'Immediate Retry', tier: 'personal' },
-  { value: 'exponential_backoff', label: 'Exponential Backoff', tier: 'personal' },
-  { value: 'quality_cascade', label: 'Quality Cascade', tier: 'professional' },
-  { value: 'alternative_release', label: 'Alternative Release', tier: 'professional' },
-  { value: 'alternative_indexer', label: 'Alternative Indexer', tier: 'professional' },
-  { value: 'repack_search', label: 'Repack Search', tier: 'professional' },
-  { value: 'manual_fallback', label: 'Manual Fallback', tier: 'enterprise' },
+  { value: "immediate", label: "Immediate Retry", tier: "personal" },
+  {
+    value: "exponential_backoff",
+    label: "Exponential Backoff",
+    tier: "personal",
+  },
+  { value: "quality_cascade", label: "Quality Cascade", tier: "professional" },
+  {
+    value: "alternative_release",
+    label: "Alternative Release",
+    tier: "professional",
+  },
+  {
+    value: "alternative_indexer",
+    label: "Alternative Indexer",
+    tier: "professional",
+  },
+  { value: "repack_search", label: "Repack Search", tier: "professional" },
+  { value: "manual_fallback", label: "Manual Fallback", tier: "enterprise" },
 ];
 
 export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
@@ -88,7 +100,7 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/premium/config');
+      const response = await fetch("/api/premium/config");
       if (response.ok) {
         const data = await response.json();
         setConfig(data);
@@ -97,7 +109,7 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
         setConfig(getDefaultConfig());
       }
     } catch (error) {
-      console.error('Failed to load config:', error);
+      console.error("Failed to load config:", error);
       setConfig(getDefaultConfig());
     } finally {
       setLoading(false);
@@ -108,9 +120,9 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
     recovery: {
       enabled: false,
       max_retry_attempts: 3,
-      retry_strategies: ['immediate', 'exponential_backoff'],
+      retry_strategies: ["immediate", "exponential_backoff"],
       quality_cascade_enabled: false,
-      quality_cascade_order: ['1080p', '720p'],
+      quality_cascade_order: ["1080p", "720p"],
       alternative_search_enabled: false,
       indexer_failover_enabled: false,
       predictive_failure_detection: false,
@@ -120,7 +132,7 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
       health_check_interval: 300,
       pattern_detection_enabled: false,
       predictive_analysis_enabled: false,
-      notification_threshold: 'high',
+      notification_threshold: "high",
       detailed_metrics_enabled: false,
     },
     analytics: {
@@ -139,28 +151,29 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
     setSaveResult(null);
 
     try {
-      const response = await fetch('/api/premium/config', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/premium/config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),
       });
 
       if (response.ok) {
         setSaveResult({
           success: true,
-          message: 'Premium settings saved successfully',
+          message: "Premium settings saved successfully",
         });
       } else {
         const error = await response.json();
         setSaveResult({
           success: false,
-          message: error.detail || 'Failed to save settings',
+          message: error.detail || "Failed to save settings",
         });
       }
     } catch (error) {
       setSaveResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to save settings',
+        message:
+          error instanceof Error ? error.message : "Failed to save settings",
       });
     } finally {
       setSaving(false);
@@ -169,13 +182,13 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
   };
 
   const handleReset = () => {
-    if (window.confirm('Reset all premium settings to defaults?')) {
+    if (window.confirm("Reset all premium settings to defaults?")) {
       setConfig(getDefaultConfig());
     }
   };
 
   const isFeatureAvailable = (requiredTier: string): boolean => {
-    const tierOrder = ['free', 'personal', 'professional', 'enterprise'];
+    const tierOrder = ["free", "personal", "professional", "enterprise"];
     return (
       licenseValid &&
       tierOrder.indexOf(licenseTier) >= tierOrder.indexOf(requiredTier)
@@ -200,8 +213,9 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
               Premium License Required
             </h3>
             <p className="text-gray-600 mb-4">
-              These settings require a valid premium license. Activate a license to
-              unlock autonomous recovery, enhanced monitoring, and advanced analytics.
+              These settings require a valid premium license. Activate a license
+              to unlock autonomous recovery, enhanced monitoring, and advanced
+              analytics.
             </p>
             <a
               href="https://autoarr.app/pricing"
@@ -224,8 +238,8 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
         <div
           className={`p-4 rounded-lg border ${
             saveResult.success
-              ? 'bg-green-50 border-green-200'
-              : 'bg-red-50 border-red-200'
+              ? "bg-green-50 border-green-200"
+              : "bg-red-50 border-red-200"
           }`}
         >
           <div className="flex items-start gap-2">
@@ -236,7 +250,7 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
             )}
             <p
               className={`text-sm ${
-                saveResult.success ? 'text-green-800' : 'text-red-800'
+                saveResult.success ? "text-green-800" : "text-red-800"
               }`}
             >
               {saveResult.message}
@@ -250,9 +264,12 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
         <div className="flex items-center gap-3 mb-4">
           <Zap className="w-6 h-6 text-blue-600" />
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900">Autonomous Recovery</h3>
+            <h3 className="text-lg font-bold text-gray-900">
+              Autonomous Recovery
+            </h3>
             <p className="text-sm text-gray-600">
-              Automatic download failure detection and intelligent retry strategies
+              Automatic download failure detection and intelligent retry
+              strategies
             </p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -265,7 +282,7 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
                   recovery: { ...config.recovery, enabled: e.target.checked },
                 })
               }
-              disabled={!isFeatureAvailable('personal')}
+              disabled={!isFeatureAvailable("personal")}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
@@ -311,24 +328,30 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
                     key={strategy.value}
                     className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
                       !isFeatureAvailable(strategy.tier)
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={config.recovery.retry_strategies.includes(
-                        strategy.value
+                        strategy.value,
                       )}
                       onChange={(e) => {
                         const strategies = e.target.checked
-                          ? [...config.recovery.retry_strategies, strategy.value]
+                          ? [
+                              ...config.recovery.retry_strategies,
+                              strategy.value,
+                            ]
                           : config.recovery.retry_strategies.filter(
-                              (s) => s !== strategy.value
+                              (s) => s !== strategy.value,
                             );
                         setConfig({
                           ...config,
-                          recovery: { ...config.recovery, retry_strategies: strategies },
+                          recovery: {
+                            ...config.recovery,
+                            retry_strategies: strategies,
+                          },
                         });
                       }}
                       disabled={!isFeatureAvailable(strategy.tier)}
@@ -352,7 +375,7 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
             </div>
 
             {/* Quality Cascade */}
-            {isFeatureAvailable('professional') && (
+            {isFeatureAvailable("professional") && (
               <div>
                 <label className="flex items-center gap-2 mb-2">
                   <input
@@ -384,13 +407,16 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
                         <input
                           type="checkbox"
                           checked={config.recovery.quality_cascade_order.includes(
-                            profile
+                            profile,
                           )}
                           onChange={(e) => {
                             const order = e.target.checked
-                              ? [...config.recovery.quality_cascade_order, profile]
+                              ? [
+                                  ...config.recovery.quality_cascade_order,
+                                  profile,
+                                ]
                               : config.recovery.quality_cascade_order.filter(
-                                  (p) => p !== profile
+                                  (p) => p !== profile,
                                 );
                             setConfig({
                               ...config,
@@ -411,7 +437,7 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
             )}
 
             {/* Advanced Options */}
-            {isFeatureAvailable('professional') && (
+            {isFeatureAvailable("professional") && (
               <div className="pt-4 border-t border-gray-200 space-y-2">
                 <label className="flex items-center gap-2">
                   <input
@@ -463,7 +489,9 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
         <div className="flex items-center gap-3 mb-4">
           <Activity className="w-6 h-6 text-purple-600" />
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900">Enhanced Monitoring</h3>
+            <h3 className="text-lg font-bold text-gray-900">
+              Enhanced Monitoring
+            </h3>
             <p className="text-sm text-gray-600">
               Real-time health monitoring with pattern detection and alerts
             </p>
@@ -475,10 +503,13 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
               onChange={(e) =>
                 setConfig({
                   ...config,
-                  monitoring: { ...config.monitoring, enabled: e.target.checked },
+                  monitoring: {
+                    ...config.monitoring,
+                    enabled: e.target.checked,
+                  },
                 })
               }
-              disabled={!isFeatureAvailable('personal')}
+              disabled={!isFeatureAvailable("personal")}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
@@ -510,7 +541,7 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
               />
             </div>
 
-            {isFeatureAvailable('professional') && (
+            {isFeatureAvailable("professional") && (
               <div className="space-y-2">
                 <label className="flex items-center gap-2">
                   <input
@@ -527,7 +558,9 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
                     }
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">Pattern Detection</span>
+                  <span className="text-sm text-gray-700">
+                    Pattern Detection
+                  </span>
                 </label>
 
                 <label className="flex items-center gap-2">
@@ -556,12 +589,14 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
       </div>
 
       {/* Analytics Settings */}
-      {isFeatureAvailable('professional') && (
+      {isFeatureAvailable("professional") && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-3 mb-4">
             <TrendingUp className="w-6 h-6 text-orange-600" />
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-900">Advanced Analytics</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                Advanced Analytics
+              </h3>
               <p className="text-sm text-gray-600">
                 Track success rates, performance metrics, and trends
               </p>
@@ -573,7 +608,10 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
                 onChange={(e) =>
                   setConfig({
                     ...config,
-                    analytics: { ...config.analytics, enabled: e.target.checked },
+                    analytics: {
+                      ...config.analytics,
+                      enabled: e.target.checked,
+                    },
                   })
                 }
                 className="sr-only peer"
@@ -622,7 +660,9 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
                     }
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">Success Rate Tracking</span>
+                  <span className="text-sm text-gray-700">
+                    Success Rate Tracking
+                  </span>
                 </label>
 
                 <label className="flex items-center gap-2">
@@ -640,7 +680,9 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
                     }
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">Performance Metrics</span>
+                  <span className="text-sm text-gray-700">
+                    Performance Metrics
+                  </span>
                 </label>
 
                 <label className="flex items-center gap-2">
