@@ -4,7 +4,7 @@
  * Displays license status and allows activation/validation of AutoArr licenses
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Key,
   Check,
@@ -15,7 +15,7 @@ import {
   Zap,
   TrendingUp,
   ExternalLink,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface LicenseFeatures {
   autonomous_recovery: boolean;
@@ -30,7 +30,7 @@ interface LicenseFeatures {
 
 interface License {
   license_key: string;
-  tier: 'free' | 'personal' | 'professional' | 'enterprise';
+  tier: "free" | "personal" | "professional" | "enterprise";
   customer_id: string;
   customer_email: string;
   issued_at: string;
@@ -43,7 +43,7 @@ interface LicenseValidationResult {
   valid: boolean;
   error?: string;
   license?: License;
-  validation_type: 'offline' | 'online' | 'grace_period';
+  validation_type: "offline" | "online" | "grace_period";
   warnings?: string[];
   days_until_expiry?: number;
   validated_at: string;
@@ -55,35 +55,35 @@ interface LicenseManagementProps {
 
 const TIER_INFO = {
   free: {
-    name: 'Free',
-    color: 'gray',
+    name: "Free",
+    color: "gray",
     icon: Shield,
-    description: 'Basic features with local LLM',
+    description: "Basic features with local LLM",
   },
   personal: {
-    name: 'Personal',
-    color: 'blue',
+    name: "Personal",
+    color: "blue",
     icon: Key,
-    description: 'Enhanced features for home use',
+    description: "Enhanced features for home use",
   },
   professional: {
-    name: 'Professional',
-    color: 'purple',
+    name: "Professional",
+    color: "purple",
     icon: Zap,
-    description: 'Advanced automation for power users',
+    description: "Advanced automation for power users",
   },
   enterprise: {
-    name: 'Enterprise',
-    color: 'orange',
+    name: "Enterprise",
+    color: "orange",
     icon: TrendingUp,
-    description: 'Full capabilities for organizations',
+    description: "Full capabilities for organizations",
   },
 };
 
 export const LicenseManagement: React.FC<LicenseManagementProps> = ({
   onLicenseChange,
 }) => {
-  const [licenseKey, setLicenseKey] = useState('');
+  const [licenseKey, setLicenseKey] = useState("");
   const [currentLicense, setCurrentLicense] = useState<License | null>(null);
   const [validationResult, setValidationResult] =
     useState<LicenseValidationResult | null>(null);
@@ -99,7 +99,7 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
   const loadExistingLicense = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/license/current');
+      const response = await fetch("/api/license/current");
       if (response.ok) {
         const data = await response.json();
         if (data.license) {
@@ -110,7 +110,7 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
         }
       }
     } catch (error) {
-      console.error('Failed to load license:', error);
+      console.error("Failed to load license:", error);
     } finally {
       setLoading(false);
     }
@@ -125,9 +125,9 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
     setValidationResult(null);
 
     try {
-      const response = await fetch('/api/license/activate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/license/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ license_key: licenseKey }),
       });
 
@@ -145,8 +145,8 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
     } catch (error) {
       setValidationResult({
         valid: false,
-        error: error instanceof Error ? error.message : 'Validation failed',
-        validation_type: 'offline',
+        error: error instanceof Error ? error.message : "Validation failed",
+        validation_type: "offline",
         validated_at: new Date().toISOString(),
       });
     } finally {
@@ -155,28 +155,28 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
   };
 
   const handleDeactivate = async () => {
-    if (!window.confirm('Are you sure you want to deactivate this license?')) {
+    if (!window.confirm("Are you sure you want to deactivate this license?")) {
       return;
     }
 
     try {
-      await fetch('/api/license/deactivate', { method: 'POST' });
+      await fetch("/api/license/deactivate", { method: "POST" });
       setCurrentLicense(null);
       setValidationResult(null);
-      setLicenseKey('');
+      setLicenseKey("");
       onLicenseChange?.(null);
     } catch (error) {
-      console.error('Failed to deactivate license:', error);
-      alert('Failed to deactivate license');
+      console.error("Failed to deactivate license:", error);
+      alert("Failed to deactivate license");
     }
   };
 
   const getTierColor = (tier: string) => {
     const colors = {
-      free: 'text-gray-600 bg-gray-100 border-gray-300',
-      personal: 'text-blue-600 bg-blue-100 border-blue-300',
-      professional: 'text-purple-600 bg-purple-100 border-purple-300',
-      enterprise: 'text-orange-600 bg-orange-100 border-orange-300',
+      free: "text-gray-600 bg-gray-100 border-gray-300",
+      personal: "text-blue-600 bg-blue-100 border-blue-300",
+      professional: "text-purple-600 bg-purple-100 border-purple-300",
+      enterprise: "text-orange-600 bg-orange-100 border-orange-300",
     };
     return colors[tier as keyof typeof colors] || colors.free;
   };
@@ -197,7 +197,7 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               {React.createElement(TIER_INFO[currentLicense.tier].icon, {
-                className: 'w-8 h-8 text-gray-700',
+                className: "w-8 h-8 text-gray-700",
               })}
               <div>
                 <h3 className="text-xl font-bold text-gray-900">
@@ -211,7 +211,7 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
 
             <div
               className={`px-3 py-1 rounded-full text-sm font-medium border ${getTierColor(
-                currentLicense.tier
+                currentLicense.tier,
               )}`}
             >
               {TIER_INFO[currentLicense.tier].name}
@@ -225,7 +225,7 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
               <span className="text-gray-900 font-mono text-xs">
                 {currentLicense.license_key.substring(0, 15)}...
                 {currentLicense.license_key.substring(
-                  currentLicense.license_key.length - 5
+                  currentLicense.license_key.length - 5,
                 )}
               </span>
             </div>
@@ -246,29 +246,32 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
             ) : (
               <div className="flex items-center text-sm">
                 <span className="text-gray-600 w-32">Expires:</span>
-                <span className="text-green-600 font-medium">Never (Lifetime)</span>
+                <span className="text-green-600 font-medium">
+                  Never (Lifetime)
+                </span>
               </div>
             )}
 
             <div className="flex items-center text-sm">
               <span className="text-gray-600 w-32">Validation:</span>
               <span className="text-gray-900 capitalize">
-                {validationResult?.validation_type || 'Unknown'}
+                {validationResult?.validation_type || "Unknown"}
               </span>
             </div>
           </div>
 
           {/* Warnings */}
-          {validationResult?.warnings && validationResult.warnings.length > 0 && (
-            <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
-              {validationResult.warnings.map((warning, index) => (
-                <div key={index} className="flex items-start gap-2 text-sm">
-                  <AlertCircle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-orange-800">{warning}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          {validationResult?.warnings &&
+            validationResult.warnings.length > 0 && (
+              <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
+                {validationResult.warnings.map((warning, index) => (
+                  <div key={index} className="flex items-start gap-2 text-sm">
+                    <AlertCircle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-orange-800">{warning}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
           {/* Features */}
           <div className="mb-4">
@@ -276,37 +279,39 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
               Enabled Features:
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {Object.entries(currentLicense.features).map(([feature, enabled]) => {
-                if (typeof enabled !== 'boolean') return null;
+              {Object.entries(currentLicense.features).map(
+                ([feature, enabled]) => {
+                  if (typeof enabled !== "boolean") return null;
 
-                const featureName = feature
-                  .split('_')
-                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                  .join(' ');
+                  const featureName = feature
+                    .split("_")
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(" ");
 
-                return (
-                  <div
-                    key={feature}
-                    className={`flex items-center gap-2 text-sm ${
-                      enabled ? 'text-green-700' : 'text-gray-400'
-                    }`}
-                  >
-                    {enabled ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <X className="w-4 h-4" />
-                    )}
-                    <span>{featureName}</span>
-                  </div>
-                );
-              })}
+                  return (
+                    <div
+                      key={feature}
+                      className={`flex items-center gap-2 text-sm ${
+                        enabled ? "text-green-700" : "text-gray-400"
+                      }`}
+                    >
+                      {enabled ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <X className="w-4 h-4" />
+                      )}
+                      <span>{featureName}</span>
+                    </div>
+                  );
+                },
+              )}
 
               {currentLicense.features.max_concurrent_downloads && (
                 <div className="flex items-center gap-2 text-sm text-green-700">
                   <Check className="w-4 h-4" />
                   <span>
                     {currentLicense.features.max_concurrent_downloads === -1
-                      ? 'Unlimited Downloads'
+                      ? "Unlimited Downloads"
                       : `${currentLicense.features.max_concurrent_downloads} Concurrent Downloads`}
                   </span>
                 </div>
@@ -317,7 +322,7 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
                   <Check className="w-4 h-4" />
                   <span>
                     {currentLicense.features.max_monitored_items === -1
-                      ? 'Unlimited Monitored Items'
+                      ? "Unlimited Monitored Items"
                       : `${currentLicense.features.max_monitored_items} Monitored Items`}
                   </span>
                 </div>
@@ -334,7 +339,7 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
               Deactivate License
             </button>
 
-            {currentLicense.tier !== 'enterprise' && (
+            {currentLicense.tier !== "enterprise" && (
               <a
                 href="https://autoarr.app/upgrade"
                 target="_blank"
@@ -354,7 +359,9 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
           <div className="flex items-center gap-3 mb-4">
             <Key className="w-8 h-8 text-gray-700" />
             <div>
-              <h3 className="text-xl font-bold text-gray-900">Activate License</h3>
+              <h3 className="text-xl font-bold text-gray-900">
+                Activate License
+              </h3>
               <p className="text-sm text-gray-600">
                 Enter your license key to unlock premium features
               </p>
@@ -375,7 +382,7 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
               disabled={validating}
             />
             <p className="mt-1 text-xs text-gray-500">
-              Don't have a license?{' '}
+              Don't have a license?{" "}
               <a
                 href="https://autoarr.app/pricing"
                 target="_blank"
@@ -437,8 +444,8 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
               key={tier}
               className={`p-4 rounded-lg border-2 ${
                 currentLicense?.tier === tier
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200'
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200"
               }`}
             >
               <div className="flex items-center gap-2 mb-2">
