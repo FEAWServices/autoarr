@@ -82,3 +82,6 @@ temp/
 # Claude Code
 .claude/settings.local.json
 .common/
+
+# Local development scripts
+.local/
