@@ -61,9 +61,36 @@ docker-compose*.yml
 data/
 logs/
 *.log
+cache/
+
+# ML Models (don't include in image - mount as volume)
+models/trained/
+models/cache/
+*.pth
+*.pt
+*.ckpt
+*.safetensors
 
 # Build artifacts
 dist/
 autoarr/ui/dist/
 build/
 *.egg-info/
+
+# Premium files (excluded from free build - handled by multi-stage)
+# Note: autoarr-paid/ is only copied in Dockerfile.premium
+
+# Tests
+tests/
+autoarr/tests/
+autoarr-paid/tests/
+*.test.py
+*_test.py
+test_*.py
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup

@@ -1,0 +1,285 @@
+# Copyright (C) 2025 AutoArr Contributors
+# PROPRIETARY - See LICENSE file for terms
+
+# ============================================================================
+# AutoArr Premium - Docker Compose Configuration
+#
+# This configuration runs the premium version of AutoArr with:
+# - Custom-trained ML model for intelligent recovery
+# - Enhanced monitoring and predictive analytics
+# - Advanced event processing
+# - Optional GPU acceleration
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # AutoArr Premium Application
+  autoarr-premium:
+    build:
+      context: .
+      dockerfile: Dockerfile.premium
+    image: autoarr/autoarr-premium:latest
+    container_name: autoarr-premium
+    restart: unless-stopped
+
+    # Resource limits (premium requires more resources)
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+
+    # Port mapping
+    ports:
+      - "${AUTOARR_PORT:-8000}:8000"
+
+    # Environment variables
+    environment:
+      # Application
+      - AUTOARR_VERSION=premium
+      - AUTOARR_ENV=production
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+
+      # License Configuration (REQUIRED for premium)
+      - LICENSE_KEY=${LICENSE_KEY}
+      - LICENSE_SERVER_URL=${LICENSE_SERVER_URL:-https://license.autoarr.app}
+
+      # ML Model Configuration
+      - MODEL_PATH=/app/models/trained/autoarr-recovery-model
+      - MODEL_TYPE=${MODEL_TYPE:-local}  # local, vllm, tgi
+      - TRANSFORMERS_CACHE=/app/models/cache
+      - HF_HOME=/app/models/hf
+      - TORCH_HOME=/app/models/torch
+
+      # Inference Backend (for advanced deployments)
+      - VLLM_URL=${VLLM_URL}  # Optional: vLLM server URL
+      - TGI_URL=${TGI_URL}    # Optional: TGI server URL
+
+      # Claude API (fallback/hybrid mode)
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-3-5-sonnet-20241022}
+
+      # SABnzbd Configuration
+      - SABNZBD_URL=${SABNZBD_URL:-http://sabnzbd:8080}
+      - SABNZBD_API_KEY=${SABNZBD_API_KEY}
+      - SABNZBD_ENABLED=${SABNZBD_ENABLED:-true}
+
+      # Sonarr Configuration
+      - SONARR_URL=${SONARR_URL:-http://sonarr:8989}
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      - SONARR_ENABLED=${SONARR_ENABLED:-true}
+
+      # Radarr Configuration
+      - RADARR_URL=${RADARR_URL:-http://radarr:7878}
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - RADARR_ENABLED=${RADARR_ENABLED:-true}
+
+      # Plex Configuration (optional)
+      - PLEX_URL=${PLEX_URL}
+      - PLEX_TOKEN=${PLEX_TOKEN}
+      - PLEX_ENABLED=${PLEX_ENABLED:-false}
+
+      # Database
+      - DATABASE_URL=${DATABASE_URL:-postgresql://autoarr:autoarr@postgres:5432/autoarr}
+
+      # Redis (for caching and event queue)
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+
+      # Security
+      - SECRET_KEY=${SECRET_KEY}
+
+      # Premium Features Configuration
+      - AUTONOMOUS_RECOVERY_ENABLED=${AUTONOMOUS_RECOVERY_ENABLED:-true}
+      - ENHANCED_MONITORING_ENABLED=${ENHANCED_MONITORING_ENABLED:-true}
+      - PREDICTIVE_ANALYTICS_ENABLED=${PREDICTIVE_ANALYTICS_ENABLED:-true}
+      - ADVANCED_ANALYTICS_ENABLED=${ADVANCED_ANALYTICS_ENABLED:-true}
+
+    # Volume mounts
+    volumes:
+      # Application data
+      - autoarr-premium-data:/app/data
+
+      # Logs
+      - autoarr-premium-logs:/app/logs
+
+      # Cache
+      - autoarr-premium-cache:/app/cache
+
+      # ML Models (IMPORTANT: Mount your trained model here)
+      - ${MODEL_DIR:-./models}:/app/models/trained:ro
+      - autoarr-model-cache:/app/models/cache
+      - autoarr-hf-home:/app/models/hf
+
+      # Optional: Mount config file
+      - ${CONFIG_DIR:-./config}:/app/config:ro
+
+      # Optional: License file (if not using environment variable)
+      - ${LICENSE_FILE:-./license.key}:/app/license.key:ro
+
+    # Networks
+    networks:
+      - autoarr-network
+
+    # Dependencies
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # PostgreSQL Database (Premium)
+  postgres:
+    image: postgres:16-alpine
+    container_name: autoarr-postgres
+    restart: unless-stopped
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Environment variables
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-autoarr}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-autoarr}
+      - POSTGRES_DB=${POSTGRES_DB:-autoarr}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+
+    # Volume mounts
+    volumes:
+      - autoarr-postgres-data:/var/lib/postgresql/data
+
+    # Networks
+    networks:
+      - autoarr-network
+
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autoarr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis Cache (Premium)
+  redis:
+    image: redis:7-alpine
+    container_name: autoarr-redis
+    restart: unless-stopped
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+    # Command with persistence
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+
+    # Volume mounts
+    volumes:
+      - autoarr-redis-data:/data
+
+    # Networks
+    networks:
+      - autoarr-network
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Optional: vLLM Server (for high-throughput inference)
+  # Uncomment to use vLLM instead of local inference
+  # vllm:
+  #   image: vllm/vllm-openai:latest
+  #   container_name: autoarr-vllm
+  #   restart: unless-stopped
+  #
+  #   # GPU support (requires nvidia-docker)
+  #   runtime: nvidia
+  #
+  #   environment:
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #
+  #   command: >
+  #     --model /models/autoarr-recovery-model
+  #     --port 8080
+  #     --max-model-len 2048
+  #     --gpu-memory-utilization 0.9
+  #
+  #   volumes:
+  #     - ${MODEL_DIR:-./models}:/models:ro
+  #
+  #   ports:
+  #     - "8080:8080"
+  #
+  #   networks:
+  #     - autoarr-network
+
+# Networks
+networks:
+  autoarr-network:
+    driver: bridge
+    name: autoarr-premium-network
+
+# Volumes
+volumes:
+  # AutoArr data
+  autoarr-premium-data:
+    driver: local
+    name: autoarr-premium-data
+
+  # AutoArr logs
+  autoarr-premium-logs:
+    driver: local
+    name: autoarr-premium-logs
+
+  # AutoArr cache
+  autoarr-premium-cache:
+    driver: local
+    name: autoarr-premium-cache
+
+  # ML Model cache
+  autoarr-model-cache:
+    driver: local
+    name: autoarr-model-cache
+
+  # HuggingFace home
+  autoarr-hf-home:
+    driver: local
+    name: autoarr-hf-home
+
+  # PostgreSQL data
+  autoarr-postgres-data:
+    driver: local
+    name: autoarr-postgres-data
+
+  # Redis data
+  autoarr-redis-data:
+    driver: local
+    name: autoarr-redis-data
