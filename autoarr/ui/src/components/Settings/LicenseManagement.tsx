@@ -93,6 +93,7 @@ export const LicenseManagement: React.FC<LicenseManagementProps> = ({
   // Load existing license on mount
   useEffect(() => {
     loadExistingLicense();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadExistingLicense = async () => {

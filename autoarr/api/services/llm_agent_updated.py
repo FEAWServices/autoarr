@@ -27,7 +27,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from autoarr.api.services.models import Priority
-from autoarr.shared.llm import LLMProviderFactory, LLMMessage, BaseLLMProvider
+from autoarr.shared.llm import BaseLLMProvider, LLMMessage, LLMProviderFactory
 
 logger = logging.getLogger(__name__)
 
