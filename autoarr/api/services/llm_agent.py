@@ -19,7 +19,7 @@
 LLM Agent Service for AutoArr.
 
 This service provides LLM-powered intelligent analysis and recommendations
-using pluggable LLM providers (Ollama, Claude, or custom). It includes:
+using pluggable LLM providers (Claude or custom). It includes:
 - LLM provider abstraction with automatic selection
 - Prompt template system
 - Structured output parsing
@@ -484,7 +484,7 @@ class LLMAgent:
                 }
                 self._provider = ClaudeProvider(config)
             else:
-                # Use factory (Ollama by default, Claude if key in env)
+                # Use factory (Claude)
                 logger.info("Auto-selecting LLM provider via factory")
                 self._provider = await LLMProviderFactory.create_provider(
                     provider_name=None,  # Auto-select

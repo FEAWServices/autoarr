@@ -682,24 +682,15 @@ curl -v http://localhost:8000/api/v1/config/audit
    LLM_RETRY_MAX_DELAY=120.0
    ```
 
-2. **Use Local LLM (Future)**
-
-   ```bash
-   # Configure Ollama
-   LLM_PROVIDER=ollama
-   OLLAMA_URL=http://ollama:11434
-   OLLAMA_MODEL=llama2
-   ```
+2. **Upgrade API Tier**
+   - Contact Anthropic for higher Claude API limits
+   - Consider enterprise plan
 
 3. **Batch Operations**
 
    - Audit multiple services at once
    - Avoid frequent small requests
    - Cache LLM responses
-
-4. **Upgrade API Tier**
-   - Contact Anthropic for higher limits
-   - Consider enterprise plan
 
 **Prevention:**
 
