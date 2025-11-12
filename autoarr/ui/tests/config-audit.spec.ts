@@ -296,6 +296,11 @@ test.describe("Configuration Audit UI", () => {
 
       await page.goto("/config-audit");
 
+      // Wait for loading to complete
+      await expect(
+        page.getByText(/loading recommendations/i),
+      ).not.toBeVisible();
+
       // Should show empty state message
       await expect(page.getByText(/no recommendations found/i)).toBeVisible();
     });
