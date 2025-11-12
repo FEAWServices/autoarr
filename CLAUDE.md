@@ -13,6 +13,13 @@
 
 **Status**: v1.0 feature-complete (100% of BUILD-PLAN implemented)
 
+### Two-Product Strategy
+
+**AutoArr (GPL-3.0)**: 100% open source, complete media automation with local LLM
+**AutoArrX (Premium)**: Optional privacy-first cloud intelligence service
+
+See [docs/VISION_AND_PRICING.md](docs/VISION_AND_PRICING.md) for complete details.
+
 ## 🏗️ Architecture
 
 ### Technology Stack

@@ -31,7 +31,6 @@ class LLMProviderFactory:
     Factory for creating LLM provider instances with fallback support.
 
     Supports multiple providers:
-    - Ollama (default, free)
     - Claude (optional, free with API key)
     - Custom (premium only)
     """
@@ -53,14 +52,6 @@ class LLMProviderFactory:
             logger.info("Registered ClaudeProvider")
         except ImportError as e:
             logger.debug(f"ClaudeProvider not available: {e}")
-
-        try:
-            from .ollama_provider import OllamaProvider
-
-            cls._providers["ollama"] = OllamaProvider
-            logger.info("Registered OllamaProvider")
-        except ImportError as e:
-            logger.debug(f"OllamaProvider not available: {e}")
 
         cls._initialized = True
 
@@ -101,7 +92,7 @@ class LLMProviderFactory:
 
         # Get provider preference from environment or parameter
         if provider_name is None:
-            provider_name = os.getenv("LLM_PROVIDER", "ollama")
+            provider_name = os.getenv("LLM_PROVIDER", "claude")
 
         # Determine fallback order
         fallback_order = cls._get_fallback_order(provider_name, fallback)
@@ -135,7 +126,7 @@ class LLMProviderFactory:
         # No providers available
         raise ValueError(
             f"No LLM providers available. Tried: {fallback_order}. "
-            f"Please configure at least one provider (Ollama or Claude)."
+            f"Please configure at least one provider (Claude)."
         )
 
     @classmethod
@@ -162,8 +153,6 @@ class LLMProviderFactory:
         fallback_order = [primary_provider]
 
         # Add other providers as fallback
-        if primary_provider != "ollama":
-            fallback_order.append("ollama")
         if primary_provider != "claude" and os.getenv("CLAUDE_API_KEY"):
             fallback_order.append("claude")
 
@@ -186,14 +175,6 @@ class LLMProviderFactory:
                 "default_model": os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022"),
                 "max_tokens": int(os.getenv("CLAUDE_MAX_TOKENS", "4096")),
                 "timeout": int(os.getenv("CLAUDE_TIMEOUT", "60")),
-            }
-
-        elif provider_name == "ollama":
-            return {
-                "base_url": os.getenv("OLLAMA_URL", "http://localhost:11434"),
-                "default_model": os.getenv("OLLAMA_MODEL", "qwen2.5:7b"),
-                "timeout": int(os.getenv("OLLAMA_TIMEOUT", "120")),
-                "auto_download": os.getenv("OLLAMA_AUTO_DOWNLOAD", "true").lower() == "true",
             }
 
         return {}
