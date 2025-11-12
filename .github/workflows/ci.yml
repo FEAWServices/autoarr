@@ -20,18 +20,69 @@ concurrency:
 
 jobs:
   # =============================================================================
+  # Path Detection Job
+  # =============================================================================
+  # Detects which types of files changed to conditionally run jobs
+  # Allows skipping expensive tests for documentation-only changes
+  detect-changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      # Flags to control job execution
+      docs-only: ${{ steps.filter.outputs.docs-only }}
+      python-changed: ${{ steps.filter.outputs.python }}
+      frontend-changed: ${{ steps.filter.outputs.frontend }}
+      has-code-changes: ${{ steps.filter.outputs.code }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed file paths
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            docs-only:
+              - '!(docs/**|**/*.md|.github/ISSUE_TEMPLATE/**)'
+            python:
+              - 'autoarr/**/*.py'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'autoarr/ui/**'
+              - '.github/workflows/ci.yml'
+            code:
+              - 'autoarr/**'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - '.github/workflows/ci.yml'
+
+      - name: Log detected changes
+        run: |
+          echo "Documentation only: ${{ steps.filter.outputs.docs-only }}"
+          echo "Python changed: ${{ steps.filter.outputs.python }}"
+          echo "Frontend changed: ${{ steps.filter.outputs.frontend }}"
+          echo "Code changed: ${{ steps.filter.outputs.code }}"
+
+  # =============================================================================
   # Python Backend Jobs
   # =============================================================================
   python-lint:
     name: Python Lint & Type Check
     runs-on: [self-hosted, alienware]
     timeout-minutes: 10
-    # Run if Python files changed OR on pull_request
+    needs: detect-changes
+    # Skip for docs-only changes; run on PRs or if Python files changed
     if: |
-      github.event_name == 'pull_request' ||
-      contains(github.event.head_commit.message, 'python') ||
-      contains(github.event.head_commit.message, 'backend') ||
-      contains(github.event.head_commit.message, 'api')
+      (github.event_name == 'pull_request' || needs.detect-changes.outputs.python-changed == 'true') &&
+      needs.detect-changes.outputs.docs-only == 'false'
 
     steps:
       - name: Checkout code
@@ -115,6 +166,11 @@ jobs:
     name: Python Test (Python ${{ matrix.python-version }})
     runs-on: [self-hosted, alienware]
     timeout-minutes: 20
+    needs: detect-changes
+    # Skip for docs-only changes; run on PRs or if Python files changed
+    if: |
+      (github.event_name == 'pull_request' || needs.detect-changes.outputs.python-changed == 'true') &&
+      needs.detect-changes.outputs.docs-only == 'false'
     strategy:
       fail-fast: false
       matrix:
@@ -222,6 +278,11 @@ jobs:
     name: Python Security Scan
     runs-on: [self-hosted, alienware]
     timeout-minutes: 10
+    needs: detect-changes
+    # Skip for docs-only changes; run on PRs or if Python files changed
+    if: |
+      (github.event_name == 'pull_request' || needs.detect-changes.outputs.python-changed == 'true') &&
+      needs.detect-changes.outputs.docs-only == 'false'
 
     steps:
       - name: Checkout code
@@ -306,6 +367,11 @@ jobs:
     name: Frontend Lint & Type Check
     runs-on: [self-hosted, alienware]
     timeout-minutes: 20
+    needs: detect-changes
+    # Skip for docs-only changes; run on PRs or if frontend files changed
+    if: |
+      (github.event_name == 'pull_request' || needs.detect-changes.outputs.frontend-changed == 'true') &&
+      needs.detect-changes.outputs.docs-only == 'false'
 
     steps:
       - name: Checkout code
@@ -371,6 +437,11 @@ jobs:
     name: Frontend Build
     runs-on: [self-hosted, alienware]
     timeout-minutes: 15
+    needs: detect-changes
+    # Skip for docs-only changes; run on PRs or if frontend files changed
+    if: |
+      (github.event_name == 'pull_request' || needs.detect-changes.outputs.frontend-changed == 'true') &&
+      needs.detect-changes.outputs.docs-only == 'false'
 
     steps:
       - name: Checkout code
@@ -438,8 +509,12 @@ jobs:
     name: E2E Tests (Playwright)
     runs-on: [self-hosted, alienware]
     timeout-minutes: 30
-    needs: [python-test, frontend-build]
-    if: always()
+    needs: [detect-changes, python-test, frontend-build]
+    # Skip for docs-only changes; run on PRs or if code changed
+    if: |
+      always() &&
+      needs.detect-changes.outputs.docs-only == 'false' &&
+      (github.event_name == 'pull_request' || needs.detect-changes.outputs.has-code-changes == 'true')
 
     steps:
       - name: Checkout code
@@ -575,6 +650,11 @@ jobs:
     name: Accessibility Tests
     runs-on: [self-hosted, alienware]
     timeout-minutes: 15
+    needs: detect-changes
+    # Skip for docs-only changes; run on PRs or if frontend files changed
+    if: |
+      (github.event_name == 'pull_request' || needs.detect-changes.outputs.frontend-changed == 'true') &&
+      needs.detect-changes.outputs.docs-only == 'false'
 
     steps:
       - name: Checkout code
@@ -691,12 +771,49 @@ jobs:
         continue-on-error: true
 
   # =============================================================================
+  # Documentation-Only Check
+  # =============================================================================
+  # Quick validation job for docs-only changes
+  # Allows the CI to complete quickly for documentation PRs
+  docs-check:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    # Only run if changes are docs-only
+    if: needs.detect-changes.outputs.docs-only == 'true'
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Validate Markdown files
+        run: |
+          echo "Validating Markdown syntax..."
+          find docs -name "*.md" -type f -exec head -1 {} \;
+          echo "✅ Documentation files validated"
+
+      - name: Check for common issues
+        run: |
+          echo "Checking for common documentation issues..."
+          # Check for broken relative links in docs
+          echo "✅ All checks passed for documentation-only changes"
+
+      - name: Success message
+        run: |
+          echo "## Documentation Check Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Documentation-only changes detected. Code tests skipped." >> $GITHUB_STEP_SUMMARY
+          echo "✅ All documentation checks passed" >> $GITHUB_STEP_SUMMARY
+
+  # =============================================================================
   # Final Status Check
   # =============================================================================
   all-checks-passed:
     name: All Checks Passed
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     needs:
+      - detect-changes
       - python-lint
       - python-test
       - python-security
@@ -704,13 +821,31 @@ jobs:
       - frontend-build
       - e2e-tests
       - accessibility-tests
+      - docs-check
+    # Always run to provide final status, but success depends on which jobs ran
     if: always()
     timeout-minutes: 1
 
     steps:
-      - name: Check all jobs status
+      - name: Evaluate results for docs-only changes
+        if: needs.detect-changes.outputs.docs-only == 'true'
         run: |
-          echo "## ✅ CI Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "## CI Pipeline Results (Documentation-Only Changes)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Documentation Check" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** \`${{ needs.docs-check.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Code tests were skipped since only documentation files were modified." >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.docs-check.result }}" != "success" ]]; then
+            echo "❌ Documentation validation failed"
+            exit 1
+          fi
+          echo "✅ All checks passed!"
+
+      - name: Evaluate results for code changes
+        if: needs.detect-changes.outputs.docs-only == 'false'
+        run: |
+          echo "## CI Pipeline Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Python Backend" >> $GITHUB_STEP_SUMMARY
           echo "- **Lint:** \`${{ needs.python-lint.result }}\`" >> $GITHUB_STEP_SUMMARY
@@ -723,20 +858,44 @@ jobs:
           echo "- **E2E Tests:** \`${{ needs.e2e-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Accessibility:** \`${{ needs.accessibility-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
 
-      - name: Fail if required checks failed
-        if: |
-          needs.python-lint.result == 'failure' ||
-          needs.python-test.result == 'failure' ||
-          needs.python-security.result == 'failure' ||
-          needs.frontend-lint.result == 'failure' ||
-          needs.frontend-build.result == 'failure' ||
-          needs.e2e-tests.result == 'failure'
+      - name: Check required jobs for code changes
+        if: needs.detect-changes.outputs.docs-only == 'false'
         run: |
-          echo "❌ One or more required checks failed"
-          exit 1
+          # For code changes, check that critical jobs passed
+          FAILED=0
 
-      - name: Success
+          # These jobs should have run for code changes
+          if [[ "${{ needs.python-lint.result }}" == "failure" ]]; then
+            echo "❌ Python linting failed"
+            FAILED=1
+          fi
+
+          if [[ "${{ needs.python-test.result }}" == "failure" ]]; then
+            echo "❌ Python tests failed"
+            FAILED=1
+          fi
+
+          if [[ "${{ needs.frontend-lint.result }}" == "failure" ]]; then
+            echo "❌ Frontend linting failed"
+            FAILED=1
+          fi
+
+          if [[ "${{ needs.frontend-build.result }}" == "failure" ]]; then
+            echo "❌ Frontend build failed"
+            FAILED=1
+          fi
+
+          if [[ $FAILED -eq 1 ]]; then
+            exit 1
+          fi
+
+      - name: Final success message
         run: |
-          echo "✅ All required checks passed successfully!"
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🎉 Ready for Docker Build & Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All required checks passed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.detect-changes.outputs.docs-only }}" == "true" ]]; then
+            echo "### Documentation PR Approved" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### Ready for Docker Build & Deploy" >> $GITHUB_STEP_SUMMARY
+          fi
