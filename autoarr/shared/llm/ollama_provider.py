@@ -18,9 +18,10 @@
 """Ollama LLM Provider for AutoArr."""
 
 import logging
-import httpx
-from typing import List, Dict, Any, Optional, AsyncGenerator
 import time
+from typing import Any, AsyncGenerator, Dict, List, Optional
+
+import httpx
 
 from .base_provider import BaseLLMProvider, LLMMessage, LLMResponse
 

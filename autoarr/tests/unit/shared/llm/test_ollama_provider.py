@@ -18,11 +18,12 @@
 """Tests for OllamaProvider."""
 
 import json
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from autoarr.shared.llm.ollama_provider import OllamaProvider
+import pytest
+
 from autoarr.shared.llm.base_provider import LLMMessage
+from autoarr.shared.llm.ollama_provider import OllamaProvider
 
 
 @pytest.fixture

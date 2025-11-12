@@ -18,7 +18,8 @@
 """Base LLM provider abstract interface for AutoArr."""
 
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict, Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict, List, Optional
+
 from pydantic import BaseModel
 
 
