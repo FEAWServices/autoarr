@@ -1,21 +1,29 @@
 # AutoArr Technical Architecture
 
 **Last Updated:** 2025-01-12
-**Version:** 2.0 (Integrated Single-Container)
+**Version:** 2.0 (Integrated Single-Container + Optional Cloud)
+
+> **See also:** [VISION_AND_PRICING.md](./VISION_AND_PRICING.md) - Product vision and premium features
 
 ---
 
 ## Design Philosophy
 
-AutoArr follows a **simplified, integrated architecture** designed for:
+AutoArr follows a **hybrid architecture** designed for:
 
 - **Easy deployment** - Single container, minimal configuration
 - **Low resource usage** - Optimized for NAS devices (4-8GB RAM)
-- **Privacy-first** - Local LLM, no external dependencies
+- **Privacy-first** - Local LLM, no external dependencies required
 - **Reliability** - Direct API integration, fewer failure points
 - **Maintainability** - Simple codebase, easy to understand
+- **Optional cloud** - Premium features via secure bridge (see VISION_AND_PRICING.md)
 
 **Inspired by:** Sonarr, Radarr (simple, effective, self-contained)
+
+### Product Structure
+
+**AutoArr (Free/GPL):** Complete, self-hosted solution with local LLM
+**AutoArrX (Premium):** Optional cloud intelligence with privacy-first architecture
 
 ---
 
@@ -920,51 +928,58 @@ pnpm test
 
 ## Future Enhancements (Post-v1.0)
 
-### Potential Features
+### AutoArr Core (Free) Features
 
-1. **Mobile App**
-   - React Native
-   - Push notifications
-   - Offline mode
-
-2. **Advanced Analytics**
-   - Download success rates
-   - Performance metrics
-   - Storage trends
-
-3. **Multi-User Support**
-   - User accounts
-   - Permissions
-   - Shared libraries
-
-4. **Plugin System**
+1. **Plugin System**
    - Custom integrations
    - Community plugins
    - JavaScript API
 
-5. **Larger LLM Models**
+2. **Larger LLM Models**
    - Optional GPU support
-   - Cloud fallback
-   - Model switching
+   - Local model switching
+   - Fallback options
+
+### AutoArrX Premium Features
+
+See [VISION_AND_PRICING.md](./VISION_AND_PRICING.md) for complete premium tier breakdown:
+
+1. **Shield ($4.99/mo)** - Smart notifications & community intelligence
+2. **Vault ($9.99/mo)** - Advanced automation & predictive analytics
+3. **Phantom ($14.99/mo)** - Multi-instance & zero-knowledge features
+4. **Teams ($24.99/mo)** - Family/community management
+
+All premium features maintain **privacy-first architecture** with client-side encryption.
 
 ---
 
 ## Summary
 
-AutoArr uses a **simple, integrated architecture** optimized for self-hosting:
+AutoArr uses a **hybrid architecture** optimized for flexibility:
 
+### Free/GPL (AutoArr)
 ✅ **Single container** - Easy deployment
-✅ **Local LLM** - Privacy-first
+✅ **Local LLM** - Privacy-first, no cloud required
 ✅ **Direct API integration** - Reliable and fast
-✅ **Minimal resources** - NAS-friendly
-✅ **100% open source** - Community-driven
+✅ **Minimal resources** - NAS-friendly (4-8GB RAM)
+✅ **100% open source** - GPL-3.0, community-driven
+✅ **Complete features** - No limitations
+
+### Premium/Cloud (AutoArrX)
+✅ **Secure bridge** - Outbound WebSocket only
+✅ **Client-side encryption** - We never see your library
+✅ **Enhanced LLM** - Claude/GPT-4 for complex tasks
+✅ **Community intelligence** - Anonymous pattern matching
+✅ **Predictive features** - Prevent problems before they happen
+✅ **Optional** - Core works perfectly without it
 
 **Perfect for home media servers running Sonarr, Radarr, SABnzbd, and Plex.**
 
 ---
 
 **Related Documentation:**
+- [VISION_AND_PRICING.md](./VISION_AND_PRICING.md) - Product vision & pricing
 - [BUILD-PLAN.md](./BUILD-PLAN.md) - Development roadmap
-- [FEATURE_CLARITY.md](./FEATURE_CLARITY.md) - Product model
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - How to contribute
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Production deployment
+- [LLM_PROVIDER_MIGRATION_GUIDE.md](./LLM_PROVIDER_MIGRATION_GUIDE.md) - LLM implementation

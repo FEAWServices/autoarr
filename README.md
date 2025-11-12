@@ -19,7 +19,9 @@ AutoArr is an **intelligent orchestration layer** that sits above your media aut
 
 Think of it as **cruise control for your media server** — it continuously monitors your setup, learns best practices, and keeps everything running optimally without manual intervention.
 
-**100% Open Source** (GPL-3.0) - Just like Sonarr and Radarr. Self-hosted, privacy-first, no subscriptions required.
+**100% Open Source** (GPL-3.0) - Just like Sonarr and Radarr. Self-hosted, privacy-first, no subscriptions required for full functionality.
+
+> **Looking for premium features?** See [AutoArrX](docs/VISION_AND_PRICING.md) for optional cloud enhancements like smart notifications, predictive analytics, and multi-instance management - all with privacy-first encryption.
 
 ### The Problem We Solve
 
@@ -113,8 +115,8 @@ For production deployment:
 
 Learn about the product strategy and goals:
 
-3. [**VISION.md**](docs/VISION.md) - Product vision, business model, and roadmap
-4. [**NAME-ANALYSIS.md**](docs/NAME-ANALYSIS.md) - Why we chose "AutoArr"
+3. [**VISION_AND_PRICING.md**](docs/VISION_AND_PRICING.md) - Product vision, AutoArr vs AutoArrX, pricing
+4. [**archive/NAME-ANALYSIS.md**](docs/archive/NAME-ANALYSIS.md) - Why we chose "AutoArr" (archived)
 
 ### **Technical Deep Dive**
 
@@ -400,13 +402,15 @@ This means you have the freedom to:
 
 Any modifications or derivative works must also be released under GPL-3.0, ensuring AutoArr remains free and open source forever.
 
-### 🎯 Fully Open Source - No Premium Tiers
+### 🎯 Two Products, One Vision
 
-AutoArr is **100% open source** - there are no premium features, no subscriptions, and no paywalls.
+**AutoArr (This Repository - GPL-3.0)**
+
+100% open source and free forever - there are no premium features, no subscriptions, and no paywalls for the core product.
 
 **What You Get (Free Forever)**:
-- ✅ Complete configuration intelligence with AI
-- ✅ Natural language content requests (local Qwen 2.5-3B LLM)
+- ✅ Complete configuration intelligence with local AI (Qwen 2.5-3B)
+- ✅ Natural language content requests
 - ✅ Automatic download monitoring and recovery
 - ✅ Intelligent retry strategies (quality fallback, exponential backoff)
 - ✅ All service integrations (SABnzbd, Sonarr, Radarr, Plex)
@@ -417,13 +421,19 @@ AutoArr is **100% open source** - there are no premium features, no subscription
 - ✅ No external API dependencies
 - ✅ Community-driven development
 
-**Future Premium Services (Optional, Undefined)**:
-- There *may* be optional cloud-based premium services in the future (advanced AI models, enhanced coordination)
-- These would be **completely optional** add-ons
-- The base AutoArr will **always** be fully functional and open source
-- No features will ever be removed from the open source version
+**AutoArrX (Optional Premium Cloud Service)**
 
-**AutoArr follows the Sonarr/Radarr model**: A trusted, transparent, community-first project.
+For users who want enhanced features with privacy-first cloud intelligence:
+- 🌟 Smart notifications & IFTTT/Zapier integration
+- 🤖 Advanced LLM models (Claude/GPT-4) for complex requests
+- 📊 Predictive maintenance & analytics
+- 🔒 Zero-knowledge architecture (we never see your library)
+- 🏢 Multi-instance management
+- 👥 Family/community features
+
+See [VISION_AND_PRICING.md](docs/VISION_AND_PRICING.md) for complete details on premium tiers.
+
+**Key Principle**: The base AutoArr will **always** be fully functional and open source. No features will ever be removed from the GPL version. AutoArrX is a separate optional service for users who want cloud enhancements.
 
 ```
 Copyright (C) 2025 AutoArr Contributors
