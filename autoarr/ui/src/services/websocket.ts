@@ -223,7 +223,9 @@ class WebSocketService {
 }
 
 // Create singleton instance
-const WS_URL = "ws://localhost:8000/api/v1/ws";
+// Derive WebSocket URL from API URL (environment variable or default to correct port 8088)
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8088/api/v1";
+const WS_URL = API_BASE.replace(/^http/, "ws") + "/ws";
 
 export const websocketService = new WebSocketService({
   url: WS_URL,

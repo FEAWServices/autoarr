@@ -22,7 +22,7 @@ This module provides dependency injection for the FastAPI Gateway,
 managing the MCP Orchestrator lifecycle and providing it to endpoints.
 """
 
-from functools import lru_cache
+import logging
 from typing import AsyncGenerator, Optional
 
 from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
@@ -30,11 +30,15 @@ from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from .config import Settings, get_settings
 
+logger = logging.getLogger(__name__)
 
-@lru_cache()
+
 def get_orchestrator_config(settings: Optional[Settings] = None) -> MCPOrchestratorConfig:
     """
     Create MCP Orchestrator configuration from application settings.
+
+    Note: No caching here since Settings objects are not hashable.
+    The get_settings() function already implements caching.
 
     Args:
         settings: Application settings (will use get_settings() if not provided)
@@ -131,9 +135,14 @@ async def get_orchestrator() -> AsyncGenerator[MCPOrchestrator, None]:
         # Connect to all enabled servers
         try:
             await _orchestrator.connect_all()
-        except Exception:
+            logger.info("Successfully connected to MCP servers")
+        except Exception as e:
             # Log error but continue - individual endpoints will handle connection errors
-            pass
+            logger.error(f"Failed to connect to some MCP servers during startup: {e}")
+            logger.warning(
+                "Orchestrator initialized but some services may be unavailable. "
+                "Individual endpoints will report connection errors."
+            )
 
     yield _orchestrator
 

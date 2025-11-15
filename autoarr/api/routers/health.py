@@ -70,7 +70,7 @@ async def health_check(
     all_healthy = True
 
     # Get list of connected servers
-    connected_servers = list(orchestrator._clients.keys())
+    connected_servers = orchestrator.get_connected_servers()
 
     if not connected_servers:
         # No servers connected - system is unhealthy

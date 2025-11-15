@@ -25,6 +25,7 @@ loading values from environment variables and .env files.
 from functools import lru_cache
 from typing import List, Optional
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -135,6 +136,17 @@ class Settings(BaseSettings):
     openapi_url: str = "/openapi.json"
 
     # Model configuration
+    @model_validator(mode="after")
+    def validate_production_security(self) -> "Settings":
+        """Validate security settings for production environment."""
+        if self.app_env == "production":
+            if self.secret_key == "dev_secret_key_change_in_production":
+                raise ValueError(
+                    "SECRET_KEY environment variable must be set to a secure random value in production. "
+                    "Generate one using: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                )
+        return self
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
