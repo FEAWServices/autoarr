@@ -61,22 +61,22 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
 
     # Startup
-    try:
-        logger.info("Starting AutoArr FastAPI Gateway...")
-        logger.info(f"Environment: {settings.app_env}")
-        logger.info(f"Log level: {settings.log_level}")
+    logger.info("Starting AutoArr FastAPI Gateway...")
+    logger.info(f"Environment: {settings.app_env}")
+    logger.info(f"Log level: {settings.log_level}")
 
-        # Initialize database
-        if settings.database_url:
+    # Initialize database
+    if settings.database_url:
+        try:
             logger.info("Initializing database...")
             db = init_database(settings.database_url)
             await db.init_db()
             logger.info("Database initialized successfully")
-        else:
-            logger.warning("No DATABASE_URL configured, settings will not persist")
-    except Exception as e:
-        logger.error(f"Error during startup: {e}")
-        # Continue to yield so shutdown can run
+        except Exception as e:
+            logger.error(f"Critical: Database initialization failed: {e}")
+            raise  # Fail fast - don't start app without database if one is configured
+    else:
+        logger.warning("No DATABASE_URL configured, settings will not persist")
 
     yield
 
@@ -273,11 +273,17 @@ class ConnectionManager:
 
     async def broadcast(self, message: dict):
         """Send message to all active connections."""
+        dead_connections = []
         for connection in self.active_connections:
             try:
                 await connection.send_json(message)
             except Exception as e:
                 logger.error(f"Error broadcasting to WebSocket: {e}")
+                dead_connections.append(connection)
+
+        # Remove failed connections to prevent memory leaks
+        for connection in dead_connections:
+            self.disconnect(connection)
 
 
 # Global connection manager

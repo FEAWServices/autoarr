@@ -81,8 +81,7 @@ def cleanup():
     """Clean up orchestrator after each test."""
     yield
     reset_orchestrator()
-    # Clear the LRU cache on get_orchestrator_config
-    get_orchestrator_config.cache_clear()
+    # Note: get_orchestrator_config no longer has caching (Settings objects are unhashable)
 
 
 class TestGetOrchestratorConfig:
@@ -184,14 +183,17 @@ class TestGetOrchestratorConfig:
 
         assert isinstance(config, MCPOrchestratorConfig)
 
-    def test_config_is_cached(self, test_settings):
-        """Test that config is cached using lru_cache."""
+    def test_config_is_not_cached(self, test_settings):
+        """Test that config is NOT cached (Settings objects are unhashable)."""
         with patch("autoarr.api.dependencies.get_settings", return_value=test_settings):
             config1 = get_orchestrator_config(None)
             config2 = get_orchestrator_config(None)
 
-            # Should be the same instance due to caching
-            assert config1 is config2
+            # Should be different instances (no caching to avoid unhashable type error)
+            # However, they should have the same configuration values
+            assert config1 is not config2
+            assert config1.sabnzbd.name == config2.sabnzbd.name
+            assert config1.sonarr.name == config2.sonarr.name
 
     def test_circuit_breaker_settings(self, test_settings):
         """Test that circuit breaker settings are configured."""

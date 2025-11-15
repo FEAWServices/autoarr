@@ -324,23 +324,21 @@ class TestLifespanFullCycle:
                         mock_shutdown.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_exception_during_startup_doesnt_prevent_shutdown(self, test_settings):
+    async def test_exception_during_startup_fails_fast(self, test_settings):
         test_app = FastAPI()
-        """Test that shutdown still happens if startup has issues."""
+        """Test that database init failures cause the app to fail fast."""
         with patch("autoarr.api.main.get_settings", return_value=test_settings):
             with patch("autoarr.api.main.logger"):
                 with patch("autoarr.api.main.init_database") as mock_init_db:
-                    with patch("autoarr.api.main.shutdown_orchestrator") as mock_shutdown:
+                    with patch("autoarr.api.main.shutdown_orchestrator"):
                         mock_db = MagicMock()
                         mock_db.init_db = AsyncMock(side_effect=Exception("Init failed"))
                         mock_init_db.return_value = mock_db
 
-                        # Should not raise, startup error is caught
-                        async with lifespan(test_app):
-                            pass
-
-                        # Shutdown should still be called
-                        mock_shutdown.assert_called_once()
+                        # Should raise - fail fast when database init fails
+                        with pytest.raises(Exception, match="Init failed"):
+                            async with lifespan(test_app):
+                                pass
 
 
 class TestAppConfiguration:

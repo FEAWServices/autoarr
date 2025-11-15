@@ -42,6 +42,7 @@ def mock_orchestrator():
     """Create a mock orchestrator."""
     mock = MagicMock()
     mock._clients = {"sabnzbd": MagicMock(), "sonarr": MagicMock()}
+    mock.get_connected_servers = MagicMock(return_value=["sabnzbd", "sonarr"])
     mock.health_check = AsyncMock(return_value=True)
     mock.get_circuit_breaker_state = MagicMock(return_value={"state": "closed", "failure_count": 0})
     mock.is_connected = AsyncMock(return_value=True)
@@ -119,6 +120,7 @@ class TestHealthEndpoints:
         """Test overall health check when no services are connected."""
         mock_orch = MagicMock()
         mock_orch._clients = {}  # No clients connected
+        mock_orch.get_connected_servers = MagicMock(return_value=[])  # No servers
 
         override_orchestrator(mock_orch)
 

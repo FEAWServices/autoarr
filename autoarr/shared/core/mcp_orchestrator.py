@@ -905,6 +905,15 @@ class MCPOrchestrator:
             "timestamp": time.time(),
         }
 
+    def get_connected_servers(self) -> List[str]:
+        """
+        Get list of connected server names.
+
+        Returns:
+            List of connected server names
+        """
+        return list(self._clients.keys())
+
     async def restore_connection_state(self, state: Dict[str, Any]) -> None:
         """Restore connection state."""
         for server_name in state.get("connected_servers", []):
