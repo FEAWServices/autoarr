@@ -24,8 +24,8 @@ dependencies:
     specifier: ^7.9.3
     version: 7.9.3(react-dom@19.2.0)(react@19.2.0)
   tailwindcss:
-    specifier: ^4.1.14
-    version: 4.1.14
+    specifier: ^4.1.17
+    version: 4.1.17
   zustand:
     specifier: ^5.0.8
     version: 5.0.8(@types/react@19.2.2)(react@19.2.0)
@@ -2529,8 +2529,8 @@ packages:
       strip-ansi: 6.0.1
     dev: true
 
-  /tailwindcss@4.1.14:
-    resolution: {integrity: sha512-b7pCxjGO98LnxVkKjaZSDeNuljC4ueKUddjENJOADtubtdo8llTaJy7HwBMeLNSSo2N5QIAgklslK1+Ir8r6CA==}
+  /tailwindcss@4.1.17:
+    resolution: {integrity: sha512-j9Ee2YjuQqYT9bbRTfTZht9W/ytp5H+jJpZKiYdP/bpnXARAuELt9ofP0lPnmHjbga7SNQIxdTAXCmtKVYjN+Q==}
     dev: false
 
   /tinyglobby@0.2.15:
