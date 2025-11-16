@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Fixtures for test data factories.
 
@@ -526,7 +543,7 @@ def sonarr_quality_profile_factory() -> callable:
             "id": profile_id,
             "name": name,
             "upgradeAllowed": True,
-            "cutoff": cutoff,
+            "cutof": cutoff,
             "items": [
                 {
                     "quality": {"id": 1, "name": "SDTV", "source": "television", "resolution": 480},
@@ -1542,7 +1559,7 @@ def plex_server_identity_factory() -> callable:
             "transcoderPhoto": True,
             "transcoderSubtitles": True,
             "transcoderVideo": True,
-            "transcoderVideoBitrates": "64,96,208,320,720,1500,2000,3000,4000,8000,10000,12000,20000",
+            "transcoderVideoBitrates": "64,96,208,320,720,1500,2000,3000,4000,8000,10000,12000,20000",  # noqa: E501
             "transcoderVideoQualities": "0,1,2,3,4,5,6,7,8,9,10,11,12",
             "transcoderVideoResolutions": "128,128,160,240,320,480,768,720,720,1080,1080,1080,1080",
             "updatedAt": 1609459200,
@@ -1647,8 +1664,8 @@ def mock_database_init():
     Usage:
         Apply this as autouse fixture in conftest or use explicitly in tests.
     """
-    from unittest.mock import MagicMock, AsyncMock, patch
     from contextlib import asynccontextmanager
+    from unittest.mock import AsyncMock, MagicMock, patch
 
     mock_db = MagicMock()
     mock_db.database_url = "sqlite+aiosqlite:///:memory:"
@@ -1686,8 +1703,8 @@ async def mock_database():
         async with mock_database.session() as session:
             # Use session in tests
     """
-    from unittest.mock import AsyncMock, MagicMock
     from contextlib import asynccontextmanager
+    from unittest.mock import AsyncMock, MagicMock
 
     db = MagicMock()
     db.database_url = "sqlite+aiosqlite:///:memory:"

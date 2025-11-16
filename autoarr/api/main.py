@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 FastAPI Gateway main application.
 
@@ -7,22 +24,31 @@ and sets up all API routes.
 
 import logging
 from contextlib import asynccontextmanager
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
 from .config import get_settings
-from .database import init_database, get_database
+from .rate_limiter import limiter
+from .database import get_database, init_database
 from .dependencies import shutdown_orchestrator
 from .middleware import (
     ErrorHandlerMiddleware,
     RequestLoggingMiddleware,
     add_security_headers,
 )
-from .routers import configuration, downloads, health, media, mcp, movies, shows
+from .routers import configuration, downloads, health, mcp, media, movies, requests
 from .routers import settings as settings_router
+from .routers import shows
+from .services.event_bus import get_event_bus
+from .services.websocket_bridge import (
+    initialize_websocket_bridge,
+    shutdown_websocket_bridge,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -43,27 +69,44 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
 
     # Startup
-    try:
-        logger.info("Starting AutoArr FastAPI Gateway...")
-        logger.info(f"Environment: {settings.app_env}")
-        logger.info(f"Log level: {settings.log_level}")
+    logger.info("Starting AutoArr FastAPI Gateway...")
+    logger.info(f"Environment: {settings.app_env}")
+    logger.info(f"Log level: {settings.log_level}")
 
-        # Initialize database
-        if settings.database_url:
+    # Initialize database
+    if settings.database_url:
+        try:
             logger.info("Initializing database...")
             db = init_database(settings.database_url)
             await db.init_db()
             logger.info("Database initialized successfully")
-        else:
-            logger.warning("No DATABASE_URL configured, settings will not persist")
+        except Exception as e:
+            logger.error(f"Critical: Database initialization failed: {e}")
+            raise  # Fail fast - don't start app without database if one is configured
+    else:
+        logger.warning("No DATABASE_URL configured, settings will not persist")
+
+    # Initialize WebSocket-EventBus bridge for real-time updates
+    try:
+        logger.info("Initializing WebSocket-EventBus bridge...")
+        event_bus = get_event_bus()
+        await initialize_websocket_bridge(event_bus, manager)
+        logger.info("WebSocket bridge initialized successfully")
     except Exception as e:
-        logger.error(f"Error during startup: {e}")
-        # Continue to yield so shutdown can run
+        logger.error(f"Warning: WebSocket bridge initialization failed: {e}")
+        # Don't fail startup if WebSocket bridge fails - it's not critical
 
     yield
 
     # Shutdown
     logger.info("Shutting down AutoArr FastAPI Gateway...")
+
+    # Shutdown WebSocket bridge
+    try:
+        await shutdown_websocket_bridge()
+    except Exception as e:
+        logger.error(f"Error shutting down WebSocket bridge: {e}")
+
     await shutdown_orchestrator()
 
     # Close database connections
@@ -90,6 +133,10 @@ app = FastAPI(
     openapi_url=_settings.openapi_url,
     lifespan=lifespan,
 )
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # ============================================================================
@@ -174,6 +221,12 @@ app.include_router(
     tags=["configuration"],
 )
 
+# Content request endpoints
+app.include_router(
+    requests.router,
+    tags=["requests"],
+)
+
 
 # ============================================================================
 # Static Files
@@ -217,6 +270,90 @@ async def ping() -> dict:
         dict: Pong response
     """
     return {"message": "pong"}
+
+
+# ============================================================================
+# WebSocket Endpoints
+# ============================================================================
+
+
+class ConnectionManager:
+    """Manages WebSocket connections."""
+
+    def __init__(self):
+        """Initialize connection manager."""
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        """Accept and store new connection."""
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        logger.info(f"WebSocket connected. Active connections: {len(self.active_connections)}")
+
+    def disconnect(self, websocket: WebSocket):
+        """Remove connection from list."""
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        logger.info(f"WebSocket disconnected. Active connections: {len(self.active_connections)}")
+
+    async def send_personal_message(self, message: dict, websocket: WebSocket):
+        """Send message to specific connection."""
+        await websocket.send_json(message)
+
+    async def broadcast(self, message: dict):
+        """Send message to all active connections."""
+        dead_connections = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception as e:
+                logger.error(f"Error broadcasting to WebSocket: {e}")
+                dead_connections.append(connection)
+
+        # Remove failed connections to prevent memory leaks
+        for connection in dead_connections:
+            self.disconnect(connection)
+
+
+# Global connection manager
+manager = ConnectionManager()
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time updates.
+
+    Clients can connect to receive real-time notifications about:
+    - Configuration audit results
+    - Download status updates
+    - Content request status changes
+    - Activity log entries
+    """
+    await manager.connect(websocket)
+    try:
+        # Send welcome message
+        await websocket.send_json(
+            {
+                "type": "connection",
+                "status": "connected",
+                "message": "Connected to AutoArr WebSocket",
+            }
+        )
+
+        # Keep connection alive and handle incoming messages
+        while True:
+            # Receive and echo any client messages (for future use)
+            data = await websocket.receive_text()
+            logger.debug(f"WebSocket received: {data}")
+
+            # For now, just acknowledge receipt
+            await websocket.send_json({"type": "ack", "message": "Message received"})
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        manager.disconnect(websocket)
 
 
 # ============================================================================

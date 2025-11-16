@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Database configuration and models for settings persistence.
 
@@ -7,10 +24,20 @@ for persisting application settings, best practices, and audit results.
 
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import AsyncGenerator, Optional
 
-from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text, create_engine, select
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Float,
+    Index,
+    Integer,
+    String,
+    Text,
+    select,
+)
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -24,8 +51,6 @@ logger = logging.getLogger(__name__)
 
 class Base(DeclarativeBase):
     """Base class for all database models."""
-
-    pass
 
 
 # ============================================================================
@@ -119,6 +144,446 @@ class AuditResult(Base):
 
 
 # ============================================================================
+# Activity Log Model
+# ============================================================================
+
+
+class ActivityLog(Base):
+    """
+    Database model for activity log entries.
+
+    Tracks all system activities including download failures, recovery attempts,
+    configuration changes, and user requests. Supports correlation IDs for
+    tracking related events and comprehensive filtering by service, type, severity,
+    and date range.
+    """
+
+    __tablename__ = "activity_log"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Event identification
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    service: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+
+    # Content
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    event_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Correlation tracking
+    correlation_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+
+    # Timestamps
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Optional user tracking for future multi-user support
+    user_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+
+    # Composite indexes for common query patterns
+    __table_args__ = (
+        Index("ix_activity_log_service_timestamp", "service", "timestamp"),
+        Index("ix_activity_log_severity_timestamp", "severity", "timestamp"),
+        Index("ix_activity_log_event_type_timestamp", "event_type", "timestamp"),
+    )
+
+
+# ============================================================================
+# Content Request Model
+# ============================================================================
+
+
+class ContentRequest(Base):
+    """
+    Database model for content requests.
+
+    Tracks user requests for movies and TV shows through the system,
+    including classification, status, and external service IDs.
+    """
+
+    __tablename__ = "content_requests"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Request correlation
+    correlation_id: Mapped[str] = mapped_column(
+        String(100), nullable=False, unique=True, index=True
+    )
+
+    # User query
+    query: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # Classification result
+    content_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)  # movie or tv
+    title: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
+
+    # Request status
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="submitted", index=True)
+
+    # Optional fields
+    year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    quality: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    season: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    episode: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    # External IDs
+    tmdb_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    imdb_id: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, index=True)
+    tvdb_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+
+    # Media info
+    poster_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    overview: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Service integration IDs
+    sonarr_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    radarr_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False, index=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Optional user tracking for future multi-user support
+    user_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+
+    # Composite indexes for common query patterns
+    __table_args__ = (
+        Index("ix_content_requests_status_created", "status", "created_at"),
+        Index("ix_content_requests_type_created", "content_type", "created_at"),
+    )
+
+
+# ============================================================================
+# Recovery Attempts Model
+# ============================================================================
+
+
+class RecoveryAttempt(Base):
+    """
+    Database model for tracking download recovery attempts.
+
+    Stores information about each retry attempt for failed downloads,
+    including the strategy used, success/failure status, and timing.
+    """
+
+    __tablename__ = "recovery_attempts"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Download identification
+    download_id: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+
+    # Service that initiated the download (sonarr, radarr)
+    service: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    # Retry strategy used
+    strategy: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+
+    # Attempt tracking
+    attempt_number: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Status: pending, in_progress, success, failed
+    status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Error information
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+# ============================================================================
+# Content Request Repository
+# ============================================================================
+
+
+class ContentRequestRepository:
+    """Repository for content request database operations."""
+
+    def __init__(self, db: "Database"):
+        """
+        Initialize repository.
+
+        Args:
+            db: Database instance
+        """
+        self.db = db
+
+    async def create(
+        self,
+        correlation_id: str,
+        query: str,
+        content_type: str,
+        title: str,
+        status: str = "submitted",
+        user_id: Optional[str] = None,
+        year: Optional[int] = None,
+        quality: Optional[str] = None,
+        season: Optional[int] = None,
+        episode: Optional[int] = None,
+        tmdb_id: Optional[int] = None,
+        imdb_id: Optional[str] = None,
+        poster_path: Optional[str] = None,
+    ) -> ContentRequest:
+        """
+        Create a new content request.
+
+        Args:
+            correlation_id: Unique correlation ID
+            query: User query
+            content_type: Content type (movie/tv)
+            title: Content title
+            status: Request status
+            user_id: Optional user ID
+            year: Optional year
+            quality: Optional quality preference
+            season: Optional season number
+            episode: Optional episode number
+            tmdb_id: Optional TMDB ID
+            imdb_id: Optional IMDb ID
+            poster_path: Optional poster path
+
+        Returns:
+            Created ContentRequest
+        """
+        async with self.db.session() as session:
+            request = ContentRequest(
+                correlation_id=correlation_id,
+                query=query,
+                content_type=content_type,
+                title=title,
+                status=status,
+                user_id=user_id,
+                year=year,
+                quality=quality,
+                season=season,
+                episode=episode,
+                tmdb_id=tmdb_id,
+                imdb_id=imdb_id,
+                poster_path=poster_path,
+            )
+            session.add(request)
+            await session.commit()
+            await session.refresh(request)
+            return request
+
+    async def get_by_id(self, request_id: int) -> Optional[ContentRequest]:
+        """
+        Get a content request by ID.
+
+        Args:
+            request_id: Request ID
+
+        Returns:
+            ContentRequest if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(  # noqa: F841
+                select(ContentRequest).where(ContentRequest.id == request_id)
+            )
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
+
+    async def get_by_correlation_id(self, correlation_id: str) -> Optional[ContentRequest]:
+        """
+        Get a content request by correlation ID.
+
+        Args:
+            correlation_id: Correlation ID
+
+        Returns:
+            ContentRequest if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(  # noqa: F841
+                select(ContentRequest).where(ContentRequest.correlation_id == correlation_id)
+            )
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
+
+    async def get_all(
+        self,
+        user_id: Optional[str] = None,
+        content_type: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[ContentRequest]:
+        """
+        Get all content requests with optional filters.
+
+        Args:
+            user_id: Optional user ID filter
+            content_type: Optional content type filter
+            status: Optional status filter
+            limit: Maximum number of results
+            offset: Offset for pagination
+
+        Returns:
+            List of ContentRequest instances
+        """
+        async with self.db.session() as session:
+            query = select(ContentRequest)
+
+            if user_id:
+                query = query.where(ContentRequest.user_id == user_id)
+            if content_type:
+                query = query.where(ContentRequest.content_type == content_type)
+            if status:
+                query = query.where(ContentRequest.status == status)
+
+            query = query.order_by(ContentRequest.created_at.desc()).limit(limit).offset(offset)
+
+            result = await session.execute(query)  # noqa: F841
+            return list(result.scalars().all())
+
+    async def update_status(
+        self,
+        request_id: int,
+        status: str,
+        external_id: Optional[str] = None,
+        completed_at: Optional[datetime] = None,
+    ) -> Optional[ContentRequest]:
+        """
+        Update request status.
+
+        Args:
+            request_id: Request ID
+            status: New status
+            external_id: Optional external service ID
+            completed_at: Optional completion timestamp
+
+        Returns:
+            Updated ContentRequest if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(  # noqa: F841
+                select(ContentRequest).where(ContentRequest.id == request_id)
+            )
+            request = result.scalar_one_or_none()
+
+            if request:
+                request.status = status
+                # Note: external_id field doesn't exist in ContentRequest model
+                # if external_id:
+                #     request.external_id = external_id
+                if completed_at:
+                    request.completed_at = completed_at
+                elif status == "completed":
+                    request.completed_at = datetime.utcnow()
+
+                await session.commit()
+                await session.refresh(request)
+                return request  # type: ignore[no-any-return]
+
+            return None
+
+    async def update_metadata(
+        self,
+        request_id: int,
+        tmdb_id: Optional[int] = None,
+        imdb_id: Optional[str] = None,
+        poster_path: Optional[str] = None,
+    ) -> Optional[ContentRequest]:
+        """
+        Update request metadata.
+
+        Args:
+            request_id: Request ID
+            tmdb_id: Optional TMDB ID
+            imdb_id: Optional IMDb ID
+            poster_path: Optional poster path
+
+        Returns:
+            Updated ContentRequest if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(  # noqa: F841
+                select(ContentRequest).where(ContentRequest.id == request_id)
+            )
+            request = result.scalar_one_or_none()
+
+            if request:
+                if tmdb_id is not None:
+                    request.tmdb_id = tmdb_id
+                if imdb_id is not None:
+                    request.imdb_id = imdb_id
+                if poster_path is not None:
+                    request.poster_path = poster_path
+
+                await session.commit()
+                await session.refresh(request)
+                return request  # type: ignore[no-any-return]
+
+            return None
+
+    async def delete(self, request_id: int) -> bool:
+        """
+        Delete a content request.
+
+        Args:
+            request_id: Request ID
+
+        Returns:
+            True if deleted, False if not found
+        """
+        async with self.db.session() as session:
+            result = await session.execute(  # noqa: F841
+                select(ContentRequest).where(ContentRequest.id == request_id)
+            )
+            request = result.scalar_one_or_none()
+
+            if request:
+                await session.delete(request)
+                await session.commit()
+                return True
+
+            return False
+
+    async def count(
+        self,
+        user_id: Optional[str] = None,
+        content_type: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> int:
+        """
+        Count content requests with optional filters.
+
+        Args:
+            user_id: Optional user ID filter
+            content_type: Optional content type filter
+            status: Optional status filter
+
+        Returns:
+            Count of matching requests
+        """
+        from sqlalchemy import func
+
+        async with self.db.session() as session:
+            query = select(func.count(ContentRequest.id))
+
+            if user_id:
+                query = query.where(ContentRequest.user_id == user_id)
+            if content_type:
+                query = query.where(ContentRequest.content_type == content_type)
+            if status:
+                query = query.where(ContentRequest.status == status)
+
+            result = await session.execute(query)  # noqa: F841
+            return result.scalar_one()  # type: ignore[no-any-return]
+
+
+# ============================================================================
 # Database Engine
 # ============================================================================
 
@@ -148,13 +613,13 @@ class Database:
             self.engine, class_=AsyncSession, expire_on_commit=False
         )
 
-    async def init_db(self):
+    async def init_db(self) -> None:
         """Initialize database tables."""
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("Database initialized successfully")
 
-    async def close(self):
+    async def close(self) -> None:
         """Close database connections."""
         await self.engine.dispose()
 
@@ -240,10 +705,10 @@ class SettingsRepository:
             ServiceSettings if found, None otherwise
         """
         async with self.db.session() as session:
-            result = await session.execute(
+            result = await session.execute(  # noqa: F841
                 select(ServiceSettings).where(ServiceSettings.service_name == service_name)
             )
-            return result.scalar_one_or_none()
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
 
     async def get_all_service_settings(self) -> dict[str, ServiceSettings]:
         """
@@ -253,7 +718,7 @@ class SettingsRepository:
             Dictionary mapping service names to settings
         """
         async with self.db.session() as session:
-            result = await session.execute(select(ServiceSettings))
+            result = await session.execute(select(ServiceSettings))  # noqa: F841
             settings = result.scalars().all()
             return {s.service_name: s for s in settings}
 
@@ -280,7 +745,7 @@ class SettingsRepository:
         """
         async with self.db.session() as session:
             # Try to get existing settings
-            result = await session.execute(
+            result = await session.execute(  # noqa: F841
                 select(ServiceSettings).where(ServiceSettings.service_name == service_name)
             )
             settings = result.scalar_one_or_none()
@@ -304,7 +769,7 @@ class SettingsRepository:
 
             await session.commit()
             await session.refresh(settings)
-            return settings
+            return settings  # type: ignore[no-any-return]
 
     async def delete_service_settings(self, service_name: str) -> bool:
         """
@@ -317,7 +782,7 @@ class SettingsRepository:
             True if deleted, False if not found
         """
         async with self.db.session() as session:
-            result = await session.execute(
+            result = await session.execute(  # noqa: F841
                 select(ServiceSettings).where(ServiceSettings.service_name == service_name)
             )
             settings = result.scalar_one_or_none()
@@ -380,10 +845,10 @@ class BestPracticesRepository:
             BestPractice if found, None otherwise
         """
         async with self.db.session() as session:
-            result = await session.execute(
+            result = await session.execute(  # noqa: F841
                 select(BestPractice).where(BestPractice.id == practice_id)
             )
-            return result.scalar_one_or_none()
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
 
     async def get_all(self, enabled_only: bool = False) -> list[BestPractice]:
         """
@@ -399,7 +864,7 @@ class BestPracticesRepository:
             query = select(BestPractice)
             if enabled_only:
                 query = query.where(BestPractice.enabled)
-            result = await session.execute(query)
+            result = await session.execute(query)  # noqa: F841
             return list(result.scalars().all())
 
     async def get_by_application(
@@ -419,7 +884,7 @@ class BestPracticesRepository:
             query = select(BestPractice).where(BestPractice.application == application)
             if enabled_only:
                 query = query.where(BestPractice.enabled)
-            result = await session.execute(query)
+            result = await session.execute(query)  # noqa: F841
             return list(result.scalars().all())
 
     async def get_by_category(
@@ -442,7 +907,7 @@ class BestPracticesRepository:
             )
             if enabled_only:
                 query = query.where(BestPractice.enabled)
-            result = await session.execute(query)
+            result = await session.execute(query)  # noqa: F841
             return list(result.scalars().all())
 
     async def get_by_priority(
@@ -462,7 +927,7 @@ class BestPracticesRepository:
             query = select(BestPractice).where(BestPractice.priority.in_(priorities))
             if enabled_only:
                 query = query.where(BestPractice.enabled)
-            result = await session.execute(query)
+            result = await session.execute(query)  # noqa: F841
             return list(result.scalars().all())
 
     async def search(self, keyword: str, enabled_only: bool = False) -> list[BestPractice]:
@@ -485,7 +950,7 @@ class BestPracticesRepository:
             )
             if enabled_only:
                 query = query.where(BestPractice.enabled)
-            result = await session.execute(query)
+            result = await session.execute(query)  # noqa: F841
             return list(result.scalars().all())
 
     async def filter(
@@ -519,7 +984,7 @@ class BestPracticesRepository:
             if enabled is not None:
                 query = query.where(BestPractice.enabled == enabled)
 
-            result = await session.execute(query)
+            result = await session.execute(query)  # noqa: F841
             return list(result.scalars().all())
 
     async def count(self, application: Optional[str] = None, enabled_only: bool = False) -> int:
@@ -543,8 +1008,8 @@ class BestPracticesRepository:
             if enabled_only:
                 query = query.where(BestPractice.enabled)
 
-            result = await session.execute(query)
-            return result.scalar_one()
+            result = await session.execute(query)  # noqa: F841
+            return result.scalar_one()  # type: ignore[no-any-return]
 
     async def update(self, practice_id: int, data: dict) -> Optional[BestPractice]:
         """
@@ -558,7 +1023,7 @@ class BestPracticesRepository:
             Updated BestPractice if found, None otherwise
         """
         async with self.db.session() as session:
-            result = await session.execute(
+            result = await session.execute(  # noqa: F841
                 select(BestPractice).where(BestPractice.id == practice_id)
             )
             practice = result.scalar_one_or_none()
@@ -570,7 +1035,7 @@ class BestPracticesRepository:
 
                 await session.commit()
                 await session.refresh(practice)
-                return practice
+                return practice  # type: ignore[no-any-return]
 
             return None
 
@@ -585,7 +1050,7 @@ class BestPracticesRepository:
             True if deleted, False if not found
         """
         async with self.db.session() as session:
-            result = await session.execute(
+            result = await session.execute(  # noqa: F841
                 select(BestPractice).where(BestPractice.id == practice_id)
             )
             practice = result.scalar_one_or_none()
@@ -607,7 +1072,7 @@ class BestPracticesRepository:
         Returns:
             True if disabled, False if not found
         """
-        result = await self.update(practice_id, {"enabled": False})
+        result = await self.update(practice_id, {"enabled": False})  # noqa: F841
         return result is not None
 
     async def bulk_create(self, practices_data: list[dict]) -> list[BestPractice]:
@@ -644,11 +1109,11 @@ class BestPracticesRepository:
         from sqlalchemy import delete as sql_delete
 
         async with self.db.session() as session:
-            result = await session.execute(
+            result = await session.execute(  # noqa: F841
                 sql_delete(BestPractice).where(BestPractice.id.in_(practice_ids))
             )
             await session.commit()
-            return result.rowcount
+            return result.rowcount  # type: ignore[no-any-return]
 
     async def get_paginated(
         self, page: int = 1, page_size: int = 10, enabled_only: bool = False
@@ -672,7 +1137,7 @@ class BestPracticesRepository:
                 query = query.where(BestPractice.enabled)
 
             query = query.offset(offset).limit(page_size)
-            result = await session.execute(query)
+            result = await session.execute(query)  # noqa: F841
             return list(result.scalars().all())
 
 
@@ -721,7 +1186,7 @@ class AuditResultsRepository:
             Saved AuditResult
         """
         async with self.db.session() as session:
-            result = AuditResult(
+            result = AuditResult(  # noqa: F841
                 application=application,
                 total_checks=total_checks,
                 issues_found=issues_found,
@@ -754,5 +1219,350 @@ class AuditResultsRepository:
                 .order_by(AuditResult.timestamp.desc())
                 .limit(limit)
             )
-            result = await session.execute(query)
+            result = await session.execute(query)  # noqa: F841
             return list(result.scalars().all())
+
+
+# ============================================================================
+# Activity Log Repository
+# ============================================================================
+
+
+class ActivityLogRepository:
+    """
+    Repository for activity log database operations.
+
+    Provides comprehensive CRUD operations, filtering, searching, pagination,
+    and statistics aggregation for activity logs.
+    """
+
+    def __init__(self, db: Database):
+        """
+        Initialize repository.
+
+        Args:
+            db: Database instance
+        """
+        self.db = db
+
+    async def create_activity(
+        self,
+        service: str,
+        event_type: str,
+        severity: str,
+        message: str,
+        correlation_id: Optional[str] = None,
+        metadata: Optional[dict] = None,
+        user_id: Optional[str] = None,
+        timestamp: Optional[datetime] = None,
+    ) -> ActivityLog:
+        """
+        Create a new activity log entry.
+
+        Args:
+            service: Service name (e.g., "monitoring_service", "recovery_service")
+            event_type: Event type (e.g., "download_failed", "recovery_attempted")
+            severity: Severity level (info, warning, error, critical)
+            message: Human-readable message
+            correlation_id: Optional correlation ID for tracking related events
+            metadata: Optional metadata dictionary
+            user_id: Optional user ID for multi-user tracking
+            timestamp: Optional timestamp (defaults to now)
+
+        Returns:
+            Created ActivityLog instance
+        """
+        async with self.db.session() as session:
+            activity = ActivityLog(
+                service=service,
+                event_type=event_type,
+                severity=severity,
+                message=message,
+                correlation_id=correlation_id,
+                event_metadata=metadata or {},
+                user_id=user_id,
+                timestamp=timestamp or datetime.utcnow(),
+            )
+            session.add(activity)
+            await session.commit()
+            await session.refresh(activity)
+            return activity
+
+    async def get_activity_by_id(self, activity_id: int) -> Optional[ActivityLog]:
+        """
+        Get an activity by ID.
+
+        Args:
+            activity_id: Activity ID
+
+        Returns:
+            ActivityLog if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(ActivityLog).where(ActivityLog.id == activity_id)
+            )  # noqa: F841
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
+
+    async def get_activities(
+        self,
+        service: Optional[str] = None,
+        services: Optional[list[str]] = None,
+        event_type: Optional[str] = None,
+        event_types: Optional[list[str]] = None,
+        severity: Optional[str] = None,
+        severities: Optional[list[str]] = None,
+        min_severity: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        correlation_id: Optional[str] = None,
+        search_query: Optional[str] = None,
+        order_by: str = "timestamp",
+        order: str = "desc",
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[ActivityLog]:
+        """
+        Get activities with optional filters.
+
+        Args:
+            service: Filter by specific service
+            services: Filter by multiple services
+            event_type: Filter by specific event type
+            event_types: Filter by multiple event types
+            severity: Filter by specific severity
+            severities: Filter by multiple severities
+            min_severity: Filter by minimum severity level
+            start_date: Filter by start date (inclusive)
+            end_date: Filter by end date (inclusive)
+            correlation_id: Filter by correlation ID
+            search_query: Search in message and metadata
+            order_by: Field to order by (default: timestamp)
+            order: Order direction (asc/desc, default: desc)
+            limit: Maximum number of results
+            offset: Offset for pagination
+
+        Returns:
+            List of ActivityLog instances
+        """
+        async with self.db.session() as session:
+            query = select(ActivityLog)
+
+            # Apply filters
+            if service:
+                query = query.where(ActivityLog.service == service)
+            if services:
+                query = query.where(ActivityLog.service.in_(services))
+            if event_type:
+                query = query.where(ActivityLog.event_type == event_type)
+            if event_types:
+                query = query.where(ActivityLog.event_type.in_(event_types))
+            if severity:
+                query = query.where(ActivityLog.severity == severity)
+            if severities:
+                query = query.where(ActivityLog.severity.in_(severities))
+            if min_severity:
+                # Map severity to numeric level for comparison
+                severity_order = {"info": 0, "warning": 1, "error": 2, "critical": 3}
+                min_level = severity_order.get(min_severity, 0)
+                valid_severities = [s for s, l in severity_order.items() if l >= min_level]
+                query = query.where(ActivityLog.severity.in_(valid_severities))
+            if start_date:
+                query = query.where(ActivityLog.timestamp >= start_date)
+            if end_date:
+                query = query.where(ActivityLog.timestamp <= end_date)
+            if correlation_id:
+                query = query.where(ActivityLog.correlation_id == correlation_id)
+            if search_query:
+                search_pattern = f"%{search_query}%"
+                query = query.where(ActivityLog.message.ilike(search_pattern))
+
+            # Apply ordering
+            order_column = getattr(ActivityLog, order_by, ActivityLog.timestamp)
+            if order.lower() == "desc":
+                query = query.order_by(order_column.desc())
+            else:
+                query = query.order_by(order_column.asc())
+
+            # Apply pagination
+            if offset:
+                query = query.offset(offset)
+            if limit:
+                query = query.limit(limit)
+
+            result = await session.execute(query)  # noqa: F841
+            return list(result.scalars().all())
+
+    async def count_activities(
+        self,
+        service: Optional[str] = None,
+        services: Optional[list[str]] = None,
+        event_type: Optional[str] = None,
+        event_types: Optional[list[str]] = None,
+        severity: Optional[str] = None,
+        severities: Optional[list[str]] = None,
+        min_severity: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        correlation_id: Optional[str] = None,
+        search_query: Optional[str] = None,
+    ) -> int:
+        """
+        Count activities with optional filters.
+
+        Args:
+            service: Filter by specific service
+            services: Filter by multiple services
+            event_type: Filter by specific event type
+            event_types: Filter by multiple event types
+            severity: Filter by specific severity
+            severities: Filter by multiple severities
+            min_severity: Filter by minimum severity level
+            start_date: Filter by start date (inclusive)
+            end_date: Filter by end date (inclusive)
+            correlation_id: Filter by correlation ID
+            search_query: Search in message and metadata
+
+        Returns:
+            Count of matching activities
+        """
+        from sqlalchemy import func
+
+        async with self.db.session() as session:
+            query = select(func.count(ActivityLog.id))
+
+            # Apply same filters as get_activities
+            if service:
+                query = query.where(ActivityLog.service == service)
+            if services:
+                query = query.where(ActivityLog.service.in_(services))
+            if event_type:
+                query = query.where(ActivityLog.event_type == event_type)
+            if event_types:
+                query = query.where(ActivityLog.event_type.in_(event_types))
+            if severity:
+                query = query.where(ActivityLog.severity == severity)
+            if severities:
+                query = query.where(ActivityLog.severity.in_(severities))
+            if min_severity:
+                severity_order = {"info": 0, "warning": 1, "error": 2, "critical": 3}
+                min_level = severity_order.get(min_severity, 0)
+                valid_severities = [s for s, l in severity_order.items() if l >= min_level]
+                query = query.where(ActivityLog.severity.in_(valid_severities))
+            if start_date:
+                query = query.where(ActivityLog.timestamp >= start_date)
+            if end_date:
+                query = query.where(ActivityLog.timestamp <= end_date)
+            if correlation_id:
+                query = query.where(ActivityLog.correlation_id == correlation_id)
+            if search_query:
+                search_pattern = f"%{search_query}%"
+                query = query.where(ActivityLog.message.ilike(search_pattern))
+
+            result = await session.execute(query)  # noqa: F841
+            return result.scalar_one()  # type: ignore[no-any-return]
+
+    async def get_statistics(
+        self,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> dict:
+        """
+        Get activity statistics with aggregations.
+
+        Args:
+            start_date: Optional start date filter
+            end_date: Optional end date filter
+
+        Returns:
+            Dictionary with statistics
+        """
+
+        async with self.db.session() as session:
+            # Build base query
+            query = select(ActivityLog)
+            if start_date:
+                query = query.where(ActivityLog.timestamp >= start_date)
+            if end_date:
+                query = query.where(ActivityLog.timestamp <= end_date)
+
+            # Get all matching activities
+            result = await session.execute(query)  # noqa: F841
+            activities = result.scalars().all()
+
+            # Calculate statistics
+            total_count = len(activities)
+            by_type: dict[str, int] = {}
+            by_service: dict[str, int] = {}
+            by_severity: dict[str, int] = {}
+
+            for activity in activities:
+                by_type[activity.event_type] = by_type.get(activity.event_type, 0) + 1
+                by_service[activity.service] = by_service.get(activity.service, 0) + 1
+                by_severity[activity.severity] = by_severity.get(activity.severity, 0) + 1
+
+            return {
+                "total_count": total_count,
+                "by_type": by_type,
+                "by_service": by_service,
+                "by_severity": by_severity,
+            }
+
+    async def get_trend(
+        self,
+        days: int = 7,
+        event_type: Optional[str] = None,
+        service: Optional[str] = None,
+    ) -> dict[str, int]:
+        """
+        Get activity trend over time.
+
+        Args:
+            days: Number of days to include
+            event_type: Optional event type filter
+            service: Optional service filter
+
+        Returns:
+            Dictionary mapping dates (YYYY-MM-DD) to counts
+        """
+        from sqlalchemy import func
+
+        async with self.db.session() as session:
+            start_date = datetime.utcnow() - timedelta(days=days)
+
+            query = select(
+                func.date(ActivityLog.timestamp).label("date"),
+                func.count(ActivityLog.id).label("count"),
+            ).where(ActivityLog.timestamp >= start_date)
+
+            if event_type:
+                query = query.where(ActivityLog.event_type == event_type)
+            if service:
+                query = query.where(ActivityLog.service == service)
+
+            query = query.group_by(func.date(ActivityLog.timestamp))
+
+            result = await session.execute(query)  # noqa: F841
+            rows = result.all()
+
+            # row.count is the actual count value, not a callable
+            return {str(row.date): row.count for row in rows}  # type: ignore[misc]
+
+    async def delete_old_activities(self, cutoff_date: datetime) -> int:
+        """
+        Delete activities older than cutoff date.
+
+        Args:
+            cutoff_date: Delete activities before this date
+
+        Returns:
+            Number of activities deleted
+        """
+        from sqlalchemy import delete as sql_delete
+
+        async with self.db.session() as session:
+            result = await session.execute(  # noqa: F841
+                sql_delete(ActivityLog).where(ActivityLog.timestamp < cutoff_date)
+            )
+            await session.commit()
+            return result.rowcount  # type: ignore[no-any-return]

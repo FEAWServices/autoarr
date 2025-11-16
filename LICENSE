@@ -1,0 +1,35 @@
+AutoArr Monorepo
+================
+
+This repository contains multiple packages with different licenses:
+
+1. autoarr/ - GPL-3.0-or-later (Open Source)
+2. autoarrx/ - Proprietary (All Rights Reserved)
+
+See individual package LICENSE files for details.
+
+---
+
+## AutoArr (GPL-3.0-or-later)
+
+AutoArr is 100% free and open source software, licensed under GPL-3.0-or-later.
+
+- Location: /app/autoarr/
+- License: GPL-3.0-or-later
+- Distribution: Docker Hub, GitHub (public)
+- See: autoarr/LICENSE for full GPL-3.0 license text
+
+## AutoArrX (Proprietary)
+
+AutoArrX is proprietary software with all rights reserved.
+
+- Location: /app/autoarrx/
+- License: Proprietary (All Rights Reserved)
+- Distribution: Azure Cloud Service (SaaS only)
+- See: autoarrx/LICENSE for proprietary license terms
+
+---
+
+For questions about licensing:
+- AutoArr (GPL): See CONTRIBUTING.md
+- AutoArrX (Premium): Contact hello@autoarr.io

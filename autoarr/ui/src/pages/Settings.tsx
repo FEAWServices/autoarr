@@ -26,6 +26,127 @@ interface SettingsData {
   };
 }
 
+// ServiceSection component - must be defined outside Settings to avoid re-creation on each render
+const ServiceSection = ({
+  title,
+  service,
+  config,
+  onChange,
+  showToken = false,
+  showKeys,
+  testResults,
+  testErrors,
+  toggleShowKey,
+  testConnection,
+}: {
+  title: string;
+  service: string;
+  config: ServiceConfig & { token?: string };
+  onChange: (updates: Partial<ServiceConfig> | { token: string }) => void;
+  showToken?: boolean;
+  showKeys: Record<string, boolean>;
+  testResults: Record<string, "idle" | "testing" | "success" | "error">;
+  testErrors: Record<string, string>;
+  toggleShowKey: (key: string) => void;
+  testConnection: (service: string) => void;
+}) => (
+  <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+    <div className="flex items-center justify-between">
+      <h3 className="text-lg font-semibold text-white">{title}</h3>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={config.enabled}
+          onChange={(e) => onChange({ enabled: e.target.checked })}
+          className="w-4 h-4 rounded border-gray-600 text-indigo-600 focus:ring-indigo-500"
+        />
+        <span className="text-sm text-gray-400">Enabled</span>
+      </label>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-300 mb-2">
+        URL
+      </label>
+      <input
+        type="text"
+        value={config.url}
+        onChange={(e) => onChange({ url: e.target.value })}
+        placeholder="http://localhost:8080"
+        className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-300 mb-2">
+        {showToken ? "Token" : "API Key"}
+      </label>
+      <div className="relative">
+        <input
+          type={showKeys[service] ? "text" : "password"}
+          value={showToken ? config.token : config.apiKey}
+          onChange={(e) =>
+            onChange(
+              showToken
+                ? { token: e.target.value }
+                : { apiKey: e.target.value },
+            )
+          }
+          placeholder={showToken ? "your_plex_token" : "your_api_key"}
+          className="w-full px-4 py-2 pr-20 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <button
+          type="button"
+          onClick={() => toggleShowKey(service)}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white"
+        >
+          {showKeys[service] ? (
+            <EyeOff className="w-4 h-4" />
+          ) : (
+            <Eye className="w-4 h-4" />
+          )}
+        </button>
+      </div>
+    </div>
+
+    <div className="space-y-2">
+      <button
+        onClick={() => testConnection(service)}
+        disabled={!config.enabled || testResults[service] === "testing"}
+        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {testResults[service] === "testing" ? (
+          "Testing..."
+        ) : testResults[service] === "success" ? (
+          <span className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" /> Connected
+          </span>
+        ) : testResults[service] === "error" ? (
+          <span className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" /> Failed
+          </span>
+        ) : (
+          "Test Connection"
+        )}
+      </button>
+
+      {testResults[service] === "error" && testErrors[service] && (
+        <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-800 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-400 mb-1">
+              Connection Failed
+            </p>
+            <p className="text-xs text-red-300 font-mono">
+              {testErrors[service]}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 export const Settings = () => {
   const [settings, setSettings] = useState<SettingsData>({
     sabnzbd: { url: "http://localhost:8080", apiKey: "", enabled: true },
@@ -53,20 +174,20 @@ export const Settings = () => {
 
   useEffect(() => {
     // Load settings from backend
+    const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/v1/settings");
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+      }
+    };
+
     loadSettings();
   }, []);
-
-  const loadSettings = async () => {
-    try {
-      const response = await fetch("/api/v1/settings");
-      if (response.ok) {
-        const data = await response.json();
-        setSettings(data);
-      }
-    } catch (error) {
-      console.error("Failed to load settings:", error);
-    }
-  };
 
   const handleSave = async () => {
     setSaveStatus("saving");
@@ -100,7 +221,7 @@ export const Settings = () => {
       const response = await fetch(`/health/${service}`);
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         setTestResults({ ...testResults, [service]: "success" });
         setTestErrors({ ...testErrors, [service]: "" });
       } else {
@@ -128,116 +249,6 @@ export const Settings = () => {
     setShowKeys({ ...showKeys, [key]: !showKeys[key] });
   };
 
-  const ServiceSection = ({
-    title,
-    service,
-    config,
-    onChange,
-    showToken = false,
-  }: {
-    title: string;
-    service: string;
-    config: ServiceConfig & { token?: string };
-    onChange: (updates: Partial<ServiceConfig>) => void;
-    showToken?: boolean;
-  }) => (
-    <div className="bg-gray-800 rounded-lg p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={config.enabled}
-            onChange={(e) => onChange({ enabled: e.target.checked })}
-            className="w-4 h-4 rounded border-gray-600 text-indigo-600 focus:ring-indigo-500"
-          />
-          <span className="text-sm text-gray-400">Enabled</span>
-        </label>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          URL
-        </label>
-        <input
-          type="text"
-          value={config.url}
-          onChange={(e) => onChange({ url: e.target.value })}
-          placeholder="http://localhost:8080"
-          className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          {showToken ? "Token" : "API Key"}
-        </label>
-        <div className="relative">
-          <input
-            type={showKeys[service] ? "text" : "password"}
-            value={showToken ? config.token : config.apiKey}
-            onChange={(e) =>
-              onChange(
-                showToken
-                  ? { token: e.target.value }
-                  : { apiKey: e.target.value },
-              )
-            }
-            placeholder={showToken ? "your_plex_token" : "your_api_key"}
-            className="w-full px-4 py-2 pr-20 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <button
-            type="button"
-            onClick={() => toggleShowKey(service)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white"
-          >
-            {showKeys[service] ? (
-              <EyeOff className="w-4 h-4" />
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <button
-          onClick={() => testConnection(service)}
-          disabled={!config.enabled || testResults[service] === "testing"}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {testResults[service] === "testing" ? (
-            "Testing..."
-          ) : testResults[service] === "success" ? (
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" /> Connected
-            </span>
-          ) : testResults[service] === "error" ? (
-            <span className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" /> Failed
-            </span>
-          ) : (
-            "Test Connection"
-          )}
-        </button>
-
-        {testResults[service] === "error" && testErrors[service] && (
-          <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-800 rounded-lg">
-            <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-red-400 mb-1">
-                Connection Failed
-              </p>
-              <p className="text-xs text-red-300 font-mono">
-                {testErrors[service]}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <div className="p-8 max-w-4xl">
       <div className="mb-8">
@@ -264,6 +275,11 @@ export const Settings = () => {
                   sabnzbd: { ...settings.sabnzbd, ...updates },
                 })
               }
+              showKeys={showKeys}
+              testResults={testResults}
+              testErrors={testErrors}
+              toggleShowKey={toggleShowKey}
+              testConnection={testConnection}
             />
             <ServiceSection
               title="Sonarr"
@@ -275,6 +291,11 @@ export const Settings = () => {
                   sonarr: { ...settings.sonarr, ...updates },
                 })
               }
+              showKeys={showKeys}
+              testResults={testResults}
+              testErrors={testErrors}
+              toggleShowKey={toggleShowKey}
+              testConnection={testConnection}
             />
             <ServiceSection
               title="Radarr"
@@ -286,6 +307,11 @@ export const Settings = () => {
                   radarr: { ...settings.radarr, ...updates },
                 })
               }
+              showKeys={showKeys}
+              testResults={testResults}
+              testErrors={testErrors}
+              toggleShowKey={toggleShowKey}
+              testConnection={testConnection}
             />
             <ServiceSection
               title="Plex"
@@ -298,6 +324,11 @@ export const Settings = () => {
                 })
               }
               showToken
+              showKeys={showKeys}
+              testResults={testResults}
+              testErrors={testErrors}
+              toggleShowKey={toggleShowKey}
+              testConnection={testConnection}
             />
           </div>
         </div>

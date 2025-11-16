@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Tests for health check endpoints.
 
@@ -5,13 +22,13 @@ This module tests the health check API endpoints for overall system health
 and individual service health monitoring.
 """
 
-import pytest
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from fastapi.testclient import TestClient
 
+from autoarr.api.dependencies import get_orchestrator, reset_orchestrator
 from autoarr.api.main import app
-from autoarr.api.dependencies import reset_orchestrator, get_orchestrator
 
 
 @pytest.fixture
@@ -25,6 +42,7 @@ def mock_orchestrator():
     """Create a mock orchestrator."""
     mock = MagicMock()
     mock._clients = {"sabnzbd": MagicMock(), "sonarr": MagicMock()}
+    mock.get_connected_servers = MagicMock(return_value=["sabnzbd", "sonarr"])
     mock.health_check = AsyncMock(return_value=True)
     mock.get_circuit_breaker_state = MagicMock(return_value={"state": "closed", "failure_count": 0})
     mock.is_connected = AsyncMock(return_value=True)
@@ -102,6 +120,7 @@ class TestHealthEndpoints:
         """Test overall health check when no services are connected."""
         mock_orch = MagicMock()
         mock_orch._clients = {}  # No clients connected
+        mock_orch.get_connected_servers = MagicMock(return_value=[])  # No servers
 
         override_orchestrator(mock_orch)
 

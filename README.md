@@ -1,10 +1,37 @@
-# AutoArr
+# AutoArr Monorepo
 
 > **Intelligent cruise control for your \*arr media automation stack**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Dual](https://img.shields.io/badge/License-GPL%203.0%20%2B%20Proprietary-blue.svg)](./LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/autoarr/autoarr)
 [![GitHub](https://img.shields.io/github/stars/autoarr/autoarr)](https://github.com/autoarr/autoarr)
+
+---
+
+## 📦 Monorepo Structure
+
+This repository contains two products:
+
+### 🟢 **AutoArr** (GPL-3.0) - 100% Free & Open Source
+**Location:** `/app/autoarr/`
+
+- ✅ **100% Free Forever** - No limitations, no subscriptions
+- ✅ **GPL-3.0 Licensed** - Open source like Sonarr and Radarr
+- ✅ **Self-Hosted** - Complete privacy and control
+- ✅ **Full Features** - Configuration auditing, download recovery, natural language requests
+- ✅ **Docker Hub** - Easy deployment
+
+**See:** [autoarr/README.md](./autoarr/README.md) | [Documentation](./docs/autoarr/)
+
+### 🔵 **AutoArrX** (Proprietary) - Premium Cloud Intelligence
+**Location:** `/app/autoarrx/`
+
+- ⭐ **Cloud-Enhanced** - Advanced LLM, smart notifications, predictive analytics
+- ⭐ **Privacy-First** - End-to-end encryption, no media file access
+- ⭐ **Optional** - AutoArr works perfectly without it
+- ⭐ **Azure SaaS** - Managed cloud service
+
+**See:** [autoarrx/README.md](./autoarrx/README.md) | [Pricing](./docs/autoarrx/PRICING.md) | [Privacy](./docs/autoarrx/PRIVACY.md)
 
 ---
 
@@ -18,6 +45,10 @@ _Aspirational UI: Modern, unified dashboard for your entire media automation sta
 AutoArr is an **intelligent orchestration layer** that sits above your media automation stack (SABnzbd, Sonarr, Radarr, and Plex), providing autonomous configuration optimization, intelligent download recovery, and natural language content requests.
 
 Think of it as **cruise control for your media server** — it continuously monitors your setup, learns best practices, and keeps everything running optimally without manual intervention.
+
+**100% Open Source** (GPL-3.0) - Just like Sonarr and Radarr. Self-hosted, privacy-first, no subscriptions required for full functionality.
+
+> **Looking for premium features?** See [AutoArrX Pricing](docs/autoarrx/PRICING.md) for optional cloud enhancements like smart notifications, predictive analytics, and multi-instance management - all with privacy-first encryption.
 
 ### The Problem We Solve
 
@@ -111,8 +142,8 @@ For production deployment:
 
 Learn about the product strategy and goals:
 
-3. [**VISION.md**](docs/VISION.md) - Product vision, business model, and roadmap
-4. [**NAME-ANALYSIS.md**](docs/NAME-ANALYSIS.md) - Why we chose "AutoArr"
+3. [**VISION_AND_PRICING.md**](docs/VISION_AND_PRICING.md) - Product vision, AutoArr vs AutoArrX, pricing
+4. [**archive/NAME-ANALYSIS.md**](docs/archive/NAME-ANALYSIS.md) - Why we chose "AutoArr" (archived)
 
 ### **Technical Deep Dive**
 
@@ -292,12 +323,12 @@ See [**BUILD-PLAN.md**](docs/BUILD-PLAN.md) for detailed sprint planning.
 
 ### **Competitive Landscape**
 
-| Solution           | Config Mgmt | Download Recovery | NL Interface | Intelligence |
+| Solution           | Config Mgmt | Download Recovery | NL Interface | Intelligence | License |
 | ------------------ | ----------- | ----------------- | ------------ | ------------ |
-| **Manual**         | ❌          | ❌                | ❌           | ❌           |
-| **Overseerr**      | ❌          | ❌                | ❌           | ❌           |
-| **Custom Scripts** | ⚠️          | ⚠️                | ❌           | ❌           |
-| **AutoArr**        | ✅          | ✅                | ✅           | ✅           |
+| **Manual**         | ❌          | ❌                | ❌           | ❌           | N/A |
+| **Overseerr**      | ❌          | ❌                | ❌           | ❌           | MIT |
+| **Custom Scripts** | ⚠️          | ⚠️                | ❌           | ❌           | N/A |
+| **AutoArr**        | ✅          | ✅                | ✅           | ✅           | **GPL-3.0** |
 
 **AutoArr is the only solution** that combines:
 
@@ -306,30 +337,29 @@ See [**BUILD-PLAN.md**](docs/BUILD-PLAN.md) for detailed sprint planning.
 - Natural language interface for content requests
 - Holistic orchestration across the entire stack
 
-### **Business Model**
+### **Open Source Model**
 
-**Open Core** approach for community growth and sustainability:
+**AutoArr is 100% open source (GPL-3.0)** - Following the same trusted model as Sonarr and Radarr:
 
-#### **Free Tier** (MIT Licensed)
+✅ **All Features Free Forever**
+- Configuration Intelligence with AI
+- Natural language content requests (local LLM)
+- Automatic download recovery
+- All service integrations
+- Beautiful web UI
+- Self-hosted, privacy-first
 
-- Configuration auditing
-- Basic download recovery
-- REST API access
-- Community support
+✅ **No Subscriptions, No Premium Tiers**
+- No API keys required (uses local Qwen 2.5-3B LLM)
+- No features locked behind paywalls
+- No cloud dependencies
+- No telemetry or tracking
 
-#### **Premium** ($4.99/month)
-
-- Advanced AI recommendations
-- Natural language interface
-- Priority support
-- Cloud configuration sync
-
-#### **Enterprise** (Custom pricing)
-
-- Multi-location support
-- Advanced analytics
-- Custom integrations
-- SLA support
+✅ **Community-Driven Development**
+- Open roadmap
+- Community contributions welcome
+- Transparent development
+- Your data stays on your server
 
 ---
 
@@ -389,16 +419,116 @@ Special thanks to the communities behind **SABnzbd**, **Sonarr**, **Radarr**, an
 
 ## 📄 License
 
-AutoArr is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
+This repository contains two products with **different licenses**:
+
+### AutoArr (GPL-3.0)
+**Location:** `/app/autoarr/`
+**License:** GNU General Public License v3.0 or later
+
+AutoArr is **100% free and open source software**. See [autoarr/LICENSE](./autoarr/LICENSE) for the full license text.
+
+This means you have the freedom to:
+- ✅ Use AutoArr for any purpose
+- ✅ Study and modify the source code
+- ✅ Distribute copies to help others
+- ✅ Distribute your modifications
+
+Any modifications or derivative works must also be released under GPL-3.0, ensuring AutoArr remains free and open source forever.
+
+### AutoArrX (Proprietary)
+**Location:** `/app/autoarrx/`
+**License:** Proprietary (All Rights Reserved)
+
+AutoArrX is proprietary software. See [autoarrx/LICENSE](./autoarrx/LICENSE) for details.
+
+### Root License
+See [LICENSE](./LICENSE) for the monorepo dual-license notice.
+
+---
+
+## 🗂️ Monorepo Architecture
+
+This repository follows **ADR-002: Monorepo Structure** for clear separation between GPL and proprietary code.
+
+### Directory Structure
 
 ```
-Copyright (c) 2025 AutoArr Team
+/app/
+├── autoarr/                # GPL-3.0 (Public-ready)
+│   ├── LICENSE             # GPL-3.0
+│   ├── api/                # FastAPI backend
+│   ├── ui/                 # React frontend
+│   ├── mcp_servers/        # Service integrations
+│   ├── shared/             # Internal shared code
+│   └── tests/              # Test suite
+│
+├── autoarrx/               # Proprietary (Private)
+│   ├── LICENSE             # Proprietary
+│   ├── bridge/             # Secure connection service
+│   ├── cloud/              # Cloud intelligence
+│   ├── notifications/      # Smart notifications
+│   ├── analytics/          # Predictive analytics
+│   └── tests/              # Premium tests
+│
+├── docs/
+│   ├── architecture/       # ADRs and architecture docs
+│   ├── autoarr/            # GPL documentation
+│   └── autoarrx/           # Premium documentation
+│
+└── LICENSE                 # Dual-license notice
+```
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software...
+### Why a Monorepo?
+
+1. **Fast Development** - Iterate quickly during pre-launch
+2. **Clear Boundaries** - Separate directories enforce licensing
+3. **Easy Split** - Can extract GPL code to public repo anytime
+4. **Transparent** - Community can verify GPL separation
+
+See [docs/architecture/adr/002-monorepo-structure.md](./docs/architecture/adr/002-monorepo-structure.md) for complete details.
+
+### What You Get (AutoArr - Free Forever)
+
+- ✅ Complete configuration intelligence with Claude/LLM
+- ✅ Natural language content requests
+- ✅ Automatic download monitoring and recovery
+- ✅ Intelligent retry strategies (quality fallback, exponential backoff)
+- ✅ All service integrations (SABnzbd, Sonarr, Radarr, Plex)
+- ✅ Beautiful, accessible web UI
+- ✅ Activity tracking and logs
+- ✅ Real-time WebSocket updates
+- ✅ Self-hosted, privacy-first
+- ✅ Community-driven development
+
+**AutoArrX (Optional Premium Cloud Service)**
+
+For users who want enhanced features with privacy-first cloud intelligence:
+- 🌟 Smart notifications & IFTTT/Zapier integration
+- 🤖 Advanced LLM models (Claude/GPT-4) for complex requests
+- 📊 Predictive maintenance & analytics
+- 🔒 Zero-knowledge architecture (we never see your library)
+- 🏢 Multi-instance management
+- 👥 Family/community features
+
+See [VISION_AND_PRICING.md](docs/VISION_AND_PRICING.md) for complete details on premium tiers.
+
+**Key Principle**: The base AutoArr will **always** be fully functional and open source. No features will ever be removed from the GPL version. AutoArrX is a separate optional service for users who want cloud enhancements.
+
+```
+Copyright (C) 2025 AutoArr Contributors
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
 ```
 
 ---

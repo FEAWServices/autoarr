@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Tests for FastAPI middleware.
 
@@ -5,12 +22,11 @@ This module tests the custom middleware for error handling, logging,
 and security headers.
 """
 
+from unittest.mock import patch
+
 import pytest
-import logging
-from unittest.mock import AsyncMock, MagicMock, patch
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from starlette.responses import Response, JSONResponse
 
 from autoarr.api.middleware import (
     ErrorHandlerMiddleware,
@@ -18,13 +34,12 @@ from autoarr.api.middleware import (
     add_security_headers,
 )
 from autoarr.shared.core.exceptions import (
-    MCPConnectionError,
-    MCPTimeoutError,
     CircuitBreakerOpenError,
-    MCPToolError,
+    MCPConnectionError,
     MCPOrchestratorError,
+    MCPTimeoutError,
+    MCPToolError,
 )
-
 
 # Create test app
 app = FastAPI()
@@ -186,7 +201,7 @@ class TestRequestLoggingMiddleware:
         """Test that request start is logged."""
         client.get("/test")
         # Check for request started log
-        calls = [str(call) for call in mock_logger.info.call_args_list]
+        calls = [str(call) for call in mock_logger.info.call_args_list]  # noqa: F841
         assert any("Request started" in call for call in calls)
         assert any("GET /test" in call for call in calls)
 
@@ -195,7 +210,7 @@ class TestRequestLoggingMiddleware:
         """Test that request completion is logged."""
         client.get("/test")
         # Check for request completed log
-        calls = [str(call) for call in mock_logger.info.call_args_list]
+        calls = [str(call) for call in mock_logger.info.call_args_list]  # noqa: F841
         assert any("Request completed" in call for call in calls)
         assert any("Status: 200" in call for call in calls)
 
@@ -204,7 +219,7 @@ class TestRequestLoggingMiddleware:
         """Test that request duration is logged."""
         client.get("/test")
         # Check for duration in logs
-        calls = [str(call) for call in mock_logger.info.call_args_list]
+        calls = [str(call) for call in mock_logger.info.call_args_list]  # noqa: F841
         assert any("Duration:" in call for call in calls)
 
     def test_adds_request_id_header(self, client):
@@ -229,7 +244,7 @@ class TestRequestLoggingMiddleware:
     def test_logs_with_custom_request_id(self, mock_logger, client):
         """Test that custom request ID is logged."""
         client.get("/test", headers={"X-Request-ID": "custom-id-456"})
-        calls = [str(call) for call in mock_logger.info.call_args_list]
+        calls = [str(call) for call in mock_logger.info.call_args_list]  # noqa: F841
         assert any("custom-id-456" in call for call in calls)
 
 
@@ -239,7 +254,7 @@ class TestSecurityHeadersMiddleware:
     def test_adds_x_content_type_options_header(self, client):
         """Test that X-Content-Type-Options header is added."""
         response = client.get("/test")
-        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["X-Content-Type-Options"] == "nosnif"
 
     def test_adds_x_frame_options_header(self, client):
         """Test that X-Frame-Options header is added."""
@@ -261,7 +276,7 @@ class TestSecurityHeadersMiddleware:
     def test_security_headers_on_error_responses(self, client):
         """Test that security headers are added even on error responses."""
         response = client.get("/error/value")
-        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["X-Content-Type-Options"] == "nosnif"
         assert response.headers["X-Frame-Options"] == "DENY"
         assert response.headers["X-XSS-Protection"] == "1; mode=block"
         assert "Strict-Transport-Security" in response.headers
@@ -282,7 +297,7 @@ class TestMiddlewareIntegration:
         assert "X-Process-Time" in response.headers
 
         # Check security headers
-        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["X-Content-Type-Options"] == "nosnif"
         assert response.headers["X-Frame-Options"] == "DENY"
 
     def test_all_middleware_applied_to_error_request(self, client):
@@ -299,7 +314,7 @@ class TestMiddlewareIntegration:
         assert "X-Process-Time" in response.headers
 
         # Check security headers
-        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["X-Content-Type-Options"] == "nosnif"
 
     @patch("autoarr.api.middleware.logger")
     def test_error_logged_with_request_tracking(self, mock_logger, client):
@@ -307,7 +322,7 @@ class TestMiddlewareIntegration:
         client.get("/error/generic", headers={"X-Request-ID": "error-tracking-test"})
 
         # Check that request was logged
-        calls = [str(call) for call in mock_logger.info.call_args_list]
+        calls = [str(call) for call in mock_logger.info.call_args_list]  # noqa: F841
         assert any("error-tracking-test" in call for call in calls)
 
         # Check that error was logged

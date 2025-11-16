@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Tests for settings API endpoints.
 
@@ -5,12 +22,13 @@ This module tests the settings configuration endpoints that allow users to
 view and update service settings through the API/UI.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
-from autoarr.api.main import app
 from autoarr.api.dependencies import reset_orchestrator
+from autoarr.api.main import app
 
 
 @pytest.fixture
@@ -61,8 +79,8 @@ def cleanup():
 @pytest.fixture
 def override_deps():
     """Helper to override dependencies."""
-    from autoarr.api.routers.settings import get_settings_repo
     from autoarr.api.dependencies import get_orchestrator
+    from autoarr.api.routers.settings import get_settings_repo
 
     def _override(orchestrator=None, settings_repo=None):
         if orchestrator:
@@ -340,8 +358,6 @@ class TestConnectionTesting:
     dynamic import mocking that doesn't add value.
     """
 
-    pass
-
 
 class TestMaskApiKey:
     """Test API key masking functionality."""
@@ -350,19 +366,19 @@ class TestMaskApiKey:
         """Test masking a normal API key."""
         from autoarr.api.routers.settings import mask_api_key
 
-        result = mask_api_key("1234567890abcdef")
-        assert result == "1234...cdef"
+        result = mask_api_key("1234567890abcde")  # noqa: F841
+        assert result == "1234...bcde"  # noqa: F841
 
     def test_mask_api_key_short(self):
         """Test masking a short API key."""
         from autoarr.api.routers.settings import mask_api_key
 
-        result = mask_api_key("short")
-        assert result == "****"
+        result = mask_api_key("short")  # noqa: F841
+        assert result == "****"  # noqa: F841
 
     def test_mask_api_key_empty(self):
         """Test masking an empty API key."""
         from autoarr.api.routers.settings import mask_api_key
 
-        result = mask_api_key("")
-        assert result == "****"
+        result = mask_api_key("")  # noqa: F841
+        assert result == "****"  # noqa: F841

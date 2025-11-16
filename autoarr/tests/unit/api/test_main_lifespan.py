@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Tests for FastAPI main application lifespan.
 
@@ -5,14 +22,13 @@ This module tests the application startup and shutdown lifecycle,
 including database initialization and orchestrator management.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from contextlib import asynccontextmanager
 
+import pytest
 from fastapi import FastAPI
 
-from autoarr.api.main import lifespan, app
 from autoarr.api.config import Settings
+from autoarr.api.main import app, lifespan
 
 
 @pytest.fixture
@@ -56,7 +72,9 @@ class TestLifespanStartup:
                             pass
 
                         # Check startup logs
-                        calls = [str(call) for call in mock_logger.info.call_args_list]
+                        calls = [
+                            str(call) for call in mock_logger.info.call_args_list
+                        ]  # noqa: F841
                         assert any("Starting AutoArr" in call for call in calls)
                         assert any("Environment: test" in call for call in calls)
                         assert any("Log level: INFO" in call for call in calls)
@@ -97,7 +115,9 @@ class TestLifespanStartup:
                         async with lifespan(test_app):
                             pass
 
-                        calls = [str(call) for call in mock_logger.info.call_args_list]
+                        calls = [
+                            str(call) for call in mock_logger.info.call_args_list
+                        ]  # noqa: F841
                         assert any("Initializing database" in call for call in calls)
                         assert any("Database initialized successfully" in call for call in calls)
 
@@ -146,7 +166,7 @@ class TestLifespanShutdown:
                         pass
 
                     # Check shutdown logs
-                    calls = [str(call) for call in mock_logger.info.call_args_list]
+                    calls = [str(call) for call in mock_logger.info.call_args_list]  # noqa: F841
                     assert any("Shutting down AutoArr" in call for call in calls)
                     assert any("Shutdown complete" in call for call in calls)
 
@@ -202,7 +222,9 @@ class TestLifespanShutdown:
                             async with lifespan(test_app):
                                 pass
 
-                            calls = [str(call) for call in mock_logger.info.call_args_list]
+                            calls = [
+                                str(call) for call in mock_logger.info.call_args_list
+                            ]  # noqa: F841
                             assert any("Database connections closed" in call for call in calls)
 
     @pytest.mark.asyncio
@@ -302,23 +324,21 @@ class TestLifespanFullCycle:
                         mock_shutdown.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_exception_during_startup_doesnt_prevent_shutdown(self, test_settings):
+    async def test_exception_during_startup_fails_fast(self, test_settings):
         test_app = FastAPI()
-        """Test that shutdown still happens if startup has issues."""
+        """Test that database init failures cause the app to fail fast."""
         with patch("autoarr.api.main.get_settings", return_value=test_settings):
             with patch("autoarr.api.main.logger"):
                 with patch("autoarr.api.main.init_database") as mock_init_db:
-                    with patch("autoarr.api.main.shutdown_orchestrator") as mock_shutdown:
+                    with patch("autoarr.api.main.shutdown_orchestrator"):
                         mock_db = MagicMock()
                         mock_db.init_db = AsyncMock(side_effect=Exception("Init failed"))
                         mock_init_db.return_value = mock_db
 
-                        # Should not raise, startup error is caught
-                        async with lifespan(test_app):
-                            pass
-
-                        # Shutdown should still be called
-                        mock_shutdown.assert_called_once()
+                        # Should raise - fail fast when database init fails
+                        with pytest.raises(Exception, match="Init failed"):
+                            async with lifespan(test_app):
+                                pass
 
 
 class TestAppConfiguration:

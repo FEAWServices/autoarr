@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Integration tests for Radarr API Client.
 
@@ -16,8 +33,6 @@ Target Coverage: 20% of total test suite (integration layer)
 """
 
 import json
-from datetime import datetime, timedelta
-from typing import Any, Dict
 
 import pytest
 from pytest_httpx import HTTPXMock
@@ -25,9 +40,7 @@ from pytest_httpx import HTTPXMock
 from autoarr.mcp_servers.mcp_servers.radarr.client import (
     RadarrClient,
     RadarrClientError,
-    RadarrConnectionError,
 )
-
 
 # ============================================================================
 # Integration Test Fixtures
@@ -51,7 +64,9 @@ async def radarr_integration_client(
     radarr_base_url: str, radarr_integration_api_key: str
 ) -> RadarrClient:
     """Create Radarr client for integration testing."""
-    client = RadarrClient(url=radarr_base_url, api_key=radarr_integration_api_key, timeout=30.0)
+    client = RadarrClient(
+        url=radarr_base_url, api_key=radarr_integration_api_key, timeout=30.0
+    )  # noqa: F841
     yield client
     await client.close()
 
@@ -172,7 +187,7 @@ class TestRadarrMovieWorkflow:
         )
         httpx_mock.add_response(status_code=201, json=search_command)
 
-        command_result = await radarr_integration_client.search_movie(movie_id=5)
+        command_result = await radarr_integration_client.search_movie(movie_id=5)  # noqa: F841
 
         assert command_result["id"] == 100
         assert command_result["name"] == "MoviesSearch"
@@ -265,7 +280,7 @@ class TestRadarrErrorScenarios:
             status_code=401, json={"error": "Unauthorized", "message": "Invalid API Key"}
         )
 
-        client = RadarrClient(url=radarr_base_url, api_key="invalid_key")
+        client = RadarrClient(url=radarr_base_url, api_key="invalid_key")  # noqa: F841
 
         with pytest.raises(RadarrClientError, match="401|Unauthorized"):
             await client.get_movies()
@@ -292,7 +307,7 @@ class TestRadarrErrorScenarios:
         # Second request succeeds
         httpx_mock.add_response(json=[])
 
-        result = await radarr_integration_client.get_movies()
+        result = await radarr_integration_client.get_movies()  # noqa: F841
 
         # Should succeed after retry
         assert result is not None

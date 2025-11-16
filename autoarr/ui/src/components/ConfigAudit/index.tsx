@@ -83,7 +83,7 @@ export const ConfigAudit: React.FC = () => {
   const sortedAndPaginatedRecommendations = useMemo(() => {
     if (!data?.recommendations) return [];
 
-    let sorted = [...data.recommendations];
+    const sorted = [...data.recommendations];
 
     // Sort
     switch (sortBy) {
@@ -154,7 +154,7 @@ export const ConfigAudit: React.FC = () => {
           position: "top-right",
         });
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to connect to service", {
         icon: <AlertCircle className="h-5 w-5 text-red-500" />,
         duration: 5000,

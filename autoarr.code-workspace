@@ -1,0 +1,108 @@
+{
+  "folders": [
+    {
+      "name": "AutoArr (GPL-3.0)",
+      "path": "."
+    },
+    {
+      "name": "AutoArr Premium (Proprietary)",
+      "path": "/workspaces/autoarr-premium"
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    },
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.pytest_cache": true,
+      "**/.mypy_cache": true,
+      "**/htmlcov": true,
+      "**/.coverage": true
+    },
+    "files.watcherExclude": {
+      "**/__pycache__/**": true,
+      "**/node_modules/**": true,
+      "**/.venv/**": true
+    },
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+      }
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.black-formatter",
+      "charliermarsh.ruff",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "ms-playwright.playwright",
+      "eamodio.gitlens"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "AutoArr API (GPL)",
+        "type": "python",
+        "request": "launch",
+        "module": "uvicorn",
+        "args": [
+          "autoarr.api.main:app",
+          "--reload",
+          "--host",
+          "0.0.0.0",
+          "--port",
+          "8088"
+        ],
+        "cwd": "${workspaceFolder:AutoArr (GPL-3.0)}",
+        "env": {
+          "APP_ENV": "development",
+          "LOG_LEVEL": "DEBUG"
+        }
+      },
+      {
+        "name": "AutoArr Premium API",
+        "type": "python",
+        "request": "launch",
+        "module": "uvicorn",
+        "args": [
+          "autoarr_premium.api.main:app",
+          "--reload",
+          "--host",
+          "0.0.0.0",
+          "--port",
+          "8089"
+        ],
+        "cwd": "${workspaceFolder:AutoArr Premium (Proprietary)}",
+        "env": {
+          "APP_ENV": "development",
+          "LOG_LEVEL": "DEBUG"
+        }
+      }
+    ]
+  }
+}

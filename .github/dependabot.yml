@@ -4,8 +4,7 @@ updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
       time: "09:00"
     open-pull-requests-limit: 10
     rebase-strategy: "auto"
@@ -21,24 +20,20 @@ updates:
       - "dependencies"
       - "python"
     groups:
-      # Group all patch and minor updates together
-      non-breaking:
+      # Group ALL Python dependencies together to avoid poetry.lock conflicts
+      python-all:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
-      # Keep major updates separate for careful review
-      breaking:
-        update-types:
           - "major"
 
   # Frontend dependencies (pnpm)
   - package-ecosystem: "npm"
     directory: "/autoarr/ui"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
       time: "09:00"
     open-pull-requests-limit: 10
     rebase-strategy: "auto"
@@ -54,24 +49,20 @@ updates:
       - "dependencies"
       - "frontend"
     groups:
-      # Group all patch and minor updates together
-      non-breaking:
+      # Group ALL npm dependencies together to avoid pnpm-lock.yaml conflicts
+      npm-all:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
-      # Keep major updates separate for careful review
-      breaking:
-        update-types:
           - "major"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "monthly"
-      day: "monday"
+      interval: "daily"
       time: "09:00"
     open-pull-requests-limit: 5
     reviewers:
@@ -91,8 +82,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
       time: "09:00"
     open-pull-requests-limit: 5
     reviewers:

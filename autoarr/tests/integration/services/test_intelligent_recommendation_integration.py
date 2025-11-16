@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Integration tests for Intelligent Recommendation Engine.
 
@@ -5,8 +22,9 @@ These tests verify the full end-to-end workflow of the recommendation engine,
 including interaction with real (mocked) LLM responses and data sources.
 """
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 from autoarr.api.services.intelligent_recommendation_engine import (
     IntelligentRecommendationEngine,
@@ -87,7 +105,7 @@ class TestIntelligentRecommendationIntegration:
             "results": [
                 {
                     "title": "SABnzbd Security Best Practices",
-                    "snippet": "Always enable SSL verification to prevent man-in-the-middle attacks",
+                    "snippet": "Always enable SSL verification to prevent man-in-the-middle attacks",  # noqa: E501
                     "url": "https://sabnzbd.org/wiki/advanced/ssl-certs",
                 },
                 {
