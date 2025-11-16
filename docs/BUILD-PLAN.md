@@ -1,5 +1,7 @@
 # AutoArr Build Plan
 
+> **⚠️ STATUS NOTE (2025-11-16)**: This BUILD-PLAN reflects the original 20-week development plan. While significant progress has been made, **not all features marked as complete (✅) are fully implemented**. See [ASSESSMENT_2025-11-16.md](./ASSESSMENT_2025-11-16.md) for current status and [ROADMAP.md](./ROADMAP.md) for remaining work.
+
 ## Overview
 
 This document outlines the phased approach to building AutoArr with Test-Driven Development (TDD), Claude Code agents for accelerated development, and a focus on delivering value incrementally.
