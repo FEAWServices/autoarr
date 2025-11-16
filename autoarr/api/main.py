@@ -41,6 +41,11 @@ from .middleware import (
 from .routers import configuration, downloads, health, mcp, media, movies, requests
 from .routers import settings as settings_router
 from .routers import shows
+from .services.event_bus import get_event_bus
+from .services.websocket_bridge import (
+    initialize_websocket_bridge,
+    shutdown_websocket_bridge,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -78,10 +83,27 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("No DATABASE_URL configured, settings will not persist")
 
+    # Initialize WebSocket-EventBus bridge for real-time updates
+    try:
+        logger.info("Initializing WebSocket-EventBus bridge...")
+        event_bus = get_event_bus()
+        await initialize_websocket_bridge(event_bus, manager)
+        logger.info("WebSocket bridge initialized successfully")
+    except Exception as e:
+        logger.error(f"Warning: WebSocket bridge initialization failed: {e}")
+        # Don't fail startup if WebSocket bridge fails - it's not critical
+
     yield
 
     # Shutdown
     logger.info("Shutting down AutoArr FastAPI Gateway...")
+
+    # Shutdown WebSocket bridge
+    try:
+        await shutdown_websocket_bridge()
+    except Exception as e:
+        logger.error(f"Error shutting down WebSocket bridge: {e}")
+
     await shutdown_orchestrator()
 
     # Close database connections
