@@ -27,12 +27,13 @@ For manual testing with real API, set ANTHROPIC_API_KEY environment variable.
 
 import json
 import os
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from autoarr.api.services.llm_agent import LLMAgent
 from autoarr.api.services.models import Priority
+from autoarr.shared.llm.base_provider import LLMResponse
 
 
 class TestLLMAgentIntegration:
@@ -58,9 +59,9 @@ class TestLLMAgentIntegration:
             },
         }
 
-        # Mock response that looks like real Claude output
-        mock_claude_response = {
-            "content": json.dumps(
+        # Mock LLM provider response
+        mock_llm_response = LLMResponse(
+            content=json.dumps(
                 {
                     "explanation": "Having multiple Usenet servers provides redundancy and improves download reliability. If one server is down or missing articles, the downloader can automatically fail over to another server. Additionally, using a separate incomplete directory prevents partially downloaded files from being processed by media management tools.",  # noqa: E501
                     "priority": "high",
@@ -68,10 +69,15 @@ class TestLLMAgentIntegration:
                     "reasoning": "Redundant servers significantly improve download success rates, especially for older or less popular content. Separate directories prevent media tools from attempting to process incomplete files, which can cause crashes or corruption.",  # noqa: E501
                 }
             ),
-            "usage": {"input_tokens": 250, "output_tokens": 120},
-        }
+            usage={"prompt_tokens": 250, "completion_tokens": 120},
+            model="claude-3-5-sonnet-20241022",
+            provider="claude",
+        )
 
-        with patch.object(agent.client, "send_message", return_value=mock_claude_response):
+        # Mock the provider's complete method
+        with patch.object(
+            agent, "_ensure_provider", return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response))
+        ):
             # Act
             recommendation = await agent.analyze_configuration(context)
 
@@ -100,8 +106,8 @@ class TestLLMAgentIntegration:
             "best_practice": {"rename_episodes": True},
         }
 
-        mock_response = {
-            "content": json.dumps(
+        mock_llm_response = LLMResponse(
+            content=json.dumps(
                 {
                     "explanation": "Enabling episode renaming provides consistent file naming across your library, making it easier to organize and identify episodes.",  # noqa: E501
                     "priority": "medium",
@@ -109,10 +115,14 @@ class TestLLMAgentIntegration:
                     "reasoning": "While not critical to functionality, consistent naming improves user experience and media management.",  # noqa: E501
                 }
             ),
-            "usage": {"input_tokens": 150, "output_tokens": 80},
-        }
+            usage={"prompt_tokens": 150, "completion_tokens": 80},
+            model="claude-3-5-sonnet-20241022",
+            provider="claude",
+        )
 
-        with patch.object(agent.client, "send_message", return_value=mock_response):
+        with patch.object(
+            agent, "_ensure_provider", return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response))
+        ):
             # Act
             recommendation = await agent.analyze_configuration(context)
 
@@ -132,8 +142,8 @@ class TestLLMAgentIntegration:
             "best_practice": {"enable_completed_download_handling": True},
         }
 
-        mock_response = {
-            "content": json.dumps(
+        mock_llm_response = LLMResponse(
+            content=json.dumps(
                 {
                     "explanation": "Your configuration already follows the best practice for completed download handling.",  # noqa: E501
                     "priority": "low",
@@ -141,10 +151,14 @@ class TestLLMAgentIntegration:
                     "reasoning": "This setting is correctly configured.",
                 }
             ),
-            "usage": {"input_tokens": 100, "output_tokens": 50},
-        }
+            usage={"prompt_tokens": 100, "completion_tokens": 50},
+            model="claude-3-5-sonnet-20241022",
+            provider="claude",
+        )
 
-        with patch.object(agent.client, "send_message", return_value=mock_response):
+        with patch.object(
+            agent, "_ensure_provider", return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response))
+        ):
             # Act
             recommendation = await agent.analyze_configuration(context)
 
@@ -179,8 +193,8 @@ class TestLLMAgentIntegration:
             },
         ]
 
-        mock_response = {
-            "content": json.dumps(
+        mock_llm_response = LLMResponse(
+            content=json.dumps(
                 {
                     "explanation": "Test explanation",
                     "priority": "medium",
@@ -188,10 +202,14 @@ class TestLLMAgentIntegration:
                     "reasoning": "Test reasoning",
                 }
             ),
-            "usage": {"input_tokens": 100, "output_tokens": 50},
-        }
+            usage={"prompt_tokens": 100, "completion_tokens": 50},
+            model="claude-3-5-sonnet-20241022",
+            provider="claude",
+        )
 
-        with patch.object(agent.client, "send_message", return_value=mock_response):
+        with patch.object(
+            agent, "_ensure_provider", return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response))
+        ):
             # Act
             for context in contexts:
                 await agent.analyze_configuration(context)
@@ -239,8 +257,8 @@ class TestLLMAgentIntegration:
         }
 
         # Response with invalid priority value
-        mock_response = {
-            "content": json.dumps(
+        mock_llm_response = LLMResponse(
+            content=json.dumps(
                 {
                     "explanation": "Test explanation",
                     "priority": "critical",  # Invalid - should default to medium
@@ -248,10 +266,14 @@ class TestLLMAgentIntegration:
                     "reasoning": "Test reasoning",
                 }
             ),
-            "usage": {"input_tokens": 100, "output_tokens": 50},
-        }
+            usage={"prompt_tokens": 100, "completion_tokens": 50},
+            model="claude-3-5-sonnet-20241022",
+            provider="claude",
+        )
 
-        with patch.object(agent.client, "send_message", return_value=mock_response):
+        with patch.object(
+            agent, "_ensure_provider", return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response))
+        ):
             # Act
             recommendation = await agent.analyze_configuration(context)
 
@@ -273,8 +295,8 @@ class TestLLMAgentIntegration:
             },
         }
 
-        mock_response = {
-            "content": json.dumps(
+        mock_llm_response = LLMResponse(
+            content=json.dumps(
                 {
                     "explanation": "Test",
                     "priority": "medium",
@@ -282,27 +304,35 @@ class TestLLMAgentIntegration:
                     "reasoning": "Test",
                 }
             ),
-            "usage": {"input_tokens": 100, "output_tokens": 50},
-        }
+            usage={"prompt_tokens": 100, "completion_tokens": 50},
+            model="claude-3-5-sonnet-20241022",
+            provider="claude",
+        )
 
-        captured_prompt = None
+        captured_messages = None
 
-        async def capture_send_message(system_prompt, user_message, temperature=0.7):
-            nonlocal captured_prompt
-            captured_prompt = user_message
-            return mock_response
+        async def capture_complete(messages, **kwargs):
+            nonlocal captured_messages
+            captured_messages = messages
+            return mock_llm_response
 
-        with patch.object(agent.client, "send_message", side_effect=capture_send_message):
+        # Create a mock provider with the capture function
+        mock_provider = AsyncMock()
+        mock_provider.complete = AsyncMock(side_effect=capture_complete)
+
+        with patch.object(agent, "_ensure_provider", return_value=mock_provider):
             # Act
             await agent.analyze_configuration(context)
 
             # Assert
-            assert captured_prompt is not None
-            assert "sabnzbd" in captured_prompt.lower()
-            assert "servers" in captured_prompt
-            assert "speed_limit" in captured_prompt
-            assert "multiple" in captured_prompt
-            assert "throttling" in captured_prompt.lower()
+            assert captured_messages is not None
+            # Combine all message content for assertion
+            all_content = " ".join([msg.content for msg in captured_messages])
+            assert "sabnzbd" in all_content.lower()
+            assert "servers" in all_content
+            assert "speed_limit" in all_content
+            assert "multiple" in all_content
+            assert "throttling" in all_content.lower()
 
 
 @pytest.mark.skipif(

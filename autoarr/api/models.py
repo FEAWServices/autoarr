@@ -551,3 +551,19 @@ class BestPracticeListResponse(BaseModel):
 
     practices: List[BestPracticeResponse] = Field(..., description="List of best practices")
     total: int = Field(..., description="Total number of practices")
+
+
+# ============================================================================
+# Re-exports for E2E test compatibility
+# ============================================================================
+
+# Configuration audit models
+from autoarr.api.models_config import (  # noqa: E402, F401
+    ConfigAuditRequest as ConfigAudit,
+    ConfigAuditResponse,
+    Recommendation,
+    DetailedRecommendation,
+)
+
+# Activity log models (database model for E2E tests)
+from autoarr.api.database import ActivityLog  # noqa: E402, F401

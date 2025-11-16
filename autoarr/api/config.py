@@ -62,6 +62,25 @@ class Settings(BaseSettings):
     cors_allow_headers: List[str] = ["*"]
 
     # ============================================================================
+    # Rate Limiting Settings
+    # ============================================================================
+
+    # Enable/disable rate limiting
+    rate_limit_enabled: bool = True
+
+    # Default rate limits (requests per minute)
+    rate_limit_default: str = "100/minute"  # General endpoints
+    rate_limit_health: str = "60/minute"  # Health check endpoints
+    rate_limit_config_audit: str = "20/minute"  # Configuration audit (LLM-heavy)
+    rate_limit_content_request: str = "20/minute"  # Content requests (LLM + search)
+    rate_limit_llm: str = "10/minute"  # Direct LLM endpoints
+    rate_limit_downloads: str = "100/minute"  # Download operations
+    rate_limit_media: str = "100/minute"  # Media queries
+
+    # Rate limit storage backend (memory or redis)
+    rate_limit_storage: str = "memory"  # Use "redis" if redis_url is configured
+
+    # ============================================================================
     # SABnzbd Settings
     # ============================================================================
 
@@ -142,8 +161,9 @@ class Settings(BaseSettings):
         if self.app_env == "production":
             if self.secret_key == "dev_secret_key_change_in_production":
                 raise ValueError(
-                    "SECRET_KEY environment variable must be set to a secure random value in production. "
-                    "Generate one using: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                    "SECRET_KEY environment variable must be set to a secure random "
+                    "value in production. Generate one using: "
+                    "python -c 'import secrets; print(secrets.token_urlsafe(32))'"
                 )
         return self
 
