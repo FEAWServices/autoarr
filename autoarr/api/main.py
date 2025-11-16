@@ -26,11 +26,14 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from .config import get_settings
+from .rate_limiter import limiter
 from .database import get_database, init_database
 from .dependencies import shutdown_orchestrator
 from .middleware import (
@@ -130,6 +133,10 @@ app = FastAPI(
     openapi_url=_settings.openapi_url,
     lifespan=lifespan,
 )
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # ============================================================================

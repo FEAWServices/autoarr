@@ -62,6 +62,25 @@ class Settings(BaseSettings):
     cors_allow_headers: List[str] = ["*"]
 
     # ============================================================================
+    # Rate Limiting Settings
+    # ============================================================================
+
+    # Enable/disable rate limiting
+    rate_limit_enabled: bool = True
+
+    # Default rate limits (requests per minute)
+    rate_limit_default: str = "100/minute"  # General endpoints
+    rate_limit_health: str = "60/minute"  # Health check endpoints
+    rate_limit_config_audit: str = "20/minute"  # Configuration audit (LLM-heavy)
+    rate_limit_content_request: str = "20/minute"  # Content requests (LLM + search)
+    rate_limit_llm: str = "10/minute"  # Direct LLM endpoints
+    rate_limit_downloads: str = "100/minute"  # Download operations
+    rate_limit_media: str = "100/minute"  # Media queries
+
+    # Rate limit storage backend (memory or redis)
+    rate_limit_storage: str = "memory"  # Use "redis" if redis_url is configured
+
+    # ============================================================================
     # SABnzbd Settings
     # ============================================================================
 
