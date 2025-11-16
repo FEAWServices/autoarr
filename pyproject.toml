@@ -11,20 +11,20 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.121.1"
+fastapi = "^0.121.2"
 uvicorn = {extras = ["standard"], version = "^0.38.0"}
 pydantic = "^2.12.4"
 pydantic-settings = "^2.12.0"
 sqlalchemy = "^2.0.44"
-alembic = "^1.17.1"
+alembic = "^1.17.2"
 asyncpg = "^0.30.0"
 redis = "^7.0.1"
 httpx = "^0.27.0"
 python-multipart = "^0.0.20"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
-mcp = "^1.21.0"
-anthropic = "^0.72.1"
+mcp = "^1.21.1"
+anthropic = "^0.73.0"
 aiosqlite = "^0.21.0"
 beautifulsoup4 = "^4.14.2"
 slowapi = "^0.1.9"
@@ -40,10 +40,10 @@ pre-commit = "^4.4.0"
 pytest-httpx = "^0.34.0"
 vulture = "^2.11"
 bandit = "^1.8.6"
-locust = "^2.42.2"
+locust = "^2.42.3"
 autoflake = "^2.3.1"
 isort = "^7.0.0"
-pylint = "^4.0.2"
+pylint = "^4.0.3"
 safety = "^3.7.0"
 
 [tool.pytest.ini_options]
