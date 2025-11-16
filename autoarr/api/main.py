@@ -26,11 +26,14 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from .config import get_settings
+from .rate_limiter import limiter
 from .database import get_database, init_database
 from .dependencies import shutdown_orchestrator
 from .middleware import (
@@ -41,6 +44,11 @@ from .middleware import (
 from .routers import configuration, downloads, health, mcp, media, movies, requests
 from .routers import settings as settings_router
 from .routers import shows
+from .services.event_bus import get_event_bus
+from .services.websocket_bridge import (
+    initialize_websocket_bridge,
+    shutdown_websocket_bridge,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -78,10 +86,27 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("No DATABASE_URL configured, settings will not persist")
 
+    # Initialize WebSocket-EventBus bridge for real-time updates
+    try:
+        logger.info("Initializing WebSocket-EventBus bridge...")
+        event_bus = get_event_bus()
+        await initialize_websocket_bridge(event_bus, manager)
+        logger.info("WebSocket bridge initialized successfully")
+    except Exception as e:
+        logger.error(f"Warning: WebSocket bridge initialization failed: {e}")
+        # Don't fail startup if WebSocket bridge fails - it's not critical
+
     yield
 
     # Shutdown
     logger.info("Shutting down AutoArr FastAPI Gateway...")
+
+    # Shutdown WebSocket bridge
+    try:
+        await shutdown_websocket_bridge()
+    except Exception as e:
+        logger.error(f"Error shutting down WebSocket bridge: {e}")
+
     await shutdown_orchestrator()
 
     # Close database connections
@@ -108,6 +133,10 @@ app = FastAPI(
     openapi_url=_settings.openapi_url,
     lifespan=lifespan,
 )
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # ============================================================================
