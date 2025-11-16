@@ -1,14 +1,30 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Root conftest.py for pytest configuration and shared fixtures.
 
 This file provides global test configuration and fixtures used across all test modules.
 """
 
-import asyncio
 import json
 import sys
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, Generator
+from typing import Any, AsyncGenerator, Dict
 
 # IMPORTANT: Add paths BEFORE any other imports to ensure modules can be found
 # Note: With the new repository structure, autoarr is a package and should be
@@ -21,9 +37,8 @@ import pytest
 from httpx import AsyncClient, Response
 from pytest_httpx import HTTPXMock
 
-
 # Configure pytest-asyncio
-# Note: With asyncio_mode = "auto" in pyproject.toml, pytest-asyncio handles event loops automatically.
+# Note: With asyncio_mode = "auto" in pyproject.toml, pytest-asyncio handles event loops automatically.  # noqa: E501
 # Custom event_loop fixture removed as it's deprecated and unnecessary with auto mode.
 
 
@@ -84,6 +99,20 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
         yield client
 
 
+@pytest.fixture(autouse=True)
+def configure_httpx_mock_defaults(request):
+    """
+    Configure default options for pytest-httpx globally.
+
+    pytest-httpx 0.32.0+ changed behavior to not reuse matched responses by default.
+    We enable can_send_already_matched_responses=True to maintain backward compatibility
+    with our existing tests that expect responses to be reusable.
+    """
+    # Apply the marker to all tests unless they override it
+    if "httpx_mock" not in [marker.name for marker in request.node.iter_markers()]:
+        request.node.add_marker(pytest.mark.httpx_mock(can_send_already_matched_responses=True))
+
+
 @pytest.fixture
 def httpx_mock(httpx_mock: HTTPXMock) -> HTTPXMock:
     """Provide HTTPXMock fixture from pytest-httpx."""
@@ -94,7 +123,6 @@ def httpx_mock(httpx_mock: HTTPXMock) -> HTTPXMock:
 def pytest_configure(config):
     """Configure pytest before collection starts."""
     # Paths should already be set from module-level code above
-    pass
 
 
 # Import fixture factories from tests/fixtures/

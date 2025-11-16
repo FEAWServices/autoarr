@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 SABnzbd MCP Server.
 
@@ -9,7 +26,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from mcp.server import Server
-from mcp.types import Tool, TextContent
+from mcp.types import TextContent, Tool
 
 from .client import SABnzbdClient, SABnzbdClientError
 
@@ -42,7 +59,7 @@ class SABnzbdMCPServer:
         if client is None:
             raise ValueError("SABnzbd client is required")
 
-        self.client = client
+        self.client = client  # noqa: F841
         self.name = "sabnzbd"
         self.version = "0.1.0"
         self._server = Server(self.name)
@@ -71,7 +88,7 @@ class SABnzbdMCPServer:
         return [
             Tool(
                 name="sabnzbd_get_queue",
-                description="Get the current SABnzbd download queue with status and progress information",
+                description="Get the current SABnzbd download queue with status and progress information",  # noqa: E501
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -138,7 +155,7 @@ class SABnzbdMCPServer:
                     "properties": {
                         "section": {
                             "type": "string",
-                            "description": "Specific config section to retrieve (optional, returns all if not specified)",
+                            "description": "Specific config section to retrieve (optional, returns all if not specified)",  # noqa: E501
                         },
                     },
                     "required": [],
@@ -182,15 +199,15 @@ class SABnzbdMCPServer:
         try:
             # Dispatch to appropriate handler
             if name == "sabnzbd_get_queue":
-                result = await self._handle_get_queue(arguments)
+                result = await self._handle_get_queue(arguments)  # noqa: F841
             elif name == "sabnzbd_get_history":
-                result = await self._handle_get_history(arguments)
+                result = await self._handle_get_history(arguments)  # noqa: F841
             elif name == "sabnzbd_retry_download":
-                result = await self._handle_retry_download(arguments)
+                result = await self._handle_retry_download(arguments)  # noqa: F841
             elif name == "sabnzbd_get_config":
-                result = await self._handle_get_config(arguments)
+                result = await self._handle_get_config(arguments)  # noqa: F841
             elif name == "sabnzbd_set_config":
-                result = await self._handle_set_config(arguments)
+                result = await self._handle_set_config(arguments)  # noqa: F841
             else:
                 return [
                     TextContent(

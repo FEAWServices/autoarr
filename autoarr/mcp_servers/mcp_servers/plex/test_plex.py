@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Plex MCP Server Test Script.
 
@@ -18,14 +36,13 @@ import asyncio
 import json
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from plex.client import PlexClient, PlexClientError, PlexConnectionError
-from plex.server import PlexMCPServer
-
+from plex.client import PlexClient  # noqa: E402
+from plex.server import PlexMCPServer  # noqa: E402
 
 # ============================================================================
 # Color Output Utilities
@@ -90,12 +107,14 @@ async def test_client_initialization(url: str, token: str) -> bool:
     try:
         # Test basic initialization
         print_info("Creating Plex client...")
-        client = PlexClient(url=url, token=token)
+        client = PlexClient(url=url, token=token)  # noqa: F841
         print_success(f"Client created with URL: {client.url}")
 
         # Test validation during creation
         print_info("Creating client with connection validation...")
-        validated_client = await PlexClient.create(url=url, token=token, validate_connection=True)
+        validated_client = await PlexClient.create(
+            url=url, token=token, validate_connection=True
+        )  # noqa: F841
         print_success("Client created and validated successfully")
 
         await validated_client.close()
@@ -162,7 +181,7 @@ async def test_get_libraries(client: PlexClient) -> bool:
             print_success(f"Found {len(libraries)} libraries")
             for lib in libraries:
                 print_info(
-                    f"  - {lib.get('title', 'Unknown')} (Type: {lib.get('type', 'Unknown')}, Key: {lib.get('key', 'N/A')})"
+                    f"  - {lib.get('title', 'Unknown')} (Type: {lib.get('type', 'Unknown')}, Key: {lib.get('key', 'N/A')})"  # noqa: E501
                 )
             return True
         else:
@@ -353,7 +372,7 @@ async def test_mcp_server(client: PlexClient) -> bool:
 
         # Test a simple tool call
         print_info("Testing plex_get_libraries tool...")
-        result = await server.call_tool("plex_get_libraries", {})
+        result = await server.call_tool("plex_get_libraries", {})  # noqa: F841
 
         if not result.isError:
             print_success("Tool call successful")
@@ -381,9 +400,9 @@ async def run_all_tests(url: str, token: str) -> None:
     results = []
 
     # Create client for tests
-    client = None
+    client = None  # noqa: F841
     try:
-        client = PlexClient(url=url, token=token)
+        client = PlexClient(url=url, token=token)  # noqa: F841
 
         # Run all tests
         results.append(("Client Initialization", await test_client_initialization(url, token)))

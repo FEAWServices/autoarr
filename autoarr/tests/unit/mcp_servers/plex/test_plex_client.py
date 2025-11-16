@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Unit tests for Plex API Client.
 
@@ -15,13 +32,8 @@ Test Coverage Strategy:
 Target Coverage: 90%+ for the Plex client class
 """
 
-import json
-import xml.etree.ElementTree as ET
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
-
 import pytest
-from httpx import AsyncClient, HTTPError, HTTPStatusError, Response
+from httpx import HTTPError
 from pytest_httpx import HTTPXMock
 
 # Import the actual client
@@ -30,7 +42,6 @@ from autoarr.mcp_servers.mcp_servers.plex.client import (
     PlexClientError,
     PlexConnectionError,
 )
-
 
 # ============================================================================
 # Test Fixtures
@@ -75,12 +86,12 @@ class TestPlexClientInitialization:
 
     def test_client_normalizes_url(self, plex_token: str) -> None:
         """Test that client normalizes URLs (removes trailing slash)."""
-        client = PlexClient(url="http://localhost:32400/", token=plex_token)
+        client = PlexClient(url="http://localhost:32400/", token=plex_token)  # noqa: F841
         assert client.url == "http://localhost:32400"
 
     def test_client_accepts_custom_timeout(self, plex_url: str, plex_token: str) -> None:
         """Test that client accepts custom timeout values."""
-        client = PlexClient(url=plex_url, token=plex_token, timeout=60.0)
+        client = PlexClient(url=plex_url, token=plex_token, timeout=60.0)  # noqa: F841
         assert client.timeout == 60.0
 
     @pytest.mark.asyncio
@@ -97,7 +108,9 @@ class TestPlexClientInitialization:
             url=f"{plex_url}/",
             json=identity,
         )
-        client = await PlexClient.create(url=plex_url, token=plex_token, validate_connection=True)
+        client = await PlexClient.create(
+            url=plex_url, token=plex_token, validate_connection=True
+        )  # noqa: F841
         assert client is not None
         await client.close()
 
@@ -132,7 +145,7 @@ class TestPlexClientSystemOperations:
         )
         httpx_mock.add_response(json=identity)
 
-        result = await plex_client.get_server_identity()
+        result = await plex_client.get_server_identity()  # noqa: F841
 
         assert "machineIdentifier" in result
         assert result["version"] == "1.40.0.7998"
@@ -181,7 +194,7 @@ class TestPlexClientLibraryOperations:
         ]
         httpx_mock.add_response(json={"MediaContainer": {"Directory": libraries}})
 
-        result = await plex_client.get_libraries()
+        result = await plex_client.get_libraries()  # noqa: F841
 
         assert len(result) == 2
         assert result[0]["title"] == "Movies"
@@ -195,7 +208,7 @@ class TestPlexClientLibraryOperations:
         library = plex_library_factory(library_id="1", title="Movies")
         httpx_mock.add_response(json={"MediaContainer": {"Directory": library}})
 
-        result = await plex_client.get_libraries()
+        result = await plex_client.get_libraries()  # noqa: F841
 
         assert len(result) == 1
         assert result[0]["title"] == "Movies"
@@ -207,9 +220,9 @@ class TestPlexClientLibraryOperations:
         """Test that get_libraries handles empty library list."""
         httpx_mock.add_response(json={"MediaContainer": {}})
 
-        result = await plex_client.get_libraries()
+        result = await plex_client.get_libraries()  # noqa: F841
 
-        assert result == []
+        assert result == []  # noqa: F841
 
     @pytest.mark.asyncio
     async def test_get_library_items_returns_media_items(
@@ -223,7 +236,7 @@ class TestPlexClientLibraryOperations:
         ]
         httpx_mock.add_response(json={"MediaContainer": {"Metadata": items}})
 
-        result = await plex_client.get_library_items("1")
+        result = await plex_client.get_library_items("1")  # noqa: F841
 
         assert len(result) == 3
         assert result[0]["title"] == "Movie 1"
@@ -236,7 +249,7 @@ class TestPlexClientLibraryOperations:
         items = [plex_media_item_factory(title=f"Movie {i}") for i in range(5)]
         httpx_mock.add_response(json={"MediaContainer": {"Metadata": items}})
 
-        result = await plex_client.get_library_items("1", limit=5, offset=10)
+        result = await plex_client.get_library_items("1", limit=5, offset=10)  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "X-Plex-Container-Size=5" in str(request.url)
@@ -250,7 +263,7 @@ class TestPlexClientLibraryOperations:
         items = [plex_media_item_factory(title=f"Recent {i}") for i in range(5)]
         httpx_mock.add_response(json={"MediaContainer": {"Metadata": items}})
 
-        result = await plex_client.get_recently_added(limit=5)
+        result = await plex_client.get_recently_added(limit=5)  # noqa: F841
 
         assert len(result) == 5
         assert result[0]["title"] == "Recent 0"
@@ -263,7 +276,7 @@ class TestPlexClientLibraryOperations:
         items = [plex_media_item_factory(title=f"On Deck {i}") for i in range(3)]
         httpx_mock.add_response(json={"MediaContainer": {"Video": items}})
 
-        result = await plex_client.get_on_deck(limit=3)
+        result = await plex_client.get_on_deck(limit=3)  # noqa: F841
 
         assert len(result) == 3
 
@@ -274,7 +287,7 @@ class TestPlexClientLibraryOperations:
         """Test that refresh_library triggers library scan."""
         httpx_mock.add_response(status_code=200, json={})
 
-        result = await plex_client.refresh_library("1")
+        result = await plex_client.refresh_library("1")  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "/library/sections/1/refresh" in str(request.url)
@@ -301,7 +314,7 @@ class TestPlexClientSessionOperations:
         ]
         httpx_mock.add_response(json={"MediaContainer": {"Metadata": sessions}})
 
-        result = await plex_client.get_sessions()
+        result = await plex_client.get_sessions()  # noqa: F841
 
         assert len(result) == 2
         assert result[0]["User"]["title"] == "User1"
@@ -313,9 +326,9 @@ class TestPlexClientSessionOperations:
         """Test that get_sessions handles no active sessions."""
         httpx_mock.add_response(json={"MediaContainer": {}})
 
-        result = await plex_client.get_sessions()
+        result = await plex_client.get_sessions()  # noqa: F841
 
-        assert result == []
+        assert result == []  # noqa: F841
 
     @pytest.mark.asyncio
     async def test_get_history_returns_watch_history(
@@ -325,7 +338,7 @@ class TestPlexClientSessionOperations:
         history = plex_history_factory(records=10)
         httpx_mock.add_response(json={"MediaContainer": {"Metadata": history}})
 
-        result = await plex_client.get_history(limit=10)
+        result = await plex_client.get_history(limit=10)  # noqa: F841
 
         assert len(result) == 10
         assert "viewedAt" in result[0]
@@ -338,7 +351,7 @@ class TestPlexClientSessionOperations:
         history = plex_history_factory(records=5)
         httpx_mock.add_response(json={"MediaContainer": {"Metadata": history}})
 
-        result = await plex_client.get_history(limit=5, offset=10)
+        result = await plex_client.get_history(limit=5, offset=10)  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "X-Plex-Container-Size=5" in str(request.url)
@@ -361,7 +374,7 @@ class TestPlexClientSearchOperations:
         results = plex_search_results_factory(count=5, query="matrix")
         httpx_mock.add_response(json={"MediaContainer": {"Metadata": results}})
 
-        result = await plex_client.search("matrix")
+        result = await plex_client.search("matrix")  # noqa: F841
 
         assert len(result) == 5
         assert "matrix" in result[0]["summary"].lower()
@@ -374,7 +387,7 @@ class TestPlexClientSearchOperations:
         results = plex_search_results_factory(count=3)
         httpx_mock.add_response(json={"MediaContainer": {"Metadata": results}})
 
-        result = await plex_client.search("test", limit=3)
+        result = await plex_client.search("test", limit=3)  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "limit=3" in str(request.url)
@@ -387,7 +400,7 @@ class TestPlexClientSearchOperations:
         results = plex_search_results_factory(count=2)
         httpx_mock.add_response(json={"MediaContainer": {"Metadata": results}})
 
-        result = await plex_client.search("test", section_id="1")
+        result = await plex_client.search("test", section_id="1")  # noqa: F841
 
         request = httpx_mock.get_request()
         assert "sectionId=1" in str(request.url)
@@ -397,9 +410,9 @@ class TestPlexClientSearchOperations:
         """Test that search handles empty results."""
         httpx_mock.add_response(json={"MediaContainer": {}})
 
-        result = await plex_client.search("nonexistent")
+        result = await plex_client.search("nonexistent")  # noqa: F841
 
-        assert result == []
+        assert result == []  # noqa: F841
 
 
 # ============================================================================
@@ -444,7 +457,7 @@ class TestPlexClientErrorHandling:
         libraries = [plex_library_factory()]
         httpx_mock.add_response(json={"MediaContainer": {"Directory": libraries}})
 
-        result = await plex_client.get_libraries()
+        result = await plex_client.get_libraries()  # noqa: F841
 
         assert len(result) == 1
         assert len(httpx_mock.get_requests()) == 3
@@ -506,7 +519,7 @@ class TestPlexClientResponseParsing:
             headers={"content-type": "application/json"},
         )
 
-        result = await plex_client.get_libraries()
+        result = await plex_client.get_libraries()  # noqa: F841
 
         assert len(result) == 1
 
@@ -522,7 +535,7 @@ class TestPlexClientResponseParsing:
             headers={"content-type": "application/xml"},
         )
 
-        result = await plex_client.get_libraries()
+        result = await plex_client.get_libraries()  # noqa: F841
 
         assert len(result) == 1
         assert result[0]["title"] == "Movies"
@@ -532,7 +545,7 @@ class TestPlexClientResponseParsing:
         """Test that client handles empty responses."""
         httpx_mock.add_response(text="", status_code=200)
 
-        result = await plex_client.get_libraries()
+        result = await plex_client.get_libraries()  # noqa: F841
 
         # Should return empty dict or list depending on endpoint
         assert result in [[], {}]
@@ -606,7 +619,7 @@ class TestPlexClientRequestBuilding:
         self, httpx_mock: HTTPXMock, plex_url: str, plex_token: str
     ) -> None:
         """Test that client converts boolean parameters to integers."""
-        client = PlexClient(url=plex_url, token=plex_token)
+        client = PlexClient(url=plex_url, token=plex_token)  # noqa: F841
         httpx_mock.add_response(json={})
 
         # Call a method that would use boolean params (using internal _request)
@@ -648,13 +661,13 @@ class TestPlexClientContextManager:
         httpx_mock.add_response(json={"MediaContainer": {"Directory": libraries}})
 
         async with PlexClient(url=plex_url, token=plex_token) as client:
-            result = await client.get_libraries()
+            result = await client.get_libraries()  # noqa: F841
             assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_client_closes_on_context_exit(self, plex_url: str, plex_token: str) -> None:
         """Test that client closes HTTP client on context exit."""
-        client = PlexClient(url=plex_url, token=plex_token)
+        client = PlexClient(url=plex_url, token=plex_token)  # noqa: F841
 
         async with client:
             # Initialize the client
@@ -666,7 +679,7 @@ class TestPlexClientContextManager:
     @pytest.mark.asyncio
     async def test_client_close_method(self, plex_url: str, plex_token: str) -> None:
         """Test that close method properly cleans up."""
-        client = PlexClient(url=plex_url, token=plex_token)
+        client = PlexClient(url=plex_url, token=plex_token)  # noqa: F841
         _ = client._get_client()
 
         await client.close()

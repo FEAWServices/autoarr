@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 MCP Orchestrator - The Heart of AutoArr.
 
@@ -97,7 +114,7 @@ class CircuitBreaker:
             )
 
         try:
-            result = await func(*args, **kwargs)
+            result = await func(*args, **kwargs)  # noqa: F841
             self.on_success()
             return result
         except Exception:
@@ -190,7 +207,7 @@ class MCPOrchestrator:
         self.max_retries = getattr(config, "max_retries", 3)
         self.auto_reconnect = getattr(config, "auto_reconnect", True)
         self.keepalive_interval = getattr(config, "keepalive_interval", 30.0)
-        self.max_parallel_calls = getattr(config, "max_parallel_calls", 10)
+        self.max_parallel_calls = getattr(config, "max_parallel_calls", 10)  # noqa: F841
         self.parallel_timeout = getattr(config, "parallel_timeout", None)
         self.cancel_on_critical_failure = getattr(config, "cancel_on_critical_failure", False)
         self.server_aliases = getattr(config, "server_aliases", {})
@@ -242,57 +259,57 @@ class MCPOrchestrator:
         # Import appropriate client
         if server_name == "sabnzbd":
             # Import dynamically to avoid circular dependencies
-            import sys
             import os
+            import sys
 
             mcp_path = os.path.join(os.path.dirname(__file__), "..", "..", "mcp-servers", "sabnzbd")
             if mcp_path not in sys.path:
                 sys.path.insert(0, mcp_path)
             from client import SABnzbdClient
 
-            client = SABnzbdClient(
+            client = SABnzbdClient(  # noqa: F841
                 url=server_config.url,
                 api_key=server_config.api_key,
                 timeout=server_config.timeout,
             )
         elif server_name == "sonarr":
-            import sys
             import os
+            import sys
 
             mcp_path = os.path.join(os.path.dirname(__file__), "..", "..", "mcp-servers", "sonarr")
             if mcp_path not in sys.path:
                 sys.path.insert(0, mcp_path)
             from client import SonarrClient
 
-            client = SonarrClient(
+            client = SonarrClient(  # noqa: F841
                 url=server_config.url,
                 api_key=server_config.api_key,
                 timeout=server_config.timeout,
             )
         elif server_name == "radarr":
-            import sys
             import os
+            import sys
 
             mcp_path = os.path.join(os.path.dirname(__file__), "..", "..", "mcp-servers", "radarr")
             if mcp_path not in sys.path:
                 sys.path.insert(0, mcp_path)
             from client import RadarrClient
 
-            client = RadarrClient(
+            client = RadarrClient(  # noqa: F841
                 url=server_config.url,
                 api_key=server_config.api_key,
                 timeout=server_config.timeout,
             )
         elif server_name == "plex":
-            import sys
             import os
+            import sys
 
             mcp_path = os.path.join(os.path.dirname(__file__), "..", "..", "mcp-servers", "plex")
             if mcp_path not in sys.path:
                 sys.path.insert(0, mcp_path)
             from client import PlexClient
 
-            client = PlexClient(
+            client = PlexClient(  # noqa: F841
                 url=server_config.url,
                 api_key_or_token=server_config.api_key,
                 timeout=server_config.timeout,
@@ -355,7 +372,7 @@ class MCPOrchestrator:
         # Connect to each enabled server
         for server_name in enabled_servers:
             try:
-                result = await self.connect(server_name)
+                result = await self.connect(server_name)  # noqa: F841
                 results[server_name] = result
             except Exception:
                 results[server_name] = False
@@ -383,7 +400,7 @@ class MCPOrchestrator:
                 return True
 
             # Create client
-            client = self._create_client(server_name)
+            client = self._create_client(server_name)  # noqa: F841
 
             # Create circuit breaker
             if server_name not in self._circuit_breakers:
@@ -395,7 +412,6 @@ class MCPOrchestrator:
 
             # Connect with retries
             max_retries = self.max_retries
-            last_error = None
 
             for attempt in range(max_retries + 1):
                 try:
@@ -432,7 +448,7 @@ class MCPOrchestrator:
 
         async with self._connection_lock:
             if server_name in self._clients:
-                client = self._clients[server_name]
+                client = self._clients[server_name]  # noqa: F841
                 try:
                     await client.disconnect()
                 except Exception:
@@ -476,7 +492,7 @@ class MCPOrchestrator:
         server_name = self._resolve_server_name(server_name)
         return server_name in self._clients
 
-    async def call_tool(
+    async def call_tool(  # noqa: C901
         self,
         server: str,
         tool: str,
@@ -521,7 +537,7 @@ class MCPOrchestrator:
             raise MCPConnectionError(f"[{server}] Server is not connected")
 
         # Get client
-        client = self._clients[server]
+        client = self._clients[server]  # noqa: F841
 
         # Get circuit breaker
         circuit_breaker = self._circuit_breakers.get(server)
@@ -543,9 +559,9 @@ class MCPOrchestrator:
             try:
                 # Use circuit breaker if available
                 if circuit_breaker:
-                    result = await circuit_breaker.call(_execute)
+                    result = await circuit_breaker.call(_execute)  # noqa: F841
                 else:
-                    result = await _execute()
+                    result = await _execute()  # noqa: F841
 
                 # Update stats
                 self._stats["total_calls"] += 1
@@ -648,7 +664,7 @@ class MCPOrchestrator:
             async with semaphore:
                 try:
                     timeout = getattr(call, "timeout", None)
-                    result = await self.call_tool(
+                    result = await self.call_tool(  # noqa: F841
                         call.server, call.tool, call.params, timeout=timeout
                     )
                     return {"success": True, "data": result, "error": None, "index": index}
@@ -713,7 +729,7 @@ class MCPOrchestrator:
         if not await self.is_connected(server):
             raise MCPConnectionError(f"[{server}] Server is not connected")
 
-        client = self._clients[server]
+        client = self._clients[server]  # noqa: F841
         return await client.list_tools()
 
     async def list_all_tools(self) -> Dict[str, List[str]]:
@@ -749,7 +765,7 @@ class MCPOrchestrator:
         if not await self.is_connected(server):
             return False
 
-        client = self._clients[server]
+        client = self._clients[server]  # noqa: F841
 
         # Retry health check on transient failures
         for attempt in range(2):
@@ -888,6 +904,15 @@ class MCPOrchestrator:
             "connected_servers": list(self._clients.keys()),
             "timestamp": time.time(),
         }
+
+    def get_connected_servers(self) -> List[str]:
+        """
+        Get list of connected server names.
+
+        Returns:
+            List of connected server names
+        """
+        return list(self._clients.keys())
 
     async def restore_connection_state(self, state: Dict[str, Any]) -> None:
         """Restore connection state."""

@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Unit tests for Plex MCP Server.
 
@@ -16,8 +33,7 @@ Target Coverage: 90%+ for the Plex MCP server class
 """
 
 import json
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -29,7 +45,6 @@ from autoarr.mcp_servers.mcp_servers.plex.client import (
 )
 from autoarr.mcp_servers.mcp_servers.plex.server import PlexMCPServer
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================
@@ -38,7 +53,7 @@ from autoarr.mcp_servers.mcp_servers.plex.server import PlexMCPServer
 @pytest.fixture
 def mock_plex_client():
     """Create a mock Plex client for testing."""
-    client = AsyncMock(spec=PlexClient)
+    client = AsyncMock(spec=PlexClient)  # noqa: F841
     client.health_check = AsyncMock(return_value=True)
     client.get_libraries = AsyncMock(return_value=[])
     client.get_library_items = AsyncMock(return_value=[])
@@ -75,7 +90,7 @@ class TestPlexMCPServerInitialization:
         """Test that server initializes correctly with a client."""
         server = PlexMCPServer(client=mock_plex_client)
 
-        assert server.client == mock_plex_client
+        assert server.client == mock_plex_client  # noqa: F841
         assert server.name == "plex"
         assert server.version == "0.1.0"
 
@@ -157,7 +172,7 @@ class TestPlexMCPServerGetLibraries:
         ]
         mock_plex_client.get_libraries.return_value = libraries
 
-        result = await plex_server.call_tool("plex_get_libraries", {})
+        result = await plex_server.call_tool("plex_get_libraries", {})  # noqa: F841
 
         assert not result.isError
         content = result.content[0].text
@@ -170,7 +185,7 @@ class TestPlexMCPServerGetLibraries:
         """Test that plex_get_libraries handles empty library list."""
         mock_plex_client.get_libraries.return_value = []
 
-        result = await plex_server.call_tool("plex_get_libraries", {})
+        result = await plex_server.call_tool("plex_get_libraries", {})  # noqa: F841
 
         assert not result.isError
         content = result.content[0].text
@@ -198,7 +213,9 @@ class TestPlexMCPServerGetLibraryItems:
         ]
         mock_plex_client.get_library_items.return_value = items
 
-        result = await plex_server.call_tool("plex_get_library_items", {"library_id": "1"})
+        result = await plex_server.call_tool(
+            "plex_get_library_items", {"library_id": "1"}
+        )  # noqa: F841
 
         assert not result.isError
         content = result.content[0].text
@@ -209,7 +226,7 @@ class TestPlexMCPServerGetLibraryItems:
     @pytest.mark.asyncio
     async def test_get_library_items_requires_library_id(self, plex_server) -> None:
         """Test that plex_get_library_items requires library_id."""
-        result = await plex_server.call_tool("plex_get_library_items", {})
+        result = await plex_server.call_tool("plex_get_library_items", {})  # noqa: F841
 
         assert result.isError
         content = result.content[0].text
@@ -220,7 +237,9 @@ class TestPlexMCPServerGetLibraryItems:
     @pytest.mark.asyncio
     async def test_get_library_items_validates_library_id(self, plex_server) -> None:
         """Test that plex_get_library_items validates library_id."""
-        result = await plex_server.call_tool("plex_get_library_items", {"library_id": ""})
+        result = await plex_server.call_tool(
+            "plex_get_library_items", {"library_id": ""}
+        )  # noqa: F841
 
         assert result.isError
         content = result.content[0].text
@@ -235,7 +254,7 @@ class TestPlexMCPServerGetLibraryItems:
         items = [plex_media_item_factory(title=f"Movie {i}") for i in range(5)]
         mock_plex_client.get_library_items.return_value = items
 
-        result = await plex_server.call_tool(
+        result = await plex_server.call_tool(  # noqa: F841
             "plex_get_library_items", {"library_id": "1", "limit": 5, "offset": 10}
         )
 
@@ -260,7 +279,7 @@ class TestPlexMCPServerGetRecentlyAdded:
         items = [plex_media_item_factory(title=f"Recent {i}") for i in range(10)]
         mock_plex_client.get_recently_added.return_value = items
 
-        result = await plex_server.call_tool("plex_get_recently_added", {})
+        result = await plex_server.call_tool("plex_get_recently_added", {})  # noqa: F841
 
         assert not result.isError
         content = result.content[0].text
@@ -276,7 +295,7 @@ class TestPlexMCPServerGetRecentlyAdded:
         items = [plex_media_item_factory(title=f"Recent {i}") for i in range(5)]
         mock_plex_client.get_recently_added.return_value = items
 
-        result = await plex_server.call_tool("plex_get_recently_added", {"limit": 5})
+        result = await plex_server.call_tool("plex_get_recently_added", {"limit": 5})  # noqa: F841
 
         mock_plex_client.get_recently_added.assert_called_once_with(limit=5)
 
@@ -297,7 +316,7 @@ class TestPlexMCPServerGetOnDeck:
         items = [plex_media_item_factory(title=f"On Deck {i}") for i in range(3)]
         mock_plex_client.get_on_deck.return_value = items
 
-        result = await plex_server.call_tool("plex_get_on_deck", {})
+        result = await plex_server.call_tool("plex_get_on_deck", {})  # noqa: F841
 
         assert not result.isError
         content = result.content[0].text
@@ -325,7 +344,7 @@ class TestPlexMCPServerGetSessions:
         ]
         mock_plex_client.get_sessions.return_value = sessions
 
-        result = await plex_server.call_tool("plex_get_sessions", {})
+        result = await plex_server.call_tool("plex_get_sessions", {})  # noqa: F841
 
         assert not result.isError
         content = result.content[0].text
@@ -338,7 +357,7 @@ class TestPlexMCPServerGetSessions:
         """Test that plex_get_sessions handles no active sessions."""
         mock_plex_client.get_sessions.return_value = []
 
-        result = await plex_server.call_tool("plex_get_sessions", {})
+        result = await plex_server.call_tool("plex_get_sessions", {})  # noqa: F841
 
         assert not result.isError
         content = result.content[0].text
@@ -363,7 +382,7 @@ class TestPlexMCPServerSearch:
         results = plex_search_results_factory(count=5, query="matrix")
         mock_plex_client.search.return_value = results
 
-        result = await plex_server.call_tool("plex_search", {"query": "matrix"})
+        result = await plex_server.call_tool("plex_search", {"query": "matrix"})  # noqa: F841
 
         assert not result.isError
         content = result.content[0].text
@@ -374,7 +393,7 @@ class TestPlexMCPServerSearch:
     @pytest.mark.asyncio
     async def test_search_requires_query(self, plex_server) -> None:
         """Test that plex_search requires query parameter."""
-        result = await plex_server.call_tool("plex_search", {})
+        result = await plex_server.call_tool("plex_search", {})  # noqa: F841
 
         assert result.isError
         content = result.content[0].text
@@ -385,7 +404,7 @@ class TestPlexMCPServerSearch:
     @pytest.mark.asyncio
     async def test_search_validates_query(self, plex_server) -> None:
         """Test that plex_search validates query parameter."""
-        result = await plex_server.call_tool("plex_search", {"query": ""})
+        result = await plex_server.call_tool("plex_search", {"query": ""})  # noqa: F841
 
         assert result.isError
         content = result.content[0].text
@@ -400,7 +419,9 @@ class TestPlexMCPServerSearch:
         results = plex_search_results_factory(count=3)
         mock_plex_client.search.return_value = results
 
-        result = await plex_server.call_tool("plex_search", {"query": "test", "limit": 3})
+        result = await plex_server.call_tool(
+            "plex_search", {"query": "test", "limit": 3}
+        )  # noqa: F841
 
         mock_plex_client.search.assert_called_once_with(query="test", limit=3, section_id=None)
 
@@ -412,7 +433,9 @@ class TestPlexMCPServerSearch:
         results = plex_search_results_factory(count=2)
         mock_plex_client.search.return_value = results
 
-        result = await plex_server.call_tool("plex_search", {"query": "test", "section_id": "1"})
+        result = await plex_server.call_tool(
+            "plex_search", {"query": "test", "section_id": "1"}
+        )  # noqa: F841
 
         mock_plex_client.search.assert_called_once_with(query="test", limit=None, section_id="1")
 
@@ -430,7 +453,9 @@ class TestPlexMCPServerRefreshLibrary:
         """Test that plex_refresh_library triggers library scan."""
         mock_plex_client.refresh_library.return_value = {"success": True, "library_id": "1"}
 
-        result = await plex_server.call_tool("plex_refresh_library", {"library_id": "1"})
+        result = await plex_server.call_tool(
+            "plex_refresh_library", {"library_id": "1"}
+        )  # noqa: F841
 
         assert not result.isError
         content = result.content[0].text
@@ -441,7 +466,7 @@ class TestPlexMCPServerRefreshLibrary:
     @pytest.mark.asyncio
     async def test_refresh_library_requires_library_id(self, plex_server) -> None:
         """Test that plex_refresh_library requires library_id."""
-        result = await plex_server.call_tool("plex_refresh_library", {})
+        result = await plex_server.call_tool("plex_refresh_library", {})  # noqa: F841
 
         assert result.isError
         content = result.content[0].text
@@ -466,7 +491,7 @@ class TestPlexMCPServerGetHistory:
         history = plex_history_factory(records=10)
         mock_plex_client.get_history.return_value = history
 
-        result = await plex_server.call_tool("plex_get_history", {})
+        result = await plex_server.call_tool("plex_get_history", {})  # noqa: F841
 
         assert not result.isError
         content = result.content[0].text
@@ -482,7 +507,9 @@ class TestPlexMCPServerGetHistory:
         history = plex_history_factory(records=5)
         mock_plex_client.get_history.return_value = history
 
-        result = await plex_server.call_tool("plex_get_history", {"limit": 5, "offset": 10})
+        result = await plex_server.call_tool(
+            "plex_get_history", {"limit": 5, "offset": 10}
+        )  # noqa: F841
 
         mock_plex_client.get_history.assert_called_once_with(limit=5, offset=10)
 
@@ -498,7 +525,7 @@ class TestPlexMCPServerErrorHandling:
     @pytest.mark.asyncio
     async def test_server_handles_unknown_tool(self, plex_server) -> None:
         """Test that server handles unknown tool names."""
-        result = await plex_server.call_tool("unknown_tool", {})
+        result = await plex_server.call_tool("unknown_tool", {})  # noqa: F841
 
         assert result.isError
         content = result.content[0].text
@@ -511,7 +538,7 @@ class TestPlexMCPServerErrorHandling:
         """Test that server handles Plex connection errors."""
         mock_plex_client.get_libraries.side_effect = PlexConnectionError("Connection refused")
 
-        result = await plex_server.call_tool("plex_get_libraries", {})
+        result = await plex_server.call_tool("plex_get_libraries", {})  # noqa: F841
 
         assert result.isError
         content = result.content[0].text
@@ -524,7 +551,7 @@ class TestPlexMCPServerErrorHandling:
         """Test that server handles Plex client errors."""
         mock_plex_client.get_libraries.side_effect = PlexClientError("Unauthorized: Invalid token")
 
-        result = await plex_server.call_tool("plex_get_libraries", {})
+        result = await plex_server.call_tool("plex_get_libraries", {})  # noqa: F841
 
         assert result.isError
         content = result.content[0].text
@@ -537,7 +564,7 @@ class TestPlexMCPServerErrorHandling:
         """Test that server handles unexpected errors gracefully."""
         mock_plex_client.get_libraries.side_effect = Exception("Unexpected error")
 
-        result = await plex_server.call_tool("plex_get_libraries", {})
+        result = await plex_server.call_tool("plex_get_libraries", {})  # noqa: F841
 
         assert result.isError
         content = result.content[0].text

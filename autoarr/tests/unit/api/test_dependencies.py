@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Tests for FastAPI dependency injection.
 
@@ -5,16 +22,17 @@ This module tests the dependency injection functions for the orchestrator
 and configuration management.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from autoarr.api.dependencies import (
-    get_orchestrator_config,
-    get_orchestrator,
-    shutdown_orchestrator,
-    reset_orchestrator,
-)
+import pytest
+
 from autoarr.api.config import Settings
+from autoarr.api.dependencies import (
+    get_orchestrator,
+    get_orchestrator_config,
+    reset_orchestrator,
+    shutdown_orchestrator,
+)
 from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
 
 
@@ -63,8 +81,7 @@ def cleanup():
     """Clean up orchestrator after each test."""
     yield
     reset_orchestrator()
-    # Clear the LRU cache on get_orchestrator_config
-    get_orchestrator_config.cache_clear()
+    # Note: get_orchestrator_config no longer has caching (Settings objects are unhashable)
 
 
 class TestGetOrchestratorConfig:
@@ -166,14 +183,17 @@ class TestGetOrchestratorConfig:
 
         assert isinstance(config, MCPOrchestratorConfig)
 
-    def test_config_is_cached(self, test_settings):
-        """Test that config is cached using lru_cache."""
+    def test_config_is_not_cached(self, test_settings):
+        """Test that config is NOT cached (Settings objects are unhashable)."""
         with patch("autoarr.api.dependencies.get_settings", return_value=test_settings):
             config1 = get_orchestrator_config(None)
             config2 = get_orchestrator_config(None)
 
-            # Should be the same instance due to caching
-            assert config1 is config2
+            # Should be different instances (no caching to avoid unhashable type error)
+            # However, they should have the same configuration values
+            assert config1 is not config2
+            assert config1.sabnzbd.name == config2.sabnzbd.name
+            assert config1.sonarr.name == config2.sonarr.name
 
     def test_circuit_breaker_settings(self, test_settings):
         """Test that circuit breaker settings are configured."""
@@ -189,7 +209,7 @@ class TestGetOrchestratorConfig:
         with patch("autoarr.api.dependencies.get_settings", return_value=test_settings):
             config = get_orchestrator_config(None)
 
-            assert config.max_parallel_calls == 10
+            assert config.max_parallel_calls == 10  # noqa: F841
             assert config.parallel_timeout is None
 
     def test_health_check_settings(self, test_settings):

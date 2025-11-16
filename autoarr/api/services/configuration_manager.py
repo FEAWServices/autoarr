@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Configuration Manager Service.
 
@@ -309,7 +326,6 @@ class ConfigurationManager:
         except Exception as e:
             logger.error(f"Failed to save audit result: {e}")
             # Don't fail the audit if saving fails
-            pass
 
     async def audit_all_applications(self) -> Dict[str, ConfigurationAudit]:
         """
@@ -373,7 +389,7 @@ class ConfigurationManager:
                 )
 
             # Actually apply the configuration
-            result = await self.orchestrator.call_tool(
+            result = await self.orchestrator.call_tool(  # noqa: F841
                 server=request.application,
                 tool="set_config",
                 params={

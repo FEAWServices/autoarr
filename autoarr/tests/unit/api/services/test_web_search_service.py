@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Unit tests for Web Search Service.
 
@@ -9,12 +26,10 @@ Following TDD (Red-Green-Refactor):
 
 import json
 import re
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
-from httpx import AsyncClient, Response
 
 from autoarr.api.services.web_search_service import (
     BestPractice,
@@ -53,7 +68,7 @@ class TestSearchResult:
 
     def test_search_result_creation(self) -> None:
         """Test creating a search result with all fields."""
-        result = SearchResult(
+        result = SearchResult(  # noqa: F841
             title="SABnzbd Best Practices",
             url="https://example.com/sabnzbd-guide",
             snippet="This is a guide to SABnzbd configuration...",

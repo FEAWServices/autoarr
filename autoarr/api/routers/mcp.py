@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 MCP proxy endpoints.
 
@@ -8,6 +25,7 @@ allowing clients to call any tool on any server.
 from typing import List
 
 from fastapi import APIRouter, Depends
+
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
@@ -64,7 +82,7 @@ async def call_tool(
     """
     try:
         # Call the tool with metadata
-        result = await orchestrator.call_tool(
+        result = await orchestrator.call_tool(  # noqa: F841
             server=request.server,
             tool=request.tool,
             params=request.params,
@@ -158,7 +176,7 @@ async def call_tools_batch(
             self.params = params
             self.timeout = timeout
 
-    tool_calls = [
+    tool_calls = [  # noqa: F841
         MCPToolCall(call.server, call.tool, call.params, call.timeout) for call in request.calls
     ]
 

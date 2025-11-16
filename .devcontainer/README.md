@@ -13,13 +13,11 @@ This directory contains the configuration for the Visual Studio Code Dev Contain
 ## Getting Started
 
 1. **Install Prerequisites**
-
    - [Visual Studio Code](https://code.visualstudio.com/)
    - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
    - [Dev Containers Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
 2. **Open in Container**
-
    - Open VS Code
    - Press `F1` or `Ctrl+Shift+P`
    - Select "Dev Containers: Reopen in Container"
@@ -77,7 +75,55 @@ The container includes pre-configured settings for:
 - Import organization on save
 - Python interpreter pointing to Poetry venv
 
+## GitHub CLI Authentication
+
+The GitHub CLI (`gh`) is pre-installed but requires authentication to manage PRs and issues.
+
+### Setup GitHub Token
+
+1. **Create a Personal Access Token**
+   - Go to: https://github.com/settings/tokens
+   - Click "Generate new token (classic)"
+   - Required scopes: `repo`, `read:org`, `workflow`
+   - Copy the token (starts with `ghp_`)
+
+2. **Add Token to .env**
+
+   ```bash
+   # Edit /app/.env
+   GIT_EMAIL=your.email@example.com
+   GIT_NAME=Your Name
+   GH_TOKEN=ghp_your_token_here
+   ```
+
+3. **Rebuild Container**
+   - Press `F1` → "Dev Containers: Rebuild Container"
+
+4. **Verify Authentication**
+   ```bash
+   gh auth status
+   # Should show: ✓ Logged in to github.com
+   ```
+
+### Using GitHub CLI
+
+```bash
+# List pull requests
+gh pr list
+
+# Close a PR
+gh pr close <number>
+
+# Bulk close Dependabot PRs
+gh pr list --author "app/dependabot" --json number --jq '.[].number' | \
+  xargs -I {} gh pr close {}
+```
+
 ## Troubleshooting
+
+### "gh: To get started with GitHub CLI, please run: gh auth login"
+
+**Fix**: Add `GH_TOKEN` to `/app/.env` and rebuild container
 
 ### Poetry not found
 

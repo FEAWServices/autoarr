@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Health check endpoints.
 
@@ -9,6 +26,7 @@ import time
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
+
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
@@ -52,7 +70,7 @@ async def health_check(
     all_healthy = True
 
     # Get list of connected servers
-    connected_servers = list(orchestrator._clients.keys())
+    connected_servers = orchestrator.get_connected_servers()
 
     if not connected_servers:
         # No servers connected - system is unhealthy

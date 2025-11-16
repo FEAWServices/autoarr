@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Configuration settings for the FastAPI Gateway.
 
@@ -8,6 +25,7 @@ loading values from environment variables and .env files.
 from functools import lru_cache
 from typing import List, Optional
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -42,6 +60,25 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = True
     cors_allow_methods: List[str] = ["*"]
     cors_allow_headers: List[str] = ["*"]
+
+    # ============================================================================
+    # Rate Limiting Settings
+    # ============================================================================
+
+    # Enable/disable rate limiting
+    rate_limit_enabled: bool = True
+
+    # Default rate limits (requests per minute)
+    rate_limit_default: str = "100/minute"  # General endpoints
+    rate_limit_health: str = "60/minute"  # Health check endpoints
+    rate_limit_config_audit: str = "20/minute"  # Configuration audit (LLM-heavy)
+    rate_limit_content_request: str = "20/minute"  # Content requests (LLM + search)
+    rate_limit_llm: str = "10/minute"  # Direct LLM endpoints
+    rate_limit_downloads: str = "100/minute"  # Download operations
+    rate_limit_media: str = "100/minute"  # Media queries
+
+    # Rate limit storage backend (memory or redis)
+    rate_limit_storage: str = "memory"  # Use "redis" if redis_url is configured
 
     # ============================================================================
     # SABnzbd Settings
@@ -118,6 +155,18 @@ class Settings(BaseSettings):
     openapi_url: str = "/openapi.json"
 
     # Model configuration
+    @model_validator(mode="after")
+    def validate_production_security(self) -> "Settings":
+        """Validate security settings for production environment."""
+        if self.app_env == "production":
+            if self.secret_key == "dev_secret_key_change_in_production":
+                raise ValueError(
+                    "SECRET_KEY environment variable must be set to a secure random "
+                    "value in production. Generate one using: "
+                    "python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                )
+        return self
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

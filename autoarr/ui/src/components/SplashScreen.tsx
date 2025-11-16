@@ -57,7 +57,9 @@ export const SplashScreen = ({
         <div className="w-64 mx-auto">
           <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden">
             <div
-              className={`h-full bg-gradient-primary transition-all duration-300 ease-out loading-bar`}
+              className="h-full bg-gradient-primary transition-all duration-300 ease-out progress-bar"
+              data-progress={progress}
+              data-testid="loading-bar"
             />
           </div>
           <p className="text-text-muted text-sm mt-3">Loading...</p>

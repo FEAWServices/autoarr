@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 FastAPI dependency injection functions.
 
@@ -5,19 +22,23 @@ This module provides dependency injection for the FastAPI Gateway,
 managing the MCP Orchestrator lifecycle and providing it to endpoints.
 """
 
-from functools import lru_cache
-from typing import AsyncGenerator
+import logging
+from typing import AsyncGenerator, Optional
 
 from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from .config import Settings, get_settings
 
+logger = logging.getLogger(__name__)
 
-@lru_cache()
-def get_orchestrator_config(settings: Settings = None) -> MCPOrchestratorConfig:
+
+def get_orchestrator_config(settings: Optional[Settings] = None) -> MCPOrchestratorConfig:
     """
     Create MCP Orchestrator configuration from application settings.
+
+    Note: No caching here since Settings objects are not hashable.
+    The get_settings() function already implements caching.
 
     Args:
         settings: Application settings (will use get_settings() if not provided)
@@ -114,9 +135,14 @@ async def get_orchestrator() -> AsyncGenerator[MCPOrchestrator, None]:
         # Connect to all enabled servers
         try:
             await _orchestrator.connect_all()
-        except Exception:
+            logger.info("Successfully connected to MCP servers")
+        except Exception as e:
             # Log error but continue - individual endpoints will handle connection errors
-            pass
+            logger.error(f"Failed to connect to some MCP servers during startup: {e}")
+            logger.warning(
+                "Orchestrator initialized but some services may be unavailable. "
+                "Individual endpoints will report connection errors."
+            )
 
     yield _orchestrator
 
