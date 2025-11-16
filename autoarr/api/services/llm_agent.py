@@ -460,11 +460,32 @@ class LLMAgent:
         self._provider = provider
         self._api_key = api_key
         self._initialized = False
+        self._client_wrapper = None  # Lazy-initialized ClaudeClient for backward compat
 
         self.token_tracker = TokenUsageTracker()
         self.parser = StructuredOutputParser(
             required_fields=["explanation", "priority", "impact", "reasoning"]
         )
+
+    @property
+    def client(self) -> ClaudeClient:
+        """
+        Get ClaudeClient wrapper for backward compatibility.
+
+        This property provides backward compatibility for code that expects
+        a `client` attribute with `send_message()` and `close()` methods.
+
+        Returns:
+            ClaudeClient wrapper instance
+        """
+        if self._client_wrapper is None:
+            # Lazy initialize ClaudeClient wrapper
+            self._client_wrapper = ClaudeClient(
+                api_key=self._api_key or "test-key",  # Fallback for tests
+                model=self.model or "claude-3-5-sonnet-20241022",
+                max_tokens=self.max_tokens,
+            )
+        return self._client_wrapper
 
     async def _ensure_provider(self) -> BaseLLMProvider:
         """Lazy initialization of LLM provider."""
