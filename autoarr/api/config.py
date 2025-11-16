@@ -142,8 +142,9 @@ class Settings(BaseSettings):
         if self.app_env == "production":
             if self.secret_key == "dev_secret_key_change_in_production":
                 raise ValueError(
-                    "SECRET_KEY environment variable must be set to a secure random value in production. "
-                    "Generate one using: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                    "SECRET_KEY environment variable must be set to a secure random "
+                    "value in production. Generate one using: "
+                    "python -c 'import secrets; print(secrets.token_urlsafe(32))'"
                 )
         return self
 

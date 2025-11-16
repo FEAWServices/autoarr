@@ -1,0 +1,605 @@
+# AutoArr GPL - Development Roadmap
+
+**Last Updated**: 2025-11-16
+**Status**: ~70-75% Complete for v1.0 Release
+**Estimated Remaining Effort**: 8-11 days (Minimum Viable), 12-17 days (Complete)
+
+> This roadmap reflects the **actual remaining work** needed to complete the AutoArr GPL application based on comprehensive assessment completed on 2025-11-16. See [ASSESSMENT_2025-11-16.md](./ASSESSMENT_2025-11-16.md) for detailed analysis.
+
+---
+
+## Quick Reference
+
+### Blocking v1.0 Release (Must Fix)
+
+| Priority | Task | Effort | Owner |
+|----------|------|--------|-------|
+| P0 | Connect WebSocket to Event Bus | 1-2 days | - |
+| P0 | Implement Content Request API | 2-3 days | - |
+| P0 | Implement Download Retry API | 1 day | - |
+| P0 | Fix 6 LLM Integration Test Failures | 4-6 hours | - |
+
+**Total Critical Path**: 4-6 days
+
+### Should Have for v1.0 (Highly Recommended)
+
+| Priority | Task | Effort | Owner |
+|----------|------|--------|-------|
+| P1 | Add Rate Limiting | 4-6 hours | - |
+| P1 | Increase Test Coverage to 85%+ | 2-3 days | - |
+| P1 | Execute Load Tests | 1-2 days | - |
+
+**Total High Priority**: 4-5 days
+
+---
+
+## Phase 1: Critical Features (Week 1) - REQUIRED FOR v1.0
+
+### 1.1 WebSocket Event Bus Integration ⚠️ CRITICAL
+
+**Status**: WebSocket endpoint exists but not integrated with event bus
+**Effort**: 1-2 days
+**Priority**: P0 (Blocking)
+
+**Current State**:
+- ✅ WebSocket endpoint `/ws` implemented in `main.py:293-328`
+- ✅ ConnectionManager class exists
+- ❌ Not connected to event bus
+- ❌ No real-time event broadcasting
+- ❌ E2E tests all skip
+
+**Tasks**:
+- [ ] Create EventBusWebSocketBridge service in `autoarr/api/services/websocket_bridge.py`
+- [ ] Subscribe to event bus topics:
+  - `config.audit.completed`
+  - `download.failed`
+  - `download.recovered`
+  - `content.request.created`
+  - `content.request.completed`
+- [ ] Integrate bridge with main.py ConnectionManager
+- [ ] Update WebSocket endpoint to broadcast event bus messages
+- [ ] Add filtering by correlation ID
+- [ ] Add client subscription management
+- [ ] Enable E2E WebSocket tests
+
+**Success Criteria**:
+- [ ] Events from event bus broadcast to all WebSocket clients
+- [ ] Clients can filter events by correlation ID
+- [ ] All WebSocket E2E tests pass
+- [ ] Real-time activity feed works in frontend
+
+**Files**:
+- New: `autoarr/api/services/websocket_bridge.py`
+- Modify: `autoarr/api/main.py`
+- Enable: `autoarr/tests/e2e/test_websocket_flow.py`
+
+---
+
+### 1.2 Content Request API Implementation ⚠️ CRITICAL
+
+**Status**: Service layer exists, API endpoint missing
+**Effort**: 2-3 days
+**Priority**: P0 (Blocking)
+
+**Current State**:
+- ✅ RequestHandler service implemented (`services/request_handler.py` - 93% coverage)
+- ✅ LLM classification logic exists
+- ✅ Web search integration exists
+- ❌ No API endpoint `/api/v1/requests/content`
+- ❌ Router not implemented
+- ❌ All E2E tests fail with import errors (now fixed)
+
+**Tasks**:
+- [ ] Implement POST `/api/v1/requests/content` in `requests.py` router
+  - [ ] Accept natural language query
+  - [ ] Call RequestHandler.classify_content()
+  - [ ] Search TMDB/Brave for metadata
+  - [ ] Present options to user if ambiguous
+  - [ ] Return request ID for tracking
+- [ ] Implement POST `/api/v1/requests/{id}/confirm`
+  - [ ] Accept user confirmation of classification
+  - [ ] Add to Radarr/Sonarr via MCP
+  - [ ] Trigger search
+  - [ ] Emit event to event bus
+- [ ] Implement GET `/api/v1/requests/{id}/status`
+  - [ ] Return current status
+  - [ ] Include download progress if available
+- [ ] Implement GET `/api/v1/requests`
+  - [ ] List all requests with filtering
+  - [ ] Support pagination
+- [ ] Wire up to activity log
+- [ ] Enable E2E content request tests
+
+**Success Criteria**:
+- [ ] Can request content via natural language
+- [ ] Movie vs. TV classification 90%+ accurate
+- [ ] Successfully adds to Radarr/Sonarr
+- [ ] All 9 content request E2E tests pass
+- [ ] Real-time status updates via WebSocket
+
+**Files**:
+- Modify: `autoarr/api/routers/requests.py`
+- Enable: `autoarr/tests/e2e/test_content_request_flow.py`
+- Verify: `autoarr/api/services/request_handler.py`
+
+---
+
+### 1.3 Download Retry API Implementation ⚠️ CRITICAL
+
+**Status**: Recovery service exists, API endpoint missing
+**Effort**: 1 day
+**Priority**: P0 (Blocking)
+
+**Current State**:
+- ✅ RecoveryService implemented (`services/recovery_service.py` - 94% coverage)
+- ✅ Monitoring service detects failures (86% coverage)
+- ✅ Retry strategies implemented
+- ❌ No API endpoint `/api/v1/downloads/retry`
+- ❌ E2E recovery flow tests all skip
+
+**Tasks**:
+- [ ] Implement POST `/api/v1/downloads/retry` in `downloads.py` router
+  - [ ] Accept `nzo_id` parameter
+  - [ ] Call RecoveryService.retry_failed_download()
+  - [ ] Return retry status and strategy
+  - [ ] Emit event to event bus
+- [ ] Implement GET `/api/v1/downloads/failed`
+  - [ ] List all failed downloads
+  - [ ] Support filtering by date
+- [ ] Implement activity log correlation ID filtering
+  - [ ] Add `correlation_id` query parameter to GET `/api/v1/monitoring/activity`
+  - [ ] Filter results by correlation ID
+- [ ] Wire up automatic retry scheduling (background task)
+- [ ] Enable E2E download recovery tests
+
+**Success Criteria**:
+- [ ] Can manually retry failed downloads via API
+- [ ] Automatic retry works in background
+- [ ] Activity log shows correlated retry attempts
+- [ ] All download recovery E2E tests pass
+- [ ] Real-time retry notifications via WebSocket
+
+**Files**:
+- Modify: `autoarr/api/routers/downloads.py`
+- Modify: `autoarr/api/routers/monitoring.py` (activity log filtering)
+- Enable: `autoarr/tests/e2e/test_download_recovery_flow.py`
+- Verify: `autoarr/api/services/recovery_service.py`
+
+---
+
+### 1.4 Fix LLM Integration Test Failures
+
+**Status**: 6/6 integration tests failing
+**Effort**: 4-6 hours
+**Priority**: P0 (Blocking)
+
+**Failing Tests**:
+1. `test_end_to_end_configuration_analysis`
+2. `test_handles_medium_priority_recommendation`
+3. `test_handles_low_priority_recommendation`
+4. `test_multiple_analyses_track_usage_correctly`
+5. `test_handles_invalid_priority_gracefully`
+6. `test_prompt_includes_all_context`
+
+**Root Cause**: Likely missing `CLAUDE_API_KEY` or mock configuration
+
+**Tasks**:
+- [ ] Investigate test failures (check for missing env vars)
+- [ ] Add proper mocking for Claude API in integration tests
+- [ ] Update test fixtures if needed
+- [ ] Verify all tests pass
+
+**Success Criteria**:
+- [ ] All 6 LLM integration tests pass
+- [ ] No real Claude API calls in tests (mocked)
+
+**Files**:
+- Fix: `autoarr/tests/integration/services/test_llm_agent_integration.py`
+- Review: `autoarr/tests/conftest.py` (fixtures)
+
+---
+
+## Phase 2: Security & Quality (Week 2) - REQUIRED FOR v1.0
+
+### 2.1 Rate Limiting Implementation
+
+**Status**: Not implemented
+**Effort**: 4-6 hours
+**Priority**: P1 (High)
+
+**Tasks**:
+- [ ] Add `slowapi` dependency to `pyproject.toml`
+- [ ] Implement rate limiting middleware
+- [ ] Configure per-endpoint limits:
+  - `/api/v1/requests/content`: 10 req/min
+  - `/api/v1/downloads/retry`: 20 req/min
+  - `/api/v1/config/audit`: 5 req/min
+  - Default: 100 req/min
+- [ ] Add rate limit headers to responses
+- [ ] Add rate limit documentation
+- [ ] Write tests for rate limiting
+
+**Success Criteria**:
+- [ ] Requests are rate limited per IP
+- [ ] Proper HTTP 429 responses when exceeded
+- [ ] Rate limit info in response headers
+
+**Files**:
+- Modify: `autoarr/api/middleware.py`
+- Modify: `pyproject.toml`
+- New: `autoarr/tests/unit/api/test_rate_limiting.py`
+
+---
+
+### 2.2 Increase Test Coverage to 85%+
+
+**Status**: Current coverage 67%, target 85%
+**Effort**: 2-3 days
+**Priority**: P1 (High)
+
+**Low Coverage Components** (Priority Order):
+
+1. **Claude Provider** (26% → 85%)
+   - File: `autoarr/shared/llm/claude_provider.py`
+   - Gap: 59%
+   - Tasks: Add tests for all API call methods, error handling, retry logic
+
+2. **Config Manager** (24% → 85%)
+   - File: `autoarr/api/services/config_manager.py`
+   - Gap: 61%
+   - Tasks: Add tests for all config operations
+
+3. **Requests Router** (50% → 85%)
+   - File: `autoarr/api/routers/requests.py`
+   - Gap: 35%
+   - Tasks: Add endpoint tests (will increase after API implementation)
+
+4. **Settings Router** (52% → 85%)
+   - File: `autoarr/api/routers/settings.py`
+   - Gap: 33%
+   - Tasks: Add tests for all settings endpoints
+
+5. **LLM Agent** (59% → 85%)
+   - File: `autoarr/api/services/llm_agent.py`
+   - Gap: 26%
+   - Tasks: Add tests for all analysis methods
+
+6. **Web Search Service** (63% → 85%)
+   - File: `autoarr/api/services/web_search_service.py`
+   - Gap: 22%
+   - Tasks: Add tests for search, caching, extraction
+
+**Success Criteria**:
+- [ ] Overall test coverage ≥ 85%
+- [ ] No component below 70% coverage
+- [ ] All critical paths tested
+
+**Files**:
+- Add tests in: `autoarr/tests/unit/services/`
+- Add tests in: `autoarr/tests/unit/api/`
+- Add tests in: `autoarr/tests/unit/shared/llm/`
+
+---
+
+### 2.3 Load Testing Execution
+
+**Status**: Tests created but not executed
+**Effort**: 1-2 days
+**Priority**: P1 (High)
+
+**Tasks**:
+- [ ] Review existing Locust test scenarios
+- [ ] Set up load test environment
+- [ ] Execute load tests:
+  - Baseline: 10 concurrent users
+  - Target: 100 concurrent users
+  - Peak: 500 concurrent users
+- [ ] Measure performance metrics:
+  - API response times (p50, p95, p99)
+  - Throughput (req/sec)
+  - Error rates
+  - Database query performance
+- [ ] Identify bottlenecks
+- [ ] Optimize slow endpoints
+- [ ] Document performance baselines
+- [ ] Set up performance regression tests
+
+**Success Criteria**:
+- [ ] API handles 100 req/sec (target from BUILD-PLAN)
+- [ ] p95 response time < 200ms
+- [ ] p99 response time < 500ms
+- [ ] No errors under target load
+- [ ] Performance metrics documented
+
+**Files**:
+- Execute: Locust test files (check `autoarr/tests/load/`)
+- Document: `docs/PERFORMANCE.md` (new)
+
+---
+
+## Phase 3: Code Cleanup & Polish (Week 3) - OPTIONAL
+
+### 3.1 Remove Duplicate MCP Server Code
+
+**Status**: Code exists in two locations with 0% coverage on one set
+**Effort**: 4-6 hours
+**Priority**: P2 (Medium)
+
+**Issue**:
+- MCP servers exist in `/autoarr/mcp_servers/[service]/` (0% coverage)
+- MCP servers exist in `/autoarr/mcp_servers/mcp_servers/[service]/` (87-98% coverage)
+
+**Tasks**:
+- [ ] Verify which location is canonical (likely `mcp_servers/mcp_servers/`)
+- [ ] Check all imports across codebase
+- [ ] Remove duplicate code
+- [ ] Update all import statements
+- [ ] Verify all tests still pass
+- [ ] Update documentation
+
+**Success Criteria**:
+- [ ] MCP servers exist in only one location
+- [ ] All tests pass
+- [ ] No import errors
+
+**Files**:
+- Remove: `autoarr/mcp_servers/[sabnzbd|sonarr|radarr|plex]/`
+- Keep: `autoarr/mcp_servers/mcp_servers/[sabnzbd|sonarr|radarr|plex]/`
+
+---
+
+### 3.2 MCP Orchestrator Timeout Configuration
+
+**Status**: Hardcoded 30s timeout
+**Effort**: 4-6 hours
+**Priority**: P2 (Medium)
+
+**Tasks**:
+- [ ] Add `MCP_TIMEOUT` setting to config.py
+- [ ] Add per-operation timeout override capability
+- [ ] Update orchestrator to use configurable timeout
+- [ ] Add timeout to tool call parameters
+- [ ] Document timeout configuration
+- [ ] Add tests for timeout behavior
+
+**Success Criteria**:
+- [ ] Timeout configurable via environment variable
+- [ ] Per-operation timeout override works
+- [ ] Long-running operations don't timeout prematurely
+
+**Files**:
+- Modify: `autoarr/api/config.py`
+- Modify: `autoarr/shared/core/mcp_orchestrator.py`
+
+---
+
+### 3.3 API Documentation Enhancement
+
+**Status**: Basic OpenAPI docs exist, examples missing
+**Effort**: 1 day
+**Priority**: P2 (Medium)
+
+**Tasks**:
+- [ ] Add comprehensive examples to all Pydantic models
+- [ ] Add response examples for all endpoints
+- [ ] Add error response examples
+- [ ] Improve endpoint descriptions
+- [ ] Add authentication docs (when implemented)
+- [ ] Add rate limiting docs
+- [ ] Generate Postman collection
+- [ ] Create API quickstart guide
+
+**Success Criteria**:
+- [ ] All endpoints have request/response examples
+- [ ] All error codes documented
+- [ ] Postman collection available
+
+**Files**:
+- Modify: All files in `autoarr/api/models*.py`
+- Modify: All router files
+- New: `docs/API_QUICKSTART.md`
+- New: `postman_collection.json`
+
+---
+
+### 3.4 Frontend Dependency Audit
+
+**Status**: Unknown, audit needed
+**Effort**: 2-4 hours
+**Priority**: P3 (Low)
+
+**Tasks**:
+- [ ] Run `pnpm audit` in `autoarr/ui/`
+- [ ] Review vulnerability report
+- [ ] Update vulnerable dependencies
+- [ ] Test frontend after updates
+- [ ] Document any breaking changes
+
+**Success Criteria**:
+- [ ] No high/critical vulnerabilities
+- [ ] Frontend still works after updates
+
+**Files**:
+- Modify: `autoarr/ui/package.json`
+- Modify: `autoarr/ui/pnpm-lock.yaml`
+
+---
+
+## Phase 4: Documentation & Release Prep (Week 3-4) - OPTIONAL
+
+### 4.1 Documentation Updates
+
+**Effort**: 1 day
+**Priority**: P2 (Medium)
+
+**Tasks**:
+- [ ] Update README.md with accurate feature list
+- [ ] Update ARCHITECTURE.md with WebSocket integration
+- [ ] Update API_REFERENCE.md with new endpoints
+- [ ] Update TROUBLESHOOTING.md with common issues
+- [ ] Update FAQ.md
+- [ ] Create CHANGELOG.md
+- [ ] Review all documentation for accuracy
+
+**Files**:
+- Update: All files in `docs/`
+
+---
+
+### 4.2 Release Checklist
+
+**Priority**: P1 (Required before v1.0 tag)
+
+**Pre-Release Checklist**:
+- [ ] All P0 tasks complete
+- [ ] All P1 tasks complete
+- [ ] All tests passing (unit, integration, E2E)
+- [ ] Test coverage ≥ 85%
+- [ ] Load tests passed
+- [ ] Security audit passed
+- [ ] No critical/high bugs open
+- [ ] Documentation up to date
+- [ ] Docker image builds successfully
+- [ ] Docker Compose works
+- [ ] Installation guide tested
+- [ ] Deployment guide updated
+- [ ] License files present
+- [ ] CHANGELOG.md updated
+
+**Release Tasks**:
+- [ ] Create v1.0.0 tag
+- [ ] Build and push Docker images
+- [ ] Create GitHub release
+- [ ] Publish release notes
+- [ ] Update project status in README
+
+---
+
+## Timeline Summary
+
+### Minimum Viable v1.0 (8-11 days)
+
+| Week | Phase | Tasks | Effort |
+|------|-------|-------|--------|
+| Week 1 | Critical Features | WebSocket integration, Content API, Retry API, Fix tests | 4-6 days |
+| Week 2 | Security & Quality | Rate limiting, test coverage, load tests | 4-5 days |
+| **Total** | **Minimum for v1.0** | **P0 + P1 tasks** | **8-11 days** |
+
+### Complete v1.0 (12-17 days)
+
+| Week | Phase | Tasks | Effort |
+|------|-------|-------|--------|
+| Week 1 | Critical Features | P0 tasks | 4-6 days |
+| Week 2 | Security & Quality | P1 tasks | 4-5 days |
+| Week 3 | Code Cleanup & Polish | P2 tasks | 3-4 days |
+| Week 4 | Documentation & Release | P2 + Release prep | 1-2 days |
+| **Total** | **Complete v1.0** | **All tasks** | **12-17 days** |
+
+---
+
+## Post-v1.0 Roadmap (v1.1+)
+
+### v1.1 Features (Planned - 3-4 weeks)
+
+- [ ] Advanced retry strategies (quality fallback, alternate sources)
+- [ ] Custom rules engine for automation
+- [ ] Notification integrations (Discord, Slack, Email)
+- [ ] Multi-user support with authentication
+- [ ] User preferences and profiles
+- [ ] Statistics and analytics dashboard
+
+### v1.2 Features (Planned - 4-6 weeks)
+
+- [ ] Plugin system for extensibility
+- [ ] Community plugin marketplace
+- [ ] Advanced analytics and insights
+- [ ] Cost tracking and optimization
+- [ ] Backup and restore functionality
+- [ ] Import/export configurations
+
+### v2.0 Features (Planned - Q3 2026)
+
+- [ ] AutoArrX Premium integration (separate repo)
+- [ ] Multi-location support
+- [ ] Enterprise features
+- [ ] Third-party API integrations
+- [ ] Advanced scheduling
+- [ ] Machine learning recommendations
+
+---
+
+## Risk Management
+
+### Critical Risks
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| WebSocket integration complexity | HIGH | Start with simple event broadcasting, iterate |
+| LLM API costs during development | MEDIUM | Use mocks in tests, monitor usage |
+| Load testing reveals performance issues | HIGH | Budget extra time for optimization |
+| Test coverage improvement takes longer | MEDIUM | Focus on critical paths first |
+
+### Dependencies
+
+| Dependency | Status | Risk |
+|------------|--------|------|
+| Claude API availability | External | LOW - Has fallback |
+| TMDB API availability | External | MEDIUM - Core feature |
+| Brave Search API | External | LOW - Optional feature |
+| MCP protocol stability | External | LOW - Well specified |
+
+---
+
+## Success Metrics
+
+### v1.0 Release Criteria
+
+- [  ] All P0 tasks complete
+- [ ] All P1 tasks complete (recommended)
+- [ ] Test coverage ≥ 85%
+- [ ] All tests passing
+- [ ] Load tests meet targets
+- [ ] Security vulnerabilities addressed
+- [ ] Documentation complete
+
+### User Success Metrics (Post-Launch)
+
+- [ ] 100 active installations (3 months)
+- [ ] 1,000 GitHub stars (6 months)
+- [ ] 50 community contributions (6 months)
+- [ ] 4.5+ rating on Docker Hub
+- [ ] <5% bug report rate
+
+### Technical Success Metrics
+
+- [ ] API response time p95 < 200ms
+- [ ] UI load time < 2s
+- [ ] Docker image < 500MB
+- [ ] Memory usage < 512MB idle
+- [ ] 99% uptime in production
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on contributing to this roadmap.
+
+To claim a task:
+1. Comment on the relevant GitHub issue
+2. Fork the repository
+3. Create a branch named `feature/task-name` or `fix/task-name`
+4. Submit a PR when complete
+
+---
+
+## Questions?
+
+- Check [ASSESSMENT_2025-11-16.md](./ASSESSMENT_2025-11-16.md) for detailed analysis
+- Review [BUILD-PLAN.md](./BUILD-PLAN.md) for original plan
+- See [ARCHITECTURE.md](./ARCHITECTURE.md) for system design
+- Check [FAQ.md](./FAQ.md) for common questions
+
+---
+
+**Last Updated**: 2025-11-16
+**Next Review**: After P0 tasks complete (approx. 1 week)
