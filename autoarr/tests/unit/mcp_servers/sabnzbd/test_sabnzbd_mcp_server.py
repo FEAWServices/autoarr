@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Unit tests for SABnzbd MCP Server.
 
@@ -17,20 +34,18 @@ Target Coverage: 100% for the SABnzbd MCP server class
 """
 
 import json
-from typing import Any, Dict
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from mcp.types import Tool, TextContent
 
-# Import the actual MCP server and client
-from autoarr.mcp_servers.mcp_servers.sabnzbd.server import SABnzbdMCPServer
 from autoarr.mcp_servers.mcp_servers.sabnzbd.client import (
     SABnzbdClient,
     SABnzbdClientError,
     SABnzbdConnectionError,
 )
 
+# Import the actual MCP server and client
+from autoarr.mcp_servers.mcp_servers.sabnzbd.server import SABnzbdMCPServer
 
 # ============================================================================
 # Test Fixtures
@@ -40,7 +55,7 @@ from autoarr.mcp_servers.mcp_servers.sabnzbd.client import (
 @pytest.fixture
 def mock_sabnzbd_client():
     """Create a mock SABnzbd client for testing."""
-    client = Mock(spec=SABnzbdClient)
+    client = Mock(spec=SABnzbdClient)  # noqa: F841
     client.url = "http://localhost:8080"
     client.api_key = "test_api_key"
 
@@ -80,7 +95,7 @@ class TestSABnzbdMCPServerInitialization:
         """Test that server initializes correctly with a valid client."""
         server = SABnzbdMCPServer(client=mock_sabnzbd_client)
 
-        assert server.client == mock_sabnzbd_client
+        assert server.client == mock_sabnzbd_client  # noqa: F841
         assert server.name == "sabnzbd"
         assert server.version == "0.1.0"
 
@@ -232,7 +247,7 @@ class TestSABnzbdMCPServerGetQueue:
         mock_queue = sabnzbd_queue_factory(slots=2)
         mock_sabnzbd_client.get_queue.return_value = mock_queue
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})  # noqa: F841
 
         # Verify client was called correctly
         mock_sabnzbd_client.get_queue.assert_called_once_with(start=0, limit=None)
@@ -261,7 +276,9 @@ class TestSABnzbdMCPServerGetQueue:
     @pytest.mark.asyncio
     async def test_get_queue_validates_start_parameter(self, sabnzbd_mcp_server) -> None:
         """Test that get_queue validates start parameter."""
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {"start": -1})
+        result = await sabnzbd_mcp_server.call_tool(
+            "sabnzbd_get_queue", {"start": -1}
+        )  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -271,7 +288,7 @@ class TestSABnzbdMCPServerGetQueue:
     @pytest.mark.asyncio
     async def test_get_queue_validates_limit_parameter(self, sabnzbd_mcp_server) -> None:
         """Test that get_queue validates limit parameter."""
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {"limit": 0})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {"limit": 0})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -285,7 +302,7 @@ class TestSABnzbdMCPServerGetQueue:
         """Test that get_queue handles SABnzbd client errors."""
         mock_sabnzbd_client.get_queue.side_effect = SABnzbdClientError("Connection failed")
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -309,7 +326,7 @@ class TestSABnzbdMCPServerGetHistory:
         mock_history = sabnzbd_history_factory(entries=3, failed=1)
         mock_sabnzbd_client.get_history.return_value = mock_history
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_history", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_history", {})  # noqa: F841
 
         # Verify client was called correctly
         mock_sabnzbd_client.get_history.assert_called_once_with(
@@ -340,7 +357,9 @@ class TestSABnzbdMCPServerGetHistory:
     @pytest.mark.asyncio
     async def test_get_history_validates_start_parameter(self, sabnzbd_mcp_server) -> None:
         """Test that get_history validates start parameter."""
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_history", {"start": -5})
+        result = await sabnzbd_mcp_server.call_tool(
+            "sabnzbd_get_history", {"start": -5}
+        )  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -349,7 +368,7 @@ class TestSABnzbdMCPServerGetHistory:
     @pytest.mark.asyncio
     async def test_get_history_validates_failed_only_parameter(self, sabnzbd_mcp_server) -> None:
         """Test that get_history validates failed_only parameter."""
-        result = await sabnzbd_mcp_server.call_tool(
+        result = await sabnzbd_mcp_server.call_tool(  # noqa: F841
             "sabnzbd_get_history", {"failed_only": "not_a_boolean"}
         )
 
@@ -374,7 +393,7 @@ class TestSABnzbdMCPServerRetryDownload:
         mock_action = sabnzbd_nzo_action_factory(success=True, nzo_ids=["new_nzo_123"])
         mock_sabnzbd_client.retry_download.return_value = mock_action
 
-        result = await sabnzbd_mcp_server.call_tool(
+        result = await sabnzbd_mcp_server.call_tool(  # noqa: F841
             "sabnzbd_retry_download", {"nzo_id": "failed_nzo_456"}
         )
 
@@ -389,7 +408,7 @@ class TestSABnzbdMCPServerRetryDownload:
     @pytest.mark.asyncio
     async def test_retry_download_requires_nzo_id(self, sabnzbd_mcp_server) -> None:
         """Test that retry_download requires nzo_id parameter."""
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_retry_download", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_retry_download", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -399,7 +418,9 @@ class TestSABnzbdMCPServerRetryDownload:
     @pytest.mark.asyncio
     async def test_retry_download_validates_nzo_id(self, sabnzbd_mcp_server) -> None:
         """Test that retry_download validates nzo_id parameter."""
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_retry_download", {"nzo_id": ""})
+        result = await sabnzbd_mcp_server.call_tool(
+            "sabnzbd_retry_download", {"nzo_id": ""}
+        )  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -412,7 +433,7 @@ class TestSABnzbdMCPServerRetryDownload:
         """Test that retry_download handles SABnzbd client errors."""
         mock_sabnzbd_client.retry_download.side_effect = SABnzbdClientError("Download not found")
 
-        result = await sabnzbd_mcp_server.call_tool(
+        result = await sabnzbd_mcp_server.call_tool(  # noqa: F841
             "sabnzbd_retry_download", {"nzo_id": "invalid_nzo"}
         )
 
@@ -437,7 +458,7 @@ class TestSABnzbdMCPServerGetConfig:
         mock_config = sabnzbd_config_factory()
         mock_sabnzbd_client.get_config.return_value = mock_config
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_config", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_config", {})  # noqa: F841
 
         # Verify client was called correctly
         mock_sabnzbd_client.get_config.assert_called_once_with(section=None)
@@ -467,7 +488,7 @@ class TestSABnzbdMCPServerGetConfig:
         """Test that get_config handles SABnzbd client errors."""
         mock_sabnzbd_client.get_config.side_effect = SABnzbdClientError("Access denied")
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_config", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_config", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -489,7 +510,7 @@ class TestSABnzbdMCPServerSetConfig:
         """Test set_config with valid parameters."""
         mock_sabnzbd_client.set_config.return_value = {"status": True}
 
-        result = await sabnzbd_mcp_server.call_tool(
+        result = await sabnzbd_mcp_server.call_tool(  # noqa: F841
             "sabnzbd_set_config", {"section": "misc", "keyword": "cache_limit", "value": "1000M"}
         )
 
@@ -506,7 +527,7 @@ class TestSABnzbdMCPServerSetConfig:
     @pytest.mark.asyncio
     async def test_set_config_requires_section(self, sabnzbd_mcp_server) -> None:
         """Test that set_config requires section parameter."""
-        result = await sabnzbd_mcp_server.call_tool(
+        result = await sabnzbd_mcp_server.call_tool(  # noqa: F841
             "sabnzbd_set_config", {"keyword": "key", "value": "val"}
         )
 
@@ -518,7 +539,7 @@ class TestSABnzbdMCPServerSetConfig:
     @pytest.mark.asyncio
     async def test_set_config_requires_keyword(self, sabnzbd_mcp_server) -> None:
         """Test that set_config requires keyword parameter."""
-        result = await sabnzbd_mcp_server.call_tool(
+        result = await sabnzbd_mcp_server.call_tool(  # noqa: F841
             "sabnzbd_set_config", {"section": "misc", "value": "val"}
         )
 
@@ -529,7 +550,7 @@ class TestSABnzbdMCPServerSetConfig:
     @pytest.mark.asyncio
     async def test_set_config_requires_value(self, sabnzbd_mcp_server) -> None:
         """Test that set_config requires value parameter."""
-        result = await sabnzbd_mcp_server.call_tool(
+        result = await sabnzbd_mcp_server.call_tool(  # noqa: F841
             "sabnzbd_set_config", {"section": "misc", "keyword": "key"}
         )
 
@@ -540,7 +561,7 @@ class TestSABnzbdMCPServerSetConfig:
     @pytest.mark.asyncio
     async def test_set_config_validates_empty_section(self, sabnzbd_mcp_server) -> None:
         """Test that set_config validates empty section."""
-        result = await sabnzbd_mcp_server.call_tool(
+        result = await sabnzbd_mcp_server.call_tool(  # noqa: F841
             "sabnzbd_set_config", {"section": "", "keyword": "key", "value": "val"}
         )
 
@@ -553,7 +574,7 @@ class TestSABnzbdMCPServerSetConfig:
         """Test that set_config handles SABnzbd client errors."""
         mock_sabnzbd_client.set_config.side_effect = SABnzbdClientError("Invalid setting")
 
-        result = await sabnzbd_mcp_server.call_tool(
+        result = await sabnzbd_mcp_server.call_tool(  # noqa: F841
             "sabnzbd_set_config", {"section": "misc", "keyword": "invalid", "value": "val"}
         )
 
@@ -573,7 +594,7 @@ class TestSABnzbdMCPServerErrorHandling:
     @pytest.mark.asyncio
     async def test_unknown_tool_returns_error(self, sabnzbd_mcp_server) -> None:
         """Test that calling an unknown tool returns an error."""
-        result = await sabnzbd_mcp_server.call_tool("unknown_tool", {})
+        result = await sabnzbd_mcp_server.call_tool("unknown_tool", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -586,7 +607,7 @@ class TestSABnzbdMCPServerErrorHandling:
         """Test that server handles unexpected exceptions gracefully."""
         mock_sabnzbd_client.get_queue.side_effect = Exception("Unexpected error")
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -597,7 +618,7 @@ class TestSABnzbdMCPServerErrorHandling:
         """Test that server handles connection errors."""
         mock_sabnzbd_client.get_queue.side_effect = SABnzbdConnectionError("Connection timeout")
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -620,7 +641,7 @@ class TestSABnzbdMCPServerResponseFormatting:
         mock_queue = sabnzbd_queue_factory(slots=1)
         mock_sabnzbd_client.get_queue.return_value = mock_queue
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})  # noqa: F841
 
         # Check TextContent format
         assert len(result.content) == 1
@@ -639,7 +660,7 @@ class TestSABnzbdMCPServerResponseFormatting:
         """Test that error responses are formatted correctly."""
         mock_sabnzbd_client.get_queue.side_effect = SABnzbdClientError("Test error")
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})  # noqa: F841
 
         # Check TextContent format
         assert len(result.content) == 1
@@ -660,7 +681,7 @@ class TestSABnzbdMCPServerResponseFormatting:
         mock_queue = sabnzbd_queue_factory(slots=3, paused=True)
         mock_sabnzbd_client.get_queue.return_value = mock_queue
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})  # noqa: F841
         response_data = json.loads(result.content[0].text)
 
         # Verify all queue data is included

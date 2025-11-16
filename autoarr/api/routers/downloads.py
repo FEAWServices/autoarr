@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Downloads endpoints (SABnzbd).
 
@@ -7,6 +24,7 @@ This module provides endpoints for managing downloads via SABnzbd.
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
+
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
@@ -37,7 +55,7 @@ async def get_download_queue(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "get_queue", {})
+    result = await orchestrator.call_tool("sabnzbd", "get_queue", {})  # noqa: F841
     return result
 
 
@@ -64,7 +82,7 @@ async def get_download_history(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "get_history", {"limit": limit})
+    result = await orchestrator.call_tool("sabnzbd", "get_history", {"limit": limit})  # noqa: F841
     return result
 
 
@@ -91,7 +109,9 @@ async def retry_download(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "retry_download", {"nzo_id": nzo_id})
+    result = await orchestrator.call_tool(
+        "sabnzbd", "retry_download", {"nzo_id": nzo_id}
+    )  # noqa: F841
     return result
 
 
@@ -114,7 +134,7 @@ async def pause_queue(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "pause_queue", {})
+    result = await orchestrator.call_tool("sabnzbd", "pause_queue", {})  # noqa: F841
     return result
 
 
@@ -137,7 +157,7 @@ async def resume_queue(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "resume_queue", {})
+    result = await orchestrator.call_tool("sabnzbd", "resume_queue", {})  # noqa: F841
     return result
 
 
@@ -164,7 +184,9 @@ async def delete_download(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "delete_download", {"nzo_id": nzo_id})
+    result = await orchestrator.call_tool(
+        "sabnzbd", "delete_download", {"nzo_id": nzo_id}
+    )  # noqa: F841
     return result
 
 
@@ -191,5 +213,5 @@ async def get_status(
         }
         ```
     """
-    result = await orchestrator.call_tool("sabnzbd", "get_status", {})
+    result = await orchestrator.call_tool("sabnzbd", "get_status", {})  # noqa: F841
     return result

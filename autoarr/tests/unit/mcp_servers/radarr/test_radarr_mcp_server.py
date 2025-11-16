@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Unit tests for Radarr MCP Server.
 
@@ -17,8 +34,7 @@ Target Coverage: 90%+ for the RadarrMCPServer class
 """
 
 import json
-from typing import Any, Dict
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from mcp.types import TextContent, Tool
@@ -31,7 +47,6 @@ from autoarr.mcp_servers.mcp_servers.radarr.client import (
 )
 from autoarr.mcp_servers.mcp_servers.radarr.server import RadarrMCPServer
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================
@@ -40,7 +55,7 @@ from autoarr.mcp_servers.mcp_servers.radarr.server import RadarrMCPServer
 @pytest.fixture
 def mock_radarr_client() -> Mock:
     """Create a mock RadarrClient for testing."""
-    client = Mock(spec=RadarrClient)
+    client = Mock(spec=RadarrClient)  # noqa: F841
     client.health_check = AsyncMock(return_value=True)
     client.close = AsyncMock()
     return client
@@ -68,7 +83,7 @@ class TestRadarrMCPServerInitialization:
     def test_server_initializes_with_valid_client(self, mock_radarr_client: Mock) -> None:
         """Test that server initializes properly with valid client."""
         server = RadarrMCPServer(client=mock_radarr_client)
-        assert server.client == mock_radarr_client
+        assert server.client == mock_radarr_client  # noqa: F841
         assert server.name == "radarr"
         assert server.version == "0.1.0"
 
@@ -176,7 +191,7 @@ class TestRadarrMCPServerMovieOperations:
         mock_movies = [radarr_movie_factory(movie_id=i) for i in range(3)]
         radarr_mcp_server.client.get_movies = AsyncMock(return_value=mock_movies)
 
-        result = await radarr_mcp_server.call_tool("radarr_get_movies", {})
+        result = await radarr_mcp_server.call_tool("radarr_get_movies", {})  # noqa: F841
 
         radarr_mcp_server.client.get_movies.assert_called_once()
         assert not result.isError
@@ -203,7 +218,9 @@ class TestRadarrMCPServerMovieOperations:
         mock_movie = radarr_movie_factory(movie_id=5, title="The Matrix")
         radarr_mcp_server.client.get_movie_by_id = AsyncMock(return_value=mock_movie)
 
-        result = await radarr_mcp_server.call_tool("radarr_get_movie_by_id", {"movie_id": 5})
+        result = await radarr_mcp_server.call_tool(
+            "radarr_get_movie_by_id", {"movie_id": 5}
+        )  # noqa: F841
 
         radarr_mcp_server.client.get_movie_by_id.assert_called_once_with(movie_id=5)
         assert not result.isError
@@ -216,7 +233,7 @@ class TestRadarrMCPServerMovieOperations:
         self, radarr_mcp_server: RadarrMCPServer
     ) -> None:
         """Test that get_movie_by_id validates movie_id parameter."""
-        result = await radarr_mcp_server.call_tool("radarr_get_movie_by_id", {})
+        result = await radarr_mcp_server.call_tool("radarr_get_movie_by_id", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -239,7 +256,7 @@ class TestRadarrMCPServerMovieOperations:
             "minimum_availability": "released",
         }
 
-        result = await radarr_mcp_server.call_tool("radarr_add_movie", arguments)
+        await radarr_mcp_server.call_tool("radarr_add_movie", arguments)
 
         radarr_mcp_server.client.add_movie.assert_called_once()
         call_args = radarr_mcp_server.client.add_movie.call_args[0][0]
@@ -255,7 +272,7 @@ class TestRadarrMCPServerMovieOperations:
         mock_results = [radarr_movie_factory(title="The Matrix")]
         radarr_mcp_server.client.search_movie_lookup = AsyncMock(return_value=mock_results)
 
-        result = await radarr_mcp_server.call_tool(
+        result = await radarr_mcp_server.call_tool(  # noqa: F841
             "radarr_search_movie_lookup", {"term": "The Matrix"}
         )
 
@@ -267,7 +284,9 @@ class TestRadarrMCPServerMovieOperations:
         self, radarr_mcp_server: RadarrMCPServer
     ) -> None:
         """Test that search_movie_lookup validates term parameter."""
-        result = await radarr_mcp_server.call_tool("radarr_search_movie_lookup", {"term": ""})
+        result = await radarr_mcp_server.call_tool(
+            "radarr_search_movie_lookup", {"term": ""}
+        )  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -278,7 +297,7 @@ class TestRadarrMCPServerMovieOperations:
         """Test that delete_movie tool calls client correctly."""
         radarr_mcp_server.client.delete_movie = AsyncMock(return_value={})
 
-        result = await radarr_mcp_server.call_tool(
+        result = await radarr_mcp_server.call_tool(  # noqa: F841
             "radarr_delete_movie", {"movie_id": 5, "delete_files": True}
         )
 
@@ -304,7 +323,9 @@ class TestRadarrMCPServerCommandOperations:
         mock_command = radarr_command_factory(command_id=123, name="MoviesSearch")
         radarr_mcp_server.client.search_movie = AsyncMock(return_value=mock_command)
 
-        result = await radarr_mcp_server.call_tool("radarr_search_movie", {"movie_id": 5})
+        result = await radarr_mcp_server.call_tool(
+            "radarr_search_movie", {"movie_id": 5}
+        )  # noqa: F841
 
         radarr_mcp_server.client.search_movie.assert_called_once_with(movie_id=5)
         assert not result.isError
@@ -316,7 +337,7 @@ class TestRadarrMCPServerCommandOperations:
         self, radarr_mcp_server: RadarrMCPServer
     ) -> None:
         """Test that search_movie validates movie_id parameter."""
-        result = await radarr_mcp_server.call_tool("radarr_search_movie", {})
+        result = await radarr_mcp_server.call_tool("radarr_search_movie", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -339,7 +360,7 @@ class TestRadarrMCPServerCalendarQueueWanted:
         mock_calendar = radarr_calendar_factory(days=7, movies_per_day=2)
         radarr_mcp_server.client.get_calendar = AsyncMock(return_value=mock_calendar)
 
-        result = await radarr_mcp_server.call_tool(
+        result = await radarr_mcp_server.call_tool(  # noqa: F841
             "radarr_get_calendar", {"start_date": "2020-01-01", "end_date": "2020-01-07"}
         )
 
@@ -356,7 +377,7 @@ class TestRadarrMCPServerCalendarQueueWanted:
         mock_queue = radarr_queue_factory(records=3)
         radarr_mcp_server.client.get_queue = AsyncMock(return_value=mock_queue)
 
-        result = await radarr_mcp_server.call_tool("radarr_get_queue", {})
+        result = await radarr_mcp_server.call_tool("radarr_get_queue", {})  # noqa: F841
 
         radarr_mcp_server.client.get_queue.assert_called_once()
         assert not result.isError
@@ -380,7 +401,7 @@ class TestRadarrMCPServerCalendarQueueWanted:
         mock_wanted = radarr_wanted_factory(records=5)
         radarr_mcp_server.client.get_wanted_missing = AsyncMock(return_value=mock_wanted)
 
-        result = await radarr_mcp_server.call_tool("radarr_get_wanted", {})
+        result = await radarr_mcp_server.call_tool("radarr_get_wanted", {})  # noqa: F841
 
         radarr_mcp_server.client.get_wanted_missing.assert_called_once()
         assert not result.isError
@@ -401,7 +422,7 @@ class TestRadarrMCPServerErrorHandling:
             side_effect=RadarrConnectionError("Connection failed")
         )
 
-        result = await radarr_mcp_server.call_tool("radarr_get_movies", {})
+        result = await radarr_mcp_server.call_tool("radarr_get_movies", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -414,7 +435,9 @@ class TestRadarrMCPServerErrorHandling:
             side_effect=RadarrClientError("Movie not found (404)")
         )
 
-        result = await radarr_mcp_server.call_tool("radarr_get_movie_by_id", {"movie_id": 999})
+        result = await radarr_mcp_server.call_tool(
+            "radarr_get_movie_by_id", {"movie_id": 999}
+        )  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -423,7 +446,7 @@ class TestRadarrMCPServerErrorHandling:
     @pytest.mark.asyncio
     async def test_handles_validation_error(self, radarr_mcp_server: RadarrMCPServer) -> None:
         """Test that server handles ValueError from validation properly."""
-        result = await radarr_mcp_server.call_tool("radarr_get_movie_by_id", {})
+        result = await radarr_mcp_server.call_tool("radarr_get_movie_by_id", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -432,7 +455,7 @@ class TestRadarrMCPServerErrorHandling:
     @pytest.mark.asyncio
     async def test_handles_unknown_tool(self, radarr_mcp_server: RadarrMCPServer) -> None:
         """Test that server handles unknown tool gracefully."""
-        result = await radarr_mcp_server.call_tool("unknown_tool", {})
+        result = await radarr_mcp_server.call_tool("unknown_tool", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -443,7 +466,7 @@ class TestRadarrMCPServerErrorHandling:
         """Test that server handles unexpected errors gracefully."""
         radarr_mcp_server.client.get_movies = AsyncMock(side_effect=Exception("Unexpected error"))
 
-        result = await radarr_mcp_server.call_tool("radarr_get_movies", {})
+        result = await radarr_mcp_server.call_tool("radarr_get_movies", {})  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -466,7 +489,9 @@ class TestRadarrMCPServerResponseFormat:
         mock_movie = radarr_movie_factory()
         radarr_mcp_server.client.get_movie_by_id = AsyncMock(return_value=mock_movie)
 
-        result = await radarr_mcp_server.call_tool("radarr_get_movie_by_id", {"movie_id": 1})
+        result = await radarr_mcp_server.call_tool(
+            "radarr_get_movie_by_id", {"movie_id": 1}
+        )  # noqa: F841
 
         assert isinstance(result.content, list)
         assert len(result.content) == 1
@@ -484,7 +509,7 @@ class TestRadarrMCPServerResponseFormat:
             side_effect=RadarrClientError("Error occurred")
         )
 
-        result = await radarr_mcp_server.call_tool("radarr_get_movies", {})
+        result = await radarr_mcp_server.call_tool("radarr_get_movies", {})  # noqa: F841
 
         assert isinstance(result.content, list)
         assert len(result.content) == 1
@@ -500,7 +525,7 @@ class TestRadarrMCPServerResponseFormat:
         """Test that all responses are valid JSON."""
         radarr_mcp_server.client.get_movies = AsyncMock(return_value=[])
 
-        result = await radarr_mcp_server.call_tool("radarr_get_movies", {})
+        result = await radarr_mcp_server.call_tool("radarr_get_movies", {})  # noqa: F841
 
         # Should not raise JSONDecodeError
         response_data = json.loads(result.content[0].text)

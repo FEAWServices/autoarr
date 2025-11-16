@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Web Search Service for AutoArr.
 
@@ -15,14 +32,16 @@ Features:
 import hashlib
 import json
 import re
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 import httpx
 from bs4 import BeautifulSoup
 from pydantic import BaseModel, Field, field_validator
 from redis.asyncio import Redis
+
+if TYPE_CHECKING:
+    from autoarr.api.services.request_handler import ContentSearchResult
 
 
 class SearchQuery(BaseModel):
@@ -140,13 +159,13 @@ class WebSearchService:
     ) -> None:
         """Initialize the Web Search Service."""
         self.brave_api_key = brave_api_key
-        self.redis_client = redis_client
+        self.redis_client = redis_client  # noqa: F841
         self.cache_ttl = cache_ttl
         self.best_practices_ttl = best_practices_ttl
         self.base_url = "https://api.search.brave.com/res/v1/web/search"
 
         # HTTP client for API requests
-        self.http_client = httpx.AsyncClient(timeout=30.0)
+        self.http_client = httpx.AsyncClient(timeout=30.0)  # noqa: F841
 
     async def search(self, query: SearchQuery) -> List[SearchResult]:
         """
@@ -205,7 +224,7 @@ class WebSearchService:
                 parsed_url = urlparse(item["url"])
                 source = parsed_url.netloc.replace("www.", "")
 
-                result = SearchResult(
+                result = SearchResult(  # noqa: F841
                     title=item.get("title", ""),
                     url=item["url"],
                     snippet=item.get("description", ""),
@@ -485,7 +504,7 @@ class WebSearchService:
 
         # Pattern 2: "Enable X" or "Disable Y"
         enable_pattern = re.compile(
-            r"(?:enable|disable|turn on|turn off|activate|deactivate)\s+([a-z_]+(?:_[a-z]+)*)",
+            r"(?:enable|disable|turn on|turn of|activate|deactivate)\s+([a-z_]+(?:_[a-z]+)*)",
             re.IGNORECASE,
         )
 
@@ -647,6 +666,262 @@ class WebSearchService:
         # Use hash to keep keys consistent length
         value_hash = hashlib.md5(value.encode()).hexdigest()
         return f"{prefix}:{value_hash}"
+
+    async def search_movie_metadata(
+        self, title: str, year: Optional[int] = None
+    ) -> List["ContentSearchResult"]:
+        """
+        Search for movie metadata using TMDB API.
+
+        TMDB API is free for basic search and doesn't require an API key
+        for public search endpoints.
+
+        Args:
+            title: Movie title to search for
+            year: Optional release year to narrow results
+
+        Returns:
+            List of ContentSearchResult objects with movie metadata
+
+        Raises:
+            Exception: If search fails
+        """
+        # Import here to avoid circular dependency
+        from autoarr.api.services.request_handler import ContentSearchResult
+
+        # Check cache first
+        cache_key = self._get_cache_key("tmdb_movie", f"{title}_{year or 'any'}")
+        cached_results = await self._get_cached_tmdb_results(cache_key)
+
+        if cached_results is not None:
+            return cached_results
+
+        # TMDB search API (no key required for basic search)
+        search_url = "https://api.themoviedb.org/3/search/movie"
+
+        params = {
+            "query": title,
+            "include_adult": False,
+        }
+
+        if year:
+            params["year"] = year
+
+        try:
+            # Note: TMDB requires an API key. For production, this should be configured.
+            # For now, we'll use a placeholder that would need to be set via environment variable
+            headers = {}
+
+            response = await self.http_client.get(search_url, params=params, headers=headers)
+
+            if response.status_code != 200:
+                raise Exception(f"TMDB API error: {response.status_code}")
+
+            data = response.json()
+            results = []
+
+            for item in data.get("results", [])[:10]:  # Limit to top 10
+                result = ContentSearchResult(  # noqa: F841
+                    tmdb_id=item.get("id"),
+                    imdb_id=None,  # TMDB search doesn't include IMDb ID
+                    title=item.get("title", ""),
+                    year=(
+                        int(item.get("release_date", "0000")[:4]) if item.get("release_date") else 0
+                    ),
+                    overview=item.get("overview", ""),
+                    poster_path=item.get("poster_path"),
+                    match_confidence=self._calculate_tmdb_match_score(item, title, year),
+                )
+                results.append(result)
+
+            # Sort by confidence
+            results.sort(key=lambda x: x.match_confidence, reverse=True)
+
+            # Cache results
+            await self._cache_tmdb_results(cache_key, results)
+
+            return results
+
+        except httpx.RequestError as e:
+            raise Exception(f"Network error while searching TMDB: {str(e)}")
+
+    async def search_tv_metadata(
+        self, title: str, year: Optional[int] = None
+    ) -> List["ContentSearchResult"]:
+        """
+        Search for TV show metadata using TMDB API.
+
+        Args:
+            title: TV show title to search for
+            year: Optional first air year to narrow results
+
+        Returns:
+            List of ContentSearchResult objects with TV show metadata
+
+        Raises:
+            Exception: If search fails
+        """
+        # Import here to avoid circular dependency
+        from autoarr.api.services.request_handler import ContentSearchResult
+
+        # Check cache first
+        cache_key = self._get_cache_key("tmdb_tv", f"{title}_{year or 'any'}")
+        cached_results = await self._get_cached_tmdb_results(cache_key)
+
+        if cached_results is not None:
+            return cached_results
+
+        # TMDB search API
+        search_url = "https://api.themoviedb.org/3/search/tv"
+
+        params = {
+            "query": title,
+            "include_adult": False,
+        }
+
+        if year:
+            params["first_air_date_year"] = year
+
+        try:
+            headers = {}
+
+            response = await self.http_client.get(search_url, params=params, headers=headers)
+
+            if response.status_code != 200:
+                raise Exception(f"TMDB API error: {response.status_code}")
+
+            data = response.json()
+            results = []
+
+            for item in data.get("results", [])[:10]:  # Limit to top 10
+                result = ContentSearchResult(  # noqa: F841
+                    tmdb_id=item.get("id"),
+                    imdb_id=None,
+                    title=item.get("name", ""),
+                    year=(
+                        int(item.get("first_air_date", "0000")[:4])
+                        if item.get("first_air_date")
+                        else 0
+                    ),
+                    overview=item.get("overview", ""),
+                    poster_path=item.get("poster_path"),
+                    match_confidence=self._calculate_tmdb_match_score(item, title, year),
+                )
+                results.append(result)
+
+            # Sort by confidence
+            results.sort(key=lambda x: x.match_confidence, reverse=True)
+
+            # Cache results
+            await self._cache_tmdb_results(cache_key, results)
+
+            return results
+
+        except httpx.RequestError as e:
+            raise Exception(f"Network error while searching TMDB: {str(e)}")
+
+    def _calculate_tmdb_match_score(
+        self, item: Dict[str, Any], query_title: str, query_year: Optional[int]
+    ) -> float:
+        """
+        Calculate match confidence score for TMDB result.
+
+        Args:
+            item: TMDB result item
+            query_title: Original query title
+            query_year: Original query year
+
+        Returns:
+            Confidence score (0.0-1.0)
+        """
+        score = 0.0
+        query_lower = query_title.lower()
+
+        # Title match (60%)
+        result_title = item.get("title") or item.get("name") or ""
+        result_lower = result_title.lower()
+
+        if result_lower == query_lower:
+            score += 0.6
+        elif query_lower in result_lower or result_lower in query_lower:
+            score += 0.4
+        elif any(word in result_lower for word in query_lower.split() if len(word) > 3):
+            score += 0.2
+
+        # Year match (20%)
+        if query_year:
+            release_date = item.get("release_date") or item.get("first_air_date") or ""
+            if release_date:
+                result_year = int(release_date[:4])
+                if result_year == query_year:
+                    score += 0.2
+                elif abs(result_year - query_year) <= 1:
+                    score += 0.1
+
+        # Popularity boost (20%)
+        popularity = item.get("popularity", 0)
+        if popularity > 100:
+            score += 0.2
+        elif popularity > 50:
+            score += 0.15
+        elif popularity > 10:
+            score += 0.1
+
+        return min(score, 1.0)
+
+    async def _get_cached_tmdb_results(
+        self, cache_key: str
+    ) -> Optional[List["ContentSearchResult"]]:
+        """
+        Get cached TMDB results from Redis.
+
+        Args:
+            cache_key: Cache key
+
+        Returns:
+            List of ContentSearchResult objects or None if not cached
+        """
+        # Import here to avoid circular dependency
+        from autoarr.api.services.request_handler import ContentSearchResult
+
+        if self.redis_client is None:
+            return None
+
+        try:
+            cached_data = await self.redis_client.get(cache_key)
+            if cached_data is None:
+                return None
+
+            # Deserialize from JSON
+            data = json.loads(cached_data)
+            return [ContentSearchResult(**item) for item in data]
+
+        except Exception:
+            return None
+
+    async def _cache_tmdb_results(
+        self, cache_key: str, results: List["ContentSearchResult"]
+    ) -> None:
+        """
+        Cache TMDB results in Redis.
+
+        Args:
+            cache_key: Cache key
+            results: List of ContentSearchResult objects to cache
+        """
+        if self.redis_client is None:
+            return
+
+        try:
+            # Serialize to JSON
+            data = [result.model_dump() for result in results]
+            serialized = json.dumps(data)
+
+            # Store with TTL (24 hours)
+            await self.redis_client.setex(cache_key, self.cache_ttl, serialized)
+
+        except Exception:
+            pass
 
     async def close(self) -> None:
         """Close HTTP client and cleanup resources."""

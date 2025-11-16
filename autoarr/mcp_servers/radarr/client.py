@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Radarr API Client.
 
@@ -8,23 +25,18 @@ and error handling.
 
 import json
 from typing import Any, Dict, List, Optional
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode
 
-import httpx
-from httpx import AsyncClient, HTTPError, HTTPStatusError, Response
+from httpx import AsyncClient, HTTPError
 
 
 # Custom exceptions
 class RadarrClientError(Exception):
     """Base exception for Radarr client errors."""
 
-    pass
-
 
 class RadarrConnectionError(RadarrClientError):
     """Exception raised when connection to Radarr fails."""
-
-    pass
 
 
 class RadarrClient:
@@ -73,14 +85,14 @@ class RadarrClient:
     def _get_client(self) -> AsyncClient:
         """Get or create the HTTP client."""
         if self._client is None:
-            self._client = AsyncClient(timeout=self.timeout)
+            self._client = AsyncClient(timeout=self.timeout)  # noqa: F841
         return self._client
 
     async def close(self) -> None:
         """Close the HTTP client and cleanup resources."""
         if self._client is not None:
             await self._client.aclose()
-            self._client = None
+            self._client = None  # noqa: F841
 
     async def __aenter__(self) -> "RadarrClient":
         """Async context manager entry."""
@@ -114,7 +126,7 @@ class RadarrClient:
             RadarrConnectionError: If validation fails
             ValueError: If url or api_key is invalid
         """
-        client = cls(url, api_key, timeout)
+        client = cls(url, api_key, timeout)  # noqa: F841
         if validate_connection:
             try:
                 is_healthy = await client.health_check()
@@ -168,7 +180,7 @@ class RadarrClient:
             "Content-Type": "application/json",
         }
 
-    async def _request(
+    async def _request(  # noqa: C901
         self,
         method: str,
         endpoint: str,
@@ -195,7 +207,7 @@ class RadarrClient:
         """
         url = self._build_url(endpoint, **params)
         headers = self._get_headers()
-        client = self._get_client()
+        client = self._get_client()  # noqa: F841
 
         last_error: Optional[Exception] = None
         for attempt in range(max_retries):
@@ -215,7 +227,7 @@ class RadarrClient:
                 if response.status_code == 401:
                     raise RadarrClientError("Unauthorized: Invalid API key (401)")
                 elif response.status_code == 404:
-                    raise RadarrClientError(f"Not found (404): Resource not found")
+                    raise RadarrClientError("Not found (404): Resource not found")
                 elif response.status_code == 503:
                     # Service unavailable - retry
                     last_error = RadarrClientError("Server unavailable (503)")

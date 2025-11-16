@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Custom middleware for the FastAPI Gateway.
 
@@ -11,6 +28,8 @@ from typing import Callable
 
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+
 from autoarr.shared.core.exceptions import (
     CircuitBreakerOpenError,
     MCPConnectionError,
@@ -18,7 +37,6 @@ from autoarr.shared.core.exceptions import (
     MCPTimeoutError,
     MCPToolError,
 )
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from .models import ErrorResponse
 
@@ -186,7 +204,7 @@ async def add_security_headers(request: Request, call_next: Callable) -> Respons
     response = await call_next(request)
 
     # Add security headers
-    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Content-Type-Options"] = "nosnif"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"

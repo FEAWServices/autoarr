@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Integration tests for Best Practices database operations.
 
@@ -5,8 +22,9 @@ Tests the complete flow from database creation to seeding to querying.
 """
 
 import pytest
-from autoarr.api.database import Database, BestPracticesRepository
-from autoarr.api.seed_data import seed_best_practices, get_best_practices_seed_data
+
+from autoarr.api.database import BestPracticesRepository, Database
+from autoarr.api.seed_data import get_best_practices_seed_data, seed_best_practices
 
 
 @pytest.fixture
@@ -215,7 +233,7 @@ class TestBestPracticesDatabaseIntegration:
         practice_id = first_practice.id
 
         # Soft delete it
-        result = await repository.soft_delete(practice_id)
+        result = await repository.soft_delete(practice_id)  # noqa: F841
         assert result is True
 
         # It should still exist but be disabled

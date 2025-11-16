@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Integration tests for SABnzbd MCP Server with real SABnzbd instance.
 
@@ -16,7 +33,6 @@ Use a test instance, not a production instance.
 """
 
 import os
-from typing import Any, Dict
 
 import pytest
 
@@ -26,7 +42,6 @@ from autoarr.mcp_servers.mcp_servers.sabnzbd.client import (
     SABnzbdConnectionError,
 )
 from autoarr.mcp_servers.mcp_servers.sabnzbd.server import SABnzbdMCPServer
-
 
 # ============================================================================
 # Fixtures and Configuration
@@ -51,7 +66,7 @@ def sabnzbd_api_key() -> str:
 @pytest.fixture(scope="module")
 async def sabnzbd_client(sabnzbd_url: str, sabnzbd_api_key: str) -> SABnzbdClient:
     """Create a SABnzbd client for integration testing."""
-    client = SABnzbdClient(url=sabnzbd_url, api_key=sabnzbd_api_key)
+    client = SABnzbdClient(url=sabnzbd_url, api_key=sabnzbd_api_key)  # noqa: F841
     yield client
     await client.close()
 
@@ -82,7 +97,7 @@ class TestSABnzbdClientIntegration:
 
     async def test_get_version_returns_valid_version(self, sabnzbd_client: SABnzbdClient) -> None:
         """Test that get_version returns valid version information."""
-        result = await sabnzbd_client.get_version()
+        result = await sabnzbd_client.get_version()  # noqa: F841
 
         assert "version" in result
         assert isinstance(result["version"], str)
@@ -90,7 +105,7 @@ class TestSABnzbdClientIntegration:
 
     async def test_get_status_returns_server_info(self, sabnzbd_client: SABnzbdClient) -> None:
         """Test that get_status returns server status information."""
-        result = await sabnzbd_client.get_status()
+        result = await sabnzbd_client.get_status()  # noqa: F841
 
         assert "status" in result
         status = result["status"]
@@ -99,7 +114,7 @@ class TestSABnzbdClientIntegration:
 
     async def test_get_queue_returns_valid_structure(self, sabnzbd_client: SABnzbdClient) -> None:
         """Test that get_queue returns valid queue structure."""
-        result = await sabnzbd_client.get_queue()
+        result = await sabnzbd_client.get_queue()  # noqa: F841
 
         assert "queue" in result
         queue = result["queue"]
@@ -111,7 +126,7 @@ class TestSABnzbdClientIntegration:
 
     async def test_get_history_returns_valid_structure(self, sabnzbd_client: SABnzbdClient) -> None:
         """Test that get_history returns valid history structure."""
-        result = await sabnzbd_client.get_history(limit=10)
+        result = await sabnzbd_client.get_history(limit=10)  # noqa: F841
 
         assert "history" in result
         history = result["history"]
@@ -122,7 +137,7 @@ class TestSABnzbdClientIntegration:
 
     async def test_get_config_returns_valid_structure(self, sabnzbd_client: SABnzbdClient) -> None:
         """Test that get_config returns valid configuration structure."""
-        result = await sabnzbd_client.get_config()
+        result = await sabnzbd_client.get_config()  # noqa: F841
 
         assert "config" in result
         config = result["config"]
@@ -132,7 +147,7 @@ class TestSABnzbdClientIntegration:
     async def test_pause_and_resume_queue(self, sabnzbd_client: SABnzbdClient) -> None:
         """Test pausing and resuming the queue."""
         # Pause queue
-        pause_result = await sabnzbd_client.pause_queue()
+        pause_result = await sabnzbd_client.pause_queue()  # noqa: F841
         assert "status" in pause_result or "queue" in pause_result
 
         # Verify queue is paused
@@ -140,7 +155,7 @@ class TestSABnzbdClientIntegration:
         assert queue["queue"]["paused"] is True or queue["queue"]["status"] == "Paused"
 
         # Resume queue
-        resume_result = await sabnzbd_client.resume_queue()
+        resume_result = await sabnzbd_client.resume_queue()  # noqa: F841
         assert "status" in resume_result or "queue" in resume_result
 
         # Verify queue is resumed
@@ -167,14 +182,16 @@ class TestSABnzbdClientIntegration:
             pytest.skip("SABNZBD_API_KEY not set - SABnzbd not configured for testing")
 
         # Use short timeout to avoid waiting too long if SABnzbd is unavailable
-        client = SABnzbdClient(url=sabnzbd_url, api_key="invalid_key_12345", timeout=2.0)
+        client = SABnzbdClient(
+            url=sabnzbd_url, api_key="invalid_key_12345", timeout=2.0
+        )  # noqa: F841
 
         try:
             # Use max_retries=1 to fail fast if service unavailable
             await client._request("queue", max_retries=1)
             # If we get here without error, the test should fail
             pytest.fail("Expected SABnzbdClientError but no error was raised")
-        except SABnzbdConnectionError as e:
+        except SABnzbdConnectionError:
             # Connection error means SABnzbd not available
             pytest.skip("SABnzbd instance not available for testing")
         except SABnzbdClientError as e:
@@ -207,7 +224,7 @@ class TestSABnzbdMCPServerIntegration:
         """Test MCP get_queue tool with real SABnzbd."""
         import json
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {})  # noqa: F841
 
         assert not result.isError
         assert len(result.content) == 1
@@ -220,7 +237,9 @@ class TestSABnzbdMCPServerIntegration:
         """Test MCP get_history tool with real SABnzbd."""
         import json
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_history", {"limit": 10})
+        result = await sabnzbd_mcp_server.call_tool(
+            "sabnzbd_get_history", {"limit": 10}
+        )  # noqa: F841
 
         assert not result.isError
         response_data = json.loads(result.content[0].text)
@@ -230,7 +249,7 @@ class TestSABnzbdMCPServerIntegration:
         """Test MCP get_config tool with real SABnzbd."""
         import json
 
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_config", {})
+        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_config", {})  # noqa: F841
 
         assert not result.isError
         response_data = json.loads(result.content[0].text)
@@ -242,7 +261,9 @@ class TestSABnzbdMCPServerIntegration:
         import json
 
         # Test invalid start parameter
-        result = await sabnzbd_mcp_server.call_tool("sabnzbd_get_queue", {"start": -1})
+        result = await sabnzbd_mcp_server.call_tool(
+            "sabnzbd_get_queue", {"start": -1}
+        )  # noqa: F841
 
         assert result.isError
         response_data = json.loads(result.content[0].text)
@@ -273,7 +294,7 @@ class TestSABnzbdConfigurationIntegration:
 
     async def test_get_specific_config_section(self, sabnzbd_client: SABnzbdClient) -> None:
         """Test getting a specific configuration section."""
-        result = await sabnzbd_client.get_config(section="misc")
+        result = await sabnzbd_client.get_config(section="misc")  # noqa: F841
 
         assert "config" in result
         config = result["config"]
@@ -281,7 +302,7 @@ class TestSABnzbdConfigurationIntegration:
 
     async def test_config_contains_expected_fields(self, sabnzbd_client: SABnzbdClient) -> None:
         """Test that config contains expected fields."""
-        result = await sabnzbd_client.get_config()
+        result = await sabnzbd_client.get_config()  # noqa: F841
         misc = result["config"]["misc"]
 
         # Check for common config fields
@@ -308,7 +329,7 @@ class TestSABnzbdErrorHandlingIntegration:
         """Test that retrying a non-existent download fails gracefully."""
         # This should not crash, but may return an error or empty result
         try:
-            result = await sabnzbd_client.retry_download("nonexistent_nzo_id")
+            result = await sabnzbd_client.retry_download("nonexistent_nzo_id")  # noqa: F841
             # If it succeeds, check the result structure
             assert "status" in result or "nzo_ids" in result
         except SABnzbdClientError:
@@ -359,16 +380,16 @@ class TestSABnzbdPerformanceIntegration:
         """Test that multiple sequential requests work correctly."""
         # Make 10 sequential requests
         for _ in range(10):
-            result = await sabnzbd_client.get_queue()
+            result = await sabnzbd_client.get_queue()  # noqa: F841
             assert "queue" in result
 
     async def test_client_connection_reuse(self, sabnzbd_client: SABnzbdClient) -> None:
         """Test that client properly reuses HTTP connections."""
         # Make multiple requests - client should reuse connection
         for _ in range(5):
-            result = await sabnzbd_client.get_queue()
+            result = await sabnzbd_client.get_queue()  # noqa: F841
             assert "queue" in result
 
         # Verify client still works after multiple uses
-        result = await sabnzbd_client.get_history()
+        result = await sabnzbd_client.get_history()  # noqa: F841
         assert "history" in result

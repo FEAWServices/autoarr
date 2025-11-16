@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Unit tests for Configuration Manager service.
 
@@ -8,10 +25,8 @@ This module tests the Configuration Manager's ability to:
 - Track audit history
 """
 
-import json
 from datetime import datetime
-from typing import Any, Dict
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -24,9 +39,7 @@ from autoarr.api.database import (
 from autoarr.api.services.configuration_manager import ConfigurationManager
 from autoarr.api.services.models import (
     ApplyRecommendationRequest,
-    ConfigurationAudit,
     Priority,
-    Recommendation,
     RecommendationType,
 )
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
@@ -439,7 +452,7 @@ async def test_audit_saves_results_to_database(
     mock_audit_repo.save_audit_result.return_value = Mock()
 
     # Act
-    audit = await configuration_manager.audit_application("sabnzbd", mock_config)
+    await configuration_manager.audit_application("sabnzbd", mock_config)
 
     # Assert
     mock_audit_repo.save_audit_result.assert_called_once()

@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Pydantic models for API request/response validation.
 
@@ -9,7 +26,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
 
 # ============================================================================
 # MCP Tool Models
@@ -419,8 +435,6 @@ class BestPracticeBase(BaseModel):
 class BestPracticeCreate(BestPracticeBase):
     """Model for creating a new best practice."""
 
-    pass
-
 
 class BestPracticeUpdate(BaseModel):
     """Model for updating an existing best practice (all fields optional)."""
@@ -537,3 +551,19 @@ class BestPracticeListResponse(BaseModel):
 
     practices: List[BestPracticeResponse] = Field(..., description="List of best practices")
     total: int = Field(..., description="Total number of practices")
+
+
+# ============================================================================
+# Re-exports for E2E test compatibility
+# ============================================================================
+
+# Configuration audit models
+from autoarr.api.models_config import (  # noqa: E402, F401
+    ConfigAuditRequest as ConfigAudit,
+    ConfigAuditResponse,
+    Recommendation,
+    DetailedRecommendation,
+)
+
+# Activity log models (database model for E2E tests)
+from autoarr.api.database import ActivityLog  # noqa: E402, F401

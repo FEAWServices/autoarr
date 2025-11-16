@@ -1,34 +1,61 @@
+# Pre-commit hooks for AutoArr
+# Install: poetry run pre-commit install
+# Run manually: poetry run pre-commit run --all-files
+
 repos:
+  # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^(\.gitignore|.*\.md)$
       - id: end-of-file-fixer
+        exclude: ^(\.gitignore|.*\.md)$
       - id: check-yaml
+        args: [--unsafe] # Allow custom tags in docker-compose
       - id: check-added-large-files
-        args: ['--maxkb=1024']
+        args: ["--maxkb=1024"]
       - id: check-json
         exclude: tsconfig.*\.json$
       - id: check-toml
       - id: check-merge-conflict
       - id: debug-statements
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
 
+  # Python: Black formatter
   - repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 24.1.1
     hooks:
       - id: black
-        language_version: python3.11
+        language_version: python3.13
         args: [--config=pyproject.toml]
+        exclude: ^(autoarr/ui/|node_modules/|\.venv/)
 
+  # Python: isort (import sorting)
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=100]
+        exclude: ^(autoarr/ui/|node_modules/|\.venv/)
+
+  # Python: Flake8 linting
   - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
+    rev: 7.0.0
     hooks:
       - id: flake8
-        args: ['--max-line-length=100', '--extend-ignore=E203,F541,F401,E402,F841']
-        exclude: ^(docs/examples/|examples/|.*example\.py$|.*test.*\.py$|scripts/|autoarr/tests/|autoarr/mcp_servers/)
+        args:
+          - --max-line-length=100
+          - --extend-ignore=E203,W503,F541,F401,E402,F841
+          - --exclude=autoarr/tests/,autoarr/__pycache__/,autoarr/ui/
+          - --max-complexity=15
+        exclude: ^(autoarr/ui/|node_modules/|\.venv/)
 
+  # Python: MyPy type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
+    rev: v1.8.0
     hooks:
       - id: mypy
         additional_dependencies:
@@ -36,11 +63,30 @@ repos:
           - types-requests
           - types-pyyaml
         args: [--config-file=pyproject.toml, --ignore-missing-imports]
-        exclude: ^(docs/examples/|examples/|.*example\.py$|.*test.*\.py$|scripts/|autoarr/shared/|autoarr/tests/|autoarr/api/|autoarr/mcp_servers/)
+        exclude: ^(autoarr/tests/|autoarr/ui/|node_modules/|\.venv/)
 
+  # Python: Bandit security scanner
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.7
+    hooks:
+      - id: bandit
+        args: [-ll, -i] # Low severity, ignore info
+        exclude: ^(autoarr/tests/|autoarr/ui/|node_modules/|\.venv/)
+
+  # Frontend: Prettier
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-        files: \.(ts|tsx|css|json|md)$
-        exclude: ^(package-lock\.json|pnpm-lock\.yaml)$
+        files: \.(js|jsx|ts|tsx|css|json|md|yml|yaml)$
+        exclude: ^(poetry\.lock|package-lock\.json|pnpm-lock\.yaml|\.venv/|dist/|build/|playwright-report/)
+        args: [--write, --ignore-unknown]
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args: [--ignore, DL3008, --ignore, DL3013, --ignore, DL3059]
+# CI/CD skip: Use --no-verify to skip hooks if needed
+# Example: git commit --no-verify -m "emergency fix"

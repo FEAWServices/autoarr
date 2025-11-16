@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 TV Shows endpoints (Sonarr).
 
@@ -7,6 +24,7 @@ This module provides endpoints for managing TV shows via Sonarr.
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends
+
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 from ..dependencies import get_orchestrator
@@ -36,7 +54,7 @@ async def list_shows(
         }
         ```
     """
-    result = await orchestrator.call_tool("sonarr", "get_series", {})
+    result = await orchestrator.call_tool("sonarr", "get_series", {})  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -69,7 +87,9 @@ async def get_show(
         }
         ```
     """
-    result = await orchestrator.call_tool("sonarr", "get_series_by_id", {"series_id": series_id})
+    result = await orchestrator.call_tool(
+        "sonarr", "get_series_by_id", {"series_id": series_id}
+    )  # noqa: F841
     return result
 
 
@@ -100,7 +120,9 @@ async def add_show(
         }
         ```
     """
-    result = await orchestrator.call_tool("sonarr", "add_series", request.model_dump())
+    result = await orchestrator.call_tool(
+        "sonarr", "add_series", request.model_dump()
+    )  # noqa: F841
     return result
 
 
@@ -129,7 +151,7 @@ async def delete_show(
         }
         ```
     """
-    result = await orchestrator.call_tool(
+    result = await orchestrator.call_tool(  # noqa: F841
         "sonarr", "delete_series", {"series_id": series_id, "delete_files": delete_files}
     )
     return result
@@ -162,7 +184,7 @@ async def search_shows(
         ]
         ```
     """
-    result = await orchestrator.call_tool("sonarr", "search_series", {"query": query})
+    result = await orchestrator.call_tool("sonarr", "search_series", {"query": query})  # noqa: F841
     return result if isinstance(result, list) else []
 
 
@@ -201,7 +223,7 @@ async def get_calendar(
     if end_date:
         params["end_date"] = end_date
 
-    result = await orchestrator.call_tool("sonarr", "get_calendar", params)
+    result = await orchestrator.call_tool("sonarr", "get_calendar", params)  # noqa: F841
     return result if isinstance(result, list) else []
 
 
@@ -226,7 +248,7 @@ async def get_queue(
         }
         ```
     """
-    result = await orchestrator.call_tool("sonarr", "get_queue", {})
+    result = await orchestrator.call_tool("sonarr", "get_queue", {})  # noqa: F841
 
     # Ensure consistent response format
     if isinstance(result, list):
@@ -257,7 +279,7 @@ async def search_series_episodes(
         }
         ```
     """
-    result = await orchestrator.call_tool(
+    result = await orchestrator.call_tool(  # noqa: F841
         "sonarr", "trigger_series_search", {"series_id": series_id}
     )
     return result
@@ -286,7 +308,7 @@ async def search_episode(
         }
         ```
     """
-    result = await orchestrator.call_tool(
+    result = await orchestrator.call_tool(  # noqa: F841
         "sonarr", "trigger_episode_search", {"episode_id": episode_id}
     )
     return result

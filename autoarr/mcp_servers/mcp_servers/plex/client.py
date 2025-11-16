@@ -1,3 +1,20 @@
+# Copyright (C) 2025 AutoArr Contributors
+#
+# This file is part of AutoArr.
+#
+# AutoArr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# AutoArr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Plex API Client.
 
@@ -7,25 +24,20 @@ and error handling.
 """
 
 import json
-from typing import Any, Dict, List, Optional
-from urllib.parse import urlencode, urljoin
 import xml.etree.ElementTree as ET
+from typing import Any, Dict, List, Optional
+from urllib.parse import urlencode
 
-import httpx
-from httpx import AsyncClient, HTTPError, HTTPStatusError, Response
+from httpx import AsyncClient, HTTPError
 
 
 # Custom exceptions
 class PlexClientError(Exception):
     """Base exception for Plex client errors."""
 
-    pass
-
 
 class PlexConnectionError(PlexClientError):
     """Exception raised when connection to Plex fails."""
-
-    pass
 
 
 class PlexClient:
@@ -74,14 +86,14 @@ class PlexClient:
     def _get_client(self) -> AsyncClient:
         """Get or create the HTTP client."""
         if self._client is None:
-            self._client = AsyncClient(timeout=self.timeout)
+            self._client = AsyncClient(timeout=self.timeout)  # noqa: F841
         return self._client
 
     async def close(self) -> None:
         """Close the HTTP client and cleanup resources."""
         if self._client is not None:
             await self._client.aclose()
-            self._client = None
+            self._client = None  # noqa: F841
 
     async def __aenter__(self) -> "PlexClient":
         """Async context manager entry."""
@@ -115,7 +127,7 @@ class PlexClient:
             PlexConnectionError: If validation fails
             ValueError: If url or token is invalid
         """
-        client = cls(url, token, timeout)
+        client = cls(url, token, timeout)  # noqa: F841
         if validate_connection:
             try:
                 is_healthy = await client.health_check()
@@ -182,7 +194,7 @@ class PlexClient:
         Returns:
             Dictionary representation of XML
         """
-        result = dict(xml_element.attrib)
+        result = dict(xml_element.attrib)  # noqa: F841
 
         # Add children
         children = list(xml_element)
@@ -203,7 +215,7 @@ class PlexClient:
 
         return result
 
-    async def _request(
+    async def _request(  # noqa: C901
         self,
         method: str,
         endpoint: str,
@@ -232,7 +244,7 @@ class PlexClient:
         """
         url = self._build_url(endpoint, **params)
         headers = self._get_headers()
-        client = self._get_client()
+        client = self._get_client()  # noqa: F841
 
         last_error: Optional[Exception] = None
         for attempt in range(max_retries):
@@ -252,7 +264,7 @@ class PlexClient:
                 if response.status_code == 401:
                     raise PlexClientError("Unauthorized: Invalid Plex token (401)")
                 elif response.status_code == 404:
-                    raise PlexClientError(f"Not found (404): Resource not found")
+                    raise PlexClientError("Not found (404): Resource not found")
                 elif response.status_code == 503:
                     # Service unavailable - retry
                     last_error = PlexClientError("Server unavailable (503)")
@@ -355,7 +367,7 @@ class PlexClient:
         Returns:
             List of library dictionaries with metadata
         """
-        result = await self._request("GET", "library/sections")
+        result = await self._request("GET", "library/sections")  # noqa: F841
 
         # Extract Directory list from MediaContainer
         if "MediaContainer" in result:
@@ -394,7 +406,9 @@ class PlexClient:
         if offset is not None:
             params["X-Plex-Container-Start"] = offset
 
-        result = await self._request("GET", f"library/sections/{library_id}/all", **params)
+        result = await self._request(
+            "GET", f"library/sections/{library_id}/all", **params
+        )  # noqa: F841
 
         # Extract Metadata or Video list from MediaContainer
         if "MediaContainer" in result:
@@ -422,7 +436,7 @@ class PlexClient:
         if limit is not None:
             params["X-Plex-Container-Size"] = limit
 
-        result = await self._request("GET", "library/recentlyAdded", **params)
+        result = await self._request("GET", "library/recentlyAdded", **params)  # noqa: F841
 
         # Extract Metadata or Video list from MediaContainer
         if "MediaContainer" in result:
@@ -449,7 +463,7 @@ class PlexClient:
         if limit is not None:
             params["X-Plex-Container-Size"] = limit
 
-        result = await self._request("GET", "library/onDeck", **params)
+        result = await self._request("GET", "library/onDeck", **params)  # noqa: F841
 
         # Extract Video or Metadata list from MediaContainer
         if "MediaContainer" in result:
@@ -472,7 +486,7 @@ class PlexClient:
         Returns:
             Response indicating success
         """
-        result = await self._request("GET", f"library/sections/{library_id}/refresh")
+        await self._request("GET", f"library/sections/{library_id}/refresh")
         return {"success": True, "library_id": library_id}
 
     # ========================================================================
@@ -486,7 +500,7 @@ class PlexClient:
         Returns:
             List of active session dictionaries
         """
-        result = await self._request("GET", "status/sessions")
+        result = await self._request("GET", "status/sessions")  # noqa: F841
 
         # Extract Metadata or Video list from MediaContainer
         if "MediaContainer" in result:
@@ -520,7 +534,7 @@ class PlexClient:
         if offset is not None:
             params["X-Plex-Container-Start"] = offset
 
-        result = await self._request("GET", "status/sessions/history/all", **params)
+        result = await self._request("GET", "status/sessions/history/all", **params)  # noqa: F841
 
         # Extract Metadata or Video list from MediaContainer
         if "MediaContainer" in result:
@@ -562,7 +576,7 @@ class PlexClient:
         if section_id is not None:
             params["sectionId"] = section_id
 
-        result = await self._request("GET", "search", **params)
+        result = await self._request("GET", "search", **params)  # noqa: F841
 
         # Extract Metadata or results from MediaContainer
         if "MediaContainer" in result:

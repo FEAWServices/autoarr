@@ -7,10 +7,12 @@ import {
   Settings,
   Activity,
   Search,
+  MessageCircle,
 } from "lucide-react";
 import { Logo } from "./Logo";
 
 const navItems = [
+  { path: "/chat", icon: MessageCircle, label: "Chat" },
   { path: "/search", icon: Search, label: "Search" },
   { path: "/downloads", icon: Download, label: "Downloads" },
   { path: "/shows", icon: Tv, label: "TV Shows" },

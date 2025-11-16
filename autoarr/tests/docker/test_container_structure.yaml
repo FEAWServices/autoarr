@@ -1,0 +1,113 @@
+# Container Structure Tests
+# Tests using container-structure-test
+# Install with: curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
+# Run with: container-structure-test test --image autoarr:latest --config test_container_structure.yaml
+
+schemaVersion: "2.0.0"
+
+# File existence tests
+fileExistenceTests:
+  - name: "AutoArr application code exists"
+    path: "/app/autoarr"
+    shouldExist: true
+    isExecutableBy: "any"
+
+  - name: "Frontend dist directory exists"
+    path: "/app/autoarr/ui/dist"
+    shouldExist: true
+
+  - name: "Frontend index.html exists"
+    path: "/app/autoarr/ui/dist/index.html"
+    shouldExist: true
+
+  - name: "Data directory exists"
+    path: "/data"
+    shouldExist: true
+    permissions: "drwxr-xr-x"
+
+  - name: "Python binary exists"
+    path: "/usr/local/bin/python"
+    shouldExist: true
+
+  - name: "Uvicorn binary exists"
+    path: "/usr/local/bin/uvicorn"
+    shouldExist: true
+
+# File content tests
+fileContentTests:
+  - name: "Python version is 3.11"
+    path: "/usr/local/bin/python"
+    shouldExist: true
+    excludedContents: ["python3.9", "python3.10", "python3.12", "python3.14"]
+
+# Command tests
+commandTests:
+  - name: "Python version check"
+    command: "python"
+    args: ["--version"]
+    expectedOutput: ["Python 3.11"]
+
+  - name: "AutoArr package import"
+    command: "python"
+    args: ["-c", "import autoarr; print('OK')"]
+    expectedOutput: ["OK"]
+
+  - name: "FastAPI import"
+    command: "python"
+    args: ["-c", "import fastapi; print('OK')"]
+    expectedOutput: ["OK"]
+
+  - name: "Uvicorn import"
+    command: "python"
+    args: ["-c", "import uvicorn; print('OK')"]
+    expectedOutput: ["OK"]
+
+  - name: "SQLAlchemy import"
+    command: "python"
+    args: ["-c", "import sqlalchemy; print('OK')"]
+    expectedOutput: ["OK"]
+
+  - name: "MCP import"
+    command: "python"
+    args: ["-c", "import mcp; print('OK')"]
+    expectedOutput: ["OK"]
+
+  - name: "Anthropic import"
+    command: "python"
+    args: ["-c", "import anthropic; print('OK')"]
+    expectedOutput: ["OK"]
+
+  - name: "User is non-root"
+    command: "whoami"
+    expectedOutput: ["autoarr"]
+
+  - name: "Frontend assets exist"
+    command: "ls"
+    args: ["-la", "/app/autoarr/ui/dist/"]
+    expectedOutput: ["index.html"]
+
+  - name: "No dev dependencies installed"
+    command: "python"
+    args:
+      [
+        "-c",
+        "try:\n    import pytest\n    print('FAIL')\nexcept ImportError:\n    print('OK')",
+      ]
+    expectedOutput: ["OK"]
+
+# Metadata tests
+metadataTest:
+  exposedPorts: ["8088"]
+
+  workdir: "/app"
+
+  user: "autoarr"
+
+  env:
+    - key: "PATH"
+      value: "/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# License test (optional)
+licenseTests:
+  - debian: false
+    files: []
