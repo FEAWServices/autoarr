@@ -82,3 +82,4 @@ temp/
 # Claude Code
 .claude/settings.local.json
 .common/
+coverage.json
