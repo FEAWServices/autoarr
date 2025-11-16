@@ -25,8 +25,10 @@ and applying configuration changes following TDD principles.
 import logging
 from typing import AsyncGenerator, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
+from ..config import get_settings
+from ..rate_limiter import limiter
 from ..models_config import (
     ApplyConfigRequest,
     ApplyConfigResponse,
@@ -41,6 +43,9 @@ from ..services.config_manager import ConfigurationManager, get_config_manager_i
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Get settings for rate limits
+_settings = get_settings()
 
 
 # ============================================================================
@@ -64,8 +69,10 @@ async def get_config_manager() -> AsyncGenerator[ConfigurationManager, None]:
 
 
 @router.post("/audit", response_model=ConfigAuditResponse, status_code=status.HTTP_200_OK)
+@limiter.limit(_settings.rate_limit_config_audit)
 async def trigger_config_audit(
-    request: ConfigAuditRequest,
+    request: Request,
+    audit_request: ConfigAuditRequest,
     config_manager: ConfigurationManager = Depends(get_config_manager),
 ) -> ConfigAuditResponse:
     """
@@ -98,7 +105,7 @@ async def trigger_config_audit(
     """
     try:
         # Validate that at least one service is specified
-        if not request.services:
+        if not audit_request.services:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="At least one service must be specified",
@@ -106,8 +113,8 @@ async def trigger_config_audit(
 
         # Perform the audit
         result = await config_manager.audit_configuration(  # noqa: F841
-            services=request.services,
-            include_web_search=request.include_web_search,
+            services=audit_request.services,
+            include_web_search=audit_request.include_web_search,
         )
 
         return ConfigAuditResponse(**result)
@@ -130,7 +137,9 @@ async def trigger_config_audit(
     response_model=RecommendationsListResponse,
     status_code=status.HTTP_200_OK,
 )
+@limiter.limit(_settings.rate_limit_default)
 async def get_recommendations(
+    request: Request,
     service: Optional[str] = Query(None, description="Filter by service name"),
     priority: Optional[str] = Query(None, description="Filter by priority (high, medium, low)"),
     category: Optional[str] = Query(
@@ -189,7 +198,9 @@ async def get_recommendations(
     response_model=DetailedRecommendation,
     status_code=status.HTTP_200_OK,
 )
+@limiter.limit(_settings.rate_limit_default)
 async def get_recommendation_detail(
+    request: Request,
     recommendation_id: int,
     config_manager: ConfigurationManager = Depends(get_config_manager),
 ) -> DetailedRecommendation:
@@ -239,8 +250,10 @@ async def get_recommendation_detail(
 
 
 @router.post("/apply", response_model=ApplyConfigResponse, status_code=status.HTTP_200_OK)
+@limiter.limit(_settings.rate_limit_config_audit)
 async def apply_config_changes(
-    request: ApplyConfigRequest,
+    request: Request,
+    apply_request: ApplyConfigRequest,
     config_manager: ConfigurationManager = Depends(get_config_manager),
 ) -> ApplyConfigResponse:
     """
@@ -273,7 +286,7 @@ async def apply_config_changes(
     """
     try:
         # Validate that at least one recommendation is specified
-        if not request.recommendation_ids:
+        if not apply_request.recommendation_ids:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="At least one recommendation ID must be specified",
@@ -281,8 +294,8 @@ async def apply_config_changes(
 
         # Apply the recommendations
         result = await config_manager.apply_recommendations(  # noqa: F841
-            recommendation_ids=request.recommendation_ids,
-            dry_run=request.dry_run,
+            recommendation_ids=apply_request.recommendation_ids,
+            dry_run=apply_request.dry_run,
         )
 
         return ApplyConfigResponse(**result)
@@ -305,7 +318,9 @@ async def apply_config_changes(
     response_model=AuditHistoryResponse,
     status_code=status.HTTP_200_OK,
 )
+@limiter.limit(_settings.rate_limit_default)
 async def get_audit_history(
+    request: Request,
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
     config_manager: ConfigurationManager = Depends(get_config_manager),
