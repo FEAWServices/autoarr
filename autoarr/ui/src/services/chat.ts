@@ -17,7 +17,8 @@ import {
 } from "../types/chat";
 
 // Use environment variable with fallback to correct port (8088, not 8000)
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8088/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8088/api/v1";
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 
 class ChatService {
