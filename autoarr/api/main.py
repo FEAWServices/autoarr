@@ -325,7 +325,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-@app.websocket("/ws")
+@app.websocket(f"{_settings.api_v1_prefix}/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint for real-time updates.
@@ -368,19 +368,38 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @app.get("/{full_path:path}", include_in_schema=False)
-async def serve_spa(full_path: str) -> FileResponse:
+async def serve_spa(request: Request, full_path: str) -> FileResponse:
     """
     Catch-all route to serve the React SPA.
 
     This route catches all unmatched paths and serves the index.html file,
     allowing React Router to handle client-side routing.
 
+    Excludes API routes, health checks, and other backend endpoints.
+
     Args:
+        request: The incoming request
         full_path: The requested path
 
     Returns:
         FileResponse: The index.html file
     """
+    # Don't serve SPA for API routes, health, or static assets
+    # These should be handled by their respective routers
+    if (
+        full_path.startswith("api/")
+        or full_path.startswith("health")
+        or full_path.startswith("static/")
+        or full_path.startswith("assets/")
+        or full_path.startswith("docs")
+        or full_path.startswith("redoc")
+        or full_path.startswith("openapi.json")
+        or full_path == "ping"
+    ):
+        # Let FastAPI return 404 for unmatched API routes
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail=f"Not found: /{full_path}")
+
     ui_dist_dir = Path(__file__).parent.parent / "ui" / "dist"
     index_file = ui_dist_dir / "index.html"
 
@@ -388,7 +407,8 @@ async def serve_spa(full_path: str) -> FileResponse:
         return FileResponse(str(index_file))
 
     # Fallback if UI not built
-    return {"error": "UI not available", "path": full_path}
+    from fastapi import HTTPException
+    raise HTTPException(status_code=503, detail="UI not available")
 
 
 # ============================================================================
