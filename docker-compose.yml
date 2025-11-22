@@ -55,9 +55,6 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       BRAVE_API_KEY: ${BRAVE_API_KEY:-}
 
-      # CORS Settings (adjust for your frontend URL)
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
-
     # Resource limits (adjust based on your system)
     deploy:
       resources:
