@@ -179,7 +179,8 @@ export const Settings = () => {
         const response = await fetch("/api/v1/settings");
         if (response.ok) {
           const data = await response.json();
-          setSettings(data);
+          // Merge API data with existing state to preserve fields not in API response
+          setSettings((prev) => ({ ...prev, ...data }));
         }
       } catch (error) {
         console.error("Failed to load settings:", error);
