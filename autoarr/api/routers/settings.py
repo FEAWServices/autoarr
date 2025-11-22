@@ -95,10 +95,10 @@ class AllServicesConfig(BaseModel):
 class AllServicesConfigResponse(BaseModel):
     """Response with all service configurations."""
 
-    sabnzbd: Optional[ServiceConnectionConfigResponse] = None
-    sonarr: Optional[ServiceConnectionConfigResponse] = None
-    radarr: Optional[ServiceConnectionConfigResponse] = None
-    plex: Optional[ServiceConnectionConfigResponse] = None
+    sabnzbd: ServiceConnectionConfigResponse
+    sonarr: ServiceConnectionConfigResponse
+    radarr: ServiceConnectionConfigResponse
+    plex: ServiceConnectionConfigResponse
 
 
 class TestConnectionRequest(BaseModel):
@@ -225,49 +225,33 @@ async def get_all_settings(
     plex_status = await get_service_status("plex", orchestrator)
 
     return AllServicesConfigResponse(
-        sabnzbd=(
-            ServiceConnectionConfigResponse(
-                enabled=sabn_enabled,
-                url=sabn_url,
-                api_key_masked=mask_api_key(sabn_key),
-                timeout=sabn_timeout,
-                status=sabnzbd_status,
-            )
-            if sabn_enabled
-            else None
+        sabnzbd=ServiceConnectionConfigResponse(
+            enabled=sabn_enabled,
+            url=sabn_url,
+            api_key_masked=mask_api_key(sabn_key),
+            timeout=sabn_timeout,
+            status=sabnzbd_status,
         ),
-        sonarr=(
-            ServiceConnectionConfigResponse(
-                enabled=son_enabled,
-                url=son_url,
-                api_key_masked=mask_api_key(son_key),
-                timeout=son_timeout,
-                status=sonarr_status,
-            )
-            if son_enabled
-            else None
+        sonarr=ServiceConnectionConfigResponse(
+            enabled=son_enabled,
+            url=son_url,
+            api_key_masked=mask_api_key(son_key),
+            timeout=son_timeout,
+            status=sonarr_status,
         ),
-        radarr=(
-            ServiceConnectionConfigResponse(
-                enabled=rad_enabled,
-                url=rad_url,
-                api_key_masked=mask_api_key(rad_key),
-                timeout=rad_timeout,
-                status=radarr_status,
-            )
-            if rad_enabled
-            else None
+        radarr=ServiceConnectionConfigResponse(
+            enabled=rad_enabled,
+            url=rad_url,
+            api_key_masked=mask_api_key(rad_key),
+            timeout=rad_timeout,
+            status=radarr_status,
         ),
-        plex=(
-            ServiceConnectionConfigResponse(
-                enabled=plex_enabled,
-                url=plex_url,
-                api_key_masked=mask_api_key(plex_key),
-                timeout=plex_timeout,
-                status=plex_status,
-            )
-            if plex_enabled
-            else None
+        plex=ServiceConnectionConfigResponse(
+            enabled=plex_enabled,
+            url=plex_url,
+            api_key_masked=mask_api_key(plex_key),
+            timeout=plex_timeout,
+            status=plex_status,
         ),
     )
 
