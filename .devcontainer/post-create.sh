@@ -11,6 +11,15 @@ if ! command -v node &> /dev/null; then
     echo "✅ Node.js installed: $(node --version)"
 fi
 
+# Install pnpm if not already installed
+if ! command -v pnpm &> /dev/null; then
+    echo "📦 Installing pnpm..."
+    curl -fsSL https://get.pnpm.io/install.sh | sh -
+    export PNPM_HOME="/root/.local/share/pnpm"
+    export PATH="$PNPM_HOME:$PATH"
+    echo "✅ pnpm installed: $(pnpm --version)"
+fi
+
 # Install Claude CLI if not already installed
 if ! command -v claude &> /dev/null; then
     echo "🤖 Installing Claude CLI..."
@@ -88,6 +97,19 @@ if [ -f ".pre-commit-config.yaml" ]; then
     poetry run pre-commit install || true
 fi
 
+# Install frontend dependencies and Playwright
+if [ -d "autoarr/ui" ]; then
+    echo "📦 Installing frontend dependencies..."
+    cd autoarr/ui
+    export PNPM_HOME="/root/.local/share/pnpm"
+    export PATH="$PNPM_HOME:$PATH"
+    pnpm install
+    echo "🎭 Installing Playwright browsers..."
+    pnpm exec playwright install --with-deps chromium
+    cd /app
+    echo "✅ Frontend dependencies and Playwright installed"
+fi
+
 # Display versions
 echo ""
 echo "✅ Setup complete!"
@@ -100,7 +122,9 @@ claude --version 2>/dev/null || echo "Claude CLI: not installed"
 gh --version 2>/dev/null || echo "GitHub CLI: not installed"
 echo ""
 echo "🎯 Next steps:"
-echo "  - Run tests: poetry run pytest"
+echo "  - Run Python tests: poetry run pytest"
+echo "  - Run Playwright tests: cd autoarr/ui && pnpm exec playwright test"
+echo "  - Run post-deployment tests: bash run-post-deployment-tests.sh"
 echo "  - Start API: poetry run python -m api.main"
 echo "  - Access API docs: http://localhost:8088/docs"
 echo ""
