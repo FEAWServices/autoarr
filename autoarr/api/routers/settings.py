@@ -166,6 +166,7 @@ async def get_service_status(service_name: str, orchestrator: "MCPOrchestrator")
 # ============================================================================
 
 
+@router.get("", response_model=AllServicesConfigResponse)
 @router.get("/", response_model=AllServicesConfigResponse)
 async def get_all_settings(
     orchestrator: "MCPOrchestrator" = Depends(get_orchestrator),
