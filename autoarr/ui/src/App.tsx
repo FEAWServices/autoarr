@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Download, Tv, Film, Server, Activity } from "lucide-react";
 import { SplashScreen } from "./components/SplashScreen";
@@ -9,9 +9,20 @@ import { Placeholder } from "./pages/Placeholder";
 import { Dashboard } from "./components/Dashboard";
 import ConfigAuditPage from "./pages/ConfigAudit";
 import { Chat } from "./pages/Chat";
+import { useThemeStore } from "./stores/themeStore";
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const { isDarkMode } = useThemeStore();
+
+  // Initialize dark mode on mount
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const handleSplashComplete = () => {
     setShowSplash(false);

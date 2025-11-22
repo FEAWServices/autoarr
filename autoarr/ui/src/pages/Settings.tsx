@@ -193,14 +193,38 @@ export const Settings = () => {
     setSaveStatus("saving");
     try {
       // Save each service individually
-      const services = ["sabnzbd", "sonarr", "radarr", "plex"];
+      const services: Array<"sabnzbd" | "sonarr" | "radarr" | "plex"> = [
+        "sabnzbd",
+        "sonarr",
+        "radarr",
+        "plex",
+      ];
+
       const savePromises = services.map(async (service) => {
+        const serviceConfig = settings[service];
+
+        // Transform the data to match backend expectations
+        const payload = {
+          enabled: serviceConfig.enabled,
+          url: serviceConfig.url,
+          // Backend expects 'api_key_or_token' field
+          api_key_or_token:
+            service === "plex"
+              ? (serviceConfig as any).token
+              : serviceConfig.apiKey,
+          timeout: 30.0, // Default timeout
+        };
+
         const response = await fetch(`/api/v1/settings/${service}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(settings[service as keyof typeof settings]),
+          body: JSON.stringify(payload),
         });
-        if (!response.ok) throw new Error(`Failed to save ${service}`);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `Failed to save ${service}`);
+        }
       });
 
       await Promise.all(savePromises);

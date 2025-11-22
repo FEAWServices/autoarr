@@ -400,16 +400,14 @@ async def update_service_settings(
     # Attempt to reconnect to the service
     try:
         if config.enabled:
-            await orchestrator.reconnect_server(service)
+            await orchestrator.reconnect(service)
             logger.info(f"Successfully reconnected to {service}")
         else:
             logger.info(f"Service {service} disabled")
     except Exception as e:
         logger.error(f"Failed to reconnect to {service}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Settings saved but failed to connect: {str(e)}",
-        )
+        # Don't fail the save if reconnect fails - settings are already saved
+        logger.warning(f"Settings saved but reconnect failed: {str(e)}")
 
     return {
         "success": True,
@@ -590,7 +588,7 @@ async def save_all_settings(
     ]:
         if service_config and service_config.enabled:
             try:
-                await orchestrator.reconnect_server(service_name)
+                await orchestrator.reconnect(service_name)
                 logger.info(f"Successfully reconnected to {service_name}")
             except Exception as e:
                 logger.error(f"Failed to reconnect to {service_name}: {e}")

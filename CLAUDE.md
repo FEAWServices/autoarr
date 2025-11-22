@@ -198,12 +198,19 @@ autoarr/tests/
 │   ├── test_config_audit_flow.py
 │   ├── test_download_recovery_flow.py
 │   └── test_content_request_flow.py
-└── security/                  # Security tests
-    └── test_security.py
+├── security/                  # Security tests
+│   └── test_security.py
+└── post-deployment/           # Post-deployment smoke tests
+    ├── run-all-tests.sh       # Test suite runner
+    ├── test-health.sh         # Health endpoint tests
+    ├── test-ui-accessible.sh  # UI accessibility tests
+    ├── test-settings-api.sh   # Settings save tests
+    └── README.md              # Test documentation
 
 autoarr/ui/tests/              # Frontend E2E tests
 ├── chat.spec.ts
 ├── activity.spec.ts
+├── settings.spec.ts
 └── ...
 ```
 
@@ -221,6 +228,12 @@ cd autoarr/ui
 pnpm exec playwright test                  # All E2E tests
 pnpm exec playwright test --ui             # Interactive mode
 pnpm exec playwright show-report           # View reports
+
+# Post-Deployment Tests
+bash run-post-deployment-tests.sh          # Quick runner
+cd tests/post-deployment
+bash run-all-tests.sh                      # Full suite
+bash test-settings-api.sh                  # Settings test only
 ```
 
 ## 📚 Key Services

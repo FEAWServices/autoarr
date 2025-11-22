@@ -28,6 +28,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -237,16 +238,21 @@ static_dir = Path(__file__).parent / "static"
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+# Mount UI static files (React app)
+ui_dist_dir = Path(__file__).parent.parent / "ui" / "dist"
+if ui_dist_dir.exists():
+    app.mount("/assets", StaticFiles(directory=str(ui_dist_dir / "assets")), name="assets")
+
 
 # ============================================================================
 # Root Endpoints
 # ============================================================================
 
 
-@app.get("/", tags=["root"])
-async def root() -> dict:
+@app.get("/api", tags=["root"])
+async def api_info() -> dict:
     """
-    Root endpoint with API information.
+    API information endpoint.
 
     Returns:
         dict: API information
@@ -354,6 +360,35 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(websocket)
+
+
+# ============================================================================
+# UI Catch-all Route (SPA)
+# ============================================================================
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_spa(full_path: str) -> FileResponse:
+    """
+    Catch-all route to serve the React SPA.
+
+    This route catches all unmatched paths and serves the index.html file,
+    allowing React Router to handle client-side routing.
+
+    Args:
+        full_path: The requested path
+
+    Returns:
+        FileResponse: The index.html file
+    """
+    ui_dist_dir = Path(__file__).parent.parent / "ui" / "dist"
+    index_file = ui_dist_dir / "index.html"
+
+    if index_file.exists():
+        return FileResponse(str(index_file))
+
+    # Fallback if UI not built
+    return {"error": "UI not available", "path": full_path}
 
 
 # ============================================================================
