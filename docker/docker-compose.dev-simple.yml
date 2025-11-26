@@ -1,0 +1,72 @@
+version: "3.8"
+
+# Simple development setup - just the autoarr-dev container
+# For a more complete setup with Redis and PostgreSQL, use docker-compose.dev.yml
+
+services:
+  autoarr-dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: autoarr-dev
+    working_dir: /app
+
+    volumes:
+      # Main code mount - changes reflected immediately
+      - ..:/app:cached
+      # Keep node_modules in volume to avoid conflicts
+      - node_modules:/app/autoarr/ui/node_modules
+      # Keep Python venv in volume for faster restarts
+      - venv:/app/.venv
+      # Playwright browser cache
+      - playwright_cache:${HOME}/.cache/ms-playwright
+
+    ports:
+      - "8088:8088" # AutoArr API
+      - "3000:3000" # React dev server
+      - "8000:8000" # Alternative API port
+
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PYTHONPATH: "/app:/app/mcp-servers"
+      PYTHONDONTWRITEBYTECODE: "1"
+      NODE_ENV: "development"
+      APP_ENV: "development"
+      LOG_LEVEL: "DEBUG"
+      DATABASE_URL: "sqlite:////data/autoarr.db"
+      REDIS_URL: "memory://"
+
+    # Load from .env file
+    env_file:
+      - ../.env
+
+    stdin_open: true
+    tty: true
+    user: "root"
+
+    # Setup on start
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        bash .devcontainer/post-create.sh &&
+        echo '' &&
+        echo '✅ Development environment ready!' &&
+        echo '' &&
+        echo '📌 Available commands:' &&
+        echo '  Backend:  poetry run python -m uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 --reload' &&
+        echo '  Frontend: cd autoarr/ui && pnpm dev' &&
+        echo '  Tests:    poetry run pytest' &&
+        echo '' &&
+        /bin/bash
+
+    healthcheck:
+      test: ["CMD", "bash", "-c", "true"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  node_modules:
+  venv:
+  playwright_cache:

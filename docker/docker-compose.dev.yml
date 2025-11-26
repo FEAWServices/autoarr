@@ -1,0 +1,153 @@
+version: "3.8"
+
+services:
+  # Development container with mounted code for live reload
+  autoarr-dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: autoarr-dev
+    working_dir: /app
+
+    # Mount the entire project directory for live code changes
+    volumes:
+      # Bind mount the entire project directory
+      - ..:/app:cached
+      # Named volume for node_modules to avoid permission issues
+      - node_modules:/app/autoarr/ui/node_modules
+      # Named volume for Poetry venv
+      - venv:/app/.venv
+      # Preserve Playwright browsers
+      - playwright_cache:${HOME}/.cache/ms-playwright
+
+    # Expose all necessary ports
+    ports:
+      # AutoArr API
+      - "8088:8088"
+      # AutoArr UI (Vite dev server)
+      - "3000:3000"
+      # Optional: FastAPI docs
+      - "8000:8000"
+      # External services (if running in same compose)
+      - "8080:8080" # SABnzbd
+      - "8989:8989" # Sonarr
+      - "7878:7878" # Radarr
+      - "32400:32400" # Plex
+      - "5432:5432" # PostgreSQL
+      - "6379:6379" # Redis
+
+    environment:
+      # Python environment
+      PYTHONUNBUFFERED: "1"
+      PYTHONPATH: "/app:/app/mcp-servers"
+      PYTHONDONTWRITEBYTECODE: "1"
+
+      # Node environment
+      NODE_ENV: "development"
+
+      # Application settings
+      APP_ENV: "development"
+      LOG_LEVEL: "DEBUG"
+
+      # Database (SQLite for dev, can override)
+      DATABASE_URL: "sqlite:////data/autoarr.db"
+
+      # Redis
+      REDIS_URL: "redis://redis:6379"
+
+      # Service URLs (assuming docker compose network)
+      SABNZBD_URL: "http://sabnzbd:8080"
+      SONARR_URL: "http://sonarr:8989"
+      RADARR_URL: "http://radarr:7878"
+      PLEX_URL: "http://plex:32400"
+
+      # API keys (load from .env or override)
+      SABNZBD_API_KEY: "${SABNZBD_API_KEY:-}"
+      SONARR_API_KEY: "${SONARR_API_KEY:-}"
+      RADARR_API_KEY: "${RADARR_API_KEY:-}"
+      PLEX_TOKEN: "${PLEX_TOKEN:-}"
+
+      # AI Features
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      BRAVE_API_KEY: "${BRAVE_API_KEY:-}"
+
+      # GitHub auth (if available)
+      GH_TOKEN: "${GH_TOKEN:-}"
+      GITHUB_ADMIN_TOKEN: "${GITHUB_ADMIN_TOKEN:-}"
+
+    # Keep container running
+    stdin_open: true
+    tty: true
+
+    # Run setup on container start
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        echo '🚀 Setting up development environment...' &&
+        bash .devcontainer/post-create.sh &&
+        echo '' &&
+        echo '✅ Development environment ready!' &&
+        echo '' &&
+        echo '📌 Available commands:' &&
+        echo '  Backend: poetry run python -m uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 --reload' &&
+        echo '  Frontend: cd autoarr/ui && pnpm dev' &&
+        echo '  Tests:    poetry run pytest' &&
+        echo '  Format:   poetry run format' &&
+        echo '' &&
+        echo '🎯 Keep this container running and open a new terminal to execute commands.' &&
+        echo '' &&
+        /bin/bash
+
+    # Health check
+    healthcheck:
+      test:
+        ["CMD", "bash", "-c", "test -f /.devcontainer/post-create.sh || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # Use root user for development (easier file access)
+    user: "root"
+
+    # Allow privileged mode for docker-in-docker if needed
+    # privileged: true
+    # Uncomment above if you need Docker commands inside the container
+
+  # Optional: Redis service for caching
+  redis:
+    image: redis:7-alpine
+    container_name: autoarr-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    # Optional: password protection
+    # command: redis-server --requirepass yourpassword
+
+  # Optional: PostgreSQL for production-like database
+  postgres:
+    image: postgres:16-alpine
+    container_name: autoarr-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: "autoarr"
+      POSTGRES_USER: "autoarr"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-autoarr}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  node_modules:
+  venv:
+  playwright_cache:
+  redis_data:
+  postgres_data:
+# Optional: Connect to existing media stack network
+# Uncomment if your SABnzbd, Sonarr, etc. are on a shared network
+# networks:
+#   default:
+#     name: media-stack
+#     external: true

@@ -1,0 +1,248 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                             ║
+║          AutoArr Docker Development Setup - Complete Guide                 ║
+║                                                                             ║
+║  Run your app in Docker with live code reloading (hot-reload)             ║
+║                                                                             ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+📦 WHAT WE'VE CREATED FOR YOU
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ docker-compose.dev-simple.yml        - Quick & lightweight dev setup
+✅ docker-compose.dev.yml              - Full setup with Redis + PostgreSQL
+✅ start-dev-container.sh              - Interactive menu script (RECOMMENDED)
+✅ QUICK-START.md                      - 2-minute quick reference
+✅ DEV-CONTAINER-GUIDE.md              - Complete detailed guide
+✅ README.md                           - Overview of all files
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 GET STARTED IN 30 SECONDS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. From the project root, run:
+
+   bash docker/start-dev-container.sh
+
+2. Choose option "1" (simple setup)
+
+3. Wait for setup to complete (~2-3 minutes on first run)
+
+4. Open another terminal and run:
+
+   docker exec -it autoarr-dev /bin/bash
+
+5. Inside the container, run one of:
+
+   # Backend with auto-reload:
+   poetry run python -m uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 --reload
+
+   # Frontend with hot-reload:
+   cd autoarr/ui && pnpm dev
+
+   # Both (if available):
+   ./run_dev.sh
+
+6. Access your app:
+   - API:     http://localhost:8088
+   - UI:      http://localhost:3000
+   - API Docs: http://localhost:8088/docs
+
+═══════════════════════════════════════════════════════════════════════════════
+
+💡 KEY FEATURES
+═══════════════════════════════════════════════════════════════════════════════
+
+✓ Live Code Reloading
+  - Edit code on your computer
+  - Changes appear instantly in the Docker container
+  - Backend restarts automatically (~2 seconds)
+  - Frontend hot-reloads without page refresh
+
+✓ Mounted Files
+  - Your /app directory is mounted into the container
+  - No copying or rebuilding needed
+  - Just edit and save
+
+✓ Complete Environment
+  - Python 3.11 with Poetry
+  - Node.js with pnpm
+  - All development tools included
+  - Playwright, pytest, linters, formatters
+
+✓ Isolated Dependencies
+  - node_modules kept in Docker volume
+  - .venv kept in Docker volume
+  - No conflicts with your host OS
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 WHICH SETUP TO CHOOSE?
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─ OPTION 1: Simple (docker-compose.dev-simple.yml) ─────────────────────┐
+│                                                                          │
+│  ⚡ Fastest startup (~30 seconds)                                       │
+│  📦 Just the dev container + SQLite                                     │
+│  🎯 Best for: Most development work                                     │
+│  💾 Disk usage: ~500MB                                                  │
+│                                                                          │
+│  Start:  bash start-dev-container.sh → Choose option 1                 │
+│  Or:     docker-compose -f docker-compose.dev-simple.yml up -d         │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌─ OPTION 2: Full (docker-compose.dev.yml) ──────────────────────────────┐
+│                                                                          │
+│  🚀 Production-like setup (~2 minutes startup)                          │
+│  📦 Includes Redis + PostgreSQL                                         │
+│  🎯 Best for: Testing with full service stack                          │
+│  💾 Disk usage: ~2GB                                                    │
+│                                                                          │
+│  Start:  bash start-dev-container.sh → Choose option 2                 │
+│  Or:     docker-compose -f docker-compose.dev.yml up -d                │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🔧 COMMON COMMANDS
+═══════════════════════════════════════════════════════════════════════════════
+
+Container Management:
+  bash docker/start-dev-container.sh      # Interactive menu
+  docker exec -it autoarr-dev /bin/bash   # Open shell
+  docker logs -f autoarr-dev              # View logs
+  docker-compose down                     # Stop all (from docker/ dir)
+  docker-compose down -v                  # Stop and remove volumes
+
+Running Code:
+  poetry run pytest                       # Run tests
+  poetry run pytest --cov                 # With coverage
+  poetry run format                       # Format Python
+  cd autoarr/ui && pnpm test             # Frontend tests
+
+Development:
+  poetry run python -m uvicorn ... --reload    # Backend with auto-restart
+  cd autoarr/ui && pnpm dev               # Frontend with hot-reload
+  poetry add package_name                 # Add Python dependency
+  cd autoarr/ui && pnpm add package_name # Add Node dependency
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📚 DOCUMENTATION FILES
+═══════════════════════════════════════════════════════════════════════════════
+
+  QUICK-START.md            ← Start here (2-minute quick ref)
+  ↓
+  README.md                 ← Overview of all docker files
+  ↓
+  DEV-CONTAINER-GUIDE.md   ← Complete reference with advanced topics
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 TYPICAL DEVELOPMENT WORKFLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+Session 1: Initial Setup
+  1. bash docker/start-dev-container.sh
+  2. Choose option 1 or 2
+  3. Wait for setup to complete
+  4. Leave container running
+
+Session 2+: Daily Development
+  1. docker exec -it autoarr-dev /bin/bash
+  2. poetry run python -m uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 --reload
+  3. In another terminal: docker exec -it autoarr-dev bash -c "cd autoarr/ui && pnpm dev"
+  4. Edit code in your editor
+  5. See changes instantly (no rebuild needed!)
+
+When done:
+  docker-compose down (from docker/ dir)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚙️ CONFIGURATION
+═══════════════════════════════════════════════════════════════════════════════
+
+API Keys (.env file):
+  - Copy .env.example.dev to .env
+  - Add your service API keys
+  - Optional for local development
+
+Database:
+  - SQLite: Built-in (default)
+  - PostgreSQL: Enable in docker-compose.dev.yml
+
+External Services (SABnzbd, Sonarr, etc.):
+  - Update SABNZBD_URL, SONARR_URL, etc. in .env
+  - If on same Docker network: use container names
+  - If external: use IP addresses
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🐛 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+Problem: Container won't start
+Solution: docker logs autoarr-dev
+
+Problem: Code changes not showing
+Solution:
+  - Backend: Restart the dev server (Ctrl+C, re-run)
+  - Frontend: Check browser console, try browser refresh
+
+Problem: Port already in use
+Solution:
+  1. Edit docker-compose.dev-simple.yml
+  2. Change "8088:8088" to "8089:8088" (for example)
+  3. Access at http://localhost:8089
+
+Problem: High memory/disk usage
+Solution:
+  docker-compose down -v  # Cleans up volumes
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✨ WHAT MAKES THIS SPECIAL
+═══════════════════════════════════════════════════════════════════════════════
+
+vs VS Code Devcontainer:
+  ✓ Works on any OS (Mac, Windows, Linux)
+  ✓ Easier terminal access
+  ✓ Can switch between IDEs
+  ✗ No IDE integration
+
+vs Running Natively:
+  ✓ Isolated environment
+  ✓ Consistent across machines
+  ✓ Easy to reset/clean
+  ✗ Slight overhead
+
+vs Traditional Docker:
+  ✓ Live code reloading (mount + --reload)
+  ✓ No rebuilding between changes
+  ✓ Same as devcontainer setup
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎓 NEXT STEPS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Read:    QUICK-START.md (2 minutes)
+2. Start:   bash docker/start-dev-container.sh
+3. Code:    Edit files in your editor
+4. See:     Changes instantly in app
+5. Learn:   DEV-CONTAINER-GUIDE.md for advanced topics
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Questions? Issues? Check:
+  - QUICK-START.md (common issues)
+  - DEV-CONTAINER-GUIDE.md (detailed reference)
+  - Project docs in /app/docs/
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Ready to start? Run:  bash docker/start-dev-container.sh  🚀

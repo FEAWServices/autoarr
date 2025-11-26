@@ -1,0 +1,318 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║             AutoArr Docker Development - Architecture Overview              ║
+║                                                                              ║
+║  How your code flows from your editor into the Docker container             ║
+║                                                                              ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+HOW IT WORKS: LIVE CODE RELOADING WITH BIND MOUNTS
+═══════════════════════════════════════════════════════════════════════════════
+
+Your Computer (Host OS)         Docker Container
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/app/                     ———bind mount———>  /app/
+├── autoarr/                                ├── autoarr/
+│   ├── api/              SHARED FILES      │   ├── api/
+│   │   └── main.py       (same files!)     │   │   └── main.py
+│   ├── ui/                                 │   ├── ui/
+│   │   └── src/                            │   │   └── src/
+│   └── mcp_servers/                        │   └── mcp_servers/
+│                                           │
+├── pyproject.toml                          ├── .venv/ (volume - isolated)
+├── poetry.lock                             ├── autoarr/ui/node_modules/ (volume)
+└── .env                                    └── .env
+
+                        INSTANT SYNC ↔ NO COPY NEEDED
+
+
+COMPONENT STACK
+═══════════════════════════════════════════════════════════════════════════════
+
+FRONTEND LAYER
+┌─────────────────────────────────────────┐
+│  Your Code Editor (VSCode, etc.)        │
+│  /app/autoarr/ui/src/                   │
+└──────────────────┬──────────────────────┘
+                   │
+                   │ watch files
+                   ↓
+┌─────────────────────────────────────────┐
+│  Vite Dev Server (hot-reload)           │
+│  Port 3000                              │
+│  Instantly reloads on save              │
+└──────────────────┬──────────────────────┘
+                   │
+                   ↓
+┌─────────────────────────────────────────┐
+│  Browser (http://localhost:3000)        │
+│  See changes WITHOUT page refresh       │
+└─────────────────────────────────────────┘
+
+
+BACKEND LAYER
+┌─────────────────────────────────────────┐
+│  Your Code Editor (VSCode, etc.)        │
+│  /app/autoarr/api/                      │
+└──────────────────┬──────────────────────┘
+                   │
+                   │ watch files
+                   ↓
+┌─────────────────────────────────────────┐
+│  Uvicorn Dev Server (--reload flag)     │
+│  Port 8088                              │
+│  Auto-restarts on Python changes        │
+└──────────────────┬──────────────────────┘
+                   │
+                   ↓
+┌─────────────────────────────────────────┐
+│  API (http://localhost:8088)            │
+│  See changes in API responses           │
+└─────────────────────────────────────────┘
+
+
+VOLUME STRATEGY
+═══════════════════════════════════════════════════════════════════════════════
+
+1. BIND MOUNT (Your Code)
+   ┌─────────────────────────────────────────┐
+   │  Host: /app                             │
+   │  Container: /app                        │
+   │  Type: :cached (for Mac/Windows perf)   │
+   │  Purpose: Live code editing             │
+   │  Changes: INSTANT                       │
+   └─────────────────────────────────────────┘
+
+2. NAMED VOLUME (Python Dependencies)
+   ┌─────────────────────────────────────────┐
+   │  Host: Docker managed storage            │
+   │  Container: /app/.venv                  │
+   │  Type: Named volume "venv"              │
+   │  Purpose: Keep venv between restarts    │
+   │  Performance: FAST (no host sync)       │
+   └─────────────────────────────────────────┘
+
+3. NAMED VOLUME (Node Dependencies)
+   ┌─────────────────────────────────────────┐
+   │  Host: Docker managed storage            │
+   │  Container: /app/autoarr/ui/node_modules│
+   │  Type: Named volume "node_modules"      │
+   │  Purpose: Avoid host OS conflicts       │
+   │  Performance: FAST (native Docker)      │
+   └─────────────────────────────────────────┘
+
+
+WORKFLOW TIMELINE
+═══════════════════════════════════════════════════════════════════════════════
+
+Initial Setup (First Time):  ~2-3 minutes
+   ├── Download Docker image
+   ├── Create container
+   ├── Install Poetry dependencies (cached)
+   ├── Install Node dependencies (cached)
+   └── Ready for development
+
+Daily Development (Subsequent Sessions):  ~10 seconds
+   ├── Container already exists
+   ├── Volumes already mounted
+   ├── Just start server
+   └── Ready to code
+
+Per-File Change:  ~2 seconds
+   ├── Edit file in editor
+   ├── Backend: Auto-restart on save
+   ├── Frontend: Hot-reload on save
+   └── See changes immediately
+
+
+PORT MAPPING
+═══════════════════════════════════════════════════════════════════════════════
+
+Your Computer              Docker Container
+Host Port      ———map———>   Container Port
+
+8088           ———————>    8088  (FastAPI backend)
+3000           ———————>    3000  (Vite frontend dev server)
+5432           ———————>    5432  (PostgreSQL - optional)
+6379           ———————>    6379  (Redis - optional)
+
+Access from your computer:
+  Backend:    http://localhost:8088
+  Frontend:   http://localhost:3000
+  API Docs:   http://localhost:8088/docs
+
+
+DEPENDENCY ISOLATION
+═══════════════════════════════════════════════════════════════════════════════
+
+Host OS                    Docker Container
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+System Python             Container Python 3.11
+(may be 3.9, 3.10, etc)   (guaranteed 3.11)
+       ↓                           ↓
+Your venv                  Container .venv/
+(mixed packages)           (isolated packages)
+       ↓                           ↓
+Shared Python env         Isolated container env
+
+
+File Sync Speed Comparison:
+═══════════════════════════════════════════════════════════════════════════════
+
+Scenario                 Speed        Notes
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Edit file                <1 second    Your text editor saves instantly
+Backend sees change      ~2 seconds   Uvicorn --reload detects and restarts
+Frontend sees change     <1 second    Vite hot-module replacement
+API responds new code    ~3 seconds   Total from edit to API response
+
+
+OPTIONAL SERVICES
+═══════════════════════════════════════════════════════════════════════════════
+
+When using docker-compose.dev.yml:
+
+┌──────────────────────────────────────────┐
+│  autoarr-dev (main container)            │
+│  - Your app                              │
+│  - Both backend and frontend             │
+└────────────┬─────────────────────────────┘
+             │
+             ├──→ Redis (optional)
+             │    Port: 6379
+             │    Purpose: Caching
+             │
+             └──→ PostgreSQL (optional)
+                  Port: 5432
+                  Purpose: Production-like DB
+                  User: autoarr
+
+
+COMPARISON: DEVCONTAINER vs DOCKER COMPOSE
+═══════════════════════════════════════════════════════════════════════════════
+
+Feature                VS Code Devcontainer    Docker Compose
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IDE Integration         ✓ Native               ✗ Manual
+Terminal Access         ✓ Integrated           ✓ Docker exec
+File Sync              ✓ Native               ✓ Bind mount
+Port Forwarding        ✓ Automatic            ✓ docker-compose.yml
+Extensions             ✓ VS Code ext.         ✗ Not applicable
+Startup Time           ~1 minute              ~30-120 seconds
+Switch IDEs            ✗ VS Code only         ✓ Any terminal
+Offline/No IDE         ✗ Needs VS Code        ✓ Just Docker
+Cost                   Free (VS Code)         Free (Docker)
+
+BOTH use same files, dependencies, and setup!
+
+
+PERFORMANCE CHARACTERISTICS
+═══════════════════════════════════════════════════════════════════════════════
+
+Operation               Time        Bottleneck
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+First start             2-3 min     Docker pull + dependency install
+Subsequent start        30 sec      Container startup
+File edit detection     <1 sec      Host file system
+Backend reload          ~2 sec      Python import time
+Frontend reload         <1 sec      Vite HMR
+API response            ~100ms      Application logic
+
+Total: Edit → See result = ~3 seconds (backend) or <1 second (frontend)
+
+
+WHAT GETS SYNCED
+═══════════════════════════════════════════════════════════════════════════════
+
+✓ SYNCED (Bind Mount):
+  - Python source files (.py)
+  - JavaScript/TypeScript files (.js, .ts, .tsx)
+  - Configuration files (.env, .yml, etc.)
+  - Documentation (.md)
+  - Tests (can edit and run)
+
+✗ NOT SYNCED (Docker Internal):
+  - .venv/ (Python virtual environment)
+  - node_modules/ (Node dependencies)
+  - __pycache__/ (Python cache)
+  - .next/ or dist/ (Build artifacts)
+  - .pytest_cache/ (Test cache)
+
+✓ SYNCED (Both Sides):
+  - Data files created by app
+  - Database files (SQLite)
+  - Logs
+
+
+AUTO-RELOAD MECHANISM
+═══════════════════════════════════════════════════════════════════════════════
+
+Backend (Python/FastAPI):
+  Your code change
+      ↓ (file saved)
+  Uvicorn --reload flag detects change
+      ↓ (via watchfiles module)
+  Stops running app
+      ↓
+  Reimports Python modules
+      ↓
+  Starts app again
+      ↓
+  API responds with new code
+      ↓
+  Total time: ~2 seconds
+
+
+Frontend (React/Vite):
+  Your code change
+      ↓ (file saved)
+  Vite dev server detects change
+      ↓ (via esbuild)
+  Compiles module
+      ↓
+  Sends hot-update to browser
+      ↓
+  Browser applies update WITHOUT full reload
+      ↓
+  App state preserved, UI updated
+      ↓
+  Total time: <1 second
+
+
+STORAGE USAGE
+═══════════════════════════════════════════════════════════════════════════════
+
+Component                   Size        Type
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Docker Image               ~1.5 GB      Downloaded once
+Your Code (/app)           ~50-200 MB   Bind mount (not duplicated)
+Python venv                ~300-500 MB  Named volume
+node_modules               ~500 MB-1GB  Named volume
+Total per project          ~2-3 GB      Moderate
+
+Simple setup (no Redis/PG)  ~500 MB-1 GB
+Full setup (with services)  ~2-3 GB
+
+
+SECURITY NOTES
+═══════════════════════════════════════════════════════════════════════════════
+
+✓ Isolated dependencies (no system conflicts)
+✓ API keys in .env (not in image/volumes)
+✓ Separate database from code
+✗ Development mode is NOT secure for production
+✗ Container runs as root (dev convenience, not production)
+
+For production, use docker-compose.example.yml or docker-compose.synology.yml
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Summary: Your code is SHARED between your computer and the Docker container
+via a bind mount. When you save, the container sees the change instantly.
+Auto-reload servers (Uvicorn + Vite) automatically restart/reload the app.
+Result: Live development experience without rebuilding!
+
+═══════════════════════════════════════════════════════════════════════════════

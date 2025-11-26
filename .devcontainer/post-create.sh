@@ -58,7 +58,7 @@ if [ -f ".env" ]; then
     fi
 
     # Configure GitHub CLI authentication
-    if [ ! -z "$GITHUB_ADMIN_TOKEN" ]; then
+    if [ ! -z "$GH_TOKEN" ]; then
         echo "🔑 Configuring GitHub CLI authentication..."
         # Add GH_TOKEN export to bash profile for persistent authentication
         if ! grep -q "export GH_TOKEN" ~/.bashrc 2>/dev/null; then
@@ -66,11 +66,11 @@ if [ -f ".env" ]; then
             echo "# GitHub CLI authentication (auto-configured by devcontainer)" >> ~/.bashrc
             echo "if [ -f /app/.env ]; then" >> ~/.bashrc
             echo "    source /app/.env" >> ~/.bashrc
-            echo "    export GH_TOKEN=\"\$GITHUB_ADMIN_TOKEN\"" >> ~/.bashrc
+            echo "    export GH_TOKEN" >> ~/.bashrc
             echo "fi" >> ~/.bashrc
         fi
-        # Export for current session
-        export GH_TOKEN="$GITHUB_ADMIN_TOKEN"
+        # Authenticate gh CLI using the token
+        echo "$GH_TOKEN" | gh auth login --with-token
         # Verify authentication
         if gh auth status > /dev/null 2>&1; then
             echo "✅ GitHub CLI authenticated as $(gh api user -q .login)"
@@ -78,8 +78,8 @@ if [ -f ".env" ]; then
             echo "⚠️  GitHub CLI authentication check failed"
         fi
     else
-        echo "⚠️  GITHUB_ADMIN_TOKEN not found in .env - GitHub CLI not authenticated"
-        echo "   Add GITHUB_ADMIN_TOKEN=your_token to .env to enable GitHub CLI features"
+        echo "⚠️  GH_TOKEN not found in .env - GitHub CLI not authenticated"
+        echo "   Add GH_TOKEN=your_token to .env to enable GitHub CLI features"
     fi
 fi
 

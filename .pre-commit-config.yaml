@@ -29,7 +29,7 @@ repos:
     rev: 24.1.1
     hooks:
       - id: black
-        language_version: python3.13
+        language_version: python3.11
         args: [--config=pyproject.toml]
         exclude: ^(autoarr/ui/|node_modules/|\.venv/)
 
