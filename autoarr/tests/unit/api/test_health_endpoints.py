@@ -116,8 +116,8 @@ class TestHealthEndpoints:
         assert data["services"]["sonarr"]["healthy"] is False
 
     @pytest.mark.asyncio
-    async def test_overall_health_check_unhealthy(self, client, override_orchestrator):
-        """Test overall health check when no services are connected."""
+    async def test_overall_health_check_no_services(self, client, override_orchestrator):
+        """Test overall health check when no services are connected (fresh install)."""
         mock_orch = MagicMock()
         mock_orch._clients = {}  # No clients connected
         mock_orch.get_connected_servers = MagicMock(return_value=[])  # No servers
@@ -128,7 +128,8 @@ class TestHealthEndpoints:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "unhealthy"
+        # Fresh install with no services should be healthy (awaiting configuration)
+        assert data["status"] == "healthy"
         assert data["services"] == {}
 
     @pytest.mark.asyncio

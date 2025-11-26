@@ -24,6 +24,7 @@ system health and individual service health.
 
 import time
 from datetime import datetime
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -73,9 +74,10 @@ async def health_check(
     connected_servers = orchestrator.get_connected_servers()
 
     if not connected_servers:
-        # No servers connected - system is unhealthy
+        # No servers connected yet - system is healthy but awaiting configuration
+        # This is the expected state on fresh install
         return HealthCheckResponse(
-            status="unhealthy",
+            status="healthy",
             services={},
             timestamp=datetime.utcnow().isoformat() + "Z",
         )
@@ -182,7 +184,7 @@ async def service_health(
 async def circuit_breaker_status(
     service: str,
     orchestrator: MCPOrchestrator = Depends(get_orchestrator),
-) -> dict:
+) -> Dict[str, Any]:
     """
     Get circuit breaker status for a service.
 
@@ -212,4 +214,5 @@ async def circuit_breaker_status(
             detail=f"Invalid service name. Must be one of: {', '.join(valid_services)}",
         )
 
-    return orchestrator.get_circuit_breaker_state(service)
+    result: Dict[str, Any] = orchestrator.get_circuit_breaker_state(service)
+    return result

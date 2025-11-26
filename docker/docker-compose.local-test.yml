@@ -15,13 +15,15 @@
 #
 # Features:
 #   - Host network for localhost service access
-#   - Volume mounts for hot-reload (same as devcontainer)
+#   - Code baked into image at build time (no volume mounts needed)
 #   - Fast iteration for testing changes
 # =============================================================================
-version: "3.8"
+
+name: autoarr_app
 
 services:
   autoarr-local:
+    image: autoarr-local:latest
     build:
       context: ..
       dockerfile: docker/Dockerfile.local-test
@@ -30,10 +32,6 @@ services:
 
     # Use host network to access services on localhost
     network_mode: host
-
-    # Load environment from .env file
-    env_file:
-      - ../.env
 
     environment:
       # Application Settings
@@ -48,15 +46,9 @@ services:
       REDIS_URL: memory://
 
     volumes:
-      # Mount source code for hot-reload (same paths as devcontainer)
-      - ../autoarr:/app/autoarr:cached
-      - ../pyproject.toml:/app/pyproject.toml:ro
-      - ../poetry.lock:/app/poetry.lock:ro
-      - ../README.md:/app/README.md:ro
-
-      # Persistent data
-      - ../data:/data
-      - ../logs:/app/logs
+      # Persistent data only (no source mounts - code is baked into image)
+      - autoarr-data:/data
+      - autoarr-logs:/app/logs
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
@@ -64,3 +56,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+volumes:
+  autoarr-data:
+  autoarr-logs:

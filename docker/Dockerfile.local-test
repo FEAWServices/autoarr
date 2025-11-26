@@ -2,15 +2,15 @@
 # Local Testing Dockerfile - Fast builds, host network access
 # =============================================================================
 # This Dockerfile creates a lightweight container for local development testing.
-# It's designed for fast iteration with hot-reload and host network access
-# to connect to existing Sonarr/Radarr/SABnzbd services on localhost.
+# It's designed for testing with host network access to connect to existing
+# Sonarr/Radarr/SABnzbd services on localhost.
 #
 # Usage:
 #   docker-compose -f docker/docker-compose.local-test.yml up -d
 #
 # Features:
 #   - Fast builds (no multi-stage)
-#   - Hot-reload via volume mounts
+#   - Code baked into image (rebuild to update)
 #   - Host network for localhost service access
 #   - Development dependencies included
 # =============================================================================
@@ -37,6 +37,9 @@ COPY pyproject.toml poetry.lock* README.md ./
 
 # Install all dependencies including dev (for testing)
 RUN poetry install --no-interaction --no-ansi --no-root
+
+# Copy application code
+COPY autoarr/ ./autoarr/
 
 # Create data directory
 RUN mkdir -p /data

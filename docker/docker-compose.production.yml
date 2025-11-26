@@ -14,7 +14,6 @@
 #   All data stored in ./data/autoarr.db (SQLite)
 #   Logs stored in ./logs/
 # =============================================================================
-version: "3.8"
 
 services:
   autoarr:
