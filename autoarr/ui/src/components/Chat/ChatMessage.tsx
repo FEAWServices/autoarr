@@ -38,9 +38,7 @@ export const ChatMessage = ({
       className={`chat-message flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div
-        className={`flex gap-3 max-w-[85%] ${
-          isUser ? "flex-row-reverse" : "flex-row"
-        }`}
+        className={`flex gap-3 max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}
       >
         {/* Avatar */}
         <div

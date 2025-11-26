@@ -249,9 +249,7 @@ export const PremiumSettingsPanel: React.FC<PremiumSettingsPanelProps> = ({
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             )}
             <p
-              className={`text-sm ${
-                saveResult.success ? "text-green-800" : "text-red-800"
-              }`}
+              className={`text-sm ${saveResult.success ? "text-green-800" : "text-red-800"}`}
             >
               {saveResult.message}
             </p>

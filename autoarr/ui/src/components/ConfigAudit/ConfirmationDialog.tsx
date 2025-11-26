@@ -289,9 +289,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                 "disabled:opacity-75 disabled:cursor-not-allowed",
                 isApplying && "relative",
               )}
-              aria-label={`${dryRun ? "Test" : "Apply"} recommendation: ${
-                recommendation.title
-              }`}
+              aria-label={`${dryRun ? "Test" : "Apply"} recommendation: ${recommendation.title}`}
             >
               {isApplying ? (
                 <span className="flex items-center justify-center">

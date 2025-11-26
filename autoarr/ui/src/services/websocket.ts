@@ -200,9 +200,7 @@ class WebSocketService {
     );
 
     console.log(
-      `Scheduling reconnection in ${delay}ms (attempt ${
-        this.reconnectAttempts + 1
-      })`,
+      `Scheduling reconnection in ${delay}ms (attempt ${this.reconnectAttempts + 1})`,
     );
 
     this.reconnectTimeoutId = window.setTimeout(() => {
@@ -223,9 +221,19 @@ class WebSocketService {
 }
 
 // Create singleton instance
-// Derive WebSocket URL from API URL (environment variable or default to correct port 8088)
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8088/api/v1";
-const WS_URL = API_BASE.replace(/^http/, "ws") + "/ws";
+// Derive WebSocket URL from current browser location (same host/port as the page)
+function getWebSocketUrl(): string {
+  // In browser, use current location to determine WebSocket URL
+  if (typeof window !== "undefined") {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}/api/v1/ws`;
+  }
+  // Fallback for SSR or tests
+  const API_BASE =
+    import.meta.env.VITE_API_URL || "http://localhost:8088/api/v1";
+  return API_BASE.replace(/^http/, "ws") + "/ws";
+}
+const WS_URL = getWebSocketUrl();
 
 export const websocketService = new WebSocketService({
   url: WS_URL,

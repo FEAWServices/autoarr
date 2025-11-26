@@ -132,9 +132,7 @@ export function ServiceCard({ serviceHealth }: ServiceCardProps) {
           <div
             className="text-xs text-text-muted border-t border-white/10 pt-3 mt-1"
             data-testid="last-audit-time"
-            aria-label={`Last audited ${formatDistanceToNow(
-              serviceHealth.lastAudit,
-            )}`}
+            aria-label={`Last audited ${formatDistanceToNow(serviceHealth.lastAudit)}`}
           >
             Last audit: {formatDistanceToNow(serviceHealth.lastAudit)}
           </div>
