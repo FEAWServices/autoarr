@@ -211,7 +211,7 @@ export const Settings = () => {
           // Backend expects 'api_key_or_token' field
           api_key_or_token:
             service === "plex"
-              ? (serviceConfig as any).token
+              ? (serviceConfig as ServiceConfig & { token: string }).token
               : serviceConfig.apiKey,
           timeout: 30.0, // Default timeout
         };
