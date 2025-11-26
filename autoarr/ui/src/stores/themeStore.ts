@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface ThemeState {
   isDarkMode: boolean;
@@ -16,9 +16,9 @@ export const useThemeStore = create<ThemeState>()(
           const newMode = !state.isDarkMode;
           // Update document class for Tailwind dark mode
           if (newMode) {
-            document.documentElement.classList.add('dark');
+            document.documentElement.classList.add("dark");
           } else {
-            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.remove("dark");
           }
           return { isDarkMode: newMode };
         }),
@@ -26,15 +26,15 @@ export const useThemeStore = create<ThemeState>()(
         set(() => {
           // Update document class for Tailwind dark mode
           if (value) {
-            document.documentElement.classList.add('dark');
+            document.documentElement.classList.add("dark");
           } else {
-            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.remove("dark");
           }
           return { isDarkMode: value };
         }),
     }),
     {
-      name: 'autoarr-theme',
-    }
-  )
+      name: "autoarr-theme",
+    },
+  ),
 );

@@ -67,10 +67,7 @@ export function ServiceCard({ serviceHealth }: ServiceCardProps) {
               className="p-2.5 rounded-xl bg-gradient-primary shadow-glow group-hover:shadow-glow-lg transition-all duration-300"
               data-testid="service-icon"
             >
-              <Icon
-                className="w-5 h-5 text-white"
-                aria-hidden="true"
-              />
+              <Icon className="w-5 h-5 text-white" aria-hidden="true" />
             </div>
             <h2 className="text-lg font-bold text-white bg-gradient-to-r from-white to-text-secondary bg-clip-text">
               {serviceName}
@@ -90,56 +87,58 @@ export function ServiceCard({ serviceHealth }: ServiceCardProps) {
           </div>
         </div>
 
-      {/* Recommendations Count */}
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600 dark:text-gray-400">
-            High Priority
-          </span>
-          <span
-            className="font-semibold text-red-600 dark:text-red-400"
-            data-testid="rec-count-high"
-            aria-label={`${serviceHealth.recommendations.high} high priority recommendations`}
-          >
-            {serviceHealth.recommendations.high}
-          </span>
+        {/* Recommendations Count */}
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-400">
+              High Priority
+            </span>
+            <span
+              className="font-semibold text-red-600 dark:text-red-400"
+              data-testid="rec-count-high"
+              aria-label={`${serviceHealth.recommendations.high} high priority recommendations`}
+            >
+              {serviceHealth.recommendations.high}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-400">
+              Medium Priority
+            </span>
+            <span
+              className="font-semibold text-yellow-600 dark:text-yellow-400"
+              data-testid="rec-count-medium"
+              aria-label={`${serviceHealth.recommendations.medium} medium priority recommendations`}
+            >
+              {serviceHealth.recommendations.medium}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-400">
+              Low Priority
+            </span>
+            <span
+              className="font-semibold text-blue-600 dark:text-blue-400"
+              data-testid="rec-count-low"
+              aria-label={`${serviceHealth.recommendations.low} low priority recommendations`}
+            >
+              {serviceHealth.recommendations.low}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600 dark:text-gray-400">
-            Medium Priority
-          </span>
-          <span
-            className="font-semibold text-yellow-600 dark:text-yellow-400"
-            data-testid="rec-count-medium"
-            aria-label={`${serviceHealth.recommendations.medium} medium priority recommendations`}
-          >
-            {serviceHealth.recommendations.medium}
-          </span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600 dark:text-gray-400">Low Priority</span>
-          <span
-            className="font-semibold text-blue-600 dark:text-blue-400"
-            data-testid="rec-count-low"
-            aria-label={`${serviceHealth.recommendations.low} low priority recommendations`}
-          >
-            {serviceHealth.recommendations.low}
-          </span>
-        </div>
-      </div>
 
-      {/* Last Audit */}
-      {serviceHealth.lastAudit && (
-        <div
-          className="text-xs text-text-muted border-t border-white/10 pt-3 mt-1"
-          data-testid="last-audit-time"
-          aria-label={`Last audited ${formatDistanceToNow(
-            serviceHealth.lastAudit,
-          )}`}
-        >
-          Last audit: {formatDistanceToNow(serviceHealth.lastAudit)}
-        </div>
-      )}
+        {/* Last Audit */}
+        {serviceHealth.lastAudit && (
+          <div
+            className="text-xs text-text-muted border-t border-white/10 pt-3 mt-1"
+            data-testid="last-audit-time"
+            aria-label={`Last audited ${formatDistanceToNow(
+              serviceHealth.lastAudit,
+            )}`}
+          >
+            Last audit: {formatDistanceToNow(serviceHealth.lastAudit)}
+          </div>
+        )}
       </div>
     </div>
   );
