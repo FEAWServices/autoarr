@@ -20,6 +20,111 @@ concurrency:
 
 jobs:
   # =============================================================================
+  # QUICK FAIL TYPE CHECK (Fast feedback - runs immediately)
+  # =============================================================================
+  # Runs IMMEDIATELY to give fast feedback (2-3 min)
+  # Catches obvious type errors before waiting for full lint/test jobs
+  # =============================================================================
+  quick-type-check:
+    name: ⚡ Quick Type Check
+    runs-on: [self-hosted, alienware]
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-quick-${{ runner.os }}-3.11-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-quick-${{ runner.os }}-3.11-
+
+      - name: Install dependencies (quick)
+        run: poetry install --no-interaction --with dev --no-root
+
+      - name: Quick Python Type Check
+        run: |
+          echo "⚡ Quick MyPy type check for fast feedback..."
+          poetry run mypy autoarr/api/ autoarr/shared/ \
+            --config-file=pyproject.toml \
+            --ignore-missing-imports \
+            --no-error-summary 2>&1 || {
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "⚠️  PYTHON TYPE WARNINGS - Review before merge"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "💡 Run: poetry run mypy autoarr/api/ autoarr/shared/"
+            # Don't fail - MyPy warnings are informational
+            true
+          }
+          echo "✅ Python type check complete"
+
+      - name: Quick Python Format Check
+        run: |
+          echo "⚡ Quick Black/isort format check..."
+          poetry run black --check autoarr/ 2>&1 || {
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ PYTHON FORMATTING ERRORS - Fix before merge!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "💡 Run: poetry run black autoarr/"
+            exit 1
+          }
+          poetry run isort --check-only --profile black autoarr/ 2>&1 || {
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ PYTHON IMPORT ORDER ERRORS - Fix before merge!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "💡 Run: poetry run isort --profile black autoarr/"
+            exit 1
+          }
+          echo "✅ Python formatting check passed"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies (quick)
+        working-directory: autoarr/ui
+        run: pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+
+      - name: Quick Frontend Type Check
+        working-directory: autoarr/ui
+        run: |
+          echo "⚡ Quick TypeScript type check..."
+          pnpm exec tsc --noEmit 2>&1 || {
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ TYPESCRIPT ERRORS - Fix before merge!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "💡 Run: cd autoarr/ui && pnpm exec tsc --noEmit"
+            exit 1
+          }
+          echo "✅ TypeScript type check passed"
+
+  # =============================================================================
   # Path Detection Job
   # =============================================================================
   # Detects which types of files changed to conditionally run jobs
@@ -91,7 +196,7 @@ jobs:
     name: Python Lint & Type Check
     runs-on: [self-hosted, alienware]
     timeout-minutes: 10
-    needs: detect-changes
+    needs: [detect-changes, quick-type-check]
     # Skip for docs-only changes; run on PRs or if Python files changed
     if: |
       (github.event_name == 'pull_request' || needs.detect-changes.outputs.python-changed == 'true') &&
@@ -380,7 +485,7 @@ jobs:
     name: Frontend Lint & Type Check
     runs-on: [self-hosted, alienware]
     timeout-minutes: 20
-    needs: detect-changes
+    needs: [detect-changes, quick-type-check]
     # Skip for docs-only changes; run on PRs or if frontend files changed
     if: |
       (github.event_name == 'pull_request' || needs.detect-changes.outputs.frontend-changed == 'true') &&

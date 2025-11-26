@@ -69,13 +69,17 @@ if [ -f ".env" ]; then
             echo "    export GH_TOKEN" >> ~/.bashrc
             echo "fi" >> ~/.bashrc
         fi
-        # Authenticate gh CLI using the token
-        echo "$GH_TOKEN" | gh auth login --with-token
-        # Verify authentication
+        # Check if already authenticated (e.g., via GH_TOKEN env var)
         if gh auth status > /dev/null 2>&1; then
-            echo "✅ GitHub CLI authenticated as $(gh api user -q .login)"
+            echo "✅ GitHub CLI already authenticated as $(gh api user -q .login)"
         else
-            echo "⚠️  GitHub CLI authentication check failed"
+            # Only try to login if not already authenticated
+            echo "$GH_TOKEN" | gh auth login --with-token
+            if gh auth status > /dev/null 2>&1; then
+                echo "✅ GitHub CLI authenticated as $(gh api user -q .login)"
+            else
+                echo "⚠️  GitHub CLI authentication check failed"
+            fi
         fi
     else
         echo "⚠️  GH_TOKEN not found in .env - GitHub CLI not authenticated"

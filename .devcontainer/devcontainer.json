@@ -6,7 +6,8 @@
   },
   "workspaceFolder": "/app",
   "mounts": [
-    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../autoarr-premium,target=/autoarr-premium,type=bind,consistency=cached"
   ],
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
@@ -48,7 +49,7 @@
   },
   "remoteUser": "root",
   "remoteEnv": {
-    "PYTHONPATH": "/app:/app/mcp-servers",
+    "PYTHONPATH": "/app:/autoarr-premium:/app/mcp-servers",
     "PATH": "/root/.local/bin:${containerEnv:PATH}",
     "GITHUB_ADMIN_TOKEN": "${localEnv:GITHUB_ADMIN_TOKEN}",
     "GH_TOKEN": "${localEnv:GITHUB_ADMIN_TOKEN}"

@@ -6,7 +6,7 @@
     },
     {
       "name": "AutoArr Premium (Proprietary)",
-      "path": "/workspaces/autoarr-premium"
+      "path": "../autoarr-premium"
     }
   ],
   "settings": {
