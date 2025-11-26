@@ -63,7 +63,6 @@ curl http://localhost:8000/health/sabnzbd
    ```
 
 3. **Verify API Key**
-
    - Log into SABnzbd web interface
    - Go to Config > General
    - Compare API key with your `.env` file
@@ -126,7 +125,6 @@ docker logs autoarr 2>&1 | grep "MCP"
 **Solutions:**
 
 1. **Circuit Breaker Open**
-
    - Wait for timeout period (default: 60 seconds)
    - Circuit breaker opens after 5 consecutive failures
    - Check underlying service health
@@ -179,7 +177,6 @@ ws.onclose = () => console.log("Disconnected");
 **Solutions:**
 
 1. **Proxy Configuration**
-
    - If behind reverse proxy (nginx, Traefik), ensure WebSocket support
 
    ```nginx
@@ -195,7 +192,6 @@ ws.onclose = () => console.log("Disconnected");
    ```
 
 2. **Firewall Issues**
-
    - Ensure WebSocket port is open
    - Check Docker network configuration
 
@@ -235,7 +231,6 @@ docker exec autoarr env | grep API_KEY
 **Solutions:**
 
 1. **Regenerate API Key**
-
    - SABnzbd: Config > General > API Key
    - Sonarr/Radarr: Settings > General > API Key
    - Update `.env` file with new key
@@ -576,7 +571,6 @@ docker exec autoarr python -c "from autoarr.api.database import get_database; pr
    ```
 
 3. **Optimize Queries**
-
    - Use pagination
    - Add select_in loading for relationships
    - Avoid N+1 queries
@@ -623,7 +617,6 @@ curl https://api.anthropic.com/v1/messages \
 **Solutions:**
 
 1. **Get Valid API Key**
-
    - Visit: https://console.anthropic.com/
    - Create new API key
    - Update `.env` file:
@@ -633,7 +626,6 @@ curl https://api.anthropic.com/v1/messages \
    ```
 
 2. **Check Key Format**
-
    - Should start with `sk-ant-api03-`
    - No spaces or quotes
    - Complete key without truncation
@@ -673,7 +665,6 @@ curl -v http://localhost:8000/api/v1/config/audit
 **Solutions:**
 
 1. **Implement Backoff**
-
    - AutoArr has built-in exponential backoff
    - Increase retry delays:
 
@@ -687,7 +678,6 @@ curl -v http://localhost:8000/api/v1/config/audit
    - Consider enterprise plan
 
 3. **Batch Operations**
-
    - Audit multiple services at once
    - Avoid frequent small requests
    - Cache LLM responses
@@ -728,7 +718,6 @@ print(f'Config size: {len(json.dumps(config))} characters')
 **Solutions:**
 
 1. **Reduce Context Size**
-
    - Audit one service at a time
    - Disable web search if not needed
    - Remove unnecessary config sections
@@ -785,7 +774,6 @@ docker inspect autoarr
    ```
 
 2. **Common Issues**
-
    - Missing environment variables
    - Port conflicts
    - Volume mount issues
@@ -1080,7 +1068,6 @@ fetch("http://localhost:8000/health")
    ```
 
 2. **Clear Browser Cache**
-
    - Hard refresh: Ctrl+Shift+R (Ctrl+F5)
    - Clear all browser cache
    - Try incognito mode
@@ -1127,7 +1114,6 @@ ws.onmessage = (e) => console.log("Message:", e.data);
 **Solutions:**
 
 1. **Check WebSocket Connection**
-
    - See [WebSocket Disconnections](#websocket-disconnections)
 
 2. **Verify Event Subscription**
@@ -1272,7 +1258,6 @@ fi
    ```
 
 3. **Check Documentation**
-
    - [Quick Start Guide](/app/docs/QUICK-START.md)
    - [Configuration Guide](/app/docs/CONFIGURATION.md)
    - [FAQ](/app/docs/FAQ.md)
@@ -1285,7 +1270,6 @@ fi
 Include:
 
 1. **Environment Details**
-
    - AutoArr version: `docker exec autoarr cat /app/VERSION`
    - Docker version: `docker --version`
    - OS: `uname -a`
@@ -1304,7 +1288,6 @@ Include:
    ```
 
 4. **Steps to Reproduce**
-
    - What you did
    - What you expected
    - What actually happened
@@ -1314,15 +1297,12 @@ Include:
 ### Support Channels
 
 - **GitHub Issues**: Bug reports and feature requests
-
   - https://github.com/autoarr/autoarr/issues
 
 - **GitHub Discussions**: Questions and general discussion
-
   - https://github.com/autoarr/autoarr/discussions
 
 - **Discord**: Real-time community support
-
   - https://discord.gg/autoarr
 
 - **Documentation**: Comprehensive guides

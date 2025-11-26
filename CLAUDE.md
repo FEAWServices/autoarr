@@ -240,11 +240,9 @@ poetry run pytest tests/integration/       # Integration tests
 poetry run pytest tests/e2e/               # E2E tests
 poetry run pytest --cov                    # With coverage
 
-# Frontend
-cd autoarr/ui
-pnpm exec playwright test                  # All E2E tests
-pnpm exec playwright test --ui             # Interactive mode
-pnpm exec playwright show-report           # View reports
+# Frontend E2E Tests (Playwright)
+# IMPORTANT: Run inside Docker container for reliable results!
+# See "Running Playwright E2E Tests" section below.
 
 # Post-Deployment Tests
 bash run-post-deployment-tests.sh          # Quick runner
@@ -252,6 +250,36 @@ cd tests/post-deployment
 bash run-all-tests.sh                      # Full suite
 bash test-settings-api.sh                  # Settings test only
 ```
+
+### Running Playwright E2E Tests
+
+**IMPORTANT FOR CLAUDE CODE**: Playwright tests MUST be run inside the Docker container, NOT from the devcontainer. Running from devcontainer causes network/memory issues due to Windows filesystem mounts.
+
+```bash
+# 1. Start the local test container (if not running)
+DOCKER_HOST=unix:///var/run/docker.sock docker-compose -f docker/docker-compose.local-test.yml up -d
+
+# 2. Run E2E tests INSIDE the container
+./scripts/run-e2e-tests.sh                           # Run all tests
+./scripts/run-e2e-tests.sh tests/home.spec.ts        # Run specific file
+./scripts/run-e2e-tests.sh "dashboard"               # Run tests matching pattern
+
+# Or manually via docker exec:
+DOCKER_HOST=unix:///var/run/docker.sock docker exec autoarr-local \
+  sh -c "cd /app/autoarr/ui && pnpm exec playwright test --config=playwright-container.config.ts"
+```
+
+**Why run inside container?**
+
+- Tests run against `localhost:8088` (same container as app)
+- No network hops or port mapping issues
+- No Windows filesystem memory problems
+- Fast, reliable feedback
+
+**Config files:**
+
+- `playwright-container.config.ts` - For running inside Docker container
+- `playwright.config.ts` - For CI/GitHub Actions (starts own dev server)
 
 ## 📚 Key Services
 

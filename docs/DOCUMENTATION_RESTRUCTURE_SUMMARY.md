@@ -10,6 +10,7 @@
 ### 1. New Core Document Created
 
 **`VISION_AND_PRICING.md`** - Comprehensive product vision document
+
 - Clearly separates AutoArr (free/GPL) and AutoArrX (premium)
 - Defines 4 premium tiers: Shield, Vault, Phantom, Teams
 - Privacy-first architecture details
@@ -20,6 +21,7 @@
 ### 2. Documentation Archived
 
 Moved to `/app/docs/archive/`:
+
 - PR_REVIEW_SUMMARY.md (old PR analysis)
 - PR_SITUATION_SUMMARY.md (old PR status)
 - PROGRESS_SUMMARY.md (outdated progress)
@@ -38,6 +40,7 @@ Moved to `/app/docs/archive/`:
 ### 3. Core Documents Updated
 
 **`ARCHITECTURE.md`**
+
 - Added reference to VISION_AND_PRICING.md
 - Updated design philosophy to include "hybrid architecture"
 - Added product structure section (AutoArr vs AutoArrX)
@@ -45,6 +48,7 @@ Moved to `/app/docs/archive/`:
 - Updated future enhancements section with premium tier breakdown
 
 **`README.md`**
+
 - Added callout box linking to AutoArrX premium features
 - Updated "What is AutoArr?" section to mention premium option
 - Fixed documentation links (removed archived docs)
@@ -53,6 +57,7 @@ Moved to `/app/docs/archive/`:
 - Added key principle about GPL version remaining complete
 
 **`CLAUDE.md`**
+
 - Added two-product strategy section
 - Updated documentation list with VISION_AND_PRICING.md
 - Noted archived documentation location
@@ -64,6 +69,7 @@ Moved to `/app/docs/archive/`:
 ## 🎯 Key Messaging
 
 ### AutoArr (Free/GPL-3.0)
+
 - **100% complete** - no feature limitations
 - **Local LLM** (Qwen 2.5-3B) - privacy-first
 - **Self-hosted** - no cloud dependencies required
@@ -71,6 +77,7 @@ Moved to `/app/docs/archive/`:
 - **Community-driven** - transparent development
 
 ### AutoArrX (Premium Cloud)
+
 - **Optional** - AutoArr works perfectly without it
 - **Privacy-first** - client-side encryption, we never see your library
 - **Smart notifications** - IFTTT/Zapier native integration
@@ -121,6 +128,7 @@ Moved to `/app/docs/archive/`:
 ## 🔄 Monorepo Strategy
 
 Current approach (development phase):
+
 ```
 /app/
 ├── autoarr/              # GPL-3.0 (open source)
@@ -132,6 +140,7 @@ Current approach (development phase):
 ```
 
 Future split (before public launch):
+
 - **Repository 1:** `autoarr/autoarr` (GPL-3.0, public)
 - **Repository 2:** `autoarrx/cloud` (Proprietary, private)
 
@@ -150,18 +159,21 @@ Future split (before public launch):
 ## 📝 Next Steps
 
 ### Documentation
+
 - Consider creating user stories/case studies
 - Add architecture diagrams for premium bridge
 - Create comparison table with competitors
 - Add FAQ section to VISION_AND_PRICING.md
 
 ### Development
+
 - Implement monorepo structure (autoarr/ vs autoarr_paid/)
 - Add LICENSE.PROPRIETARY for premium code
 - Create clear API boundary between GPL and proprietary
 - Implement license key validation system
 
 ### Marketing
+
 - Create landing page content from VISION_AND_PRICING.md
 - Develop pricing calculator tool
 - Write blog post announcing two-product strategy

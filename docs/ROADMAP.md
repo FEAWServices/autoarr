@@ -15,14 +15,14 @@
 
 ### ✅ COMPLETED (2025-11-16)
 
-| Priority | Task | Effort | Status |
-|----------|------|--------|--------|
-| P0 | Connect WebSocket to Event Bus | 1-2 days | ✅ **DONE** |
-| P0 | Content Request API | 2-3 days | ✅ **EXISTS** |
-| P0 | Download Retry API | 1 day | ✅ **EXISTS** |
-| P0 | Fix 6 LLM Integration Test Failures | 4-6 hours | ✅ **DONE** |
-| - | Code Quality Fixes | 2-4 hours | ✅ **DONE** |
-| - | E2E Test Import Fixes | 2-4 hours | ✅ **DONE** |
+| Priority | Task                                | Effort    | Status        |
+| -------- | ----------------------------------- | --------- | ------------- |
+| P0       | Connect WebSocket to Event Bus      | 1-2 days  | ✅ **DONE**   |
+| P0       | Content Request API                 | 2-3 days  | ✅ **EXISTS** |
+| P0       | Download Retry API                  | 1 day     | ✅ **EXISTS** |
+| P0       | Fix 6 LLM Integration Test Failures | 4-6 hours | ✅ **DONE**   |
+| -        | Code Quality Fixes                  | 2-4 hours | ✅ **DONE**   |
+| -        | E2E Test Import Fixes               | 2-4 hours | ✅ **DONE**   |
 
 **Total Completed**: ~2.5 days of critical work eliminated!
 
@@ -34,11 +34,11 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 
 ### Should Have for v1.0 (Highly Recommended)
 
-| Priority | Task | Effort | Status |
-|----------|------|--------|--------|
-| P1 | Add Rate Limiting | 4-6 hours | ✅ **DONE** |
-| P1 | Increase Test Coverage to 85%+ | 2-3 days | 🚧 **NEXT** |
-| P1 | Execute Load Tests | 1-2 days | Pending |
+| Priority | Task                           | Effort    | Status      |
+| -------- | ------------------------------ | --------- | ----------- |
+| P1       | Add Rate Limiting              | 4-6 hours | ✅ **DONE** |
+| P1       | Increase Test Coverage to 85%+ | 2-3 days  | 🚧 **NEXT** |
+| P1       | Execute Load Tests             | 1-2 days  | Pending     |
 
 **Total High Priority**: 3-4 days remaining (down from 4-5 days!)
 
@@ -53,6 +53,7 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 **Priority**: P0 (Blocking) → **RESOLVED**
 
 **Implementation Summary**:
+
 - ✅ Created `EventBusWebSocketBridge` service in `autoarr/api/services/websocket_bridge.py`
 - ✅ Subscribed to 13 event bus topics (config, download, content request, activity)
 - ✅ Integrated bridge with ConnectionManager in `main.py`
@@ -61,6 +62,7 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 - ✅ Real-time event broadcasting functional
 
 **Completed Tasks**:
+
 - ✅ Create EventBusWebSocketBridge service in `autoarr/api/services/websocket_bridge.py`
 - ✅ Subscribe to event bus topics (13 types covered)
 - ✅ Integrate bridge with main.py ConnectionManager
@@ -69,12 +71,14 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 - ⏸️ Enable E2E WebSocket tests (pending)
 
 **Success Criteria Met**:
+
 - ✅ Events from event bus broadcast to all WebSocket clients
 - ⏸️ Clients can filter events by correlation ID (supported, not tested)
 - ⏸️ All WebSocket E2E tests pass (need to enable tests)
 - ⏸️ Real-time activity feed works in frontend (need frontend integration)
 
 **Files Created/Modified**:
+
 - ✅ New: `autoarr/api/services/websocket_bridge.py` (273 lines)
 - ✅ Modified: `autoarr/api/main.py` (added bridge initialization)
 - Pending: Enable `autoarr/tests/e2e/test_websocket_flow.py`
@@ -92,6 +96,7 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 **Discovery**: The Content Request API is **fully functional** and was already implemented!
 
 **Implemented Endpoints** (in `autoarr/api/routers/requests.py`):
+
 - ✅ POST `/api/v1/requests/content` - Submit natural language request
 - ✅ GET `/api/v1/requests/{id}/status` - Check request status
 - ✅ POST `/api/v1/requests/{id}/confirm` - Confirm and execute
@@ -99,6 +104,7 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 - ✅ DELETE `/api/v1/requests/{id}/cancel` - Cancel request
 
 **Features Included**:
+
 - ✅ Natural language classification (movie vs TV)
 - ✅ Metadata extraction (title, year, quality, season, episode)
 - ✅ LLM integration for intelligent parsing
@@ -109,6 +115,7 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 - ✅ Database persistence
 
 **Test Coverage**:
+
 - ✅ Service layer tests exist (93% coverage for RequestHandler)
 - ⏸️ E2E tests in `test_content_request_flow.py` (need to enable)
 
@@ -125,6 +132,7 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 **Discovery**: The Download Retry API is **fully functional** and was already implemented!
 
 **Implemented Endpoints** (in `autoarr/api/routers/downloads.py`):
+
 - ✅ POST `/api/v1/downloads/retry/{nzo_id}` - Retry failed download
 - ✅ GET `/api/v1/downloads/queue` - Get download queue
 - ✅ GET `/api/v1/downloads/history` - Get download history
@@ -134,6 +142,7 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 - ✅ GET `/api/v1/downloads/status` - Get status
 
 **Backend Services**:
+
 - ✅ RecoveryService implemented (94% coverage)
 - ✅ MonitoringService implemented (86% coverage)
 - ✅ Automatic retry strategies
@@ -141,10 +150,12 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 - ✅ Activity logging
 
 **Test Coverage**:
+
 - ✅ Service layer tests exist (excellent coverage)
 - ⏸️ E2E tests in `test_download_recovery_flow.py` (import errors fixed, need to enable)
 
 **Additional Work Needed**:
+
 - ⏸️ Activity log correlation ID filtering (minor enhancement)
 - ⏸️ Enable E2E tests
 
@@ -159,6 +170,7 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 **Priority**: P0 (Blocking) → **RESOLVED**
 
 **Implementation Summary**:
+
 - ✅ Added backward-compatible `client` property to LLMAgent
 - ✅ Updated all 6 integration tests to use provider mocking pattern
 - ✅ Fixed mocking approach from `agent.client.send_message` to `agent._ensure_provider`
@@ -166,11 +178,13 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 - ✅ Fixed `test_prompt_includes_all_context` to capture messages list
 
 **Test Results**:
+
 - ✅ All 6 LLM integration tests now passing (100%)
 - ✅ Test file coverage: 82% (up from 0%)
 - ✅ Integration test suite: 70 passed, 23 skipped, 0 failed
 
 **Fixed Tests** (all in `test_llm_agent_integration.py`):
+
 1. ✅ `test_end_to_end_configuration_analysis`
 2. ✅ `test_handles_medium_priority_recommendation`
 3. ✅ `test_handles_low_priority_recommendation`
@@ -179,6 +193,7 @@ All P0 (blocking) tasks for v1.0 release have been completed. The application ca
 6. ✅ `test_prompt_includes_all_context`
 
 **Root Cause Fixed**:
+
 ```python
 # Added backward compatibility in llm_agent.py
 @property
@@ -194,10 +209,12 @@ def client(self):
 ```
 
 **Files Modified**:
+
 - ✅ `autoarr/api/services/llm_agent.py` (added client property)
 - ✅ `autoarr/tests/integration/services/test_llm_agent_integration.py` (updated all 6 tests)
 
 **Success Criteria**:
+
 - ✅ All 6 LLM integration tests pass
 - ✅ No real Claude API calls in tests (mocked)
 - ✅ Backward compatibility maintained
@@ -205,6 +222,7 @@ def client(self):
 **Commit**: `0b40d19` - "fix: Fix all 6 LLM integration test failures"
 
 **Current State**:
+
 - ✅ RequestHandler service implemented (`services/request_handler.py` - 93% coverage)
 - ✅ LLM classification logic exists
 - ✅ Web search integration exists
@@ -213,6 +231,7 @@ def client(self):
 - ❌ All E2E tests fail with import errors (now fixed)
 
 **Tasks**:
+
 - [ ] Implement POST `/api/v1/requests/content` in `requests.py` router
   - [ ] Accept natural language query
   - [ ] Call RequestHandler.classify_content()
@@ -234,6 +253,7 @@ def client(self):
 - [ ] Enable E2E content request tests
 
 **Success Criteria**:
+
 - [ ] Can request content via natural language
 - [ ] Movie vs. TV classification 90%+ accurate
 - [ ] Successfully adds to Radarr/Sonarr
@@ -241,6 +261,7 @@ def client(self):
 - [ ] Real-time status updates via WebSocket
 
 **Files**:
+
 - Modify: `autoarr/api/routers/requests.py`
 - Enable: `autoarr/tests/e2e/test_content_request_flow.py`
 - Verify: `autoarr/api/services/request_handler.py`
@@ -254,6 +275,7 @@ def client(self):
 **Priority**: P0 (Blocking)
 
 **Current State**:
+
 - ✅ RecoveryService implemented (`services/recovery_service.py` - 94% coverage)
 - ✅ Monitoring service detects failures (86% coverage)
 - ✅ Retry strategies implemented
@@ -261,6 +283,7 @@ def client(self):
 - ❌ E2E recovery flow tests all skip
 
 **Tasks**:
+
 - [ ] Implement POST `/api/v1/downloads/retry` in `downloads.py` router
   - [ ] Accept `nzo_id` parameter
   - [ ] Call RecoveryService.retry_failed_download()
@@ -276,6 +299,7 @@ def client(self):
 - [ ] Enable E2E download recovery tests
 
 **Success Criteria**:
+
 - [ ] Can manually retry failed downloads via API
 - [ ] Automatic retry works in background
 - [ ] Activity log shows correlated retry attempts
@@ -283,6 +307,7 @@ def client(self):
 - [ ] Real-time retry notifications via WebSocket
 
 **Files**:
+
 - Modify: `autoarr/api/routers/downloads.py`
 - Modify: `autoarr/api/routers/monitoring.py` (activity log filtering)
 - Enable: `autoarr/tests/e2e/test_download_recovery_flow.py`
@@ -297,6 +322,7 @@ def client(self):
 **Priority**: P0 (Blocking)
 
 **Failing Tests**:
+
 1. `test_end_to_end_configuration_analysis`
 2. `test_handles_medium_priority_recommendation`
 3. `test_handles_low_priority_recommendation`
@@ -307,16 +333,19 @@ def client(self):
 **Root Cause**: Likely missing `CLAUDE_API_KEY` or mock configuration
 
 **Tasks**:
+
 - [ ] Investigate test failures (check for missing env vars)
 - [ ] Add proper mocking for Claude API in integration tests
 - [ ] Update test fixtures if needed
 - [ ] Verify all tests pass
 
 **Success Criteria**:
+
 - [ ] All 6 LLM integration tests pass
 - [ ] No real Claude API calls in tests (mocked)
 
 **Files**:
+
 - Fix: `autoarr/tests/integration/services/test_llm_agent_integration.py`
 - Review: `autoarr/tests/conftest.py` (fixtures)
 
@@ -331,6 +360,7 @@ def client(self):
 **Priority**: P1 (High) → **RESOLVED**
 
 **Implementation Summary**:
+
 - ✅ Added slowapi dependency (v0.1.9)
 - ✅ Created rate_limiter.py module with centralized limiter
 - ✅ Configured per-endpoint rate limits:
@@ -344,6 +374,7 @@ def client(self):
 - ✅ Support for memory and Redis storage backends
 
 **Completed Tasks**:
+
 - ✅ Added slowapi to pyproject.toml and poetry.lock
 - ✅ Created autoarr/api/rate_limiter.py module
 - ✅ Added rate limiting configuration to config.py
@@ -352,12 +383,14 @@ def client(self):
 - ✅ Tested import and initialization
 
 **Success Criteria Met**:
+
 - ✅ Requests are rate limited per IP address
 - ✅ Proper HTTP 429 responses when exceeded
 - ✅ Rate limits configurable via environment variables
 - ✅ Fallback to in-memory storage (Redis optional)
 
 **Files Modified**:
+
 - ✅ New: `autoarr/api/rate_limiter.py` (47 lines)
 - ✅ Modified: `autoarr/api/config.py` (added rate limit settings)
 - ✅ Modified: `autoarr/api/main.py` (integrated limiter)
@@ -407,11 +440,13 @@ def client(self):
    - Tasks: Add tests for search, caching, extraction
 
 **Success Criteria**:
+
 - [ ] Overall test coverage ≥ 85%
 - [ ] No component below 70% coverage
 - [ ] All critical paths tested
 
 **Files**:
+
 - Add tests in: `autoarr/tests/unit/services/`
 - Add tests in: `autoarr/tests/unit/api/`
 - Add tests in: `autoarr/tests/unit/shared/llm/`
@@ -425,6 +460,7 @@ def client(self):
 **Priority**: P1 (High)
 
 **Tasks**:
+
 - [ ] Review existing Locust test scenarios
 - [ ] Set up load test environment
 - [ ] Execute load tests:
@@ -442,6 +478,7 @@ def client(self):
 - [ ] Set up performance regression tests
 
 **Success Criteria**:
+
 - [ ] API handles 100 req/sec (target from BUILD-PLAN)
 - [ ] p95 response time < 200ms
 - [ ] p99 response time < 500ms
@@ -449,6 +486,7 @@ def client(self):
 - [ ] Performance metrics documented
 
 **Files**:
+
 - Execute: Locust test files (check `autoarr/tests/load/`)
 - Document: `docs/PERFORMANCE.md` (new)
 
@@ -463,10 +501,12 @@ def client(self):
 **Priority**: P2 (Medium)
 
 **Issue**:
+
 - MCP servers exist in `/autoarr/mcp_servers/[service]/` (0% coverage)
 - MCP servers exist in `/autoarr/mcp_servers/mcp_servers/[service]/` (87-98% coverage)
 
 **Tasks**:
+
 - [ ] Verify which location is canonical (likely `mcp_servers/mcp_servers/`)
 - [ ] Check all imports across codebase
 - [ ] Remove duplicate code
@@ -475,11 +515,13 @@ def client(self):
 - [ ] Update documentation
 
 **Success Criteria**:
+
 - [ ] MCP servers exist in only one location
 - [ ] All tests pass
 - [ ] No import errors
 
 **Files**:
+
 - Remove: `autoarr/mcp_servers/[sabnzbd|sonarr|radarr|plex]/`
 - Keep: `autoarr/mcp_servers/mcp_servers/[sabnzbd|sonarr|radarr|plex]/`
 
@@ -492,6 +534,7 @@ def client(self):
 **Priority**: P2 (Medium)
 
 **Tasks**:
+
 - [ ] Add `MCP_TIMEOUT` setting to config.py
 - [ ] Add per-operation timeout override capability
 - [ ] Update orchestrator to use configurable timeout
@@ -500,11 +543,13 @@ def client(self):
 - [ ] Add tests for timeout behavior
 
 **Success Criteria**:
+
 - [ ] Timeout configurable via environment variable
 - [ ] Per-operation timeout override works
 - [ ] Long-running operations don't timeout prematurely
 
 **Files**:
+
 - Modify: `autoarr/api/config.py`
 - Modify: `autoarr/shared/core/mcp_orchestrator.py`
 
@@ -517,6 +562,7 @@ def client(self):
 **Priority**: P2 (Medium)
 
 **Tasks**:
+
 - [ ] Add comprehensive examples to all Pydantic models
 - [ ] Add response examples for all endpoints
 - [ ] Add error response examples
@@ -527,11 +573,13 @@ def client(self):
 - [ ] Create API quickstart guide
 
 **Success Criteria**:
+
 - [ ] All endpoints have request/response examples
 - [ ] All error codes documented
 - [ ] Postman collection available
 
 **Files**:
+
 - Modify: All files in `autoarr/api/models*.py`
 - Modify: All router files
 - New: `docs/API_QUICKSTART.md`
@@ -546,6 +594,7 @@ def client(self):
 **Priority**: P3 (Low)
 
 **Tasks**:
+
 - [ ] Run `pnpm audit` in `autoarr/ui/`
 - [ ] Review vulnerability report
 - [ ] Update vulnerable dependencies
@@ -553,10 +602,12 @@ def client(self):
 - [ ] Document any breaking changes
 
 **Success Criteria**:
+
 - [ ] No high/critical vulnerabilities
 - [ ] Frontend still works after updates
 
 **Files**:
+
 - Modify: `autoarr/ui/package.json`
 - Modify: `autoarr/ui/pnpm-lock.yaml`
 
@@ -570,6 +621,7 @@ def client(self):
 **Priority**: P2 (Medium)
 
 **Tasks**:
+
 - [ ] Update README.md with accurate feature list
 - [ ] Update ARCHITECTURE.md with WebSocket integration
 - [ ] Update API_REFERENCE.md with new endpoints
@@ -579,6 +631,7 @@ def client(self):
 - [ ] Review all documentation for accuracy
 
 **Files**:
+
 - Update: All files in `docs/`
 
 ---
@@ -588,6 +641,7 @@ def client(self):
 **Priority**: P1 (Required before v1.0 tag)
 
 **Pre-Release Checklist**:
+
 - [ ] All P0 tasks complete
 - [ ] All P1 tasks complete
 - [ ] All tests passing (unit, integration, E2E)
@@ -604,6 +658,7 @@ def client(self):
 - [ ] CHANGELOG.md updated
 
 **Release Tasks**:
+
 - [ ] Create v1.0.0 tag
 - [ ] Build and push Docker images
 - [ ] Create GitHub release
@@ -617,6 +672,7 @@ def client(self):
 ### ✅ Progress Update (2025-11-16)
 
 **Completed Work**:
+
 - ✅ WebSocket-EventBus integration (1-2 days) - **DONE**
 - ✅ Content Request API (2-3 days) - **ALREADY EXISTED**
 - ✅ Download Retry API (1 day) - **ALREADY EXISTED**
@@ -626,23 +682,23 @@ def client(self):
 
 ### UPDATED: Minimum Viable v1.0 (6-9 days) ⬅️ Down from 8-11 days!
 
-| Week | Phase | Tasks | Effort | Status |
-|------|-------|-------|--------|--------|
-| ~~Week 1~~ | ~~Critical Features~~ | ~~WebSocket, APIs~~ | ~~4-6 days~~ | ✅ **DONE** |
-| Week 1 | Fix LLM Tests | Fix integration tests | 4-6 hours | ⏳ In Progress |
-| Week 1-2 | Security & Quality | Rate limiting, test coverage, load tests | 4-5 days | Pending |
-| **Total** | **Minimum for v1.0** | **P0 + P1 tasks** | **~6-9 days** | **25% Done** |
+| Week       | Phase                 | Tasks                                    | Effort        | Status         |
+| ---------- | --------------------- | ---------------------------------------- | ------------- | -------------- |
+| ~~Week 1~~ | ~~Critical Features~~ | ~~WebSocket, APIs~~                      | ~~4-6 days~~  | ✅ **DONE**    |
+| Week 1     | Fix LLM Tests         | Fix integration tests                    | 4-6 hours     | ⏳ In Progress |
+| Week 1-2   | Security & Quality    | Rate limiting, test coverage, load tests | 4-5 days      | Pending        |
+| **Total**  | **Minimum for v1.0**  | **P0 + P1 tasks**                        | **~6-9 days** | **25% Done**   |
 
 ### UPDATED: Complete v1.0 (10-15 days) ⬅️ Down from 12-17 days!
 
-| Week | Phase | Tasks | Effort | Status |
-|------|-------|-------|--------|--------|
-| ~~Week 1~~ | ~~Critical Features~~ | ~~P0 tasks~~ | ~~4-6 days~~ | ✅ **DONE** |
-| Week 1 | Fix LLM Tests | P0 remaining | 4-6 hours | In Progress |
-| Week 1-2 | Security & Quality | P1 tasks | 4-5 days | Pending |
-| Week 2-3 | Code Cleanup & Polish | P2 tasks | 3-4 days | Pending |
-| Week 3 | Documentation & Release | P2 + Release prep | 1-2 days | Pending |
-| **Total** | **Complete v1.0** | **All tasks** | **~10-15 days** | **30% Done** |
+| Week       | Phase                   | Tasks             | Effort          | Status       |
+| ---------- | ----------------------- | ----------------- | --------------- | ------------ |
+| ~~Week 1~~ | ~~Critical Features~~   | ~~P0 tasks~~      | ~~4-6 days~~    | ✅ **DONE**  |
+| Week 1     | Fix LLM Tests           | P0 remaining      | 4-6 hours       | In Progress  |
+| Week 1-2   | Security & Quality      | P1 tasks          | 4-5 days        | Pending      |
+| Week 2-3   | Code Cleanup & Polish   | P2 tasks          | 3-4 days        | Pending      |
+| Week 3     | Documentation & Release | P2 + Release prep | 1-2 days        | Pending      |
+| **Total**  | **Complete v1.0**       | **All tasks**     | **~10-15 days** | **30% Done** |
 
 ---
 
@@ -681,21 +737,21 @@ def client(self):
 
 ### Critical Risks
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| WebSocket integration complexity | HIGH | Start with simple event broadcasting, iterate |
-| LLM API costs during development | MEDIUM | Use mocks in tests, monitor usage |
-| Load testing reveals performance issues | HIGH | Budget extra time for optimization |
-| Test coverage improvement takes longer | MEDIUM | Focus on critical paths first |
+| Risk                                    | Impact | Mitigation                                    |
+| --------------------------------------- | ------ | --------------------------------------------- |
+| WebSocket integration complexity        | HIGH   | Start with simple event broadcasting, iterate |
+| LLM API costs during development        | MEDIUM | Use mocks in tests, monitor usage             |
+| Load testing reveals performance issues | HIGH   | Budget extra time for optimization            |
+| Test coverage improvement takes longer  | MEDIUM | Focus on critical paths first                 |
 
 ### Dependencies
 
-| Dependency | Status | Risk |
-|------------|--------|------|
-| Claude API availability | External | LOW - Has fallback |
-| TMDB API availability | External | MEDIUM - Core feature |
-| Brave Search API | External | LOW - Optional feature |
-| MCP protocol stability | External | LOW - Well specified |
+| Dependency              | Status   | Risk                   |
+| ----------------------- | -------- | ---------------------- |
+| Claude API availability | External | LOW - Has fallback     |
+| TMDB API availability   | External | MEDIUM - Core feature  |
+| Brave Search API        | External | LOW - Optional feature |
+| MCP protocol stability  | External | LOW - Well specified   |
 
 ---
 
@@ -703,7 +759,7 @@ def client(self):
 
 ### v1.0 Release Criteria
 
-- [  ] All P0 tasks complete
+- [ ] All P0 tasks complete
 - [ ] All P1 tasks complete (recommended)
 - [ ] Test coverage ≥ 85%
 - [ ] All tests passing
@@ -734,6 +790,7 @@ def client(self):
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on contributing to this roadmap.
 
 To claim a task:
+
 1. Comment on the relevant GitHub issue
 2. Fork the repository
 3. Create a branch named `feature/task-name` or `fix/task-name`

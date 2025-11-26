@@ -267,7 +267,9 @@ test.describe("Dashboard - Run Audit Button", () => {
     await expect(spinner).toBeVisible();
   });
 
-  test.skip("should disable button while audit is running", async ({ page }) => {
+  test.skip("should disable button while audit is running", async ({
+    page,
+  }) => {
     // Mock slow API response
     await page.route(`${API_BASE_URL}/config/audit`, async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -521,7 +523,6 @@ test.describe.skip("Dashboard - Mobile Responsiveness", () => {
       await expect(button).toBeVisible();
     });
   }
-
 });
 
 // ============================================================================
@@ -688,13 +689,17 @@ test.describe("Dashboard - Recommendation Cards", () => {
     expect(count).toBeGreaterThan(0);
   });
 
-  test.skip("recommendation cards should show priority badge", async ({ page }) => {
+  test.skip("recommendation cards should show priority badge", async ({
+    page,
+  }) => {
     const firstCard = page.getByTestId("recommendation-card").first();
     const priorityBadge = firstCard.getByTestId("priority-badge");
     await expect(priorityBadge).toBeVisible();
   });
 
-  test.skip("recommendation cards should show service name", async ({ page }) => {
+  test.skip("recommendation cards should show service name", async ({
+    page,
+  }) => {
     const firstCard = page.getByTestId("recommendation-card").first();
     const serviceName = firstCard.getByTestId("recommendation-service");
     await expect(serviceName).toBeVisible();

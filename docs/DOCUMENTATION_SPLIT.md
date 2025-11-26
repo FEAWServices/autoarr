@@ -10,6 +10,7 @@ To prepare AutoArr for open-source release, we've split documentation between th
 ## 🆓 Free Repository (/app/docs/)
 
 **What Stays Here:**
+
 - ✅ GPL-3.0 technical documentation
 - ✅ Free feature documentation
 - ✅ Architecture (non-proprietary aspects)
@@ -21,6 +22,7 @@ To prepare AutoArr for open-source release, we've split documentation between th
 - ✅ Test strategies and TDD guides
 
 **Examples:**
+
 - `VISION.md` - Open-source vision and roadmap
 - `LLM_PLUGIN_ARCHITECTURE.md` - Plugin system (free + premium interfaces)
 - `LICENSE_COMPATIBILITY.md` - GPL compatibility verification
@@ -31,6 +33,7 @@ To prepare AutoArr for open-source release, we've split documentation between th
 ## 💎 Premium Repository (/autoarr-paid/docs/)
 
 **What Moved There:**
+
 - ✅ Business strategy and monetization plans
 - ✅ Pricing models and revenue projections
 - ✅ Premium feature implementation details
@@ -42,6 +45,7 @@ To prepare AutoArr for open-source release, we've split documentation between th
 - ✅ Billing integration details
 
 **Examples:**
+
 - `VISION_BUSINESS_MODEL.md` - Pricing, revenue, market strategy
 - `CUSTOM_MODEL_TRAINING.md` - Proprietary training pipeline
 - `AUTONOMOUS_RECOVERY.md` - Premium recovery system
@@ -50,8 +54,8 @@ To prepare AutoArr for open-source release, we've split documentation between th
 
 ## 🔍 Documents Moved
 
-| Document | From (GPL) | To (Premium) | Reason |
-|----------|-----------|--------------|---------|
+| Document    | From (GPL)  | To (Premium)               | Reason                                                |
+| ----------- | ----------- | -------------------------- | ----------------------------------------------------- |
 | `VISION.md` | ✅ Replaced | `VISION_BUSINESS_MODEL.md` | Contains pricing, business model, revenue projections |
 
 **Note**: Only the business/proprietary aspects were moved. The free repo now has `VISION.md` focused on GPL development.
@@ -59,12 +63,14 @@ To prepare AutoArr for open-source release, we've split documentation between th
 ## 📝 Documentation Guidelines
 
 ### Free Repository (GPL-3.0)
+
 - **License**: All docs are GPL-3.0 compatible
 - **Content**: Technical, educational, community-focused
 - **Audience**: Public, open-source contributors
 - **Transparency**: Everything is auditable and modifiable
 
 ### Premium Repository (Proprietary)
+
 - **License**: Proprietary, confidential
 - **Content**: Business strategy, proprietary tech, pricing
 - **Audience**: Internal team, premium customers (selected docs)
@@ -81,12 +87,14 @@ To prepare AutoArr for open-source release, we've split documentation between th
 ## 🤝 Contributing
 
 ### To Free Version
+
 - All documentation welcome
 - Must be GPL-3.0 compatible
 - Focus on improving free features
 - Community-driven priorities
 
 ### To Premium Version
+
 - Internal team only
 - NDA required
 - Proprietary information
@@ -95,24 +103,29 @@ To prepare AutoArr for open-source release, we've split documentation between th
 ## 📚 Document Types by Repository
 
 ### Architecture Documents
+
 - **Free**: High-level architecture, public APIs, plugin systems
 - **Premium**: Proprietary algorithms, custom models, license validation
 
 ### Feature Documents
+
 - **Free**: Free feature specifications and guides
 - **Premium**: Premium-only features (autonomous recovery, custom models)
 
 ### API Documentation
+
 - **Free**: Public API endpoints anyone can use
 - **Premium**: Premium API endpoints requiring license
 
 ### Deployment
+
 - **Free**: Docker deployment, self-hosting guides
 - **Premium**: SaaS infrastructure, multi-tenant deployment
 
 ## 🔒 Security Note
 
 **Premium documentation contains confidential information and should:**
+
 - ❌ Never be committed to public repos
 - ❌ Never be shared without authorization
 - ❌ Never be discussed in public channels

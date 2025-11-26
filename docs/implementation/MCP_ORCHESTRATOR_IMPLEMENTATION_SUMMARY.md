@@ -33,14 +33,12 @@ The implementation followed the Red-Green-Refactor cycle:
 #### Production Code
 
 1. **`/app/autoarr/shared/core/mcp_orchestrator.py`** (958 lines)
-
    - Main orchestrator implementation
    - 44 methods covering all functionality
    - CircuitBreaker class for fault tolerance
    - Comprehensive error handling
 
 2. **`/app/autoarr/shared/core/config.py`** (115 lines)
-
    - Configuration data models
    - ServerConfig and MCPOrchestratorConfig classes
    - Validation and helper methods
@@ -53,7 +51,6 @@ The implementation followed the Red-Green-Refactor cycle:
 #### Test Code
 
 4. **`/app/autoarr/tests/unit/core/test_mcp_orchestrator.py`** (1,583 lines)
-
    - 75 comprehensive unit tests
    - 6 test classes covering all aspects
    - Extensive edge case and error scenario coverage
@@ -176,7 +173,6 @@ Tests for lifecycle and cleanup:
 ### Core Features
 
 1. **Connection Management**
-
    - Connect to all 4 MCP servers (SABnzbd, Sonarr, Radarr, Plex)
    - Connection pooling and reuse
    - Auto-reconnect on connection loss
@@ -184,7 +180,6 @@ Tests for lifecycle and cleanup:
    - Thread-safe connection handling
 
 2. **Unified Tool Calling Interface**
-
    - Single method to call tools on any server
    - Parameter validation
    - Server name validation and aliases
@@ -192,7 +187,6 @@ Tests for lifecycle and cleanup:
    - Metadata tracking (timing, server, tool)
 
 3. **Parallel Execution**
-
    - Execute multiple tool calls concurrently
    - Configurable concurrency limits
    - Progress callbacks
@@ -200,7 +194,6 @@ Tests for lifecycle and cleanup:
    - Partial results on timeout
 
 4. **Error Handling and Retries**
-
    - Exponential backoff retry logic
    - Configurable max retries
    - Transient vs. permanent error detection
@@ -208,7 +201,6 @@ Tests for lifecycle and cleanup:
    - Detailed error context
 
 5. **Circuit Breaker Pattern**
-
    - Prevent cascading failures
    - Three states: closed, open, half-open
    - Configurable thresholds
@@ -216,7 +208,6 @@ Tests for lifecycle and cleanup:
    - Per-server circuit breakers
 
 6. **Health Monitoring**
-
    - Per-server health checks
    - Periodic background health checks
    - Health check retry logic
@@ -233,7 +224,6 @@ Tests for lifecycle and cleanup:
 ### Advanced Features
 
 8. **Configuration**
-
    - Type-safe configuration models
    - Per-server configuration
    - Global orchestrator settings
@@ -241,7 +231,6 @@ Tests for lifecycle and cleanup:
    - Validation on initialization
 
 9. **Statistics Tracking**
-
    - Total calls count
    - Calls per server
    - Health check count

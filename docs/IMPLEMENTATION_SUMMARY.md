@@ -220,14 +220,12 @@ All tasks from BUILD-PLAN.md (Task 2.5) have been completed and verified.
 ### Test Categories
 
 1. **Health Endpoints** (10 tests)
-
    - Overall health check
    - Individual service health
    - Circuit breaker status
    - Error scenarios
 
 2. **MCP Proxy Endpoints** (11 tests)
-
    - Single tool calls
    - Batch tool calls
    - Tool listing

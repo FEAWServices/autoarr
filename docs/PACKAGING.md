@@ -96,12 +96,10 @@ AutoArr supports **two deployment modes** aligned with the BUILD-PLAN.md roadmap
 The `Dockerfile` uses **multi-stage builds**:
 
 1. **Stage 1**: Build React frontend
-
    - Node.js 18 Alpine
    - pnpm build → static files in `dist/`
 
 2. **Stage 2**: Install Python dependencies
-
    - Python 3.11 + Poetry
    - Install packages to system Python
 
@@ -234,39 +232,32 @@ spec:
 Each service gets its own container:
 
 1. **Frontend Service** (Nginx)
-
    - Serves static React app from CDN
    - ~50 MB image
 
 2. **API Gateway** (FastAPI)
-
    - Routes requests to MCP services
    - Authentication & rate limiting
    - ~200 MB image
 
 3. **MCP Service - SABnzbd** (Python)
-
    - Dedicated MCP server for SABnzbd
    - Horizontally scalable
    - ~150 MB image
 
 4. **MCP Service - Sonarr** (Python)
-
    - Dedicated MCP server for Sonarr
    - ~150 MB image
 
 5. **MCP Service - Radarr** (Python)
-
    - Dedicated MCP server for Radarr
    - ~150 MB image
 
 6. **MCP Service - Plex** (Python)
-
    - Dedicated MCP server for Plex
    - ~150 MB image
 
 7. **Configuration Manager** (Python)
-
    - Best practices & auditing
    - LLM integration
    - ~250 MB image

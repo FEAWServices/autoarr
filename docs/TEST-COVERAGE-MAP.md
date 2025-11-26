@@ -358,14 +358,12 @@ Documentation:
 ### Phase 1: Core Client (Days 1-3)
 
 1. **Day 1**: Initialization + Queue operations
-
    - Remove skip from 11 tests
    - Implement initialization
    - Implement get_queue
    - Target: 11/82 client tests passing
 
 2. **Day 2**: History + Downloads
-
    - Remove skip from 9 tests
    - Implement get_history
    - Implement retry_download
@@ -380,7 +378,6 @@ Documentation:
 ### Phase 2: Client Polish (Days 4-5)
 
 4. **Day 4**: Error handling
-
    - Remove skip from 8 tests
    - Implement retry logic
    - Implement error handling
@@ -394,14 +391,12 @@ Documentation:
 ### Phase 3: MCP Server (Days 6-8)
 
 6. **Day 6**: Server initialization + tools
-
    - Remove skip from 13 tests
    - Implement server initialization
    - Implement tool registration
    - Target: 13/90 server tests passing
 
 7. **Day 7**: Tool implementations
-
    - Remove skip from 21 tests
    - Implement all 5 tools
    - Target: 34/90 server tests passing
@@ -414,7 +409,6 @@ Documentation:
 ### Phase 4: Integration (Days 9-10)
 
 9. **Day 9**: Integration testing
-
    - Setup real SABnzbd instance
    - Remove skip from integration tests
    - Target: 25/25 integration tests passing ⭐

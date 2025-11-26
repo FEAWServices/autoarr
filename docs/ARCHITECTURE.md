@@ -98,6 +98,7 @@ AutoArr follows a **hybrid architecture** designed for:
 ### 1. FastAPI Backend
 
 **Technology Stack:**
+
 - Python 3.11+
 - FastAPI (async web framework)
 - SQLAlchemy (ORM)
@@ -105,6 +106,7 @@ AutoArr follows a **hybrid architecture** designed for:
 - llama-cpp-python (local LLM)
 
 **Key Features:**
+
 - Async/await throughout
 - Type hints and Pydantic validation
 - Automatic OpenAPI documentation
@@ -112,6 +114,7 @@ AutoArr follows a **hybrid architecture** designed for:
 - Background task scheduling
 
 **API Structure:**
+
 ```
 /api/v1/
 ├── health              # Health check
@@ -151,6 +154,7 @@ llm = Llama(
 ```
 
 **Capabilities:**
+
 - Natural language understanding
 - Content type classification (movie vs TV)
 - Title and metadata extraction
@@ -158,11 +162,13 @@ llm = Llama(
 - Reasoning and decision-making
 
 **Performance:**
+
 - Inference speed: 20-30 tokens/second (CPU)
 - Memory usage: ~3GB RAM
 - Latency: 200-500ms per query
 
 **Quantization:** Q4_K_M (4-bit quantized)
+
 - 75% smaller than full precision
 - Minimal accuracy loss
 - Optimized for CPU inference
@@ -198,11 +204,13 @@ class RadarrClient:
 ```
 
 **Similar clients for:**
+
 - Sonarr (TV shows)
 - SABnzbd (downloads)
 - Plex (library management)
 
 **Features:**
+
 - Async HTTP calls
 - Automatic retry with exponential backoff
 - Connection pooling
@@ -396,6 +404,7 @@ CREATE TABLE download_failures (
 ### 6. React Frontend
 
 **Technology Stack:**
+
 - React 18
 - TypeScript
 - Tailwind CSS (mobile-first)
@@ -412,6 +421,7 @@ CREATE TABLE download_failures (
 5. **Settings** - Service connections
 
 **State Management:**
+
 ```typescript
 // Zustand store
 interface AutoArrState {
@@ -542,7 +552,7 @@ User clicks: "Run Audit"
 ### Docker Compose (Recommended)
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   autoarr:
@@ -566,17 +576,17 @@ services:
       - DATABASE_PATH=/data/autoarr.db
       - MODEL_PATH=/models/qwen2.5-3b-instruct-q4_k_m.gguf
     volumes:
-      - ./data:/data          # Database persistence
-      - ./models:/models      # LLM model (cached)
+      - ./data:/data # Database persistence
+      - ./models:/models # LLM model (cached)
     restart: unless-stopped
-    mem_limit: 6g            # 2GB app + 3GB LLM + 1GB buffer
+    mem_limit: 6g # 2GB app + 3GB LLM + 1GB buffer
     cpus: 4.0
     networks:
       - media-network
 
 networks:
   media-network:
-    external: true  # Shared with Radarr, Sonarr, etc.
+    external: true # Shared with Radarr, Sonarr, etc.
 ```
 
 ### Dockerfile (Multi-stage)
@@ -668,6 +678,7 @@ Total                 ~3-4 GB
 ### Threat Model
 
 **In Scope:**
+
 - API authentication
 - Service credential storage
 - Input validation
@@ -675,6 +686,7 @@ Total                 ~3-4 GB
 - Rate limiting
 
 **Out of Scope:**
+
 - Network security (handled by firewall/proxy)
 - TLS/HTTPS (handled by reverse proxy)
 - Physical security
@@ -874,6 +886,7 @@ pnpm test
 ### Why Single Container?
 
 **Pros:**
+
 - ✅ Easy deployment (one command)
 - ✅ Lower resource usage (shared memory)
 - ✅ Simpler networking (no inter-container communication)
@@ -881,6 +894,7 @@ pnpm test
 - ✅ Better for NAS devices (limited Docker support)
 
 **Cons:**
+
 - ❌ Less scalable (can't scale components independently)
 - ❌ Harder to update one component
 
@@ -889,6 +903,7 @@ pnpm test
 ### Why Local LLM vs API?
 
 **Local (Qwen 2.5-3B):**
+
 - ✅ Privacy (nothing leaves your server)
 - ✅ No API costs
 - ✅ No rate limits
@@ -897,6 +912,7 @@ pnpm test
 - ❌ Limited capabilities
 
 **Cloud API (Claude/GPT-4):**
+
 - ✅ More powerful
 - ✅ Faster inference
 - ❌ Privacy concerns
@@ -909,6 +925,7 @@ pnpm test
 ### Why Direct API vs MCP Protocol?
 
 **Direct API Integration:**
+
 - ✅ Simpler code
 - ✅ Fewer dependencies
 - ✅ More reliable (fewer failure points)
@@ -916,6 +933,7 @@ pnpm test
 - ❌ Tightly coupled to specific services
 
 **MCP Protocol:**
+
 - ✅ Standardized interface
 - ✅ Easier to add new services
 - ❌ Additional complexity
@@ -958,6 +976,7 @@ All premium features maintain **privacy-first architecture** with client-side en
 AutoArr uses a **hybrid architecture** optimized for flexibility:
 
 ### Free/GPL (AutoArr)
+
 ✅ **Single container** - Easy deployment
 ✅ **Local LLM** - Privacy-first, no cloud required
 ✅ **Direct API integration** - Reliable and fast
@@ -966,6 +985,7 @@ AutoArr uses a **hybrid architecture** optimized for flexibility:
 ✅ **Complete features** - No limitations
 
 ### Premium/Cloud (AutoArrX)
+
 ✅ **Secure bridge** - Outbound WebSocket only
 ✅ **Client-side encryption** - We never see your library
 ✅ **Enhanced LLM** - Claude/GPT-4 for complex tasks
@@ -978,6 +998,7 @@ AutoArr uses a **hybrid architecture** optimized for flexibility:
 ---
 
 **Related Documentation:**
+
 - [VISION_AND_PRICING.md](./VISION_AND_PRICING.md) - Product vision & pricing
 - [BUILD-PLAN.md](./BUILD-PLAN.md) - Development roadmap
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - How to contribute

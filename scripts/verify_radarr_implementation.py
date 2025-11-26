@@ -28,17 +28,17 @@ def test_imports():
     print("Testing imports...")
     try:
         from radarr.client import RadarrClient, RadarrClientError, RadarrConnectionError
-        from radarr.server import RadarrMCPServer
         from radarr.models import (
+            Command,
+            ErrorResponse,
             Movie,
             MovieFile,
-            Command,
             Queue,
             QueueRecord,
-            WantedMissing,
             SystemStatus,
-            ErrorResponse,
+            WantedMissing,
         )
+        from radarr.server import RadarrMCPServer
 
         print(f"  {CHECK} All modules imported successfully")
         return True
@@ -105,9 +105,10 @@ def test_server_class():
 def test_mcp_tools():
     """Test MCP tool definitions."""
     print("\nTesting MCP tools...")
-    from radarr.server import RadarrMCPServer
-    from radarr.client import RadarrClient
     from unittest.mock import AsyncMock
+
+    from radarr.client import RadarrClient
+    from radarr.server import RadarrMCPServer
 
     # Create mock client
     mock_client = AsyncMock(spec=RadarrClient)
@@ -168,7 +169,7 @@ def test_mcp_tools():
 def test_models():
     """Test Pydantic models."""
     print("\nTesting Pydantic models...")
-    from radarr.models import Movie, MovieFile, Command, Queue, QueueRecord
+    from radarr.models import Command, Movie, MovieFile, Queue, QueueRecord
 
     # Test Movie model
     try:
@@ -256,9 +257,10 @@ def test_client_initialization():
 def test_server_initialization():
     """Test RadarrMCPServer initialization."""
     print("\nTesting server initialization...")
-    from radarr.server import RadarrMCPServer
-    from radarr.client import RadarrClient
     from unittest.mock import AsyncMock
+
+    from radarr.client import RadarrClient
+    from radarr.server import RadarrMCPServer
 
     # Test with None client
     try:

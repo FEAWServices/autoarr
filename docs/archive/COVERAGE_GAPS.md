@@ -21,26 +21,22 @@ This document identifies test coverage gaps in the AutoArr codebase after Sprint
 These components have excellent test coverage:
 
 1. **MCP Orchestrator** (`autoarr/core/mcp_orchestrator.py`)
-
    - Connection management: 95%
    - Tool invocation: 95%
    - Circuit breaker: 90%
    - Health checks: 95%
 
 2. **API Dependencies** (`autoarr/api/dependencies.py`)
-
    - Orchestrator factory: 100%
    - Configuration: 100%
    - Shutdown handling: 100%
 
 3. **Middleware** (`autoarr/api/middleware.py`)
-
    - Error handling: 95%
    - Request logging: 95%
    - Security headers: 100%
 
 4. **Best Practices** (`autoarr/api/models.py`, repositories)
-
    - CRUD operations: 100%
    - Validation: 100%
    - Queries: 95%
@@ -55,7 +51,6 @@ These components have excellent test coverage:
 These components have good coverage but need improvement:
 
 1. **Configuration Router** (`autoarr/api/routers/configuration.py`)
-
    - Current: ~85%
    - Gaps:
      - Configuration update endpoint (not implemented)
@@ -63,7 +58,6 @@ These components have good coverage but need improvement:
      - Complex error scenarios
 
 2. **Settings Router** (`autoarr/api/routers/settings.py`)
-
    - Current: ~80%
    - Gaps:
      - Concurrent update scenarios
@@ -71,7 +65,6 @@ These components have good coverage but need improvement:
      - Bulk operations
 
 3. **MCP Clients** (SABnzbd, Sonarr, Radarr, Plex)
-
    - Current: ~75%
    - Gaps:
      - All API endpoints not covered
@@ -91,7 +84,6 @@ These components have good coverage but need improvement:
 These components need significant testing:
 
 1. **Content Request Flow** (Not implemented yet)
-
    - Current: 0%
    - Needed:
      - Natural language processing
@@ -101,7 +93,6 @@ These components need significant testing:
      - E2E content request flow
 
 2. **Download Recovery** (Partially implemented)
-
    - Current: ~50%
    - Gaps:
      - Retry endpoint (not implemented)
@@ -111,7 +102,6 @@ These components need significant testing:
      - Max retry limit enforcement
 
 3. **WebSocket Implementation** (Not implemented)
-
    - Current: 0%
    - Needed:
      - Connection handling
@@ -121,7 +111,6 @@ These components need significant testing:
      - Rate limiting
 
 4. **Intelligent Recommendation Engine** (`autoarr/api/services/intelligent_recommendation_engine.py`)
-
    - Current: ~60%
    - Gaps:
      - LLM integration error handling
@@ -275,16 +264,13 @@ These components need significant testing:
 Based on analysis, these files likely have low coverage:
 
 1. `autoarr/api/routers/downloads.py` - ~60%
-
    - Missing retry endpoint
    - Missing recovery logic
 
 2. `autoarr/api/routers/media.py` - ~65%
-
    - Limited Plex integration testing
 
 3. `autoarr/mcp_servers/*/server.py` - ~70%
-
    - Not all MCP protocol features tested
    - Edge cases missing
 
@@ -304,14 +290,12 @@ Based on analysis, these files likely have low coverage:
 ### Critical (Implement Immediately)
 
 1. **Implement Missing Endpoints**
-
    - Content request endpoint
    - Download retry endpoint
    - WebSocket endpoint
    - Enable E2E tests
 
 2. **Add Security Tests**
-
    - Rate limiting implementation and tests
    - Authentication implementation and tests
    - Input validation for all endpoints
@@ -324,14 +308,12 @@ Based on analysis, these files likely have low coverage:
 ### High Priority (Next Sprint)
 
 4. **Complete Integration Tests**
-
    - All SABnzbd API endpoints
    - All Sonarr API endpoints
    - All Radarr API endpoints
    - All Plex API endpoints
 
 5. **Error Scenario Testing**
-
    - Connection failures
    - Timeout scenarios
    - Malformed responses
@@ -345,13 +327,11 @@ Based on analysis, these files likely have low coverage:
 ### Medium Priority (Future Sprints)
 
 7. **Mutation Testing**
-
    - Run mutation testing tool (mutmut)
    - Improve test quality
    - Target >80% mutation coverage
 
 8. **Property-Based Testing**
-
    - Add Hypothesis tests for complex logic
    - Generate edge cases automatically
 
@@ -363,12 +343,10 @@ Based on analysis, these files likely have low coverage:
 ### Low Priority (As Needed)
 
 10. **Documentation Testing**
-
     - Verify code examples work
     - Test API documentation accuracy
 
 11. **Performance Regression Tests**
-
     - Add performance benchmarks
     - Detect performance regressions in CI
 
@@ -462,13 +440,11 @@ Based on analysis, these files likely have low coverage:
 ### Areas Needing Refactoring
 
 1. **Test Duplication**
-
    - Some test logic duplicated across files
    - Extract common test utilities
    - Create reusable test fixtures
 
 2. **Mock Complexity**
-
    - Some tests have complex mock setups
    - Simplify with test factories
    - Use fixture factories
@@ -481,13 +457,11 @@ Based on analysis, these files likely have low coverage:
 ### Test Quality Issues
 
 1. **Flaky Tests**
-
    - None identified yet
    - Monitor for timing issues
    - Add retry logic where needed
 
 2. **Slow Tests**
-
    - Some integration tests slow
    - Consider test databases in-memory
    - Optimize setup/teardown

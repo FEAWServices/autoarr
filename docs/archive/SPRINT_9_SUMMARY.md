@@ -519,14 +519,12 @@ locust = "^2.x"    # Load testing
 ### Immediate (Sprint 10)
 
 1. **Implement Missing Endpoints**
-
    - [ ] WebSocket endpoint (`/ws`)
    - [ ] Content request endpoint (`/api/v1/requests/content`)
    - [ ] Download retry endpoint (`/api/v1/downloads/retry`)
    - [ ] Enable skipped E2E tests
 
 2. **Execute Load Tests**
-
    - [ ] Run Locust with various user loads
    - [ ] Document performance metrics
    - [ ] Identify bottlenecks
@@ -540,14 +538,12 @@ locust = "^2.x"    # Load testing
 ### Short-term (Sprint 11-12)
 
 4. **Complete Integration Testing**
-
    - [ ] All SABnzbd API endpoints
    - [ ] All Sonarr API endpoints
    - [ ] All Radarr API endpoints
    - [ ] All Plex API endpoints
 
 5. **Frontend Testing**
-
    - [ ] Set up Playwright
    - [ ] Add UI E2E tests
    - [ ] Add component tests
@@ -561,7 +557,6 @@ locust = "^2.x"    # Load testing
 ### Long-term (Sprint 13+)
 
 7. **Advanced Testing**
-
    - [ ] Mutation testing
    - [ ] Property-based testing
    - [ ] Chaos engineering

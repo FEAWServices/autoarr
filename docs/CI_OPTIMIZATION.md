@@ -86,12 +86,14 @@ TOTAL TIME: 10-15 minutes
 **Purpose**: Identify what types of files changed
 
 **Outputs**:
+
 - `docs-only`: `'true'` if ONLY docs changed
 - `python-changed`: `'true'` if Python files changed
 - `frontend-changed`: `'true'` if frontend files changed
 - `has-code-changes`: `'true'` if any code changed
 
 **Example**:
+
 - PR with only `docs/*.md` changes → `docs-only=true`
 - PR with `autoarr/api/main.py` changes → `python-changed=true`, `docs-only=false`
 - PR with `autoarr/ui/src/components/` changes → `frontend-changed=true`, `docs-only=false`
@@ -99,16 +101,19 @@ TOTAL TIME: 10-15 minutes
 ### Conditional Jobs
 
 **Python Jobs** (if `python-changed == 'true' && docs-only == 'false'`):
+
 - `python-lint`: Black, isort, Flake8, Pylint, MyPy
 - `python-test`: Unit & integration tests (3.11 & 3.12)
 - `python-security`: Bandit & Safety scans
 
 **Frontend Jobs** (if `frontend-changed == 'true' && docs-only == 'false'`):
+
 - `frontend-lint`: ESLint, Stylelint, Prettier, TypeScript
 - `frontend-build`: Production build
 - `accessibility-tests`: WCAG 2.1 AA checks
 
 **Integration Job** (if `has-code-changes == 'true' && docs-only == 'false'`):
+
 - `e2e-tests`: Full end-to-end Playwright tests
 
 ### docs-check (if `docs-only == 'true'`)
@@ -116,6 +121,7 @@ TOTAL TIME: 10-15 minutes
 **Purpose**: Quick validation for documentation changes
 
 **Checks**:
+
 - Validates Markdown file syntax
 - Checks for common documentation issues
 - Runs in ~5-10 seconds
@@ -125,6 +131,7 @@ TOTAL TIME: 10-15 minutes
 **Purpose**: Provide consistent status check for branch protection
 
 **Behavior**:
+
 - **For docs-only**: Requires only `docs-check` to pass
 - **For code changes**: Requires all applicable code checks to pass
 - **Always succeeds if correct jobs passed** (safe for branch protection)
@@ -151,6 +158,7 @@ Require status checks to pass before merging:
 ### Manual Testing
 
 1. **Test docs-only detection**:
+
    ```bash
    # Create a branch with only doc changes
    git checkout -b test/docs-only-change
@@ -163,6 +171,7 @@ Require status checks to pass before merging:
    ```
 
 2. **Test Python changes**:
+
    ```bash
    # Create a branch with Python code changes
    git checkout -b test/python-change
@@ -192,10 +201,11 @@ The path filters use negative lookahead patterns to detect docs-only changes:
 
 ```yaml
 docs-only:
-  - '!(docs/**|**/*.md|.github/ISSUE_TEMPLATE/**)'
+  - "!(docs/**|**/*.md|.github/ISSUE_TEMPLATE/**)"
 ```
 
 This means:
+
 - If ANY file outside docs/**.md/.github/ISSUE_TEMPLATE/** exists → `docs-only=false`
 - If ALL files are in those paths → `docs-only=true`
 
@@ -206,19 +216,21 @@ This means:
 If you add new code directories, update the path filters:
 
 1. **For Python**: Update `python` filter in `detect-changes`
+
    ```yaml
    python:
-     - 'autoarr/**/*.py'
-     - 'new_module/**/*.py'  # Add new location
-     - 'pyproject.toml'
-     - 'poetry.lock'
+     - "autoarr/**/*.py"
+     - "new_module/**/*.py" # Add new location
+     - "pyproject.toml"
+     - "poetry.lock"
    ```
 
 2. **For Frontend**: Update `frontend` filter
+
    ```yaml
    frontend:
-     - 'autoarr/ui/**'
-     - 'new_frontend_module/**'  # Add new location
+     - "autoarr/ui/**"
+     - "new_frontend_module/**" # Add new location
    ```
 
 3. **For Code**: Update `code` filter to include all code locations
@@ -229,7 +241,7 @@ If documentation is added to new locations:
 
 ```yaml
 docs-only:
-  - '!(docs/**|new_docs_path/**|**/*.md|.github/ISSUE_TEMPLATE/**)'
+  - "!(docs/**|new_docs_path/**|**/*.md|.github/ISSUE_TEMPLATE/**)"
 ```
 
 ## Performance Metrics
@@ -252,22 +264,26 @@ docs-only:
 ### Issue: Docs-only detection not working
 
 **Check**:
+
 1. Verify all changes are in `docs/**` or `**/*.md`
 2. Ensure no Python/frontend/config files were touched
 3. Check `detect-changes` job output in workflow run
 
 **Example bad case** (triggers full tests):
+
 - File: `docs/README.md` + `docs/typo_in_code.py`
 - Result: `docs-only=false` (Python file present)
 
 ### Issue: Code job was skipped but should have run
 
 **Check**:
+
 1. Verify file paths match the filters
 2. Check if file extension is included (e.g., `.py` for Python)
 3. Review the path filter logic in `detect-changes`
 
 **Example fix**:
+
 - If new Python module isn't detected, add pattern to `python` filter
 
 ## References

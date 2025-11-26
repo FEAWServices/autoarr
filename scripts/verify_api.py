@@ -28,12 +28,7 @@ def verify_imports():
 
         print("[OK] api.config imported successfully")
 
-        from api.models import (
-            ToolCallRequest,
-            ToolCallResponse,
-            HealthCheckResponse,
-            ServiceHealth,
-        )
+        from api.models import HealthCheckResponse, ServiceHealth, ToolCallRequest, ToolCallResponse
 
         print("[OK] api.models imported successfully")
 
@@ -45,7 +40,7 @@ def verify_imports():
 
         print("[OK] api.middleware imported successfully")
 
-        from api.routers import health, mcp, downloads, shows, movies, media
+        from api.routers import downloads, health, mcp, media, movies, shows
 
         print("[OK] api.routers imported successfully")
 
@@ -65,8 +60,8 @@ def verify_app_config():
     print("=" * 70)
 
     try:
-        from api.main import app
         from api.config import get_settings
+        from api.main import app
 
         settings = get_settings()
 
@@ -161,13 +156,13 @@ def verify_models():
 
     try:
         from api.models import (
-            ToolCallRequest,
-            ToolCallResponse,
+            AddMovieRequest,
+            AddSeriesRequest,
             BatchToolCallRequest,
             HealthCheckResponse,
             ServiceHealth,
-            AddSeriesRequest,
-            AddMovieRequest,
+            ToolCallRequest,
+            ToolCallResponse,
         )
 
         # Test model creation
@@ -204,8 +199,8 @@ def verify_test_client():
     print("=" * 70)
 
     try:
-        from fastapi.testclient import TestClient
         from api.main import app
+        from fastapi.testclient import TestClient
 
         client = TestClient(app)
 

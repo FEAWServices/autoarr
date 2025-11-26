@@ -45,11 +45,13 @@ bash test-settings-api.sh
 **Purpose**: Verify application health endpoints respond correctly
 
 **Tests**:
+
 - Main health endpoint returns `{"status": "healthy"}`
 - Individual service health endpoints are accessible
 - MCP server connections are reported
 
 **Expected Output**:
+
 ```
 ✅ Main health check: PASSED
   - sabnzbd: disconnected
@@ -64,11 +66,13 @@ bash test-settings-api.sh
 **Purpose**: Verify frontend is properly served
 
 **Tests**:
+
 - Root URL returns HTML (not JSON)
 - React root element exists in HTML
 - Static assets directory is accessible
 
 **Expected Output**:
+
 ```
 ✅ UI serves HTML: PASSED
 ✅ React root element found: PASSED
@@ -81,6 +85,7 @@ bash test-settings-api.sh
 **Purpose**: Verify settings can be saved and persisted
 
 **Tests**:
+
 1. Retrieve current SABnzbd settings
 2. Disable SABnzbd and save
 3. Verify settings were saved (enabled = false)
@@ -88,6 +93,7 @@ bash test-settings-api.sh
 5. Verify settings were saved (enabled = true)
 
 **Expected Output**:
+
 ```
 ✅ Test Complete: Settings toggle and save works without errors!
 ```
@@ -130,16 +136,19 @@ To add a new test:
 ## Troubleshooting
 
 **Tests fail with connection errors**:
+
 - Verify AutoArr is running: `docker-compose ps`
 - Check application logs: `docker-compose logs autoarr`
 - Verify port 8088 is accessible: `curl http://localhost:8088/health`
 
 **Tests fail with 422 errors**:
+
 - Check backend logs for validation errors
 - Verify API request format matches backend expectations
 - Review recent code changes to settings endpoints
 
 **Tests timeout**:
+
 - Increase curl timeout in test scripts
 - Check for blocking operations in application startup
 - Verify database migrations completed successfully
@@ -147,6 +156,7 @@ To add a new test:
 ## Maintenance
 
 These tests should be updated when:
+
 - New API endpoints are added
 - Settings schema changes
 - Health check behavior changes

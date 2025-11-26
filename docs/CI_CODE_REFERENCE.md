@@ -293,16 +293,18 @@ filters: |
 
 ```yaml
 docs-only:
-  - '!(docs/**|**/*.md|.github/ISSUE_TEMPLATE/**)'
+  - "!(docs/**|**/*.md|.github/ISSUE_TEMPLATE/**)"
 ```
 
 **What this means:**
+
 - `!(...)` = Negation operator
 - Inside parentheses: patterns to exclude
 - If ANY file matches a pattern OUTSIDE these paths → `docs-only=false`
 - If ALL files match patterns INSIDE these paths → `docs-only=true`
 
 **Examples:**
+
 - Change: `docs/api.md` → `docs-only=true` (matches `**/*.md`)
 - Change: `autoarr/api/main.py` → `docs-only=false` (doesn't match excluded patterns)
 - Change: `docs/api.md` + `autoarr/api/main.py` → `docs-only=false` (has non-docs file)
@@ -368,6 +370,7 @@ EOF
 ### Check if Job Ran
 
 In workflow run UI:
+
 - Look for job in "All checks" list
 - Green checkmark = Job ran successfully
 - Gray checkbox = Job was skipped

@@ -162,9 +162,11 @@ The CI pipeline runs on every push and pull request. It uses GitHub Actions and 
    - If hooks fail, fix the issues and commit again
 
 6. **Push to GitHub**
+
    ```bash
    git push
    ```
+
    - CI pipeline will run automatically
    - All checks must pass before merging
 

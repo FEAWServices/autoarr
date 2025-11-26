@@ -420,7 +420,6 @@ jobs:
 ### For Implementation Team
 
 1. **Read Documentation**
-
    - Review MCP_ORCHESTRATOR_TEST_STRATEGY.md
    - Understand requirements
 
@@ -439,13 +438,11 @@ jobs:
    ```
 
 4. **Create Skeleton**
-
    - Create `core/mcp_orchestrator.py`
    - Define exception classes
    - Define MCPOrchestrator class
 
 5. **Begin TDD Cycle**
-
    - Pick first test
    - Implement minimal code to pass
    - Refactor

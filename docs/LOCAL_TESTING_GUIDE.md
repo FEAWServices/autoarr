@@ -5,6 +5,7 @@ This guide will help you set up AutoArr for local testing with your **existing**
 ## Overview
 
 AutoArr connects to your existing media automation services and provides:
+
 - 🧠 **AI-Powered Configuration Auditing** - Get intelligent recommendations for optimizing your setup
 - 🤖 **Natural Language Content Requests** - Request movies/shows by typing "Add Inception in 4K"
 - 📊 **Unified Dashboard** - Monitor all your services in one place
@@ -34,6 +35,7 @@ AutoArr requires the following services to be **already installed and running**:
 4. **Plex** (Optional - Media server)
 
 These services can be running:
+
 - On the **same machine** as AutoArr (localhost)
 - On a **different machine** on your network (LAN)
 - In **Docker containers**
@@ -43,24 +45,28 @@ These services can be running:
 You'll need API keys from each service:
 
 #### SABnzbd API Key
+
 1. Open SABnzbd web interface (usually http://localhost:8080)
 2. Go to **Config → General**
 3. Find **API Key** in the Security section
 4. Copy the key
 
 #### Sonarr API Key
+
 1. Open Sonarr web interface (usually http://localhost:8989)
 2. Go to **Settings → General**
 3. Scroll to **Security** section
 4. Copy the **API Key**
 
 #### Radarr API Key
+
 1. Open Radarr web interface (usually http://localhost:7878)
 2. Go to **Settings → General**
 3. Scroll to **Security** section
 4. Copy the **API Key**
 
 #### Plex Token (Optional)
+
 1. Follow [Plex's official guide](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 2. Or visit: https://www.plex.tv/claim/ while logged in
 
@@ -103,6 +109,7 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
 **If your services are on a different machine:**
+
 ```bash
 # Example: Services running on 192.168.1.100
 SABNZBD_URL=http://192.168.1.100:8080
@@ -117,6 +124,7 @@ RADARR_URL=http://192.168.1.100:7878
 ```
 
 This script will:
+
 - ✅ Check Docker is running
 - ✅ Create necessary directories
 - ✅ Build AutoArr backend
@@ -197,6 +205,7 @@ If these work, AutoArr will be able to connect.
 Edit `.env` to match your setup:
 
 **Scenario 1: Services on Same Machine (localhost)**
+
 ```bash
 SABNZBD_URL=http://localhost:8080
 SONARR_URL=http://localhost:8989
@@ -204,6 +213,7 @@ RADARR_URL=http://localhost:7878
 ```
 
 **Scenario 2: Services on Different Machine (LAN)**
+
 ```bash
 SABNZBD_URL=http://192.168.1.100:8080
 SONARR_URL=http://192.168.1.100:8989
@@ -211,6 +221,7 @@ RADARR_URL=http://192.168.1.100:7878
 ```
 
 **Scenario 3: Services in Docker on Same Host**
+
 ```bash
 # Use host.docker.internal to access host from container
 SABNZBD_URL=http://host.docker.internal:8080
@@ -219,6 +230,7 @@ RADARR_URL=http://host.docker.internal:7878
 ```
 
 **Scenario 4: Mixed Setup**
+
 ```bash
 # SABnzbd on localhost
 SABNZBD_URL=http://localhost:8080
@@ -281,6 +293,7 @@ Frontend will be available at: http://localhost:3000
 6. Click **"Apply"** on any recommendation to update the service
 
 **What's Happening Behind the Scenes:**
+
 - AutoArr fetches current configurations from all services
 - Compares against best practices database
 - Uses Claude AI to analyze and prioritize recommendations
@@ -300,6 +313,7 @@ Frontend will be available at: http://localhost:3000
 4. Click on any service card to see details
 
 **API Endpoint:**
+
 ```bash
 curl http://localhost:8088/health/services
 ```
@@ -323,6 +337,7 @@ curl http://localhost:8088/health/services
    - Show real-time status updates
 
 **API Endpoint:**
+
 ```bash
 curl -X POST http://localhost:8088/api/v1/requests/content \
   -H "Content-Type: application/json" \
@@ -334,6 +349,7 @@ curl -X POST http://localhost:8088/api/v1/requests/content \
 **Goal**: View and manage your existing media
 
 **Movies (Radarr):**
+
 ```bash
 # List all movies
 curl http://localhost:8088/api/v1/movies
@@ -348,6 +364,7 @@ curl -X POST http://localhost:8088/api/v1/movies \
 ```
 
 **TV Shows (Sonarr):**
+
 ```bash
 # List all shows
 curl http://localhost:8088/api/v1/shows
@@ -367,19 +384,19 @@ curl -X POST http://localhost:8088/api/v1/shows \
 
 ```javascript
 // Connect to WebSocket
-const ws = new WebSocket('ws://localhost:8088/ws');
+const ws = new WebSocket("ws://localhost:8088/ws");
 
 ws.onopen = () => {
-  console.log('Connected to AutoArr WebSocket');
+  console.log("Connected to AutoArr WebSocket");
 };
 
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
-  console.log('Received update:', data);
+  console.log("Received update:", data);
 };
 
 ws.onerror = (error) => {
-  console.error('WebSocket error:', error);
+  console.error("WebSocket error:", error);
 };
 ```
 
@@ -390,6 +407,7 @@ ws.onerror = (error) => {
 ### Problem: "Cannot connect to SABnzbd/Sonarr/Radarr"
 
 **Symptoms:**
+
 - Red status indicators in UI
 - API returns connection errors
 - Logs show "Connection refused"
@@ -397,6 +415,7 @@ ws.onerror = (error) => {
 **Solutions:**
 
 1. **Verify service is running:**
+
    ```bash
    curl http://localhost:8080  # SABnzbd
    curl http://localhost:8989  # Sonarr
@@ -412,6 +431,7 @@ ws.onerror = (error) => {
    - If on different machine: use IP address, not hostname
 
 4. **Check network connectivity:**
+
    ```bash
    # From AutoArr container
    docker-compose -f docker-compose.dev.yml exec autoarr-backend curl http://host.docker.internal:8080
@@ -425,11 +445,13 @@ ws.onerror = (error) => {
 **Solutions:**
 
 1. **Clear Docker cache:**
+
    ```bash
    docker-compose -f docker-compose.dev.yml build --no-cache
    ```
 
 2. **Check disk space:**
+
    ```bash
    docker system df
    docker system prune  # Clean up if needed
@@ -443,6 +465,7 @@ ws.onerror = (error) => {
 **Solutions:**
 
 1. **Clear node_modules and reinstall:**
+
    ```bash
    cd autoarr/ui
    rm -rf node_modules pnpm-lock.yaml
@@ -450,6 +473,7 @@ ws.onerror = (error) => {
    ```
 
 2. **Check Node version:**
+
    ```bash
    node --version  # Should be 20+
    ```
@@ -462,6 +486,7 @@ ws.onerror = (error) => {
 ### Problem: "AI features not working"
 
 **Symptoms:**
+
 - Configuration audit fails
 - Natural language requests don't work
 - Logs show "Missing ANTHROPIC_API_KEY"
@@ -474,6 +499,7 @@ ws.onerror = (error) => {
    - Add to `.env`: `ANTHROPIC_API_KEY=sk-ant-your-key-here`
 
 2. **Restart backend:**
+
    ```bash
    docker-compose -f docker-compose.dev.yml restart
    ```
@@ -585,15 +611,17 @@ websocat ws://localhost:8088/ws
 If you need to change AutoArr's ports:
 
 **Backend (edit `docker-compose.dev.yml`):**
+
 ```yaml
 ports:
-  - "9000:8088"  # External:Internal
+  - "9000:8088" # External:Internal
 ```
 
 **Frontend (edit `autoarr/ui/vite.config.ts`):**
+
 ```typescript
 server: {
-  port: 4000
+  port: 4000;
 }
 ```
 
@@ -713,14 +741,14 @@ Once you have AutoArr running:
 
 ### Service Default Ports
 
-| Service | Default Port | URL |
-|---------|-------------|-----|
-| SABnzbd | 8080 | http://localhost:8080 |
-| Sonarr | 8989 | http://localhost:8989 |
-| Radarr | 7878 | http://localhost:7878 |
-| Plex | 32400 | http://localhost:32400 |
-| AutoArr Backend | 8088 | http://localhost:8088 |
-| AutoArr Frontend | 3000 | http://localhost:3000 |
+| Service          | Default Port | URL                    |
+| ---------------- | ------------ | ---------------------- |
+| SABnzbd          | 8080         | http://localhost:8080  |
+| Sonarr           | 8989         | http://localhost:8989  |
+| Radarr           | 7878         | http://localhost:7878  |
+| Plex             | 32400        | http://localhost:32400 |
+| AutoArr Backend  | 8088         | http://localhost:8088  |
+| AutoArr Frontend | 3000         | http://localhost:3000  |
 
 ### Environment Variables Reference
 
@@ -728,18 +756,18 @@ See `.env.local` for complete list with descriptions.
 
 ### API Endpoint Quick Reference
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Overall health |
-| `/health/services` | GET | Service health |
-| `/api/v1/config/audit` | POST | Run configuration audit |
-| `/api/v1/config/recommendations` | GET | Get recommendations |
-| `/api/v1/requests/content` | POST | Request content (NL) |
-| `/api/v1/requests` | GET | List all requests |
-| `/api/v1/movies` | GET | List movies |
-| `/api/v1/shows` | GET | List TV shows |
-| `/api/v1/downloads` | GET | List downloads |
-| `/ws` | WebSocket | Real-time updates |
+| Endpoint                         | Method    | Description             |
+| -------------------------------- | --------- | ----------------------- |
+| `/health`                        | GET       | Overall health          |
+| `/health/services`               | GET       | Service health          |
+| `/api/v1/config/audit`           | POST      | Run configuration audit |
+| `/api/v1/config/recommendations` | GET       | Get recommendations     |
+| `/api/v1/requests/content`       | POST      | Request content (NL)    |
+| `/api/v1/requests`               | GET       | List all requests       |
+| `/api/v1/movies`                 | GET       | List movies             |
+| `/api/v1/shows`                  | GET       | List TV shows           |
+| `/api/v1/downloads`              | GET       | List downloads          |
+| `/ws`                            | WebSocket | Real-time updates       |
 
 ---
 

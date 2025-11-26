@@ -9,9 +9,11 @@ Successfully optimized the GitHub Actions CI pipeline to skip expensive tests wh
 ## Changes Made
 
 ### 1. Workflow File Modified
+
 **File**: `/app/.github/workflows/ci.yml` (+205 lines, -23 lines)
 
 #### New Job: detect-changes
+
 Added a path detection job that runs on every workflow execution to identify which types of files changed:
 
 ```yaml
@@ -26,12 +28,14 @@ detect-changes:
 ```
 
 **Path Filters Configured**:
-- `docs-only`: Matches only documentation files (docs/**, **.md, .github/ISSUE_TEMPLATE/**)
+
+- `docs-only`: Matches only documentation files (docs/**, **.md, .github/ISSUE_TEMPLATE/\*\*)
 - `python`: Python files and backend dependencies
 - `frontend`: Frontend code and dependencies
 - `code`: All code files (union of python + frontend)
 
 #### Modified Jobs: Conditional Execution
+
 Updated 7 jobs to conditionally run based on detected changes:
 
 1. **python-lint** - Now skips for docs-only changes
@@ -43,6 +47,7 @@ Updated 7 jobs to conditionally run based on detected changes:
 7. **accessibility-tests** - Now skips for docs-only changes
 
 Example conditional logic:
+
 ```yaml
 if: |
   (github.event_name == 'pull_request' || needs.detect-changes.outputs.python-changed == 'true') &&
@@ -50,6 +55,7 @@ if: |
 ```
 
 #### New Job: docs-check
+
 Added a lightweight validation job for documentation-only changes:
 
 ```yaml
@@ -61,24 +67,29 @@ docs-check:
 ```
 
 **Checks Performed**:
+
 - Validates Markdown file syntax
 - Checks for common documentation issues
 - Completes in 5-10 seconds
 
 #### Modified Job: all-checks-passed
+
 Enhanced the final status check job to intelligently evaluate results based on change type:
 
 **For docs-only changes**:
+
 - Requires only `docs-check` to pass
 - Reports code tests were skipped
 - Completes in ~1 second
 
 **For code changes**:
+
 - Requires all applicable code tests to pass (python-lint, python-test, frontend-lint, frontend-build)
 - Provides detailed results for each category
 - Ensures branch protection still works
 
 ### 2. Documentation Added
+
 **File**: `/app/docs/CI_OPTIMIZATION.md` (+282 lines)
 
 Comprehensive documentation including:
@@ -97,12 +108,12 @@ Comprehensive documentation including:
 
 ### Time Reduction
 
-| Scenario | Before | After | Savings |
-|----------|--------|-------|---------|
-| Docs-only PR | 10-15 min | 30 sec | 95% reduction |
-| Python change | 10-15 min | 10-15 min | No change |
-| Frontend change | 10-15 min | 10-15 min | No change |
-| Full code change | 10-15 min | 10-15 min | No change |
+| Scenario         | Before    | After     | Savings       |
+| ---------------- | --------- | --------- | ------------- |
+| Docs-only PR     | 10-15 min | 30 sec    | 95% reduction |
+| Python change    | 10-15 min | 10-15 min | No change     |
+| Frontend change  | 10-15 min | 10-15 min | No change     |
+| Full code change | 10-15 min | 10-15 min | No change     |
 
 ### Resource Impact
 
@@ -119,10 +130,11 @@ The `docs-only` filter uses a negation pattern to detect when ONLY documentation
 
 ```yaml
 docs-only:
-  - '!(docs/**|**/*.md|.github/ISSUE_TEMPLATE/**)'
+  - "!(docs/**|**/*.md|.github/ISSUE_TEMPLATE/**)"
 ```
 
 **Logic Explanation**:
+
 - `!()` = negation (inverted match)
 - Matches ALL files EXCEPT those in the specified paths
 - If ANY non-docs file exists → `docs-only=false`
@@ -131,6 +143,7 @@ docs-only:
 ### Job Dependency Chain
 
 **Documentation-only path**:
+
 ```
 detect-changes (5s)
     ↓
@@ -141,6 +154,7 @@ Total: ~30 seconds
 ```
 
 **Code change path**:
+
 ```
 detect-changes (5s)
     ↓
@@ -178,6 +192,7 @@ Require status checks to pass before merging:
 ### Test Case 1: Documentation-Only Changes
 
 **Setup**:
+
 ```bash
 git checkout -b test/docs-only
 echo "# New guide" > docs/deployment-guide.md
@@ -186,6 +201,7 @@ git push origin test/docs-only
 ```
 
 **Expected Results**:
+
 - ✓ `detect-changes`: `docs-only = 'true'`
 - ✓ `docs-check`: Runs (5-10 sec)
 - ⊘ `python-lint`: Skipped
@@ -198,6 +214,7 @@ git push origin test/docs-only
 ### Test Case 2: Python Code Changes
 
 **Setup**:
+
 ```bash
 git checkout -b test/python-feature
 echo "def new_function(): pass" >> autoarr/api/main.py
@@ -206,6 +223,7 @@ git push origin test/python-feature
 ```
 
 **Expected Results**:
+
 - ✓ `detect-changes`: `python-changed = 'true'`, `docs-only = 'false'`
 - ⊘ `docs-check`: Skipped
 - ✓ `python-lint`: Runs
@@ -219,6 +237,7 @@ git push origin test/python-feature
 ### Test Case 3: Frontend Code Changes
 
 **Setup**:
+
 ```bash
 git checkout -b test/frontend-feature
 echo "export const New = () => null" >> autoarr/ui/src/components/new.tsx
@@ -227,6 +246,7 @@ git push origin test/frontend-feature
 ```
 
 **Expected Results**:
+
 - ✓ `detect-changes`: `frontend-changed = 'true'`, `docs-only = 'false'`
 - ⊘ `docs-check`: Skipped
 - ⊘ `python-lint`: Skipped
@@ -244,28 +264,31 @@ git push origin test/frontend-feature
 Update path filters in `.github/workflows/ci.yml` when:
 
 1. **Adding new Python modules**:
+
    ```yaml
    python:
-     - 'autoarr/**/*.py'
-     - 'new_module/**/*.py'  # Add here
+     - "autoarr/**/*.py"
+     - "new_module/**/*.py" # Add here
    ```
 
 2. **Adding new frontend locations**:
+
    ```yaml
    frontend:
-     - 'autoarr/ui/**'
-     - 'new_frontend/**'  # Add here
+     - "autoarr/ui/**"
+     - "new_frontend/**" # Add here
    ```
 
 3. **Adding new documentation locations**:
    ```yaml
    docs-only:
-     - '!(docs/**|new_docs_path/**|**/*.md|.github/ISSUE_TEMPLATE/**)'
+     - "!(docs/**|new_docs_path/**|**/*.md|.github/ISSUE_TEMPLATE/**)"
    ```
 
 ### Current Coverage
 
 **Python Files**:
+
 - `autoarr/api/**/*.py`
 - `autoarr/shared/**/*.py`
 - `autoarr/mcp_servers/**/*.py`
@@ -274,12 +297,14 @@ Update path filters in `.github/workflows/ci.yml` when:
 - `poetry.lock`
 
 **Frontend Files**:
+
 - `autoarr/ui/src/**/*`
 - `autoarr/ui/tests/**/*`
 - `autoarr/ui/package.json`
 - `pnpm-lock.yaml`
 
 **Documentation**:
+
 - `docs/**/*.md`
 - `**/*.md` (root-level documentation)
 - `.github/ISSUE_TEMPLATE/**`
@@ -314,10 +339,12 @@ git revert 5d28f26
 ## Files Modified
 
 ### Core Changes
+
 1. `/app/.github/workflows/ci.yml` - Enhanced workflow with path detection and conditionals
 2. `/app/docs/CI_OPTIMIZATION.md` - Comprehensive documentation
 
 ### Affected Components
+
 - GitHub Actions CI/CD pipeline
 - Branch protection rules (no changes needed, but compatible)
 - Developer workflow (faster feedback for docs)

@@ -257,31 +257,26 @@ Located in `tests/fixtures/conftest.py`, these factories create realistic test d
 ### Available Factories
 
 1. **sabnzbd_queue_factory**
-
    - Creates mock queue responses
    - Configurable: slots, paused state, speed, size
    - Realistic NZO IDs and filenames
 
 2. **sabnzbd_history_factory**
-
    - Creates mock history responses
    - Configurable: entries, failed count, pagination
    - Realistic timestamps and statuses
 
 3. **sabnzbd_config_factory**
-
    - Creates mock configuration responses
    - Configurable: directories, settings
    - Supports nested config updates
 
 4. **sabnzbd_status_factory**
-
    - Creates mock status/version responses
    - Configurable: version, uptime
    - System metrics included
 
 5. **sabnzbd_error_response_factory**
-
    - Creates mock error responses
    - Configurable: error message, error code
 

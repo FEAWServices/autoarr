@@ -6,6 +6,7 @@
 ## Critical Issue
 
 **All pull requests are blocked due to CI infrastructure unavailability**:
+
 - ❌ Self-hosted GitHub Actions runners are not accessible
 - ❌ Branch protection rules require passing CI checks
 - ❌ Admin override cannot bypass repository rulesets
@@ -15,12 +16,13 @@
 
 ### High Priority - Release PRs
 
-| PR | Branch | Status | Action Needed |
-|----|--------|--------|---------------|
+| PR  | Branch                       | Status     | Action Needed                                                       |
+| --- | ---------------------------- | ---------- | ------------------------------------------------------------------- |
 | #59 | `release/v1.0.0` → `develop` | ⏸️ BLOCKED | Version bump (1.0.0) + fixes - **READY TO MERGE** when CI available |
-| #58 | `develop` → `main` | ⏸️ BLOCKED | Production release - Depends on #59 |
+| #58 | `develop` → `main`           | ⏸️ BLOCKED | Production release - Depends on #59                                 |
 
 **PR #59 Details**:
+
 - ✅ Contains critical fixes: Docker build, linting, test failures
 - ✅ Version bump: 0.1.0 → 1.0.0
 - ✅ Complete CHANGELOG.md
@@ -30,42 +32,47 @@
 
 ### Medium Priority - Dependency Updates
 
-| PR | Dependency | Type | Recommendation |
-|----|-----------|------|----------------|
-| #62 | locust 2.41.5 → 2.42.0 | dev | ✅ Safe - minor update with bug fixes |
-| #61 | vite 7.1.9 → 7.1.11 | dev | ✅ Safe - patch update |
-| #56 | pydantic 2.12.0 → 2.12.3 | prod | ✅ Safe - patch update |
-| #54 | mcp 1.16.0 → 1.18.0 | prod | ⚠️ Review - minor update, check changelog |
-| #53 | anthropic 0.69.0 → 0.71.0 | prod | ⚠️ Review - minor update, check changelog |
-| #51 | uvicorn 0.37.0 → 0.38.0 | prod | ✅ Safe - minor update |
-| #50 | @typescript-eslint/parser 8.46.0 → 8.46.1 | dev | ✅ Safe - patch update |
+| PR  | Dependency                                | Type | Recommendation                            |
+| --- | ----------------------------------------- | ---- | ----------------------------------------- |
+| #62 | locust 2.41.5 → 2.42.0                    | dev  | ✅ Safe - minor update with bug fixes     |
+| #61 | vite 7.1.9 → 7.1.11                       | dev  | ✅ Safe - patch update                    |
+| #56 | pydantic 2.12.0 → 2.12.3                  | prod | ✅ Safe - patch update                    |
+| #54 | mcp 1.16.0 → 1.18.0                       | prod | ⚠️ Review - minor update, check changelog |
+| #53 | anthropic 0.69.0 → 0.71.0                 | prod | ⚠️ Review - minor update, check changelog |
+| #51 | uvicorn 0.37.0 → 0.38.0                   | prod | ✅ Safe - minor update                    |
+| #50 | @typescript-eslint/parser 8.46.0 → 8.46.1 | dev  | ✅ Safe - patch update                    |
 
 ### Closed PRs
 
-| PR | Dependency | Reason |
-|----|-----------|--------|
+| PR  | Dependency                    | Reason                                                  |
+| --- | ----------------------------- | ------------------------------------------------------- |
 | #60 | eslint-plugin-react-hooks 6→7 | ❌ BREAKING CHANGE - requires manual review and testing |
 
 ## Root Cause Analysis
 
 ### CI Infrastructure
+
 ```
 Error: Repository rule violations found
 3 of 3 required status checks have not succeeded: 1 failing.
 ```
 
 **Issue**: The GitHub Actions workflows are configured for self-hosted runners that are not currently available:
+
 - Python CI workflow requires self-hosted runner
 - Frontend CI workflow requires self-hosted runner
 - Docker Build & Deploy requires self-hosted runner
 
 **Evidence**:
+
 - All recent CI runs show "cancelled" status
 - No logs available (jobs didn't execute)
 - Same issue affects both `develop` and `release/v1.0.0` branches
 
 ### Branch Protection
+
 The repository has strict branch protection rulesets that:
+
 - Require all CI checks to pass
 - Cannot be bypassed even with admin override
 - Block both PR merges and direct pushes
@@ -75,6 +82,7 @@ The repository has strict branch protection rulesets that:
 ### Immediate Action Required
 
 **Option 1: Fix CI Infrastructure** (Recommended)
+
 ```bash
 # Verify self-hosted runner is running
 docker compose -f .common/gh-local-runners/docker-compose-dind.yml ps
@@ -88,12 +96,14 @@ gh api repos/FEAWServices/autoarr/actions/runners
 ```
 
 **Option 2: Temporarily Use GitHub-Hosted Runners**
+
 1. Edit `.github/workflows/*.yml` files
 2. Change `runs-on: self-hosted` to `runs-on: ubuntu-latest`
 3. Commit and push changes
 4. Revert after PRs are merged
 
 **Option 3: Temporarily Disable Branch Protection**
+
 1. Go to Settings → Rules → Rulesets
 2. Disable or modify ruleset temporarily
 3. Merge critical PRs (#59, #58)
@@ -102,16 +112,19 @@ gh api repos/FEAWServices/autoarr/actions/runners
 ### Merge Sequence (Once CI is Fixed)
 
 1. **Merge PR #59** (`release/v1.0.0` → `develop`)
+
    ```bash
    gh pr merge 59 --squash --delete-branch
    ```
 
 2. **Merge PR #58** (`develop` → `main`)
+
    ```bash
    gh pr merge 58 --squash --delete-branch
    ```
 
 3. **Tag Release**
+
    ```bash
    git checkout main
    git pull origin main
@@ -120,6 +133,7 @@ gh api repos/FEAWServices/autoarr/actions/runners
    ```
 
 4. **Merge Safe Dependency Updates**
+
    ```bash
    # Patch updates (safe to auto-merge)
    gh pr merge 62 --squash --delete-branch  # locust
@@ -213,6 +227,7 @@ The `release/v1.0.0` branch contains essential fixes:
 ## Impact Assessment
 
 **HIGH**: Every day without merging PR #59 means:
+
 - ❌ Docker builds may fail in production
 - ❌ Tests continue to have failures
 - ❌ Linting issues persist
@@ -220,6 +235,7 @@ The `release/v1.0.0` branch contains essential fixes:
 - ❌ Documentation scattered instead of organized
 
 **MEDIUM**: Dependency updates are delayed:
+
 - Security patches not applied
 - Bug fixes not available
 - Performance improvements missing

@@ -1,57 +1,49 @@
 # =============================================================================
 # AutoArr Local Development Environment
 # =============================================================================
-# This docker-compose file runs AutoArr for local development with LIVE RELOADING.
-# Source code is mounted from the host, so changes take effect immediately.
+# This docker-compose file runs AutoArr for local development.
+# Source code is mounted from Windows for live backend reloading.
 #
-# Prerequisites:
-#   1. Build the dev image first: docker build -t autoarr:dev -f docker/Dockerfile.dev .
-#   2. Or let docker-compose build it: docker-compose -f docker/docker-compose.local-test.yml build
+# Access Point:
+#   - http://localhost:8001 - Full application (UI + API)
+#
+# Backend Changes:
+#   - Python code changes are detected automatically (no restart needed)
+#
+# Frontend Changes:
+#   - Run `pnpm build` in /app/autoarr/ui after UI changes
+#   - Then refresh your browser
 #
 # Usage:
 #   docker-compose -f docker/docker-compose.local-test.yml up -d
 #   docker-compose -f docker/docker-compose.local-test.yml logs -f
 #   docker-compose -f docker/docker-compose.local-test.yml down
-#
-# Features:
-#   - Live code reloading (uvicorn --reload)
-#   - Source code mounted from host
-#   - Fast iteration for development/testing
 # =============================================================================
 
 name: autoarr_app
 
 services:
-  autoarr-local:
+  autoarr:
     image: autoarr:dev
     build:
       context: ..
       dockerfile: docker/Dockerfile.dev
-    container_name: autoarr-local-test
+    container_name: autoarr-local
     restart: unless-stopped
 
-    # Expose port to host
     ports:
       - "8001:8088"
 
     environment:
-      # Application Settings
       APP_ENV: development
       LOG_LEVEL: DEBUG
       PORT: 8088
-
-      # Python path for module imports
       PYTHONPATH: /app
-
-      # Database (SQLite for local testing)
       DATABASE_URL: sqlite:////data/autoarr.db
-
-      # Redis (in-memory for local testing)
       REDIS_URL: memory://
 
     volumes:
-      # Mount source code for live reloading
-      # Uses the same Windows path as devcontainer: c:\Git\autoarr
+      # Mount source code from Windows
       - c:/Git/autoarr/autoarr:/app/autoarr:cached
       - c:/Git/autoarr/scripts:/app/scripts:cached
 
