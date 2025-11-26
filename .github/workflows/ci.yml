@@ -363,6 +363,17 @@ jobs:
             -ra
         continue-on-error: true
 
+      - name: Run contract tests
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        run: |
+          echo "🔗 Running contract and path-based tests..."
+          poetry run pytest autoarr/tests/contracts/ \
+            -v \
+            --junit-xml=test-results/contract-junit.xml \
+            --maxfail=5 \
+            -ra
+          echo "✅ Contract tests passed"
+
       - name: Upload coverage to Codecov
         if: (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request') && matrix.python-version == '3.11'
         uses: codecov/codecov-action@v5
