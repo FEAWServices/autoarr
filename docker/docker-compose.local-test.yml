@@ -40,6 +40,9 @@ services:
       LOG_LEVEL: DEBUG
       PORT: 8088
 
+      # Python path for module imports
+      PYTHONPATH: /app
+
       # Database (SQLite for local testing)
       DATABASE_URL: sqlite:////data/autoarr.db
 
@@ -48,10 +51,13 @@ services:
 
     volumes:
       # Mount source code for live reloading
-      # IMPORTANT: Update the host path to match your local workspace
-      # For devcontainer, use the same path as ${localWorkspaceFolder}
-      - ../autoarr:/app/autoarr:cached
-      - ../scripts:/app/scripts:cached
+      # The SOURCE_CODE_PATH variable should be set to your local workspace path
+      # For Windows/Docker Desktop: C:\Users\...\autoarr or /mnt/c/Users/.../autoarr
+      # For Linux: /home/.../autoarr
+      #
+      # Example: SOURCE_CODE_PATH=/mnt/c/Users/YourName/code/autoarr
+      - ${SOURCE_CODE_PATH:-..}/autoarr:/app/autoarr:cached
+      - ${SOURCE_CODE_PATH:-..}/scripts:/app/scripts:cached
 
       # Persistent data
       - autoarr-data:/data
