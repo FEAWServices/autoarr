@@ -4,6 +4,7 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
+  "runArgs": ["--name", "autoarr_devcontainer"],
   "workspaceFolder": "/app",
   "mounts": [
     "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
