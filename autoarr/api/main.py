@@ -23,6 +23,7 @@ and sets up all API routes.
 """
 
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -34,22 +35,15 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from .config import get_settings
-from .rate_limiter import limiter
 from .database import get_database, init_database
 from .dependencies import shutdown_orchestrator
-from .middleware import (
-    ErrorHandlerMiddleware,
-    RequestLoggingMiddleware,
-    add_security_headers,
-)
+from .middleware import ErrorHandlerMiddleware, RequestLoggingMiddleware, add_security_headers
+from .rate_limiter import limiter
 from .routers import configuration, downloads, health, mcp, media, movies, requests
 from .routers import settings as settings_router
 from .routers import shows
 from .services.event_bus import get_event_bus
-from .services.websocket_bridge import (
-    initialize_websocket_bridge,
-    shutdown_websocket_bridge,
-)
+from .services.websocket_bridge import initialize_websocket_bridge, shutdown_websocket_bridge
 
 # Configure logging
 logging.basicConfig(
@@ -60,7 +54,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
     Application lifespan handler.
 
@@ -287,27 +281,27 @@ async def ping() -> dict:
 class ConnectionManager:
     """Manages WebSocket connections."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize connection manager."""
         self.active_connections: list[WebSocket] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket) -> None:
         """Accept and store new connection."""
         await websocket.accept()
         self.active_connections.append(websocket)
         logger.info(f"WebSocket connected. Active connections: {len(self.active_connections)}")
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket) -> None:
         """Remove connection from list."""
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
         logger.info(f"WebSocket disconnected. Active connections: {len(self.active_connections)}")
 
-    async def send_personal_message(self, message: dict, websocket: WebSocket):
+    async def send_personal_message(self, message: dict, websocket: WebSocket) -> None:
         """Send message to specific connection."""
         await websocket.send_json(message)
 
-    async def broadcast(self, message: dict):
+    async def broadcast(self, message: dict) -> None:
         """Send message to all active connections."""
         dead_connections = []
         for connection in self.active_connections:
@@ -327,7 +321,7 @@ manager = ConnectionManager()
 
 
 @app.websocket(f"{_settings.api_v1_prefix}/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket) -> None:
     """
     WebSocket endpoint for real-time updates.
 
