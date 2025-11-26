@@ -333,8 +333,9 @@ class TestRootEndpoints:
     """Test root API endpoints."""
 
     def test_root_endpoint(self, client):
-        """Test root endpoint."""
-        response = client.get("/")
+        """Test API info endpoint."""
+        # The app uses /api for API info, / serves the SPA
+        response = client.get("/api")
 
         assert response.status_code == 200
         data = response.json()

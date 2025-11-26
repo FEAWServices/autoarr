@@ -52,6 +52,7 @@ def mock_orchestrator():
         }
     )
     mock.reconnect_server = AsyncMock(return_value=True)
+    mock.reconnect = AsyncMock(return_value=True)  # Used by save_all_settings
     return mock
 
 
