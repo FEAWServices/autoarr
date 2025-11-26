@@ -13,12 +13,29 @@
 
 **Status**: v1.0 feature-complete (100% of BUILD-PLAN implemented)
 
-### Two-Product Strategy
+### Two-Product Strategy (Separate Repositories)
 
-**AutoArr (GPL-3.0)**: 100% open source, complete media automation with local LLM
-**AutoArrX (Premium)**: Optional privacy-first cloud intelligence service
+**AutoArr (GPL-3.0)** - This repo (`/app`)
+
+- 100% open source, complete media automation with local LLM
+- Self-hosted, works standalone without premium
+
+**AutoArrX (Premium)** - Separate repo (`/autoarr-premium`)
+
+- Optional privacy-first cloud SaaS
+- AutoArr instances connect TO it via secure outbound WebSocket (like Plex)
+- No firewall configuration needed on user's network
 
 See [docs/VISION_AND_PRICING.md](docs/VISION_AND_PRICING.md) for complete details.
+
+### Multi-Repo Development
+
+When working in the devcontainer, both repos are available:
+
+- `/app` - AutoArr GPL (this repo)
+- `/autoarr-premium` - AutoArr Premium SaaS (separate repo)
+
+Use `bash scripts/test-all.sh` to run tests across both repos.
 
 ## 🏗️ Architecture
 
@@ -379,7 +396,6 @@ See `.env.example` for complete list.
    ```
 
 4. **Use existing patterns**:
-
    - Follow existing service structure
    - Use async/await consistently
    - Mock external services in tests
