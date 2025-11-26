@@ -693,12 +693,25 @@ jobs:
     name: E2E Tests (Playwright)
     runs-on: [self-hosted, alienware]
     timeout-minutes: 30
-    needs: [detect-changes, python-test, frontend-build]
+    needs:
+      [
+        detect-changes,
+        quick-type-check,
+        python-test,
+        python-lint,
+        frontend-build,
+        frontend-lint,
+      ]
     # Skip for docs-only changes; run on PRs or if code changed
+    # IMPORTANT: Only run if ALL predecessors succeeded (fail-fast)
     if: |
-      always() &&
       needs.detect-changes.outputs.docs-only == 'false' &&
-      (github.event_name == 'pull_request' || needs.detect-changes.outputs.has-code-changes == 'true')
+      (github.event_name == 'pull_request' || needs.detect-changes.outputs.has-code-changes == 'true') &&
+      needs.quick-type-check.result == 'success' &&
+      needs.python-test.result == 'success' &&
+      needs.python-lint.result == 'success' &&
+      needs.frontend-build.result == 'success' &&
+      needs.frontend-lint.result == 'success'
 
     steps:
       - name: Checkout code
