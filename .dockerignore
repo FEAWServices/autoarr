@@ -30,6 +30,7 @@ htmlcov/
 node_modules/
 **/node_modules/
 autoarr/ui/node_modules/
+.pnpm-store/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

@@ -1,12 +1,12 @@
 # =============================================================================
-# AutoArr Local Testing Environment
+# AutoArr Local Development Environment
 # =============================================================================
-# This docker-compose file runs AutoArr for local testing with fast feedback.
-# Uses host network mode to connect to existing Sonarr/Radarr/SABnzbd on localhost.
+# This docker-compose file runs AutoArr for local development with LIVE RELOADING.
+# Source code is mounted from the host, so changes take effect immediately.
 #
 # Prerequisites:
-#   1. Copy .env.example to .env in repo root and configure your service URLs/API keys
-#   2. Ensure your media services are accessible on localhost
+#   1. Build the dev image first: docker build -t autoarr:dev -f docker/Dockerfile.dev .
+#   2. Or let docker-compose build it: docker-compose -f docker/docker-compose.local-test.yml build
 #
 # Usage:
 #   docker-compose -f docker/docker-compose.local-test.yml up -d
@@ -14,24 +14,25 @@
 #   docker-compose -f docker/docker-compose.local-test.yml down
 #
 # Features:
-#   - Host network for localhost service access
-#   - Code baked into image at build time (no volume mounts needed)
-#   - Fast iteration for testing changes
+#   - Live code reloading (uvicorn --reload)
+#   - Source code mounted from host
+#   - Fast iteration for development/testing
 # =============================================================================
 
 name: autoarr_app
 
 services:
   autoarr-local:
-    image: autoarr-local:latest
+    image: autoarr:dev
     build:
       context: ..
-      dockerfile: docker/Dockerfile.local-test
+      dockerfile: docker/Dockerfile.dev
     container_name: autoarr-local-test
     restart: unless-stopped
 
-    # Use host network to access services on localhost
-    network_mode: host
+    # Expose port to host
+    ports:
+      - "8001:8088"
 
     environment:
       # Application Settings
@@ -46,7 +47,13 @@ services:
       REDIS_URL: memory://
 
     volumes:
-      # Persistent data only (no source mounts - code is baked into image)
+      # Mount source code for live reloading
+      # IMPORTANT: Update the host path to match your local workspace
+      # For devcontainer, use the same path as ${localWorkspaceFolder}
+      - ../autoarr:/app/autoarr:cached
+      - ../scripts:/app/scripts:cached
+
+      # Persistent data
       - autoarr-data:/data
       - autoarr-logs:/app/logs
 
