@@ -43,5 +43,5 @@ RUN poetry install --no-interaction --no-ansi --without dev --no-root
 # Expose ports
 EXPOSE 8088 3000
 
-# Default command: run backend with auto-reload
-CMD ["uvicorn", "autoarr.api.main:app", "--host", "0.0.0.0", "--port", "8088", "--reload"]
+# Default command: run backend with multiple workers for better performance
+CMD ["uvicorn", "autoarr.api.main:app", "--host", "0.0.0.0", "--port", "8088", "--workers", "4"]

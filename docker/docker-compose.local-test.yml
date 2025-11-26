@@ -51,13 +51,9 @@ services:
 
     volumes:
       # Mount source code for live reloading
-      # The SOURCE_CODE_PATH variable should be set to your local workspace path
-      # For Windows/Docker Desktop: C:\Users\...\autoarr or /mnt/c/Users/.../autoarr
-      # For Linux: /home/.../autoarr
-      #
-      # Example: SOURCE_CODE_PATH=/mnt/c/Users/YourName/code/autoarr
-      - ${SOURCE_CODE_PATH:-..}/autoarr:/app/autoarr:cached
-      - ${SOURCE_CODE_PATH:-..}/scripts:/app/scripts:cached
+      # Uses the same Windows path as devcontainer: c:\Git\autoarr
+      - c:/Git/autoarr/autoarr:/app/autoarr:cached
+      - c:/Git/autoarr/scripts:/app/scripts:cached
 
       # Persistent data
       - autoarr-data:/data
