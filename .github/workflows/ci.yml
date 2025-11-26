@@ -85,12 +85,12 @@ jobs:
             echo "💡 Run: poetry run black autoarr/"
             exit 1
           }
-          poetry run isort --check-only --profile black autoarr/ 2>&1 || {
+          poetry run isort --check-only --profile black --line-length 100 autoarr/ 2>&1 || {
             echo ""
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "❌ PYTHON IMPORT ORDER ERRORS - Fix before merge!"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "💡 Run: poetry run isort --profile black autoarr/"
+            echo "💡 Run: poetry run isort --profile black --line-length 100 autoarr/"
             exit 1
           }
           echo "✅ Python formatting check passed"
