@@ -562,4 +562,4 @@ from autoarr.api.database import ActivityLog  # noqa: E402, F401
 
 # Configuration audit models
 from autoarr.api.models_config import ConfigAuditRequest as ConfigAudit  # noqa: E402, F401
-from autoarr.api.models_config import ConfigAuditResponse, DetailedRecommendation, Recommendation
+from autoarr.api.models_config import DetailedRecommendation, Recommendation  # noqa: E402, F401
