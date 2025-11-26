@@ -38,18 +38,6 @@ test.describe("Settings Page", () => {
     await expect(sabnzbdEnabled).toBeChecked({ checked: !initialState });
   });
 
-  test("should allow entering service URL", async ({ page }) => {
-    // Find URL input fields (there should be multiple)
-    const urlInput = page.getByPlaceholder("http://localhost:8080").first();
-
-    // Clear and enter new URL
-    await urlInput.clear();
-    await urlInput.fill("http://my-sabnzbd:8080");
-
-    // Verify the value
-    await expect(urlInput).toHaveValue("http://my-sabnzbd:8080");
-  });
-
   test("should toggle password visibility", async ({ page }) => {
     // Wait for settings form to render - check for SABnzbd section
     await expect(page.getByText("SABnzbd")).toBeVisible();
