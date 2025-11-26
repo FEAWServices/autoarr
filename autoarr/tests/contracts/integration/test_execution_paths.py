@@ -361,9 +361,7 @@ class TestWebSocketBroadcastPath:
         internal_event = {
             "type": "queue_update",
             "data": {
-                "downloads": [
-                    {"id": "nzo_123", "progress": 75, "status": "downloading"}
-                ],
+                "downloads": [{"id": "nzo_123", "progress": 75, "status": "downloading"}],
                 "speed": "5.2 MB/s",
             },
         }

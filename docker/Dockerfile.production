@@ -81,13 +81,13 @@ RUN poetry install --no-interaction --no-ansi --only-root
 # Copy built frontend from previous stage
 COPY --from=frontend-builder /app/dist ./autoarr/ui/dist
 
-# Create data directory
-RUN mkdir -p /data
+# Create data directories (both /data for volume mounts and /app/data for relative paths)
+RUN mkdir -p /data /app/data
 
 # Create non-root user for security
 RUN groupadd -r autoarr --gid=1001 && \
     useradd -r -g autoarr --uid=1001 --home=/app autoarr && \
-    chown -R autoarr:autoarr /app /data
+    chown -R autoarr:autoarr /app /data /app/data
 
 # Switch to non-root user
 USER autoarr
