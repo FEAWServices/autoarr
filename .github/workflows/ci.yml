@@ -251,7 +251,7 @@ jobs:
 
       - name: Run isort (import sorting check)
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        run: poetry run isort --check-only --profile black autoarr/
+        run: poetry run isort --check-only --profile black --line-length 100 autoarr/
 
       - name: Run Flake8 (linting)
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
