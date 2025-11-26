@@ -51,19 +51,25 @@ test.describe("Settings Page", () => {
   });
 
   test("should toggle password visibility", async ({ page }) => {
-    // Find the first "Show/Hide" button for API key
-    const toggleButton = page
-      .locator('button[type="button"]')
-      .filter({ hasText: /eye/i })
-      .first();
+    // Wait for settings form to render - check for SABnzbd section
+    await expect(page.getByText("SABnzbd")).toBeVisible();
 
     // Find the first password/API key field
-    const apiKeyInput = page
-      .getByPlaceholder(/your_api_key|your_plex_token/)
-      .first();
+    const apiKeyInput = page.getByPlaceholder(/your_api_key/).first();
+
+    // Wait for the input to be visible
+    await expect(apiKeyInput).toBeVisible();
 
     // Initially should be password type
     await expect(apiKeyInput).toHaveAttribute("type", "password");
+
+    // Find the toggle button - it's the button adjacent to the API key input
+    // The button contains an SVG icon, so we locate it by its position relative to the input
+    const apiKeyContainer = apiKeyInput.locator("..");
+    const toggleButton = apiKeyContainer.locator('button[type="button"]');
+
+    // Wait for toggle button to be visible
+    await expect(toggleButton).toBeVisible();
 
     // Click toggle button
     await toggleButton.click();
