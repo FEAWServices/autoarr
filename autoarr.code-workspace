@@ -7,6 +7,10 @@
     {
       "name": "AutoArr Premium (Proprietary)",
       "path": "../autoarr-premium"
+    },
+    {
+      "name": "Common Tools",
+      "path": ".common"
     }
   ],
   "settings": {

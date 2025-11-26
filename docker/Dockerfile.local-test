@@ -1,0 +1,48 @@
+# =============================================================================
+# Local Testing Dockerfile - Fast builds, host network access
+# =============================================================================
+# This Dockerfile creates a lightweight container for local development testing.
+# It's designed for fast iteration with hot-reload and host network access
+# to connect to existing Sonarr/Radarr/SABnzbd services on localhost.
+#
+# Usage:
+#   docker-compose -f docker/docker-compose.local-test.yml up -d
+#
+# Features:
+#   - Fast builds (no multi-stage)
+#   - Hot-reload via volume mounts
+#   - Host network for localhost service access
+#   - Development dependencies included
+# =============================================================================
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN pip install --no-cache-dir poetry==1.7.1
+
+# Configure poetry to not create virtual env (we're in a container)
+RUN poetry config virtualenvs.create false
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock* README.md ./
+
+# Install all dependencies including dev (for testing)
+RUN poetry install --no-interaction --no-ansi --no-root
+
+# Create data directory
+RUN mkdir -p /data
+
+# Expose API port
+EXPOSE 8088
+
+# Run with hot-reload enabled
+CMD ["uvicorn", "autoarr.api.main:app", "--host", "0.0.0.0", "--port", "8088", "--reload"]

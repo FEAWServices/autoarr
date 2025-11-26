@@ -1,277 +1,220 @@
-# AutoArr Docker Development Setup
+# AutoArr Docker Configuration
 
-This directory contains Docker configurations for running AutoArr with live code reloading (hot-reload) on your host OS.
+This directory contains all Docker configurations for AutoArr deployment and local testing.
 
-## 📁 Files Overview
+## 📁 Directory Structure
 
-### Development Compose Files
+```
+docker/
+├── Dockerfile.production        # Multi-stage production build (CI/users)
+├── Dockerfile.local-test        # Lightweight local testing image
+├── docker-compose.production.yml # Production deployment
+├── docker-compose.local-test.yml # Local testing with host network
+├── docker-compose.synology.yml   # Synology NAS deployment
+├── README.md                     # This file
+└── QUICK-START.md               # Quick reference
+```
 
-- **docker-compose.dev-simple.yml** - ⚡ **START HERE** - Simple setup (fastest)
-  - Just the dev container
-  - SQLite database
-  - ~30 seconds startup
-  - Perfect for most development
+## 🚀 Quick Start
 
-- **docker-compose.dev.yml** - Full production-like setup
-  - Includes Redis cache
-  - Includes PostgreSQL database
-  - Good for testing with external services
-  - ~2 minutes startup
-
-### Scripts & Documentation
-
-- **start-dev-container.sh** - 🚀 Interactive startup script
-  - Menu-driven options
-  - Handles all common tasks
-  - Recommended for beginners
-
-- **QUICK-START.md** - ⚡ 2-minute quick reference
-  - Essential commands
-  - Common tasks
-  - Troubleshooting
-
-- **DEV-CONTAINER-GUIDE.md** - 📚 Complete reference
-  - Detailed explanation
-  - All configuration options
-  - Advanced usage
-  - Performance optimization
-
-### Docker Images
-
-- **Dockerfile.api** - Production API image (single service)
-- **Dockerfile.ui** - Production UI image (single service)
-- **docker-compose.example.yml** - Example production setup
-- **docker-compose.synology.yml** - Synology NAS specific setup
-
-## 🚀 Quick Start (Choose One)
-
-### Option 1: Interactive Script (Recommended)
+### For Users (Production Deployment)
 
 ```bash
-bash start-dev-container.sh
+# Pull and run the pre-built image
+docker-compose -f docker/docker-compose.production.yml up -d
 ```
 
-Then select option 1 or 2 and follow the prompts.
-
-### Option 2: Manual Docker Compose
+### For Developers (Local Testing)
 
 ```bash
-# Simple setup
-docker-compose -f docker-compose.dev-simple.yml up -d autoarr-dev
-
-# Full setup with Redis & PostgreSQL
-docker-compose -f docker-compose.dev.yml up -d
+# Run with hot-reload, connects to services on localhost
+docker-compose -f docker/docker-compose.local-test.yml up -d
 ```
 
-### Option 3: One-Liner for Impatient
+### For VS Code Development
+
+Open the repo in VS Code and use "Reopen in Container" (uses `.devcontainer/`).
+
+## 📦 Docker Configurations
+
+### 1. Production (`docker-compose.production.yml`)
+
+**Purpose**: End-user deployment
+
+- Pre-built image from GitHub Container Registry
+- Self-contained with SQLite database (like Sonarr/Radarr)
+- No external dependencies required
+- Resource limits and health checks
 
 ```bash
-cd /app/docker && docker-compose -f docker-compose.dev-simple.yml up -d && sleep 3 && docker exec -it autoarr-dev /bin/bash
+# Using pre-built image
+docker-compose -f docker/docker-compose.production.yml up -d
+
+# Or build locally
+docker build -f docker/Dockerfile.production -t autoarr:latest ..
 ```
 
-## 📖 How It Works
+### 2. Local Testing (`docker-compose.local-test.yml`)
 
-### Key Concept: Bind Mounts with Live Reload
+**Purpose**: Fast developer iteration
 
-Instead of copying code into the image, we **mount your local files** into the container:
-
-```
-Your Computer          →  Docker Container
-├── /app/autoarr/    →  /app/autoarr/ (same location)
-├── /app/pyproject.toml → /app/pyproject.toml
-└── Code changes visible instantly!
-```
-
-### Auto-Reload
-
-The development servers use `--reload` flag:
-
-**Backend**:
+- Host network mode (connects to localhost services)
+- Volume mounts for hot-reload
+- Same folder structure as devcontainer
+- Quick builds
 
 ```bash
-poetry run python -m uvicorn autoarr.api.main:app --reload
+docker-compose -f docker/docker-compose.local-test.yml up -d
+
+# View logs
+docker-compose -f docker/docker-compose.local-test.yml logs -f
 ```
 
-- Watches Python files
-- Restarts server on changes
-- Takes ~2 seconds
+### 3. Synology NAS (`docker-compose.synology.yml`)
 
-**Frontend**:
+**Purpose**: Synology NAS deployment
 
-```bash
-cd autoarr/ui && pnpm dev
+- Optimized paths for Synology (`/volume1/docker/`)
+- Pre-configured for Container Manager
+- Resource limits for NAS hardware
+
+### 4. VS Code DevContainer (`.devcontainer/`)
+
+**Purpose**: Full IDE integration
+
+- Located in repo root at `.devcontainer/`
+- Docker-in-Docker support
+- Pre-installed extensions and tools
+- Open repo in VS Code → "Reopen in Container"
+
+## 🗄️ Database Architecture
+
+AutoArr uses **SQLite** by default - the same self-contained approach as Sonarr and Radarr:
+
+- **Location**: `/data/autoarr.db` (inside container)
+- **Persistence**: Mount `./data:/data` volume
+- **No external database required**
+
+Optional: PostgreSQL can be configured via `DATABASE_URL` for high-availability setups.
+
+## 🌐 Network Configuration
+
+| Configuration | Network Mode     | Use Case                  |
+| ------------- | ---------------- | ------------------------- |
+| Production    | Bridge (default) | Isolated container        |
+| Local Testing | Host             | Access localhost services |
+| DevContainer  | Bridge           | VS Code integration       |
+
+### Connecting to Media Services
+
+**Production/Bridge mode** - Use Docker network names or IP addresses:
+
+```yaml
+SONARR_URL: http://sonarr:8989
+RADARR_URL: http://radarr:7878
 ```
 
-- Vite hot module replacement
-- Instant reload in browser
-- No page refresh needed
+**Local Testing/Host mode** - Use localhost:
 
-## 🎯 Development Workflow
-
-1. **Start the container once**:
-
-   ```bash
-   bash start-dev-container.sh
-   # Choose option 1
-   ```
-
-2. **Keep it running**, open a new terminal:
-
-   ```bash
-   docker exec -it autoarr-dev /bin/bash
-   ```
-
-3. **Run backend with auto-reload**:
-
-   ```bash
-   poetry run python -m uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 --reload
-   ```
-
-4. **In another terminal, run frontend**:
-
-   ```bash
-   docker exec -it autoarr-dev bash -c "cd autoarr/ui && pnpm dev"
-   ```
-
-5. **Edit code in your editor**:
-   - Changes appear instantly
-   - Backend restarts automatically
-   - Frontend hot-reloads
-
-## 🌐 Access Points
-
-| Component | URL                          | Notes        |
-| --------- | ---------------------------- | ------------ |
-| API       | http://localhost:8088        | REST API     |
-| API Docs  | http://localhost:8088/docs   | OpenAPI docs |
-| UI        | http://localhost:3000        | React app    |
-| Health    | http://localhost:8088/health | Health check |
-
-## 🔧 Common Tasks
-
-### Run Tests
-
-```bash
-docker exec autoarr-dev poetry run pytest
+```yaml
+SONARR_URL: http://localhost:8989
+RADARR_URL: http://localhost:7878
 ```
 
-### Run Tests with Coverage
+## 🔌 Ports
+
+| Port | Service         | Notes             |
+| ---- | --------------- | ----------------- |
+| 8088 | AutoArr API     | Main application  |
+| 3000 | Vite Dev Server | Frontend dev only |
+
+## 🛠️ Common Commands
+
+### View Logs
 
 ```bash
-docker exec autoarr-dev poetry run pytest --cov
+docker-compose -f docker/docker-compose.local-test.yml logs -f
 ```
 
-### Format Code
+### Rebuild Image
 
 ```bash
-docker exec autoarr-dev poetry run format
-```
-
-### Install Package (Python)
-
-```bash
-docker exec autoarr-dev poetry add package_name
-```
-
-### Install Package (Node.js)
-
-```bash
-docker exec autoarr-dev bash -c "cd autoarr/ui && pnpm add package_name"
-```
-
-### View Live Logs
-
-```bash
-docker logs -f autoarr-dev
+docker-compose -f docker/docker-compose.local-test.yml up -d --build
 ```
 
 ### Stop Container
 
 ```bash
-docker-compose -f docker/docker-compose.dev-simple.yml down
+docker-compose -f docker/docker-compose.local-test.yml down
 ```
 
-### Remove Everything (Clean Slate)
+### Shell Access
 
 ```bash
-docker-compose -f docker/docker-compose.dev-simple.yml down -v
+docker exec -it autoarr-local-test /bin/bash
 ```
 
-## 📋 What's Mounted Inside?
+### Run Tests
 
-| Host Path             | Container Path                 | Type  | Purpose                    |
-| --------------------- | ------------------------------ | ----- | -------------------------- |
-| `/app`                | `/app`                         | Bind  | Your code (live changes)   |
-| `node_modules` volume | `/app/autoarr/ui/node_modules` | Named | Dependencies (isolated)    |
-| `venv` volume         | `/app/.venv`                   | Named | Python venv (fast restart) |
+```bash
+docker exec autoarr-local-test poetry run pytest
+```
 
-## 🔌 Ports
+## 📋 Environment Variables
 
-| Port | Service          | Purpose             |
-| ---- | ---------------- | ------------------- |
-| 8088 | AutoArr API      | Main API            |
-| 3000 | React Dev Server | Frontend (with HMR) |
-| 8000 | Alternative API  | Optional            |
+Required environment variables (set in `.env` file):
+
+```env
+# Media Service URLs and API Keys
+SABNZBD_URL=http://localhost:8080
+SABNZBD_API_KEY=your_key_here
+
+SONARR_URL=http://localhost:8989
+SONARR_API_KEY=your_key_here
+
+RADARR_URL=http://localhost:7878
+RADARR_API_KEY=your_key_here
+
+# Optional
+PLEX_URL=http://localhost:32400
+PLEX_TOKEN=your_token_here
+
+# AI Features (optional)
+ANTHROPIC_API_KEY=your_key_here
+```
 
 ## 🆘 Troubleshooting
 
 ### Container won't start
 
 ```bash
-docker logs autoarr-dev
+docker-compose -f docker/docker-compose.local-test.yml logs
 ```
 
-### Code changes not showing
+### Port already in use
 
-- **Backend**: Restart the dev server (Ctrl+C, re-run)
-- **Frontend**: Check browser console, refresh if needed
-
-### Port in use
-
-Edit `docker-compose.dev-simple.yml`:
+Edit the compose file to change the port mapping:
 
 ```yaml
 ports:
-  - "8089:8088" # Use 8089 instead of 8088
+  - "8089:8088" # Use 8089 instead
 ```
 
-### High memory usage
+### Can't connect to localhost services (local testing)
 
-Keep frontend and backend in same container (they share memory).
+Ensure you're using `network_mode: host` in the compose file.
 
-### "No such file or directory"
+### Changes not reflecting
 
-Ensure you're running docker commands from `/app/docker/` directory.
+For local testing, the volume mounts enable hot-reload. If changes aren't showing:
 
-## 📚 Next Steps
+1. Check the container is running: `docker ps`
+2. View logs: `docker logs autoarr-local-test`
+3. Restart: `docker-compose -f docker/docker-compose.local-test.yml restart`
 
-1. **Quick start**: See `QUICK-START.md`
-2. **Full reference**: See `DEV-CONTAINER-GUIDE.md`
-3. **Production deploy**: See `docker-compose.example.yml` or `docker-compose.synology.yml`
+## 📚 Related Documentation
 
-## 🎓 Comparison
-
-| Setup                  | Startup | Reload Speed | Files Synced | Best For              |
-| ---------------------- | ------- | ------------ | ------------ | --------------------- |
-| Devcontainer (VS Code) | ~1 min  | 2-3 sec      | ✓ Native     | Full IDE integration  |
-| dev-simple.yml         | ~30 sec | 2-3 sec      | ✓ Bind mount | Fast iteration        |
-| dev.yml                | ~2 min  | 2-3 sec      | ✓ Bind mount | Production-like setup |
-| Production             | ~1 min  | N/A          | ✗ Image      | Deployment            |
-
-## 💡 Tips
-
-1. **Keep container running** between sessions - faster restart
-2. **Use separate terminals** - one for backend, one for frontend
-3. **Monitor logs** - `docker logs -f autoarr-dev` in another terminal
-4. **Check mounted files** - `docker exec autoarr-dev ls -la /app`
-
-## 📞 Need Help?
-
-- **Quick reference**: `QUICK-START.md`
-- **Detailed guide**: `DEV-CONTAINER-GUIDE.md`
-- **Project docs**: `/app/docs/`
-- **Issues**: Check project issue tracker
-
----
-
-**Ready to start?** Run `bash start-dev-container.sh` and choose option 1! 🚀
+- **Project README**: `/app/README.md`
+- **Architecture**: `/app/docs/ARCHITECTURE.md`
+- **Deployment Guide**: `/app/docs/DEPLOYMENT.md`
+- **Synology Setup**: `/app/docs/SYNOLOGY_DEPLOYMENT.md`

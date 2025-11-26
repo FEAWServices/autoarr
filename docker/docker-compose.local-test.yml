@@ -1,0 +1,66 @@
+# =============================================================================
+# AutoArr Local Testing Environment
+# =============================================================================
+# This docker-compose file runs AutoArr for local testing with fast feedback.
+# Uses host network mode to connect to existing Sonarr/Radarr/SABnzbd on localhost.
+#
+# Prerequisites:
+#   1. Copy .env.example to .env in repo root and configure your service URLs/API keys
+#   2. Ensure your media services are accessible on localhost
+#
+# Usage:
+#   docker-compose -f docker/docker-compose.local-test.yml up -d
+#   docker-compose -f docker/docker-compose.local-test.yml logs -f
+#   docker-compose -f docker/docker-compose.local-test.yml down
+#
+# Features:
+#   - Host network for localhost service access
+#   - Volume mounts for hot-reload (same as devcontainer)
+#   - Fast iteration for testing changes
+# =============================================================================
+version: "3.8"
+
+services:
+  autoarr-local:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.local-test
+    container_name: autoarr-local-test
+    restart: unless-stopped
+
+    # Use host network to access services on localhost
+    network_mode: host
+
+    # Load environment from .env file
+    env_file:
+      - ../.env
+
+    environment:
+      # Application Settings
+      APP_ENV: development
+      LOG_LEVEL: DEBUG
+      PORT: 8088
+
+      # Database (SQLite for local testing)
+      DATABASE_URL: sqlite:////data/autoarr.db
+
+      # Redis (in-memory for local testing)
+      REDIS_URL: memory://
+
+    volumes:
+      # Mount source code for hot-reload (same paths as devcontainer)
+      - ../autoarr:/app/autoarr:cached
+      - ../pyproject.toml:/app/pyproject.toml:ro
+      - ../poetry.lock:/app/poetry.lock:ro
+      - ../README.md:/app/README.md:ro
+
+      # Persistent data
+      - ../data:/data
+      - ../logs:/app/logs
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

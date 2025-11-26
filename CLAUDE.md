@@ -351,11 +351,28 @@ See `/app/docs/BUGS.md` for tracked issues.
 ### Docker Deployment
 
 ```bash
-# Production
-docker-compose -f docker/docker-compose.yml up -d
+# Production (for end users)
+docker-compose -f docker/docker-compose.production.yml up -d
+
+# Local Testing (for developers, with host network)
+docker-compose -f docker/docker-compose.local-test.yml up -d
 
 # Synology NAS
 docker-compose -f docker/docker-compose.synology.yml up -d
+
+# VS Code DevContainer
+# Open repo in VS Code → "Reopen in Container"
+```
+
+### Docker Files Structure
+
+```
+docker/
+├── Dockerfile.production         # Multi-stage build for CI/users
+├── Dockerfile.local-test         # Lightweight local testing
+├── docker-compose.production.yml # End-user deployment
+├── docker-compose.local-test.yml # Developer testing (host network)
+└── docker-compose.synology.yml   # Synology NAS deployment
 ```
 
 ### Environment Variables
