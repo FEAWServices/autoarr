@@ -32,15 +32,26 @@ async function fetchRecommendations(
   params.append("page", page.toString());
   params.append("page_size", pageSize.toString());
 
-  const response = await fetch(
-    `${API_BASE_URL}/config/recommendations?${params}`,
-  );
+  const url = `${API_BASE_URL}/config/recommendations?${params}`;
+  console.log("[DEBUG] Fetching recommendations from:", url);
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch recommendations: ${response.statusText}`);
+  try {
+    const response = await fetch(url);
+    console.log("[DEBUG] Response status:", response.status);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch recommendations: ${response.statusText}`,
+      );
+    }
+
+    const data = await response.json();
+    console.log("[DEBUG] Recommendations data:", data);
+    return data;
+  } catch (error) {
+    console.error("[DEBUG] Fetch error:", error);
+    throw error;
   }
-
-  return response.json();
 }
 
 async function triggerAudit(

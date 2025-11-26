@@ -5,7 +5,7 @@
 # Source code is mounted from Windows for live backend reloading.
 #
 # Access Point:
-#   - http://localhost:8001 - Full application (UI + API)
+#   - http://localhost:18088 - Full application (UI + API)
 #
 # Backend Changes:
 #   - Python code changes are detected automatically (no restart needed)
@@ -32,7 +32,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "8001:8088"
+      - "18088:8088"
 
     environment:
       APP_ENV: development
