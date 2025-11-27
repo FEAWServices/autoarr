@@ -78,20 +78,22 @@ export const Welcome = () => {
 
   // Check which services are configured
   useEffect(() => {
+    const serviceKeys = ['sabnzbd', 'sonarr', 'radarr', 'plex'];
+
     const checkServices = async () => {
       try {
         // Check health of each service
         const healthChecks = await Promise.all(
-          services.map(async (service) => {
+          serviceKeys.map(async (key) => {
             try {
-              const response = await fetch(`/health/${service.key}`);
+              const response = await fetch(`/health/${key}`);
               if (response.ok) {
-                return { key: service.key, configured: true, connected: true };
+                return { key, configured: true, connected: true };
               }
               // Service configured but not connected
-              return { key: service.key, configured: true, connected: false };
+              return { key, configured: true, connected: false };
             } catch {
-              return { key: service.key, configured: false, connected: false };
+              return { key, configured: false, connected: false };
             }
           })
         );
