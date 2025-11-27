@@ -16,13 +16,13 @@
   --sidebar-width: 192px;
 
   /** Sidebar background color */
-  --sidebar-background: hsl(222 47% 11%);
+  --sidebar-background: hsl(222deg 47% 11%);
 
   /** Sidebar hover/active item background */
-  --sidebar-accent: hsl(222 47% 18%);
+  --sidebar-accent: hsl(222deg 47% 18%);
 
   /** Sidebar border color */
-  --sidebar-border: hsl(222 47% 18%);
+  --sidebar-border: hsl(222deg 47% 18%);
 
   /** Nav item vertical padding */
   --sidebar-item-py: 12px; /* py-3 */
@@ -89,12 +89,12 @@
   --features-card-padding: 40px; /* p-10 */
   --features-icon-padding: 20px; /* p-5 */
   --features-icon-mb: 32px; /* mb-8 */
-  --features-title-mb: 16px; /* mb-4 */
+  --features-card-title-mb: 16px; /* mb-4 */
 
   /* ==========================================
    * GLOBAL ACCENT
    * ========================================== */
 
   /** Primary accent color (purple) */
-  --accent-color: hsl(280 100% 70%);
+  --accent-color: hsl(280deg 100% 70%);
 }
