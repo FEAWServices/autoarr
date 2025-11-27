@@ -60,8 +60,12 @@ const ServiceSection = ({
   toggleShowKey: (key: string) => void;
   testConnection: (service: string) => void;
 }) => (
-  <div className="bg-gray-800 rounded-lg p-6 space-y-4">
-    <div className="flex items-center justify-between">
+  <div
+    className="bg-gray-800 rounded-lg p-8 space-y-6"
+    data-testid={`service-card-${service}`}
+    data-component="ServiceCard"
+  >
+    <div className="flex items-center justify-between" data-component="ServiceCardHeader">
       <h3 className="text-lg font-semibold text-white">{title}</h3>
       <label className="flex items-center gap-2">
         <input
@@ -74,46 +78,50 @@ const ServiceSection = ({
       </label>
     </div>
 
-    <div>
+    <div data-component="ServiceCardUrlField">
       <label className="block text-sm font-medium text-gray-300 mb-2">URL</label>
       <input
         type="text"
-        value={config.url}
+        value={config.url ?? ''}
         onChange={(e) => onChange({ url: e.target.value })}
         placeholder="http://localhost:8080"
-        className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        data-component="ServiceCardUrlInput"
       />
     </div>
 
-    <div>
+    <div data-component="ServiceCardApiKeyField">
       <label className="block text-sm font-medium text-gray-300 mb-2">
         {showToken ? 'Token' : 'API Key'}
       </label>
       <div className="relative">
         <input
           type={showKeys[service] ? 'text' : 'password'}
-          value={showToken ? config.token : config.apiKey}
+          value={showToken ? config.token ?? '' : config.apiKey ?? ''}
           onChange={(e) =>
             onChange(showToken ? { token: e.target.value } : { apiKey: e.target.value })
           }
           placeholder={showToken ? 'your_plex_token' : 'your_api_key'}
-          className="w-full px-4 py-2 pr-20 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-4 py-3 pr-20 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          data-component="ServiceCardApiKeyInput"
         />
         <button
           type="button"
           onClick={() => toggleShowKey(service)}
           className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white"
+          data-component="ServiceCardToggleVisibility"
         >
           {showKeys[service] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>
       </div>
     </div>
 
-    <div className="space-y-2">
+    <div className="space-y-2" data-component="ServiceCardActions">
       <button
         onClick={() => testConnection(service)}
         disabled={!config.enabled || testResults[service] === 'testing'}
         className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        data-component="ServiceCardTestButton"
       >
         {testResults[service] === 'testing' ? (
           'Testing...'
@@ -173,8 +181,43 @@ export const Settings = () => {
         const response = await fetch('/api/v1/settings');
         if (response.ok) {
           const data = await response.json();
-          // Merge API data with existing state to preserve fields not in API response
-          setSettings((prev) => ({ ...prev, ...data }));
+          // Deep merge API data with existing state to preserve fields not in API response
+          // and ensure all input values are defined (never undefined)
+          setSettings((prev) => ({
+            sabnzbd: {
+              url: data.sabnzbd?.url ?? prev.sabnzbd.url,
+              apiKey: data.sabnzbd?.apiKey ?? prev.sabnzbd.apiKey,
+              enabled: data.sabnzbd?.enabled ?? prev.sabnzbd.enabled,
+            },
+            sonarr: {
+              url: data.sonarr?.url ?? prev.sonarr.url,
+              apiKey: data.sonarr?.apiKey ?? prev.sonarr.apiKey,
+              enabled: data.sonarr?.enabled ?? prev.sonarr.enabled,
+            },
+            radarr: {
+              url: data.radarr?.url ?? prev.radarr.url,
+              apiKey: data.radarr?.apiKey ?? prev.radarr.apiKey,
+              enabled: data.radarr?.enabled ?? prev.radarr.enabled,
+            },
+            plex: {
+              url: data.plex?.url ?? prev.plex.url,
+              apiKey: data.plex?.apiKey ?? prev.plex.apiKey,
+              token: data.plex?.token ?? prev.plex.token,
+              enabled: data.plex?.enabled ?? prev.plex.enabled,
+            },
+            anthropic: {
+              apiKey: data.anthropic?.apiKey ?? prev.anthropic.apiKey,
+              enabled: data.anthropic?.enabled ?? prev.anthropic.enabled,
+            },
+            brave: {
+              apiKey: data.brave?.apiKey ?? prev.brave.apiKey,
+              enabled: data.brave?.enabled ?? prev.brave.enabled,
+            },
+            app: {
+              logLevel: data.app?.logLevel ?? prev.app.logLevel,
+              timezone: data.app?.timezone ?? prev.app.timezone,
+            },
+          }));
         }
       } catch (error) {
         console.error('Failed to load settings:', error);
@@ -265,18 +308,24 @@ export const Settings = () => {
   };
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="mb-8">
+    <div
+      className="max-w-4xl mx-auto"
+      style={{ padding: 'var(--page-padding)' }}
+      data-testid="settings-page"
+      data-component="SettingsPage"
+    >
+      <div className="mb-8" data-component="SettingsPageHeader">
         <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
         <p className="text-gray-400">Configure your media automation services</p>
       </div>
 
       <div className="space-y-8">
         {/* Quick Settings Links */}
-        <div className="space-y-3">
+        <div className="space-y-3" data-component="QuickSettingsLinks">
           <Link
             to="/settings/appearance"
             className="flex items-center justify-between p-4 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
+            data-component="QuickSettingsLink-Appearance"
           >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-[var(--accent-color)]/10">
@@ -295,6 +344,7 @@ export const Settings = () => {
           <Link
             to="/settings/config-audit"
             className="flex items-center justify-between p-4 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
+            data-component="QuickSettingsLink-ConfigAudit"
           >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-green-500/10">
@@ -312,7 +362,7 @@ export const Settings = () => {
         </div>
 
         {/* Media Services */}
-        <div>
+        <div data-component="MediaServicesSection">
           <h2 className="text-xl font-semibold text-white mb-4">Media Services</h2>
           <div className="space-y-4">
             <ServiceSection
@@ -384,10 +434,10 @@ export const Settings = () => {
         </div>
 
         {/* AI & Search */}
-        <div>
+        <div data-component="AISearchSection">
           <h2 className="text-xl font-semibold text-white mb-4">AI & Search</h2>
           <div className="space-y-4">
-            <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+            <div className="bg-gray-800 rounded-lg p-8 space-y-6" data-component="AnthropicCard">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-white">Anthropic Claude</h3>
                 <label className="flex items-center gap-2">
@@ -412,7 +462,7 @@ export const Settings = () => {
                 <label className="block text-sm font-medium text-gray-300 mb-2">API Key</label>
                 <input
                   type={showKeys['anthropic'] ? 'text' : 'password'}
-                  value={settings.anthropic.apiKey}
+                  value={settings.anthropic.apiKey ?? ''}
                   onChange={(e) =>
                     setSettings({
                       ...settings,
@@ -423,7 +473,7 @@ export const Settings = () => {
                     })
                   }
                   placeholder="sk-ant-..."
-                  className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
@@ -431,20 +481,20 @@ export const Settings = () => {
         </div>
 
         {/* Application Settings */}
-        <div>
+        <div data-component="ApplicationSection">
           <h2 className="text-xl font-semibold text-white mb-4">Application</h2>
-          <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+          <div className="bg-gray-800 rounded-lg p-8 space-y-6" data-component="ApplicationCard">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Log Level</label>
               <select
-                value={settings.app.logLevel}
+                value={settings.app.logLevel ?? 'INFO'}
                 onChange={(e) =>
                   setSettings({
                     ...settings,
                     app: { ...settings.app, logLevel: e.target.value },
                   })
                 }
-                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="DEBUG">Debug</option>
                 <option value="INFO">Info</option>
@@ -456,7 +506,7 @@ export const Settings = () => {
               <label className="block text-sm font-medium text-gray-300 mb-2">Timezone</label>
               <input
                 type="text"
-                value={settings.app.timezone}
+                value={settings.app.timezone ?? ''}
                 onChange={(e) =>
                   setSettings({
                     ...settings,
@@ -464,18 +514,19 @@ export const Settings = () => {
                   })
                 }
                 placeholder="America/New_York"
-                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           </div>
         </div>
 
         {/* Save Button */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4" data-component="SaveButtonSection">
           <button
             onClick={handleSave}
             disabled={saveStatus === 'saving'}
             className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            data-component="SaveButton"
           >
             <Save className="w-5 h-5" />
             {saveStatus === 'saving' ? 'Saving...' : 'Save Settings'}
