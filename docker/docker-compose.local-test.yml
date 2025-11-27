@@ -5,10 +5,12 @@
 #
 # Access Points:
 #   - http://localhost:18088 - Full application (Vite dev server + API proxy)
+#   - http://localhost:6006  - Storybook (component library)
 #
 # Hot Reloading:
 #   - Backend: Python code changes detected automatically (uvicorn reload)
 #   - Frontend: Vite HMR - instant updates on save (no refresh needed!)
+#   - Storybook: Hot reload on component/story changes
 #
 # Usage:
 #   docker-compose -f docker/docker-compose.local-test.yml up -d
@@ -39,6 +41,8 @@ services:
       DATABASE_URL: sqlite:////data/autoarr.db
       REDIS_URL: memory://
       VITE_DEV_MODE: "true"
+      # HMR client port - tells Vite to use the mapped port for WebSocket
+      VITE_HMR_CLIENT_PORT: "18088"
       # Reduce file watcher memory usage
       WATCHFILES_FORCE_POLLING: "true"
 
@@ -46,9 +50,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 2G
         reservations:
-          memory: 1G
+          memory: 512M
 
     volumes:
       # Mount source code from Windows
@@ -75,6 +79,48 @@ services:
       timeout: 10s
       retries: 3
       start_period: 90s
+
+  # Storybook - Component library and design system
+  storybook:
+    image: autoarr:dev
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    container_name: autoarr-storybook
+    restart: unless-stopped
+
+    ports:
+      - "6006:6006" # Storybook default port
+
+    environment:
+      NODE_ENV: development
+      # Reduce file watcher memory usage
+      WATCHFILES_FORCE_POLLING: "true"
+
+    # Memory limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+
+    volumes:
+      # Mount source code from Windows
+      - c:/Git/autoarr/autoarr:/app/autoarr:cached
+
+    command: >
+      sh -c "
+        cd /app/autoarr/ui && pnpm install --frozen-lockfile &&
+        pnpm storybook --host 0.0.0.0 --port 6006 --no-open
+      "
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6006"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
 
 volumes:
   autoarr-data:
