@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Save, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  Save,
+  AlertCircle,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Palette,
+  ChevronRight,
+  ClipboardCheck,
+} from 'lucide-react';
 
 interface ServiceConfig {
   url: string;
@@ -261,7 +271,46 @@ export const Settings = () => {
         <p className="text-gray-400">Configure your media automation services</p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
+        {/* Quick Settings Links */}
+        <div className="space-y-3">
+          <Link
+            to="/settings/appearance"
+            className="flex items-center justify-between p-4 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-[var(--accent-color)]/10">
+                <Palette className="w-6 h-6 text-[var(--accent-color)]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text)]">Appearance</h3>
+                <p className="text-sm text-[var(--text-muted)]">
+                  Customize themes, colors, and visual preferences
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
+          </Link>
+
+          <Link
+            to="/settings/config-audit"
+            className="flex items-center justify-between p-4 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-green-500/10">
+                <ClipboardCheck className="w-6 h-6 text-green-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text)]">Configuration Audit</h3>
+                <p className="text-sm text-[var(--text-muted)]">
+                  Analyze and optimize your service configurations
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
+          </Link>
+        </div>
+
         {/* Media Services */}
         <div>
           <h2 className="text-xl font-semibold text-white mb-4">Media Services</h2>

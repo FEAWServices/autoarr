@@ -240,3 +240,133 @@ class TestHealthEndpoints:
         assert data["healthy"] is False
         assert data["latency_ms"] is None
         assert data["error"] is not None
+
+
+class TestDatabaseHealthEndpoint:
+    """Test database health check endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_database_health_configured_and_healthy(self, client, mock_database_init):
+        """Test database health check when database is configured and healthy."""
+        from contextlib import asynccontextmanager
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        # Mock the database to be configured and healthy
+        mock_db = MagicMock()
+
+        @asynccontextmanager
+        async def mock_session():
+            mock_sess = MagicMock()
+            mock_sess.execute = AsyncMock(return_value=None)
+            yield mock_sess
+
+        mock_db.session = mock_session
+
+        mock_settings = MagicMock()
+        mock_settings.database_url = "sqlite:///./test.db"
+
+        with patch("autoarr.api.config.get_settings", return_value=mock_settings):
+            with patch("autoarr.api.database.get_database", return_value=mock_db):
+                response = client.get("/health/database")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert data["configured"] is True
+        assert data["type"] == "sqlite"
+        assert "successful" in data["message"]
+
+    @pytest.mark.asyncio
+    async def test_database_health_not_configured(self, client, mock_database_init):
+        """Test database health check when DATABASE_URL is not set."""
+        from unittest.mock import MagicMock, patch
+
+        mock_settings = MagicMock()
+        mock_settings.database_url = None
+
+        with patch("autoarr.api.config.get_settings", return_value=mock_settings):
+            response = client.get("/health/database")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "unconfigured"
+        assert data["configured"] is False
+        assert data["type"] is None
+        assert "not configured" in data["message"].lower()
+
+    @pytest.mark.asyncio
+    async def test_database_health_not_initialized(self, client, mock_database_init):
+        """Test database health check when database is configured but not initialized."""
+        from unittest.mock import MagicMock, patch
+
+        mock_settings = MagicMock()
+        mock_settings.database_url = "sqlite:///./test.db"
+
+        with patch("autoarr.api.config.get_settings", return_value=mock_settings):
+            with patch(
+                "autoarr.api.database.get_database",
+                side_effect=RuntimeError("Database not initialized"),
+            ):
+                response = client.get("/health/database")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "error"
+        assert data["configured"] is True
+        assert "not initialized" in data["message"].lower()
+
+    @pytest.mark.asyncio
+    async def test_database_health_connection_error(self, client, mock_database_init):
+        """Test database health check when database connection fails."""
+        from contextlib import asynccontextmanager
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_db = MagicMock()
+
+        @asynccontextmanager
+        async def mock_session():
+            mock_sess = MagicMock()
+            mock_sess.execute = AsyncMock(side_effect=Exception("Connection refused"))
+            yield mock_sess
+
+        mock_db.session = mock_session
+
+        mock_settings = MagicMock()
+        mock_settings.database_url = "postgresql://localhost:5432/test"
+
+        with patch("autoarr.api.config.get_settings", return_value=mock_settings):
+            with patch("autoarr.api.database.get_database", return_value=mock_db):
+                response = client.get("/health/database")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "error"
+        assert data["configured"] is True
+        assert "connection failed" in data["message"].lower()
+
+    @pytest.mark.asyncio
+    async def test_database_health_detects_postgresql(self, client, mock_database_init):
+        """Test database health check correctly identifies PostgreSQL."""
+        from contextlib import asynccontextmanager
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_db = MagicMock()
+
+        @asynccontextmanager
+        async def mock_session():
+            mock_sess = MagicMock()
+            mock_sess.execute = AsyncMock(return_value=None)
+            yield mock_sess
+
+        mock_db.session = mock_session
+
+        mock_settings = MagicMock()
+        mock_settings.database_url = "postgresql://localhost:5432/autoarr"
+
+        with patch("autoarr.api.config.get_settings", return_value=mock_settings):
+            with patch("autoarr.api.database.get_database", return_value=mock_db):
+                response = client.get("/health/database")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["type"] == "postgresql"

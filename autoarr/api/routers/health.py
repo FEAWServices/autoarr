@@ -117,6 +117,80 @@ async def health_check(
     )
 
 
+@router.get("/health/database", tags=["health"])
+async def database_health() -> Dict[str, Any]:
+    """
+    Database health check.
+
+    Check if the database is configured and accessible.
+
+    Returns:
+        dict: Database health status
+
+    Example:
+        ```
+        GET /health/database
+        {
+            "status": "healthy",
+            "configured": true,
+            "type": "sqlite",
+            "message": "Database connection successful"
+        }
+        ```
+    """
+    from ..config import get_settings
+    from ..database import get_database
+
+    settings = get_settings()
+
+    if not settings.database_url:
+        return {
+            "status": "unconfigured",
+            "configured": False,
+            "type": None,
+            "message": "DATABASE_URL not configured. Settings will not persist.",
+        }
+
+    try:
+        db = get_database()
+        # Try to get a session to verify connection
+        async with db.session() as session:
+            # Execute a simple query to verify connectivity
+            from sqlalchemy import text
+
+            await session.execute(text("SELECT 1"))
+
+        # Determine database type from URL
+        db_type = "unknown"
+        if "sqlite" in settings.database_url:
+            db_type = "sqlite"
+        elif "postgresql" in settings.database_url:
+            db_type = "postgresql"
+        elif "mysql" in settings.database_url:
+            db_type = "mysql"
+
+        return {
+            "status": "healthy",
+            "configured": True,
+            "type": db_type,
+            "message": "Database connection successful",
+        }
+    except RuntimeError as e:
+        return {
+            "status": "error",
+            "configured": True,
+            "type": None,
+            "message": f"Database not initialized: {str(e)}",
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "configured": True,
+            "type": None,
+            "message": f"Database connection failed: {str(e)}",
+        }
+
+
 @router.get("/health/{service}", response_model=ServiceHealth, tags=["health"])
 async def service_health(
     service: str,

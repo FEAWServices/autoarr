@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
   Download,
   Tv,
@@ -13,11 +13,22 @@ import {
   X,
   Moon,
   Sun,
+  Home,
+  ClipboardCheck,
+  Palette,
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { useThemeStore } from '../stores/themeStore';
 
-const navItems = [
+interface NavItem {
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  children?: Omit<NavItem, 'children'>[];
+}
+
+const navItems: NavItem[] = [
+  { path: '/', icon: Home, label: 'Home' },
   { path: '/chat', icon: MessageCircle, label: 'Chat' },
   { path: '/search', icon: Search, label: 'Search' },
   { path: '/downloads', icon: Download, label: 'Downloads' },
@@ -25,8 +36,81 @@ const navItems = [
   { path: '/movies', icon: Film, label: 'Movies' },
   { path: '/media', icon: Server, label: 'Media Server' },
   { path: '/activity', icon: Activity, label: 'Activity' },
-  { path: '/settings', icon: Settings, label: 'Settings' },
+  {
+    path: '/settings',
+    icon: Settings,
+    label: 'Settings',
+    children: [
+      { path: '/settings/appearance', icon: Palette, label: 'Appearance' },
+      { path: '/settings/config-audit', icon: ClipboardCheck, label: 'Config Audit' },
+    ],
+  },
 ];
+
+// Sidebar Item Component - follows *arr pattern
+const SidebarItem = ({
+  item,
+  isChild = false,
+  onCloseMobileMenu,
+}: {
+  item: NavItem;
+  isChild?: boolean;
+  onCloseMobileMenu: () => void;
+}) => {
+  const location = useLocation();
+
+  const isActive = location.pathname === item.path;
+  const isParentActive =
+    item.children?.some(
+      (child) => location.pathname === child.path || location.pathname.startsWith(child.path + '/')
+    ) || false;
+  const showChildren = isActive || isParentActive;
+
+  return (
+    <div>
+      <NavLink
+        to={item.path}
+        onClick={onCloseMobileMenu}
+        className={`
+          flex items-center
+          border-l-[3px] transition-all duration-200 ease-in-out
+          ${
+            isActive
+              ? 'border-l-[var(--accent-color)] text-[var(--accent-color)] bg-[var(--sidebar-accent)]'
+              : isParentActive && !isChild
+                ? 'border-l-transparent text-foreground bg-[var(--sidebar-accent)]'
+                : 'border-l-transparent text-muted-foreground hover:text-[var(--accent-color)] hover:bg-[var(--sidebar-accent)]/50'
+          }
+        `}
+        style={{
+          paddingTop: 'var(--sidebar-item-py, 12px)',
+          paddingBottom: 'var(--sidebar-item-py, 12px)',
+          paddingLeft: isChild ? 'var(--sidebar-child-pl, 40px)' : 'var(--sidebar-item-px, 15px)',
+          paddingRight: 'var(--sidebar-item-px, 15px)',
+        }}
+      >
+        <span className="inline-block w-5 mr-2 text-center">
+          <item.icon className="w-[18px] h-[18px] inline-block" />
+        </span>
+        <span className="font-medium">{item.label}</span>
+      </NavLink>
+
+      {/* Children - only show when parent is active */}
+      {item.children && showChildren && (
+        <div>
+          {item.children.map((child) => (
+            <SidebarItem
+              key={child.path}
+              item={child}
+              isChild={true}
+              onCloseMobileMenu={onCloseMobileMenu}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Sidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -40,13 +124,13 @@ export const Sidebar = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleMobileMenu}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-background-secondary/80 backdrop-blur-md border border-background-tertiary hover:bg-background-tertiary transition-all shadow-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-lg bg-card/80 backdrop-blur-md border border-primary/20 hover:bg-muted hover:border-primary/40 transition-all duration-300 shadow-lg hover:shadow-glow-hover"
         aria-label="Toggle menu"
       >
         {isMobileMenuOpen ? (
-          <X className="w-6 h-6 text-white" />
+          <X className="w-6 h-6 text-foreground" />
         ) : (
-          <Menu className="w-6 h-6 text-white" />
+          <Menu className="w-6 h-6 text-foreground" />
         )}
       </button>
 
@@ -58,98 +142,74 @@ export const Sidebar = () => {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - following *arr family structure */}
       <aside
         className={`
           fixed lg:sticky top-0 h-screen z-40
-          w-64 lg:w-64
-          bg-background-secondary/90 dark:bg-background-secondary/95
-          backdrop-blur-xl
-          border-r border-background-tertiary/50
+          bg-[var(--sidebar-background)]
           flex flex-col
           transition-transform duration-300 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
+        style={{
+          width: 'var(--sidebar-width, 192px)',
+          backgroundColor: 'var(--sidebar-background, hsl(222 47% 11%))',
+        }}
       >
-        {/* Logo - clickable home button */}
+        {/* Logo/Brand Header - *arr style */}
         <Link
           to="/"
           onClick={closeMobileMenu}
-          className="p-6 border-b border-background-tertiary/50 hover:bg-background-tertiary/30 transition-all duration-300 group"
+          className="flex items-center gap-3 px-5 py-4 hover:bg-[var(--sidebar-accent)]/50 transition-colors duration-200"
         >
-          <div className="flex items-center gap-3">
-            <div className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-              <Logo size="md" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white bg-gradient-to-r from-white to-text-secondary bg-clip-text">
-                AutoArr
-              </h1>
-              <p className="text-xs text-text-muted">v1.0.0</p>
-            </div>
+          <div className="transition-transform duration-200 hover:scale-105">
+            <Logo size="md" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white">AutoArr</h1>
+            <p className="text-xs text-muted-foreground">v1.0.0</p>
           </div>
         </Link>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-background-tertiary scrollbar-track-transparent">
+        {/* Navigation - *arr style */}
+        <nav className="flex-1 overflow-y-auto py-2">
           {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={closeMobileMenu}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${
-                  isActive
-                    ? 'bg-gradient-primary text-white shadow-glow scale-105'
-                    : 'text-text-secondary hover:text-white hover:bg-background-tertiary/50 hover:scale-102'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-primary-600/20 animate-shimmer" />
-                  )}
-                  <item.icon className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:scale-110" />
-                  <span className="font-medium relative z-10">{item.label}</span>
-                </>
-              )}
-            </NavLink>
+            <SidebarItem key={item.path} item={item} onCloseMobileMenu={closeMobileMenu} />
           ))}
         </nav>
 
-        {/* Dark Mode Toggle & Status */}
-        <div className="p-4 space-y-3 border-t border-background-tertiary/50">
+        {/* Footer - Dark Mode Toggle & Status */}
+        <div className="border-t border-[var(--sidebar-border)] py-3 px-4 space-y-3">
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleDarkMode}
-            className="w-full flex items-center justify-between px-4 py-2 rounded-xl bg-background-tertiary/30 hover:bg-background-tertiary/50 transition-all duration-300 group"
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-md bg-[var(--sidebar-accent)]/30 hover:bg-[var(--sidebar-accent)]/50 transition-colors duration-200"
             aria-label="Toggle dark mode"
           >
-            <span className="text-sm text-text-secondary group-hover:text-white transition-colors">
+            <span className="text-sm text-muted-foreground">
               {isDarkMode ? 'Dark Mode' : 'Light Mode'}
             </span>
-            <div className="relative w-12 h-6 bg-background-elevated rounded-full transition-colors duration-300">
+            <div className="relative w-10 h-5 bg-muted rounded-full transition-colors duration-200">
               <div
-                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-gradient-primary shadow-lg transition-transform duration-300 flex items-center justify-center ${
-                  isDarkMode ? 'translate-x-6' : 'translate-x-0'
+                className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-[var(--accent-color)] shadow-sm transition-transform duration-200 flex items-center justify-center ${
+                  isDarkMode ? 'translate-x-5' : 'translate-x-0'
                 }`}
               >
                 {isDarkMode ? (
-                  <Moon className="w-3 h-3 text-white" />
+                  <Moon className="w-2.5 h-2.5 text-white" />
                 ) : (
-                  <Sun className="w-3 h-3 text-white" />
+                  <Sun className="w-2.5 h-2.5 text-white" />
                 )}
               </div>
             </div>
           </button>
 
           {/* Status */}
-          <div className="flex items-center justify-between text-xs text-text-muted px-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
             <span>Status</span>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-status-success rounded-full animate-pulse shadow-glow" />
-              <span className="text-status-success font-medium">Online</span>
+              <div className="w-2 h-2 bg-green-500 rounded-full" />
+              <span className="text-green-500 font-medium">Online</span>
             </div>
           </div>
         </div>

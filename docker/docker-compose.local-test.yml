@@ -1,18 +1,14 @@
 # =============================================================================
 # AutoArr Local Development Environment
 # =============================================================================
-# This docker-compose file runs AutoArr for local development.
-# Source code is mounted from Windows for live backend reloading.
+# This docker-compose file runs AutoArr for local development with hot reload.
 #
-# Access Point:
-#   - http://localhost:18088 - Full application (UI + API)
+# Access Points:
+#   - http://localhost:18088 - Full application (Vite dev server + API proxy)
 #
-# Backend Changes:
-#   - Python code changes are detected automatically (no restart needed)
-#
-# Frontend Changes:
-#   - Run `pnpm build` in /app/autoarr/ui after UI changes
-#   - Then refresh your browser
+# Hot Reloading:
+#   - Backend: Python code changes detected automatically (uvicorn reload)
+#   - Frontend: Vite HMR - instant updates on save (no refresh needed!)
 #
 # Usage:
 #   docker-compose -f docker/docker-compose.local-test.yml up -d
@@ -32,7 +28,8 @@ services:
     restart: unless-stopped
 
     ports:
-      - "18088:8088"
+      - "18088:5173" # Vite dev server (frontend + API proxy)
+      - "18089:8088" # Direct backend access (optional)
 
     environment:
       APP_ENV: development
@@ -41,6 +38,17 @@ services:
       PYTHONPATH: /app
       DATABASE_URL: sqlite:////data/autoarr.db
       REDIS_URL: memory://
+      VITE_DEV_MODE: "true"
+      # Reduce file watcher memory usage
+      WATCHFILES_FORCE_POLLING: "true"
+
+    # Memory limits to prevent OOM
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 1G
 
     volumes:
       # Mount source code from Windows
@@ -51,12 +59,22 @@ services:
       - autoarr-data:/data
       - autoarr-logs:/app/logs
 
+    # Run both backend and frontend dev servers
+    # Backend: no --reload to avoid file watcher memory issues on Windows mounts
+    # Frontend: Vite handles its own efficient file watching
+    command: >
+      sh -c "
+        cd /app/autoarr/ui && pnpm install --frozen-lockfile &&
+        (uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &) &&
+        pnpm run dev --host 0.0.0.0 --port 5173
+      "
+
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 90s
 
 volumes:
   autoarr-data:

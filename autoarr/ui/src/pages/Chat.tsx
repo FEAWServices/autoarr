@@ -5,7 +5,7 @@ import { websocketService } from '../services/websocket';
 import { ChatMessage } from '../components/Chat/ChatMessage';
 import { TypingIndicator } from '../components/Chat/TypingIndicator';
 import { RequestStatus } from '../components/Chat/RequestStatus';
-import { MessageCircle, Send, Trash2, Search as SearchIcon, Wifi, WifiOff } from 'lucide-react';
+import { Send, Trash2, Search as SearchIcon, Wifi, WifiOff, Sparkles } from 'lucide-react';
 import { ChatSearch } from '../components/Chat/ChatSearch';
 
 export const Chat = () => {
@@ -269,37 +269,53 @@ export const Chat = () => {
     (req) => req.status === 'downloading' || req.status === 'searching'
   );
 
+  // Quick action suggestions
+  const suggestions = [
+    'Download the latest episode of...',
+    'What movies are coming out this week?',
+    'Show me my download queue',
+    'Check the status of my servers',
+  ];
+
   return (
-    <div data-testid="chat-container" className="flex flex-col h-full bg-background-primary">
+    <div
+      data-testid="chat-container"
+      className="flex flex-col h-full min-h-0 bg-gradient-to-b from-background to-[hsl(280,50%,15%)]"
+    >
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-background-tertiary bg-background-secondary px-6 py-4">
+      <div className="flex-shrink-0 border-b border-primary/20 bg-card/50 backdrop-blur-md px-6 py-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <MessageCircle className="w-6 h-6 text-primary-default" />
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-primary/20 border border-primary/30 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+              <Sparkles className="w-7 h-7 text-primary drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Chat</h1>
-              <p className="text-sm text-text-muted">
-                Ask me to add movies or TV shows to your library
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-[hsl(290,90%,70%)] bg-clip-text text-transparent">
+                AutoArr Assistant
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Your intelligent media automation companion. Ask me to download content, check
+                status, or manage your library.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {/* Connection Status */}
             <div
               data-testid="connection-status"
-              className="flex items-center gap-2 px-3 py-1.5 bg-background-tertiary rounded-full"
+              className="flex items-center gap-2 px-4 py-2 glass-card"
               aria-label={`Connection status: ${connectionStatus}`}
             >
               {connectionStatus === 'connected' ? (
                 <>
                   <Wifi className="w-4 h-4 text-status-success" />
-                  <span className="text-xs text-status-success">Connected</span>
+                  <span className="text-xs text-status-success font-medium">Connected</span>
                 </>
               ) : (
                 <>
                   <WifiOff className="w-4 h-4 text-status-warning" />
-                  <span className="text-xs text-status-warning">
+                  <span className="text-xs text-status-warning font-medium">
                     {connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
                   </span>
                 </>
@@ -309,19 +325,19 @@ export const Chat = () => {
             {/* Search Button */}
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className="p-2 hover:bg-background-tertiary rounded-lg transition-colors"
+              className="p-2.5 hover:bg-muted rounded-lg transition-all duration-300 hover:shadow-glow-hover"
               aria-label="Search messages"
             >
-              <SearchIcon className="w-5 h-5 text-text-secondary" />
+              <SearchIcon className="w-5 h-5 text-muted-foreground hover:text-foreground" />
             </button>
 
             {/* Clear History Button */}
             <button
               onClick={handleClearHistory}
-              className="p-2 hover:bg-background-tertiary rounded-lg transition-colors"
+              className="p-2.5 hover:bg-muted rounded-lg transition-all duration-300 hover:shadow-glow-hover"
               aria-label="Clear history"
             >
-              <Trash2 className="w-5 h-5 text-text-secondary" />
+              <Trash2 className="w-5 h-5 text-muted-foreground hover:text-foreground" />
             </button>
           </div>
         </div>
@@ -336,7 +352,7 @@ export const Chat = () => {
 
       {/* Active Requests */}
       {activeRequests.length > 0 && (
-        <div className="flex-shrink-0 border-b border-background-tertiary bg-background-secondary px-6 py-4 space-y-3">
+        <div className="flex-shrink-0 border-b border-border bg-card/30 backdrop-blur-sm px-6 py-4 space-y-3">
           {activeRequests.map((request) => (
             <RequestStatus
               key={request.requestId}
@@ -352,19 +368,44 @@ export const Chat = () => {
       {/* Messages Area */}
       <div
         data-testid="messages-list"
-        className="flex-1 overflow-y-auto px-6 py-6"
+        className="flex-1 overflow-y-auto px-6 py-8 min-h-0"
         role="log"
         aria-live="polite"
         aria-label="Chat messages"
       >
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <MessageCircle className="w-16 h-16 text-text-muted mb-4" />
-            <h2 className="text-xl font-semibold text-text-primary mb-2">Start a Conversation</h2>
-            <p className="text-text-secondary max-w-md">
-              Ask me to add movies or TV shows to your library. For example: "Add Inception" or "I
-              want to watch Breaking Bad"
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            {/* Welcome Icon with Pulsing Glow */}
+            <div className="relative mb-12">
+              <div className="absolute inset-[-50%] animate-pulse rounded-full bg-primary/30 blur-3xl" />
+              <div className="relative p-8 rounded-2xl bg-card/50 border border-primary/30 backdrop-blur-sm shadow-[0_0_60px_rgba(168,85,247,0.4)]">
+                <Sparkles className="w-16 h-16 text-primary drop-shadow-[0_0_30px_rgba(168,85,247,0.6)]" />
+              </div>
+            </div>
+
+            <h2 className="mb-4 bg-gradient-to-r from-primary via-accent to-[hsl(290,90%,70%)] bg-clip-text text-4xl font-bold text-transparent">
+              Welcome to AutoArr
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mb-10">
+              I can help you automate your media downloads, manage your library, and keep track of
+              your favorite shows and movies. What would you like to do today?
             </p>
+
+            {/* Quick Suggestions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl w-full">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setInput(suggestion);
+                    inputRef.current?.focus();
+                  }}
+                  className="rounded-lg border border-primary/20 bg-card/50 px-6 py-4 backdrop-blur-sm text-left text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:border-primary/40"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <>
@@ -383,41 +424,47 @@ export const Chat = () => {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 border-t border-background-tertiary bg-background-secondary px-6 py-4">
-        <div className="flex gap-3 items-end">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isProcessing}
-            placeholder="Request a movie or show..."
-            className="flex-1 bg-background-tertiary text-text-primary placeholder-text-muted px-4 py-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary-default disabled:opacity-50 disabled:cursor-not-allowed textarea-auto-size"
-            rows={1}
-            aria-label="Message input"
-            role="textbox"
-            aria-multiline="true"
-          />
+      <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-md px-6 py-5">
+        <div className="flex gap-4 items-end">
+          <div className="flex-1 glass-card p-1">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isProcessing}
+              placeholder="Ask AutoArr to help with your media automation..."
+              className="w-full bg-transparent text-foreground placeholder-muted-foreground px-4 py-3 rounded-lg resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed textarea-auto-size"
+              rows={1}
+              aria-label="Message input"
+              role="textbox"
+              aria-multiline="true"
+            />
+          </div>
           <button
             onClick={handleSend}
             disabled={!input.trim() || isProcessing}
-            className="px-6 py-3 bg-gradient-primary text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[100px] justify-center"
+            className="px-6 py-3.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[110px] justify-center shadow-glow hover:shadow-glow-lg"
             aria-label="Send message"
           >
             {isProcessing ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                <span>Send</span>
+                <span className="font-medium">Send</span>
               </>
             )}
           </button>
         </div>
 
+        <p className="text-xs text-muted-foreground mt-3 text-center">
+          Press Enter to send. Shift+Enter for new line.
+        </p>
+
         {error && (
           <div
-            className="mt-3 text-sm text-status-error bg-red-500/10 px-4 py-2 rounded"
+            className="mt-4 text-sm text-destructive bg-destructive/10 border border-destructive/20 px-4 py-3 rounded-lg"
             role="alert"
             aria-live="assertive"
           >

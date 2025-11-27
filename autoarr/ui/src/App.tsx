@@ -5,24 +5,21 @@ import { SplashScreen } from './components/SplashScreen';
 import { MainLayout } from './layouts/MainLayout';
 import { Search } from './pages/Search';
 import { Settings } from './pages/Settings';
+import { Appearance } from './pages/Appearance';
 import { Placeholder } from './pages/Placeholder';
-import { Dashboard } from './components/Dashboard';
+import { Welcome } from './pages/Welcome';
 import ConfigAuditPage from './pages/ConfigAudit';
 import { Chat } from './pages/Chat';
 import { useThemeStore } from './stores/themeStore';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
-  const { isDarkMode } = useThemeStore();
+  const { _initializeTheme } = useThemeStore();
 
-  // Initialize dark mode on mount
+  // Initialize theme system on mount
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+    _initializeTheme();
+  }, [_initializeTheme]);
 
   const handleSplashComplete = () => {
     setShowSplash(false);
@@ -36,10 +33,12 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<Dashboard />} />
+          <Route index element={<Welcome />} />
           <Route path="chat" element={<Chat />} />
           <Route path="search" element={<Search />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="settings/appearance" element={<Appearance />} />
+          <Route path="settings/config-audit" element={<ConfigAuditPage />} />
           <Route
             path="downloads"
             element={
@@ -90,7 +89,6 @@ function App() {
               />
             }
           />
-          <Route path="config-audit" element={<ConfigAuditPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

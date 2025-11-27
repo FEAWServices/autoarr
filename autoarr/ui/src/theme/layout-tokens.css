@@ -1,0 +1,100 @@
+/**
+ * Layout Design Tokens
+ *
+ * This file documents all spacing and sizing values used across the UI.
+ * Use these variable names when communicating layout changes.
+ *
+ * USAGE: To change a value, tell me: "Set --sidebar-width to 180px"
+ */
+
+:root {
+  /* ==========================================
+   * SIDEBAR
+   * ========================================== */
+
+  /** Total sidebar width (Tailwind: w-48 = 192px, 25% narrower than 256px) */
+  --sidebar-width: 192px;
+
+  /** Sidebar background color */
+  --sidebar-background: hsl(222 47% 11%);
+
+  /** Sidebar hover/active item background */
+  --sidebar-accent: hsl(222 47% 18%);
+
+  /** Sidebar border color */
+  --sidebar-border: hsl(222 47% 18%);
+
+  /** Nav item vertical padding */
+  --sidebar-item-py: 12px; /* py-3 */
+
+  /** Nav item horizontal padding */
+  --sidebar-item-px: 15px;
+
+  /** Child nav item left padding */
+  --sidebar-child-pl: 40px; /* pl-10 */
+
+  /** Active indicator width */
+  --sidebar-indicator-width: 3px;
+
+  /** Nav icon size */
+  --sidebar-icon-size: 18px;
+
+  /** Gap between icon and label */
+  --sidebar-icon-gap: 8px; /* mr-2 */
+
+  /** Logo area horizontal padding */
+  --sidebar-logo-px: 20px; /* px-5 */
+
+  /** Logo area vertical padding */
+  --sidebar-logo-py: 16px; /* py-4 */
+
+  /* ==========================================
+   * WELCOME PAGE
+   * ========================================== */
+
+  /** Container padding (responsive) */
+  --welcome-container-p-base: 40px; /* p-10 */
+  --welcome-container-p-md: 64px; /* md:p-16 */
+  --welcome-container-p-lg: 80px; /* lg:p-20 */
+
+  /** Max content width */
+  --welcome-max-width: 1024px; /* max-w-5xl */
+
+  /* Hero Section */
+  --hero-mb: 112px; /* mb-28 */
+  --hero-pt: 48px; /* pt-12 */
+  --hero-logo-mb: 64px; /* mb-16 */
+  --hero-logo-padding: 48px; /* p-12 */
+  --hero-icon-size: 112px; /* w-28 h-28 */
+  --hero-title-mb: 40px; /* mb-10 */
+  --hero-desc-mb: 48px; /* mb-12 */
+  --hero-status-px: 40px; /* px-10 */
+  --hero-status-py: 20px; /* py-5 */
+
+  /* Service Cards Section */
+  --services-section-mb: 128px; /* mb-32 */
+  --services-header-mb: 48px; /* mb-12 */
+  --services-grid-gap: 40px; /* gap-10 */
+  --services-card-padding: 40px; /* p-10 */
+  --services-card-radius: 16px; /* rounded-2xl */
+  --services-icon-padding: 20px; /* p-5 */
+  --services-icon-mb: 32px; /* mb-8 */
+  --services-title-mb: 16px; /* mb-4 */
+  --services-desc-mb: 32px; /* mb-8 */
+
+  /* Features Section */
+  --features-pb: 64px; /* pb-16 */
+  --features-title-mb: 56px; /* mb-14 */
+  --features-grid-gap: 40px; /* gap-10 */
+  --features-card-padding: 40px; /* p-10 */
+  --features-icon-padding: 20px; /* p-5 */
+  --features-icon-mb: 32px; /* mb-8 */
+  --features-title-mb: 16px; /* mb-4 */
+
+  /* ==========================================
+   * GLOBAL ACCENT
+   * ========================================== */
+
+  /** Primary accent color (purple) */
+  --accent-color: hsl(280 100% 70%);
+}

@@ -83,3 +83,6 @@ temp/
 .claude/settings.local.json
 .common/
 coverage.json
+
+*storybook.log
+storybook-static

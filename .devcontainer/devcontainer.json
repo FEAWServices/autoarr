@@ -9,7 +9,8 @@
   "mounts": [
     "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
     "source=${localWorkspaceFolder}/../autoarr-premium,target=/autoarr-premium,type=bind,consistency=cached",
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=C:/Git/.common,target=/app/.common,type=bind,consistency=cached"
   ],
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}

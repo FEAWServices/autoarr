@@ -1,37 +1,12 @@
 @import url("tailwindcss");
 
-/* AutoArr Design System - Based on Lovable branding */
-@layer base {
-  :root {
-    /* Dark blue/purple theme from the design */
-    --bg-primary: #1a1f2e;
-    --bg-secondary: #242938;
-    --bg-tertiary: #2d3348;
+/* AutoArr Theme System */
+@import "./theme/variables.css";
+@import "./theme/layout-tokens.css";
 
-    /* Purple/Blue gradients */
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
-    --primary-glow: #8b5cf6;
-    --accent: #3b82f6;
-
-    /* Text colors */
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-
-    /* Status colors */
-    --success: #10b981;
-    --warning: #f59e0b;
-    --error: #ef4444;
-    --offline: #ef4444;
-
-    /* Borders */
-    --border-color: rgb(100 116 139 / 20%);
-
-    /* Shadows and glows */
-    --shadow-glow: 0 0 40px rgb(99 102 241 / 30%);
-  }
-}
+/* ============================================
+   Base Styles
+   ============================================ */
 
 * {
   margin: 0;
@@ -45,8 +20,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 #root {
@@ -55,26 +30,167 @@ body {
   overflow: hidden;
 }
 
-/* Custom scrollbar */
+/* ============================================
+   Custom Scrollbar (matching theme)
+   ============================================ */
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: hsl(var(--muted));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
+  background: hsl(var(--border));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
+  background: hsl(var(--primary));
 }
 
-/* Animation delays for loading dots */
+/* ============================================
+   Glassmorphic Card Styles
+   ============================================ */
+
+.glass-card {
+  background: hsl(var(--card) / 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--primary) / 0.2);
+  border-radius: var(--radius);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+  border-color: hsl(var(--primary) / 0.4);
+}
+
+/* Solid card variant */
+.solid-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.solid-card:hover {
+  border-color: hsl(var(--primary) / 0.3);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+}
+
+/* ============================================
+   Gradient Text
+   ============================================ */
+
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary)),
+    hsl(var(--accent)),
+    hsl(var(--primary-glow))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ============================================
+   Gradient Backgrounds
+   ============================================ */
+
+.gradient-primary {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(320 85% 65%));
+}
+
+.gradient-hero {
+  background: linear-gradient(180deg, hsl(var(--background)), hsl(280 50% 15%));
+}
+
+.gradient-mesh {
+  background: radial-gradient(at 40% 20%, hsl(var(--primary) / 0.3) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsl(var(--primary-glow) / 0.3) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsl(var(--secondary) / 0.3) 0px, transparent 50%);
+}
+
+/* ============================================
+   Glow Effects
+   ============================================ */
+
+.glow {
+  box-shadow: 0 0 40px hsl(var(--primary) / 0.3);
+}
+
+.glow-lg {
+  box-shadow: 0 0 60px hsl(var(--primary) / 0.4);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+}
+
+/* ============================================
+   Button Styles
+   ============================================ */
+
+.btn-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: hsl(280 85% 50%);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: hsl(260 70% 45%);
+  box-shadow: 0 0 25px rgba(124, 58, 237, 0.3);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: hsl(var(--foreground));
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  background: hsl(var(--muted));
+  border-color: hsl(var(--primary) / 0.2);
+}
+
+/* ============================================
+   Animation Delays
+   ============================================ */
+
 .delay-100 {
   animation-delay: 0.1s;
 }
@@ -83,26 +199,18 @@ body {
   animation-delay: 0.2s;
 }
 
-/* Gradient utilities */
-.gradient-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-glow));
+.delay-300 {
+  animation-delay: 0.3s;
 }
 
-.gradient-hero {
-  background: linear-gradient(180deg, var(--bg-primary), var(--bg-secondary));
-}
+/* ============================================
+   Loading Animations
+   ============================================ */
 
-/* Glow effect */
-.glow {
-  box-shadow: var(--shadow-glow);
-}
-
-/* Loading bar animation */
 @keyframes loading-bar {
   0% {
     width: 0%;
   }
-
   100% {
     width: 100%;
   }
@@ -112,421 +220,17 @@ body {
   animation: loading-bar 2s ease-out forwards;
 }
 
-/* Progress bar utility using data attribute */
-
-.progress-bar[data-progress="0"] {
-  width: 0%;
-}
-
-.progress-bar[data-progress="1"] {
-  width: 1%;
-}
-
-.progress-bar[data-progress="2"] {
-  width: 2%;
-}
-
-.progress-bar[data-progress="3"] {
-  width: 3%;
-}
-
-.progress-bar[data-progress="4"] {
-  width: 4%;
-}
-
-.progress-bar[data-progress="5"] {
-  width: 5%;
-}
-
-.progress-bar[data-progress="6"] {
-  width: 6%;
-}
-
-.progress-bar[data-progress="7"] {
-  width: 7%;
-}
-
-.progress-bar[data-progress="8"] {
-  width: 8%;
-}
-
-.progress-bar[data-progress="9"] {
-  width: 9%;
-}
-
-.progress-bar[data-progress="10"] {
-  width: 10%;
-}
-
-.progress-bar[data-progress="11"] {
-  width: 11%;
-}
-
-.progress-bar[data-progress="12"] {
-  width: 12%;
-}
-
-.progress-bar[data-progress="13"] {
-  width: 13%;
-}
-
-.progress-bar[data-progress="14"] {
-  width: 14%;
-}
-
-.progress-bar[data-progress="15"] {
-  width: 15%;
-}
-
-.progress-bar[data-progress="16"] {
-  width: 16%;
-}
-
-.progress-bar[data-progress="17"] {
-  width: 17%;
-}
-
-.progress-bar[data-progress="18"] {
-  width: 18%;
-}
-
-.progress-bar[data-progress="19"] {
-  width: 19%;
-}
-
-.progress-bar[data-progress="20"] {
-  width: 20%;
-}
-
-.progress-bar[data-progress="21"] {
-  width: 21%;
-}
-
-.progress-bar[data-progress="22"] {
-  width: 22%;
-}
-
-.progress-bar[data-progress="23"] {
-  width: 23%;
-}
-
-.progress-bar[data-progress="24"] {
-  width: 24%;
-}
-
-.progress-bar[data-progress="25"] {
-  width: 25%;
-}
-
-.progress-bar[data-progress="26"] {
-  width: 26%;
-}
-
-.progress-bar[data-progress="27"] {
-  width: 27%;
-}
-
-.progress-bar[data-progress="28"] {
-  width: 28%;
-}
-
-.progress-bar[data-progress="29"] {
-  width: 29%;
-}
-
-.progress-bar[data-progress="30"] {
-  width: 30%;
-}
-
-.progress-bar[data-progress="31"] {
-  width: 31%;
-}
-
-.progress-bar[data-progress="32"] {
-  width: 32%;
-}
-
-.progress-bar[data-progress="33"] {
-  width: 33%;
-}
-
-.progress-bar[data-progress="34"] {
-  width: 34%;
-}
-
-.progress-bar[data-progress="35"] {
-  width: 35%;
-}
-
-.progress-bar[data-progress="36"] {
-  width: 36%;
-}
-
-.progress-bar[data-progress="37"] {
-  width: 37%;
-}
-
-.progress-bar[data-progress="38"] {
-  width: 38%;
-}
-
-.progress-bar[data-progress="39"] {
-  width: 39%;
-}
-
-.progress-bar[data-progress="40"] {
-  width: 40%;
-}
-
-.progress-bar[data-progress="41"] {
-  width: 41%;
-}
-
-.progress-bar[data-progress="42"] {
-  width: 42%;
-}
-
-.progress-bar[data-progress="43"] {
-  width: 43%;
-}
-
-.progress-bar[data-progress="44"] {
-  width: 44%;
-}
-
-.progress-bar[data-progress="45"] {
-  width: 45%;
-}
-
-.progress-bar[data-progress="46"] {
-  width: 46%;
-}
-
-.progress-bar[data-progress="47"] {
-  width: 47%;
-}
-
-.progress-bar[data-progress="48"] {
-  width: 48%;
-}
-
-.progress-bar[data-progress="49"] {
-  width: 49%;
-}
-
-.progress-bar[data-progress="50"] {
-  width: 50%;
-}
-
-.progress-bar[data-progress="51"] {
-  width: 51%;
-}
-
-.progress-bar[data-progress="52"] {
-  width: 52%;
-}
-
-.progress-bar[data-progress="53"] {
-  width: 53%;
-}
-
-.progress-bar[data-progress="54"] {
-  width: 54%;
-}
-
-.progress-bar[data-progress="55"] {
-  width: 55%;
-}
-
-.progress-bar[data-progress="56"] {
-  width: 56%;
-}
-
-.progress-bar[data-progress="57"] {
-  width: 57%;
-}
-
-.progress-bar[data-progress="58"] {
-  width: 58%;
-}
-
-.progress-bar[data-progress="59"] {
-  width: 59%;
-}
-
-.progress-bar[data-progress="60"] {
-  width: 60%;
-}
-
-.progress-bar[data-progress="61"] {
-  width: 61%;
-}
-
-.progress-bar[data-progress="62"] {
-  width: 62%;
-}
-
-.progress-bar[data-progress="63"] {
-  width: 63%;
-}
-
-.progress-bar[data-progress="64"] {
-  width: 64%;
-}
-
-.progress-bar[data-progress="65"] {
-  width: 65%;
-}
-
-.progress-bar[data-progress="66"] {
-  width: 66%;
-}
-
-.progress-bar[data-progress="67"] {
-  width: 67%;
-}
-
-.progress-bar[data-progress="68"] {
-  width: 68%;
-}
-
-.progress-bar[data-progress="69"] {
-  width: 69%;
-}
-
-.progress-bar[data-progress="70"] {
-  width: 70%;
-}
-
-.progress-bar[data-progress="71"] {
-  width: 71%;
-}
-
-.progress-bar[data-progress="72"] {
-  width: 72%;
-}
-
-.progress-bar[data-progress="73"] {
-  width: 73%;
-}
-
-.progress-bar[data-progress="74"] {
-  width: 74%;
-}
-
-.progress-bar[data-progress="75"] {
-  width: 75%;
-}
-
-.progress-bar[data-progress="76"] {
-  width: 76%;
-}
-
-.progress-bar[data-progress="77"] {
-  width: 77%;
-}
-
-.progress-bar[data-progress="78"] {
-  width: 78%;
-}
-
-.progress-bar[data-progress="79"] {
-  width: 79%;
-}
-
-.progress-bar[data-progress="80"] {
-  width: 80%;
-}
-
-.progress-bar[data-progress="81"] {
-  width: 81%;
-}
-
-.progress-bar[data-progress="82"] {
-  width: 82%;
-}
-
-.progress-bar[data-progress="83"] {
-  width: 83%;
-}
-
-.progress-bar[data-progress="84"] {
-  width: 84%;
-}
-
-.progress-bar[data-progress="85"] {
-  width: 85%;
-}
-
-.progress-bar[data-progress="86"] {
-  width: 86%;
-}
-
-.progress-bar[data-progress="87"] {
-  width: 87%;
-}
-
-.progress-bar[data-progress="88"] {
-  width: 88%;
-}
-
-.progress-bar[data-progress="89"] {
-  width: 89%;
-}
-
-.progress-bar[data-progress="90"] {
-  width: 90%;
-}
-
-.progress-bar[data-progress="91"] {
-  width: 91%;
-}
-
-.progress-bar[data-progress="92"] {
-  width: 92%;
-}
-
-.progress-bar[data-progress="93"] {
-  width: 93%;
-}
-
-.progress-bar[data-progress="94"] {
-  width: 94%;
-}
-
-.progress-bar[data-progress="95"] {
-  width: 95%;
-}
-
-.progress-bar[data-progress="96"] {
-  width: 96%;
-}
-
-.progress-bar[data-progress="97"] {
-  width: 97%;
-}
-
-.progress-bar[data-progress="98"] {
-  width: 98%;
-}
-
-.progress-bar[data-progress="99"] {
-  width: 99%;
-}
-
-.progress-bar[data-progress="100"] {
-  width: 100%;
-}
-
-/* Textarea auto-sizing utilities */
-
-.textarea-auto-size {
-  min-height: 48px;
-  max-height: 200px;
-}
-
-/* Typing indicator animation delays */
-
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-25%);
+  }
+}
+
+/* Typing indicator animation */
 .typing-dot-1 {
   animation: bounce 1.4s infinite;
   animation-delay: 0ms;
@@ -540,4 +244,113 @@ body {
 .typing-dot-3 {
   animation: bounce 1.4s infinite;
   animation-delay: 400ms;
+}
+
+/* ============================================
+   Progress Bar Utility
+   ============================================ */
+
+.progress-bar[data-progress="0"] {
+  width: 0%;
+}
+.progress-bar[data-progress="5"] {
+  width: 5%;
+}
+.progress-bar[data-progress="10"] {
+  width: 10%;
+}
+.progress-bar[data-progress="15"] {
+  width: 15%;
+}
+.progress-bar[data-progress="20"] {
+  width: 20%;
+}
+.progress-bar[data-progress="25"] {
+  width: 25%;
+}
+.progress-bar[data-progress="30"] {
+  width: 30%;
+}
+.progress-bar[data-progress="35"] {
+  width: 35%;
+}
+.progress-bar[data-progress="40"] {
+  width: 40%;
+}
+.progress-bar[data-progress="45"] {
+  width: 45%;
+}
+.progress-bar[data-progress="50"] {
+  width: 50%;
+}
+.progress-bar[data-progress="55"] {
+  width: 55%;
+}
+.progress-bar[data-progress="60"] {
+  width: 60%;
+}
+.progress-bar[data-progress="65"] {
+  width: 65%;
+}
+.progress-bar[data-progress="70"] {
+  width: 70%;
+}
+.progress-bar[data-progress="75"] {
+  width: 75%;
+}
+.progress-bar[data-progress="80"] {
+  width: 80%;
+}
+.progress-bar[data-progress="85"] {
+  width: 85%;
+}
+.progress-bar[data-progress="90"] {
+  width: 90%;
+}
+.progress-bar[data-progress="95"] {
+  width: 95%;
+}
+.progress-bar[data-progress="100"] {
+  width: 100%;
+}
+
+/* ============================================
+   Textarea Utilities
+   ============================================ */
+
+.textarea-auto-size {
+  min-height: 48px;
+  max-height: 200px;
+}
+
+/* ============================================
+   Focus Ring Styles
+   ============================================ */
+
+.focus-ring:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--ring));
+}
+
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--ring));
+}
+
+/* ============================================
+   Sidebar Active State
+   ============================================ */
+
+.sidebar-item-active {
+  background: hsl(var(--primary) / 0.15);
+  border-left: 3px solid hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+
+.sidebar-item-active:hover {
+  background: hsl(var(--primary) / 0.2);
 }
