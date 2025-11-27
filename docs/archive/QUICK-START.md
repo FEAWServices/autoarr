@@ -313,14 +313,12 @@ cd ..
 ### Your Immediate Tasks
 
 1. **Day 1: Environment Setup**
-
    - [ ] Create GitHub repo
    - [ ] Set up local development environment
    - [ ] Start Docker containers: `docker-compose -f docker/docker-compose.dev.yml up -d`
    - [ ] Configure test applications (get API keys)
 
 2. **Day 2-3: SABnzbd MCP Server (TDD)**
-
    - [ ] Write test for connecting to SABnzbd
    - [ ] Implement connection
    - [ ] Write test for `get_queue` tool
@@ -329,7 +327,6 @@ cd ..
    - [ ] Implement `get_history`
 
 3. **Day 4-5: Basic API Gateway**
-
    - [ ] Write test for health endpoint
    - [ ] Implement FastAPI app with health check
    - [ ] Write test for MCP proxy endpoint

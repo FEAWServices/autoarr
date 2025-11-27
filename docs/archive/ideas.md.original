@@ -144,7 +144,7 @@ class FeatureFlags:
             'plus': ['cloud_recommendations', 'mobile_app', 'cloud_backup'],
             'pro': ['multi_server', 'analytics', 'priority_support']
         }
-        
+
         tier_features = []
         if license_type in FEATURES:
             # Include all lower tier features
@@ -152,7 +152,7 @@ class FeatureFlags:
                 tier_features.extend(FEATURES[tier])
                 if tier == license_type:
                     break
-        
+
         return feature in tier_features
 Marketing Positioning
 "AutoArr: The Sonarr/Radarr Intelligence Layer"
@@ -243,32 +243,32 @@ class AutoArrBridge:
             'radarr': 'http://localhost:7878'
         }
         self.cloud_endpoint = 'wss://bridge.autoarr.cloud'
-        
+
     async def establish_tunnel(self):
         """Establish outbound-only WebSocket connection"""
         if not self.license_key:
             return  # Free tier - no cloud connection
-            
+
         headers = {
             'Authorization': f'Bearer {self.license_key}',
             'X-Instance-ID': self.get_instance_id()
         }
-        
+
         async with websockets.connect(
-            self.cloud_endpoint, 
+            self.cloud_endpoint,
             extra_headers=headers
         ) as websocket:
             await self.handle_cloud_requests(websocket)
-    
+
     async def handle_cloud_requests(self, websocket):
         """Process requests from cloud, execute locally"""
         async for message in websocket:
             request = json.loads(message)
-            
+
             # Validate request signature
             if not self.validate_request(request):
                 continue
-                
+
             # Execute locally based on request type
             if request['type'] == 'recommendation_data':
                 data = await self.gather_watch_history()
@@ -287,12 +287,12 @@ services:
       - PLEX_URL=http://plex:32400
       - SONARR_URL=http://sonarr:8989
       - RADARR_URL=http://radarr:7878
-      
+
       # Optional cloud bridge
       - ENABLE_CLOUD_BRIDGE=${ENABLE_CLOUD:-false}
       - LICENSE_KEY=${AUTOARR_LICENSE_KEY:-}
       - INSTANCE_ID=${AUTOARR_INSTANCE_ID:-}
-      
+
       # Security settings
       - TUNNEL_ENCRYPTION_KEY=${TUNNEL_KEY:-auto-generate}
       - ALLOWED_CLOUD_COMMANDS=recommendations,analytics
@@ -313,7 +313,7 @@ No cloud connection needed - everything runs locally
 ```
 Secure outbound tunnel for enhanced features
 ┌──────────────────┐
-│   AutoArr Core   │ 
+│   AutoArr Core   │
 │   with Bridge    │ ← → Outbound WebSocket → AutoArr Cloud
 └──────────────────┘
 Alternative Approaches
@@ -341,7 +341,7 @@ services:
   autoarr:
     image: autoarr/autoarr:latest
     network_mode: "service:tailscale"
-  
+
   tailscale:
     image: tailscale/tailscale:latest
     environment:
@@ -412,23 +412,23 @@ class PremiumSetupWizard:
     def run(self):
         print("AutoArr Premium Setup")
         print("=" * 40)
-        
+
         # Step 1: Choose connection method
         method = self.choose_connection_method()
-        
+
         if method == 'bridge':
             # Simplest - just enter license key
             license_key = input("Enter license key: ")
             self.setup_bridge(license_key)
-            
+
         elif method == 'cloudflare':
             # More control, still easy
             self.setup_cloudflare_tunnel()
-            
+
         elif method == 'tailscale':
             # Maximum control
             self.setup_tailscale()
-            
+
         # Test connection
         if self.test_cloud_connection():
             print("✅ Cloud features activated!")
@@ -517,16 +517,16 @@ class SecureBridge:
         # Derive encryption key from license
         self.encryption_key = self.derive_key(license_key)
         self.fernet = Fernet(self.encryption_key)
-        
+
     def derive_key(self, license_key):
         """Generate encryption key from license"""
         return base64.urlsafe_b64encode(
-            hashlib.pbkdf2_hmac('sha256', 
-                                license_key.encode(), 
-                                b'autoarr-salt', 
+            hashlib.pbkdf2_hmac('sha256',
+                                license_key.encode(),
+                                b'autoarr-salt',
                                 100000)[:32]
         )
-    
+
     async def connect_to_cloud(self):
         """Establish persistent outbound connection"""
         while True:
@@ -542,33 +542,33 @@ class SecureBridge:
                     ping_interval=20,
                     ping_timeout=10
                 ) as websocket:
-                    
+
                     print("✅ Cloud features activated")
-                    
+
                     # Listen for cloud requests through the tunnel
                     async for encrypted_message in websocket:
                         # Decrypt request
                         message = self.decrypt_message(encrypted_message)
-                        
+
                         # Process based on request type
                         response = await self.handle_request(message)
-                        
+
                         # Encrypt and send response
                         encrypted_response = self.encrypt_message(response)
                         await websocket.send(encrypted_response)
-                        
+
             except Exception as e:
                 print(f"Connection lost, retrying in 30s: {e}")
                 await asyncio.sleep(30)
-    
+
     async def handle_request(self, request):
         """Process cloud requests securely"""
         # Verify request signature
         if not self.verify_signature(request):
             return {'error': 'Invalid signature'}
-        
+
         request_type = request.get('type')
-        
+
         # Whitelist of allowed operations
         if request_type == 'get_watch_history':
             return await self.get_plex_history()
@@ -580,7 +580,7 @@ class SecureBridge:
             return await self.send_mobile_notification(request['data'])
         else:
             return {'error': 'Unknown request type'}
-    
+
     def verify_signature(self, request):
         """Verify request is legitimate"""
         signature = request.get('signature')
@@ -600,11 +600,11 @@ pythonclass LicenseValidator:
         # Format check
         if not re.match(r'AARR-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}', license_key):
             return False
-        
+
         # Checksum validation
         if not LicenseValidator.verify_checksum(license_key):
             return False
-        
+
         # Online verification (cached for 24h)
         return LicenseValidator.verify_with_server(license_key)
 2. End-to-End Encryption
@@ -622,16 +622,16 @@ pythonclass SecurityMiddleware:
             max_requests_per_minute=60,
             max_data_per_hour=100_000_000  # 100MB
         )
-        
+
     async def process_request(self, request):
         # Check rate limits
         if not self.rate_limiter.allow(request):
             raise TooManyRequestsError()
-        
+
         # Validate request size
         if len(request) > 10_000:  # 10KB max per request
             raise RequestTooLargeError()
-        
+
         # Check operation whitelist
         if request['operation'] not in ALLOWED_OPERATIONS:
             raise UnauthorizedOperationError()
@@ -656,16 +656,16 @@ Response travels back through tunnel to mobile app
 Data Privacy & Security
 pythonclass PrivacyFilter:
     """Ensure sensitive data never leaves local network"""
-    
+
     NEVER_SEND = [
         'file_paths',
-        'ip_addresses', 
+        'ip_addresses',
         'api_keys',
         'usernames',
         'passwords',
         'server_urls'
     ]
-    
+
     @staticmethod
     def sanitize_for_cloud(data):
         """Remove sensitive info before sending to cloud"""
@@ -708,7 +708,7 @@ pythonclass ConnectionManager:
     def __init__(self):
         self.connection_state = 'disconnected'
         self.local_mode = True
-        
+
     async def maintain_connection(self):
         """Automatic fallback to local-only mode"""
         while True:
@@ -722,9 +722,9 @@ pythonclass ConnectionManager:
             else:
                 # No license key - full features, local only
                 self.local_mode = True
-            
+
             await asyncio.sleep(30)
-    
+
     def get_recommendations(self):
         if self.local_mode:
             return self.local_llm.get_recommendations()
@@ -801,14 +801,14 @@ notifications:
     - Daily digest of all downloads
     - Weekly summary of failures/retries
     - Monthly storage analysis
-    
+
   channels:
     - Discord (rich embeds with posters)
     - Telegram (with inline actions)
     - Email (beautiful HTML templates)
     - IFTTT/Zapier webhooks
     - Home Assistant integration
-    
+
   intelligent_filtering:
     - "Only notify for 4K upgrades"
     - "Skip notifications for reality TV"
@@ -845,37 +845,37 @@ yamlautomation_rules:
       - "Movie watched in last 6 months"
       - "IMDB rating > 7.5"
     action: "Upgrade to 4K and remove 1080p after success"
-    
+
   - name: "Storage Manager"
     trigger: "Disk usage > 90%"
     action: "Remove watched content older than 60 days"
     exclude: "Favorites playlist"
-    
+
   - name: "Failure Recovery"
     trigger: "Download failed 3 times"
-    action: 
+    action:
       - "Try alternative indexer"
       - "Adjust quality profile temporarily"
       - "Notify if still failing after 24h"
 2. Predictive Maintenance
 pythonclass PredictiveAnalytics:
     """Prevent problems before they happen"""
-    
+
     def analyze_patterns(self):
         alerts = []
-        
+
         # Disk space prediction
         if self.predict_disk_full() < 7:
             alerts.append("Disk will be full in 6 days at current rate")
-        
+
         # Indexer health
         if self.detect_indexer_degradation():
             alerts.append("NZBPlanet showing signs of issues - consider backup")
-        
+
         # Quality analysis
         if self.detect_fake_4k():
             alerts.append("Recent '4K' download appears to be upscaled 1080p")
-        
+
         return alerts
 3. Multi-Instance Orchestration
 yaml# Manage multiple servers/locations
@@ -883,14 +883,14 @@ instances:
   - name: "Main Server"
     role: "primary"
     services: ["sonarr", "radarr", "plex"]
-    
+
   - name: "Backup NAS"
     role: "backup"
     sync_from: "Main Server"
     rules:
       - "Sync only 4K content"
       - "Keep for 90 days"
-  
+
   - name: "Parents House"
     role: "filtered"
     rules:
@@ -919,16 +919,16 @@ AutoArr Teams ($19.99/month)
 1. Request Intelligence
 pythonclass RequestManager:
     """Smart request handling across users"""
-    
+
     def handle_request(self, user, content):
         # Check if already requested
         if self.already_requested(content):
             return "Already downloading - ETA 2 hours"
-        
+
         # Smart approval
         if user.request_success_rate > 0.8:
             return self.auto_approve(content)
-        
+
         # Quality optimization
         if self.is_niche_content(content):
             return "Approved in 1080p (4K unlikely to be available)"
@@ -938,13 +938,13 @@ yamlfeatures:
     dad: "New war documentary added"
     mom: "British mystery series you might like"
     kids: "New animated movies this week"
-    
+
   download_scheduling:
     - user: "roommate_1"
       bandwidth_window: "2am-8am"
-    - user: "roommate_2"  
+    - user: "roommate_2"
       bandwidth_window: "8am-2pm"
-      
+
   cost_sharing:
     track_by_user:
       - downloads_per_month
@@ -990,7 +990,7 @@ IFTTT/Zapier Webhook
 python@app.post("/webhook/ifttt")
 async def ifttt_webhook(event: dict, license_key: str):
     """Clean, simple webhooks for automation"""
-    
+
     # AutoArr handles the complexity
     if event['type'] == 'download_complete':
         return {
@@ -1003,16 +1003,16 @@ yaml# Binary sensors
 binary_sensor:
   - platform: autoarr
     name: "Downloads Active"
-    
+
   - platform: autoarr
     name: "Disk Space Low"
 
-# Services  
+# Services
 service: autoarr.add_movie
 data:
   title: "Inception"
   quality: "4K"
-  
+
 service: autoarr.pause_downloads
 data:
   duration: 2  # hours
@@ -1048,13 +1048,13 @@ python# Conservative estimates
 users = 10000  # Active users
 conversion_rates = {
     'plus': 0.08,    # 8% convert to Plus
-    'pro': 0.03,     # 3% convert to Pro  
+    'pro': 0.03,     # 3% convert to Pro
     'teams': 0.005   # 0.5% convert to Teams
 }
 
 monthly_revenue = (
     (users * conversion_rates['plus'] * 4.99) +
-    (users * conversion_rates['pro'] * 9.99) + 
+    (users * conversion_rates['pro'] * 9.99) +
     (users * conversion_rates['teams'] * 19.99)
 )
 # = $7,291/month = $87,492/year
@@ -1076,7 +1076,7 @@ class PrivacyFirstArchitecture:
     - File names or paths
     - User viewing habits
     - Server configurations
-    
+
     We ONLY see:
     - Hashed identifiers
     - Statistical patterns
@@ -1088,7 +1088,7 @@ Feature Categories
 "Learn from everyone, expose nothing"
 pythonclass AnonymousPatternLearning:
     """Collective intelligence without exposing individual data"""
-    
+
     features = {
         "failure_patterns": {
             # We see: "Hash_ABC fails 90% of the time"
@@ -1097,7 +1097,7 @@ pythonclass AnonymousPatternLearning:
             "privacy": "Only hashed content IDs shared",
             "benefit": "Skip downloads that are failing for everyone"
         },
-        
+
         "quality_fingerprints": {
             # We see: "Hash_XYZ has encoding pattern 0x4B3F"
             # User sees: "This 4K release is likely upscaled"
@@ -1105,7 +1105,7 @@ pythonclass AnonymousPatternLearning:
             "privacy": "Only technical metadata patterns",
             "benefit": "Avoid fake 4K, CAM, watermarked releases"
         },
-        
+
         "indexer_health": {
             # We see: "Indexer_ID_5 success rate: 12%"
             # User sees: "YourIndexer is currently having issues"
@@ -1118,14 +1118,14 @@ pythonclass AnonymousPatternLearning:
 "AI understands your library without seeing it"
 pythonclass EncryptedSemanticSearch:
     """LLM processes encrypted embeddings"""
-    
+
     def setup(self):
         # Local side: Generate embeddings
         embeddings = self.generate_local_embeddings(user_library)
-        
+
         # Encrypt with user's key
         encrypted_embeddings = self.encrypt(embeddings, user_key)
-        
+
         # Cloud: Process without decryption
         return {
             "natural_queries": [
@@ -1140,26 +1140,26 @@ pythonclass EncryptedSemanticSearch:
 "Know your patterns without exposing them"
 pythonclass PrivateAnalytics:
     """Generate insights from encrypted metrics"""
-    
+
     insights = {
         "viewing_patterns": {
             # We store: {user_id: encrypted_blob}
             # User sees: "You watch 80% more on weekends"
             "storage": "Time patterns only, no content info"
         },
-        
+
         "optimization_opportunities": {
             # We calculate on: Size distributions, age statistics
             # User sees: "Delete 200GB of unwatched content > 1 year"
             "privacy": "Statistical analysis on encrypted metadata"
         },
-        
+
         "taste_evolution": {
             # We track: Genre vectors over time (anonymized)
             # User sees: "Your taste shifted from action to drama"
             "method": "Differential privacy on preference vectors"
         },
-        
+
         "cost_analysis": {
             # We see: Bandwidth patterns
             # User sees: "Downloading 4K costs you ~$15/month in bandwidth"
@@ -1170,20 +1170,20 @@ pythonclass PrivateAnalytics:
 "Identify content without revealing it"
 pythonclass PhantomRecognition:
     """Content matching without exposure"""
-    
+
     features = {
         "duplicate_detection": {
             "how": "Perceptual hashing on client side",
             "user_sees": "You have 3 versions of the same movie",
             "we_see": "Hash_A matches Hash_B and Hash_C"
         },
-        
+
         "upgrade_available": {
             "how": "Bloom filter matching",
             "user_sees": "4K version now available for your movie",
             "we_see": "Bloom_filter_X has new match"
         },
-        
+
         "missing_episodes": {
             "how": "Sequential pattern analysis",
             "user_sees": "Missing S02E05 and S02E09",
@@ -1194,20 +1194,20 @@ pythonclass PhantomRecognition:
 "Predict problems without seeing specifics"
 pythonclass PrivatePredictiveMaintenance:
     """Prevent issues while maintaining privacy"""
-    
+
     predictions = {
         "disk_failure_prediction": {
             "inputs": "I/O patterns, SMART data, age",
             "output": "70% chance of failure in 30 days",
             "privacy": "No file information, just disk metrics"
         },
-        
+
         "bandwidth_forecasting": {
             "inputs": "Historical usage patterns (encrypted)",
             "output": "You'll exceed ISP cap in 5 days",
             "privacy": "Just numbers, no content details"
         },
-        
+
         "quality_availability": {
             "inputs": "Release patterns for content category",
             "output": "4K version likely in 2-3 weeks",
@@ -1218,17 +1218,17 @@ pythonclass PrivatePredictiveMaintenance:
 "Recommendations from similar users, zero exposure"
 pythonclass PrivateRecommendations:
     """Get recommendations without revealing library"""
-    
+
     def generate_recommendations(self):
         # Step 1: Local embedding
         library_vector = self.vectorize_library(user_library)
-        
+
         # Step 2: Secure multi-party computation
         similar_users = self.find_similar_users_mpc(library_vector)
-        
+
         # Step 3: Private set intersection
         recommendations = self.private_set_intersection(similar_users)
-        
+
         return {
             "result": "5 hidden gems you might like",
             "privacy": "Uses MPC - no party sees full data",
@@ -1238,20 +1238,20 @@ pythonclass PrivateRecommendations:
 "Intelligent notifications without data exposure"
 pythonclass ZeroKnowledgeAlerts:
     """Alert on patterns without seeing content"""
-    
+
     alerts = {
         "unusual_activity": {
             "trigger": "3 standard deviations from normal",
             "message": "Unusual download pattern detected",
             "privacy": "Statistical anomaly detection only"
         },
-        
+
         "optimization_opportunity": {
             "trigger": "Duplicate hash patterns detected",
             "message": "You could save 500GB by removing duplicates",
             "privacy": "Hash comparison only"
         },
-        
+
         "community_wisdom": {
             "trigger": "Hash matches high-failure pattern",
             "message": "This download fails for 90% of users",
@@ -1262,12 +1262,12 @@ pythonclass ZeroKnowledgeAlerts:
 "Chat naturally, privately"
 pythonclass EncryptedLLMChat:
     """Process natural language without seeing content"""
-    
+
     def process_message(self, encrypted_message):
         # User's device encrypts: "Add the new Marvel movie"
         # We process: encrypted_blob_xyz
         # LLM operates on: tokenized, encrypted representations
-        
+
         features = {
             "natural_requests": "Add that movie we talked about",
             "context_aware": "Get the sequel to what I watched yesterday",
@@ -1278,20 +1278,20 @@ pythonclass EncryptedLLMChat:
 "Analyze encrypted data without decrypting"
 pythonclass HomomorphicAnalysis:
     """Compute on encrypted data directly"""
-    
+
     capabilities = {
         "library_deduplication": {
             "process": "Find duplicates in encrypted hashes",
             "result": "15 duplicate items found",
             "privacy": "Never decrypt the actual titles"
         },
-        
+
         "quality_distribution": {
             "process": "Analyze encrypted quality tags",
             "result": "60% is 1080p, 30% is 4K, 10% is 720p",
             "privacy": "Statistical analysis on encrypted metadata"
         },
-        
+
         "watch_time_optimization": {
             "process": "Analyze encrypted duration + watch status",
             "result": "400 hours of unwatched content",
@@ -1302,20 +1302,20 @@ pythonclass HomomorphicAnalysis:
 "Learn from everyone, share with no one"
 pythonclass FederatedLearning:
     """Train models locally, share only improvements"""
-    
+
     features = {
         "personal_ai_assistant": {
             "training": "Learns your preferences locally",
             "sharing": "Only model weight updates, not data",
             "benefit": "AI that knows you without us knowing you"
         },
-        
+
         "quality_predictor": {
             "local": "Train on your download success/failures",
             "global": "Aggregate model improvements",
             "privacy": "We never see your specific downloads"
         },
-        
+
         "smart_scheduling": {
             "learns": "Your viewing patterns",
             "shares": "Only gradient updates",
@@ -1326,20 +1326,20 @@ pythonclass FederatedLearning:
 "Connect everything, expose nothing"
 pythonclass SecureIntegrations:
     """Bridge services without data exposure"""
-    
+
     integrations = {
         "trakt_privacy_mode": {
             "sync": "Hash-based matching",
             "features": "Scrobble without revealing titles",
             "benefit": "Social features with privacy"
         },
-        
+
         "encrypted_webhooks": {
             "ifttt": "Send encrypted triggers",
             "zapier": "Process without seeing content",
             "home_assistant": "Automate without exposure"
         },
-        
+
         "anonymous_sharing": {
             "lists": "Share collections via encrypted tokens",
             "recommendations": "Suggest to friends anonymously",
@@ -1350,20 +1350,20 @@ pythonclass SecureIntegrations:
 "Aggregate insights, individual privacy"
 pythonclass DifferentialPrivacyAnalytics:
     """Add noise to protect individuals"""
-    
+
     reports = {
         "genre_trends": {
             "data": "Community genre preferences",
             "privacy": "Laplacian noise prevents identification",
             "value": "See what's trending without exposure"
         },
-        
+
         "global_health": {
             "metrics": "Overall ecosystem health",
             "privacy": "K-anonymity ensures privacy",
             "benefit": "Know if issues are widespread or local"
         },
-        
+
         "optimization_benchmarks": {
             "compare": "Your efficiency vs anonymous average",
             "privacy": "Differential privacy on all metrics",
@@ -1377,30 +1377,30 @@ pythonclass ClientSideEncryption:
     def __init__(self):
         # Generate key from user passphrase
         self.key = self.derive_key(user_passphrase)
-        
+
     def prepare_for_cloud(self, data):
         # 1. Sanitize (remove sensitive fields)
         sanitized = self.remove_pii(data)
-        
+
         # 2. Hash identifiers
         hashed = self.hash_identifiers(sanitized)
-        
+
         # 3. Encrypt remaining data
         encrypted = self.encrypt(hashed, self.key)
-        
+
         # 4. Add homomorphic layer for processing
         homomorphic = self.add_homomorphic_layer(encrypted)
-        
+
         return homomorphic
 Zero-Knowledge Proofs
 pythonclass ZeroKnowledgeProof:
     """Prove facts without revealing data"""
-    
+
     def prove_ownership(self, content_hash):
         # Prove you have content without revealing what
         proof = self.generate_zk_proof(content_hash)
         return proof
-    
+
     def verify_eligibility(self, criteria):
         # Prove you meet criteria without showing library
         return self.zk_verify(criteria)

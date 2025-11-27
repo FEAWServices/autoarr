@@ -330,7 +330,7 @@ test.describe("Configuration Audit UI", () => {
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Select SABnzbd from dropdown
-      await page.selectOption('[data-testid="filter-service"]', 'sabnzbd');
+      await page.selectOption('[data-testid="filter-service"]', "sabnzbd");
 
       // Should only show SABnzbd recommendations
       await page.waitForTimeout(500); // Wait for filter to apply
@@ -349,7 +349,7 @@ test.describe("Configuration Audit UI", () => {
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Select HIGH priority from dropdown
-      await page.selectOption('[data-testid="filter-priority"]', 'high');
+      await page.selectOption('[data-testid="filter-priority"]', "high");
 
       // Should only show high priority recommendations
       await page.waitForTimeout(500);
@@ -372,7 +372,7 @@ test.describe("Configuration Audit UI", () => {
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Select performance category from dropdown
-      await page.selectOption('[data-testid="filter-category"]', 'performance');
+      await page.selectOption('[data-testid="filter-category"]', "performance");
 
       // Should only show performance recommendations
       await page.waitForTimeout(500);
@@ -388,11 +388,11 @@ test.describe("Configuration Audit UI", () => {
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Filter by service: SABnzbd
-      await page.selectOption('[data-testid="filter-service"]', 'sabnzbd');
+      await page.selectOption('[data-testid="filter-service"]', "sabnzbd");
       await page.waitForTimeout(300);
 
       // Filter by priority: HIGH
-      await page.selectOption('[data-testid="filter-priority"]', 'high');
+      await page.selectOption('[data-testid="filter-priority"]', "high");
       await page.waitForTimeout(300);
 
       // Should show only SABnzbd high priority recommendations
@@ -408,7 +408,7 @@ test.describe("Configuration Audit UI", () => {
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Apply a filter
-      await page.selectOption('[data-testid="filter-service"]', 'sabnzbd');
+      await page.selectOption('[data-testid="filter-service"]', "sabnzbd");
       await page.waitForTimeout(300);
 
       // Clear filters
@@ -440,7 +440,7 @@ test.describe("Configuration Audit UI", () => {
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Select service sort from dropdown
-      await page.selectOption('[data-testid="sort-select"]', 'service');
+      await page.selectOption('[data-testid="sort-select"]', "service");
 
       await page.waitForTimeout(300);
 
@@ -455,7 +455,7 @@ test.describe("Configuration Audit UI", () => {
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Select category sort from dropdown
-      await page.selectOption('[data-testid="sort-select"]', 'category');
+      await page.selectOption('[data-testid="sort-select"]', "category");
 
       await page.waitForTimeout(300);
 
@@ -585,7 +585,9 @@ test.describe("Configuration Audit UI", () => {
       await expect(page.locator('[data-testid="apply-loading"]')).toBeVisible();
     });
 
-    test.skip("should show success toast on successful apply", async ({ page }) => {
+    test.skip("should show success toast on successful apply", async ({
+      page,
+    }) => {
       await page.goto("/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
@@ -782,8 +784,8 @@ test.describe("Configuration Audit UI", () => {
       await page.keyboard.press("Tab");
 
       // Filter should be focused
-      const focused = await page.evaluate(
-        () => document.activeElement?.getAttribute("data-testid"),
+      const focused = await page.evaluate(() =>
+        document.activeElement?.getAttribute("data-testid"),
       );
       expect(focused).toBeTruthy();
     });
@@ -843,7 +845,9 @@ test.describe("Configuration Audit UI", () => {
       expect(ariaLive).toBeTruthy();
     });
 
-    test.skip("should have accessible confirmation dialog", async ({ page }) => {
+    test.skip("should have accessible confirmation dialog", async ({
+      page,
+    }) => {
       await page.goto("/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 

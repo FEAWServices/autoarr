@@ -1,15 +1,19 @@
 {
-  "name": "AutoArr Development",
+  "name": "autoarr_devcontainer",
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".."
   },
+  "runArgs": ["--name", "autoarr_devcontainer"],
   "workspaceFolder": "/app",
   "mounts": [
-    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../autoarr-premium,target=/autoarr-premium,type=bind,consistency=cached",
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=C:/Git/.common,target=/app/.common,type=bind,consistency=cached"
   ],
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
@@ -48,7 +52,7 @@
   },
   "remoteUser": "root",
   "remoteEnv": {
-    "PYTHONPATH": "/app:/app/mcp-servers",
+    "PYTHONPATH": "/app:/autoarr-premium:/app/mcp-servers",
     "PATH": "/root/.local/bin:${containerEnv:PATH}",
     "GITHUB_ADMIN_TOKEN": "${localEnv:GITHUB_ADMIN_TOKEN}",
     "GH_TOKEN": "${localEnv:GITHUB_ADMIN_TOKEN}"

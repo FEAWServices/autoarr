@@ -29,8 +29,8 @@ Usage:
 import json
 import random
 import time
-from locust import HttpUser, TaskSet, task, between, events
 
+from locust import HttpUser, TaskSet, between, events, task
 
 # ============================================================================
 # Test Data

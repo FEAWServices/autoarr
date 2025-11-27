@@ -13,20 +13,17 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 ### Core Implementation (4 files)
 
 1. **`mcp-servers/radarr/models.py`** (187 lines)
-
    - Pydantic models for Radarr API data validation
    - Models: `Movie`, `MovieFile`, `Command`, `Queue`, `QueueRecord`, `WantedMissing`, `SystemStatus`, `ErrorResponse`
    - Full type safety and validation
 
 2. **`mcp-servers/radarr/client.py`** (559 lines)
-
    - Async HTTP client for Radarr API v3
    - 14 API methods covering all movie operations
    - Connection management, error handling, retry logic
    - Authentication via X-Api-Key header
 
 3. **`mcp-servers/radarr/server.py`** (487 lines)
-
    - MCP server implementation
    - 9 MCP tools for movie operations
    - Request routing and response formatting
@@ -39,14 +36,12 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 ### Documentation & Examples (3 files)
 
 5. **`mcp-servers/radarr/README.md`** (200+ lines)
-
    - Complete documentation
    - Usage examples
    - API reference
    - Configuration guide
 
 6. **`scripts/verify_radarr_implementation.py`** (345 lines)
-
    - Comprehensive verification script
    - 7 test suites validating implementation
    - All tests passing
@@ -119,31 +114,26 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 ### Movie Management Tools
 
 1. **radarr_get_movies**
-
    - Description: Get all movies from Radarr with optional pagination
    - Parameters: `limit` (optional), `page` (optional)
    - Returns: List of movies
 
 2. **radarr_get_movie_by_id**
-
    - Description: Get detailed information about a specific movie by ID
    - Parameters: `movie_id` (required)
    - Returns: Movie details
 
 3. **radarr_add_movie**
-
    - Description: Add a new movie to Radarr for monitoring and downloading
    - Parameters: `tmdb_id` (required), `quality_profile_id` (required), `root_folder_path` (required), `title` (optional), `monitored` (optional), `minimum_availability` (optional)
    - Returns: Added movie data
 
 4. **radarr_delete_movie**
-
    - Description: Delete a movie from Radarr with optional file deletion
    - Parameters: `movie_id` (required), `delete_files` (optional), `add_import_exclusion` (optional)
    - Returns: Deletion confirmation
 
 5. **radarr_search_movie_lookup**
-
    - Description: Search for movies using TMDb lookup (use before adding)
    - Parameters: `term` (required)
    - Returns: List of search results
@@ -156,13 +146,11 @@ Successfully implemented a complete Radarr MCP Server by adapting the Sonarr imp
 ### Queue & Calendar Tools
 
 7. **radarr_get_queue**
-
    - Description: Get the current download queue with status and progress
    - Parameters: `page` (optional), `page_size` (optional)
    - Returns: Queue data with pagination
 
 8. **radarr_get_calendar**
-
    - Description: Get upcoming movie releases from the calendar
    - Parameters: `start_date` (optional), `end_date` (optional)
    - Returns: List of upcoming movies

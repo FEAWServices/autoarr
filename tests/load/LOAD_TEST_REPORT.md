@@ -350,13 +350,11 @@ Peak: TBD MB
 ### High Priority
 
 1. **Implement Database Indexing**
-
    - Impact: High
    - Effort: Low
    - Add indexes on: `activity_log.correlation_id`, `config_audit.service`, `setting.key`
 
 2. **Add Response Caching**
-
    - Impact: High
    - Effort: Medium
    - Cache frequently accessed data with Redis
@@ -371,14 +369,12 @@ Peak: TBD MB
 ### Medium Priority
 
 4. **Connection Pooling**
-
    - Impact: Medium
    - Effort: Medium
    - Implement connection pooling for MCP servers
    - Reuse HTTP connections
 
 5. **Request Coalescing**
-
    - Impact: Medium
    - Effort: High
    - Coalesce duplicate concurrent requests
@@ -393,7 +389,6 @@ Peak: TBD MB
 ### Low Priority
 
 7. **Code Splitting**
-
    - Impact: Low
    - Effort: Medium
    - Lazy load non-critical components
@@ -491,21 +486,18 @@ locust -f tests/load/locustfile.py --host=http://localhost:8088
 ### Metrics to Track
 
 1. **API Metrics**:
-
    - Response times (median, p95, p99)
    - Request rate (RPS)
    - Error rate
    - Success rate
 
 2. **System Metrics**:
-
    - CPU usage
    - Memory usage
    - Disk I/O
    - Network I/O
 
 3. **Database Metrics**:
-
    - Query execution time
    - Active connections
    - Lock waits

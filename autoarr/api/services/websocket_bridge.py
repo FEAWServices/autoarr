@@ -24,9 +24,9 @@ real-time event delivery to connected clients.
 
 import asyncio
 import logging
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, List, Optional
 
-from .event_bus import Event, EventBus
+from .event_bus import Event, EventBus, EventSubscription, EventType
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class WebSocketBridge:
         """
         self.event_bus = event_bus
         self.connection_manager = connection_manager
-        self.subscribed_topics: Set[str] = set()
+        self._subscriptions: List[EventSubscription] = []
         self._running = False
         self._tasks: list[asyncio.Task] = []
 
@@ -68,28 +68,28 @@ class WebSocketBridge:
         self._running = True
 
         # Subscribe to all important event types
-        topics = [
-            "config.audit.started",
-            "config.audit.completed",
-            "config.audit.failed",
-            "download.failed",
-            "download.retry.started",
-            "download.retry.succeeded",
-            "download.retry.failed",
-            "content.request.created",
-            "content.request.classified",
-            "content.request.added",
-            "content.request.completed",
-            "content.request.failed",
-            "activity.created",
+        event_types = [
+            EventType.CONFIG_AUDIT_STARTED,
+            EventType.CONFIG_AUDIT_COMPLETED,
+            EventType.CONFIG_AUDIT_FAILED,
+            EventType.DOWNLOAD_FAILED,
+            EventType.RECOVERY_ATTEMPTED,
+            EventType.RECOVERY_SUCCESS,
+            EventType.RECOVERY_FAILED,
+            EventType.CONTENT_REQUESTED,
+            EventType.CONTENT_ADDED,
+            EventType.CONTENT_REQUEST_FAILED,
+            EventType.REQUEST_CREATED,
+            EventType.REQUEST_PROCESSED,
+            EventType.REQUEST_FAILED,
         ]
 
-        for topic in topics:
-            await self.event_bus.subscribe(topic, self._handle_event)
-            self.subscribed_topics.add(topic)
-            logger.debug(f"Subscribed to event topic: {topic}")
+        for event_type in event_types:
+            subscription = self.event_bus.subscribe(event_type, self._handle_event_sync)
+            self._subscriptions.append(subscription)
+            logger.debug(f"Subscribed to event type: {event_type}")
 
-        logger.info(f"WebSocket bridge started, monitoring {len(topics)} event types")
+        logger.info(f"WebSocket bridge started, monitoring {len(event_types)} event types")
 
     async def stop(self) -> None:
         """
@@ -103,14 +103,14 @@ class WebSocketBridge:
         logger.info("Stopping WebSocket event bridge...")
         self._running = False
 
-        # Unsubscribe from all topics
-        for topic in self.subscribed_topics:
+        # Unsubscribe from all event types
+        for subscription in self._subscriptions:
             try:
-                await self.event_bus.unsubscribe(topic, self._handle_event)
+                self.event_bus.unsubscribe(subscription)
             except Exception as e:
-                logger.error(f"Error unsubscribing from {topic}: {e}")
+                logger.error(f"Error unsubscribing: {e}")
 
-        self.subscribed_topics.clear()
+        self._subscriptions.clear()
 
         # Cancel all pending tasks
         for task in self._tasks:
@@ -123,9 +123,32 @@ class WebSocketBridge:
         self._tasks.clear()
         logger.info("WebSocket bridge stopped")
 
-    async def _handle_event(self, event: Event) -> None:
+    def _handle_event_sync(self, event: Event) -> None:
         """
-        Handle an event from the event bus.
+        Sync wrapper for handling events from the event bus.
+
+        Creates an async task to handle the event without blocking.
+
+        Args:
+            event: Event from the event bus
+        """
+        if not self._running:
+            return
+
+        # Schedule the async handler as a task
+        try:
+            loop = asyncio.get_running_loop()
+            task = loop.create_task(self._handle_event_async(event))
+            self._tasks.append(task)
+            # Clean up completed tasks
+            self._tasks = [t for t in self._tasks if not t.done()]
+        except RuntimeError:
+            # No running event loop - this shouldn't happen in normal operation
+            logger.warning("No running event loop for WebSocket bridge event handling")
+
+    async def _handle_event_async(self, event: Event) -> None:
+        """
+        Handle an event from the event bus asynchronously.
 
         Transforms the event into a WebSocket-friendly format and broadcasts
         it to all connected clients.
@@ -144,8 +167,7 @@ class WebSocketBridge:
             await self.connection_manager.broadcast(message)
 
             logger.debug(
-                f"Broadcasted event {event.event_type} "
-                f"(correlation_id: {event.correlation_id})"
+                f"Broadcasted event {event.event_type} (correlation_id: {event.correlation_id})"
             )
 
         except Exception as e:
@@ -169,7 +191,6 @@ class WebSocketBridge:
             "data": event.data,
             "metadata": {
                 "source": event.source,
-                "user_id": event.user_id,
             },
         }
 
@@ -211,12 +232,12 @@ def get_websocket_bridge() -> Optional[WebSocketBridge]:
     return _bridge_instance
 
 
-def set_websocket_bridge(bridge: WebSocketBridge) -> None:
+def set_websocket_bridge(bridge: Optional[WebSocketBridge]) -> None:
     """
     Set the global WebSocket bridge instance.
 
     Args:
-        bridge: WebSocket bridge instance
+        bridge: WebSocket bridge instance (or None to clear)
     """
     global _bridge_instance
     _bridge_instance = bridge

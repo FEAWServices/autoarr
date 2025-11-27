@@ -1,19 +1,14 @@
-# AutoArr Monorepo
+# AutoArr
 
 > **Intelligent cruise control for your \*arr media automation stack**
 
-[![License: Dual](https://img.shields.io/badge/License-GPL%203.0%20%2B%20Proprietary-blue.svg)](./LICENSE)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL%203.0-blue.svg)](./LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/autoarr/autoarr)
 [![GitHub](https://img.shields.io/github/stars/autoarr/autoarr)](https://github.com/autoarr/autoarr)
 
 ---
 
-## 📦 Monorepo Structure
-
-This repository contains two products:
-
-### 🟢 **AutoArr** (GPL-3.0) - 100% Free & Open Source
-**Location:** `/app/autoarr/`
+## 🟢 100% Free & Open Source (GPL-3.0)
 
 - ✅ **100% Free Forever** - No limitations, no subscriptions
 - ✅ **GPL-3.0 Licensed** - Open source like Sonarr and Radarr
@@ -21,17 +16,7 @@ This repository contains two products:
 - ✅ **Full Features** - Configuration auditing, download recovery, natural language requests
 - ✅ **Docker Hub** - Easy deployment
 
-**See:** [autoarr/README.md](./autoarr/README.md) | [Documentation](./docs/autoarr/)
-
-### 🔵 **AutoArrX** (Proprietary) - Premium Cloud Intelligence
-**Location:** `/app/autoarrx/`
-
-- ⭐ **Cloud-Enhanced** - Advanced LLM, smart notifications, predictive analytics
-- ⭐ **Privacy-First** - End-to-end encryption, no media file access
-- ⭐ **Optional** - AutoArr works perfectly without it
-- ⭐ **Azure SaaS** - Managed cloud service
-
-**See:** [autoarrx/README.md](./autoarrx/README.md) | [Pricing](./docs/autoarrx/PRICING.md) | [Privacy](./docs/autoarrx/PRIVACY.md)
+> **Looking for premium cloud features?** AutoArrX is an optional SaaS that provides smart notifications, predictive analytics, and multi-instance management with privacy-first encryption. AutoArr works 100% standalone without it.
 
 ---
 
@@ -48,7 +33,7 @@ Think of it as **cruise control for your media server** — it continuously moni
 
 **100% Open Source** (GPL-3.0) - Just like Sonarr and Radarr. Self-hosted, privacy-first, no subscriptions required for full functionality.
 
-> **Looking for premium features?** See [AutoArrX Pricing](docs/autoarrx/PRICING.md) for optional cloud enhancements like smart notifications, predictive analytics, and multi-instance management - all with privacy-first encryption.
+> **Looking for premium features?** AutoArrX is an optional cloud SaaS providing smart notifications, predictive analytics, and multi-instance management - all with privacy-first encryption. AutoArr connects to AutoArrX via secure outbound WebSocket (like Plex) so no firewall configuration is needed.
 
 ### The Problem We Solve
 
@@ -323,11 +308,11 @@ See [**BUILD-PLAN.md**](docs/BUILD-PLAN.md) for detailed sprint planning.
 
 ### **Competitive Landscape**
 
-| Solution           | Config Mgmt | Download Recovery | NL Interface | Intelligence | License |
-| ------------------ | ----------- | ----------------- | ------------ | ------------ |
-| **Manual**         | ❌          | ❌                | ❌           | ❌           | N/A |
-| **Overseerr**      | ❌          | ❌                | ❌           | ❌           | MIT |
-| **Custom Scripts** | ⚠️          | ⚠️                | ❌           | ❌           | N/A |
+| Solution           | Config Mgmt | Download Recovery | NL Interface | Intelligence | License     |
+| ------------------ | ----------- | ----------------- | ------------ | ------------ | ----------- |
+| **Manual**         | ❌          | ❌                | ❌           | ❌           | N/A         |
+| **Overseerr**      | ❌          | ❌                | ❌           | ❌           | MIT         |
+| **Custom Scripts** | ⚠️          | ⚠️                | ❌           | ❌           | N/A         |
 | **AutoArr**        | ✅          | ✅                | ✅           | ✅           | **GPL-3.0** |
 
 **AutoArr is the only solution** that combines:
@@ -342,6 +327,7 @@ See [**BUILD-PLAN.md**](docs/BUILD-PLAN.md) for detailed sprint planning.
 **AutoArr is 100% open source (GPL-3.0)** - Following the same trusted model as Sonarr and Radarr:
 
 ✅ **All Features Free Forever**
+
 - Configuration Intelligence with AI
 - Natural language content requests (local LLM)
 - Automatic download recovery
@@ -350,12 +336,14 @@ See [**BUILD-PLAN.md**](docs/BUILD-PLAN.md) for detailed sprint planning.
 - Self-hosted, privacy-first
 
 ✅ **No Subscriptions, No Premium Tiers**
+
 - No API keys required (uses local Qwen 2.5-3B LLM)
 - No features locked behind paywalls
 - No cloud dependencies
 - No telemetry or tracking
 
 ✅ **Community-Driven Development**
+
 - Open roadmap
 - Community contributions welcome
 - Transparent development
@@ -422,12 +410,14 @@ Special thanks to the communities behind **SABnzbd**, **Sonarr**, **Radarr**, an
 This repository contains two products with **different licenses**:
 
 ### AutoArr (GPL-3.0)
+
 **Location:** `/app/autoarr/`
 **License:** GNU General Public License v3.0 or later
 
 AutoArr is **100% free and open source software**. See [autoarr/LICENSE](./autoarr/LICENSE) for the full license text.
 
 This means you have the freedom to:
+
 - ✅ Use AutoArr for any purpose
 - ✅ Study and modify the source code
 - ✅ Distribute copies to help others
@@ -436,12 +426,14 @@ This means you have the freedom to:
 Any modifications or derivative works must also be released under GPL-3.0, ensuring AutoArr remains free and open source forever.
 
 ### AutoArrX (Proprietary)
+
 **Location:** `/app/autoarrx/`
 **License:** Proprietary (All Rights Reserved)
 
 AutoArrX is proprietary software. See [autoarrx/LICENSE](./autoarrx/LICENSE) for details.
 
 ### Root License
+
 See [LICENSE](./LICENSE) for the monorepo dual-license notice.
 
 ---
@@ -503,6 +495,7 @@ See [docs/architecture/adr/002-monorepo-structure.md](./docs/architecture/adr/00
 **AutoArrX (Optional Premium Cloud Service)**
 
 For users who want enhanced features with privacy-first cloud intelligence:
+
 - 🌟 Smart notifications & IFTTT/Zapier integration
 - 🤖 Advanced LLM models (Claude/GPT-4) for complex requests
 - 📊 Predictive maintenance & analytics

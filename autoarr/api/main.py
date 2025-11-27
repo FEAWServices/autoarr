@@ -23,32 +23,27 @@ and sets up all API routes.
 """
 
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from .config import get_settings
-from .rate_limiter import limiter
 from .database import get_database, init_database
 from .dependencies import shutdown_orchestrator
-from .middleware import (
-    ErrorHandlerMiddleware,
-    RequestLoggingMiddleware,
-    add_security_headers,
-)
+from .middleware import ErrorHandlerMiddleware, RequestLoggingMiddleware, add_security_headers
+from .rate_limiter import limiter
 from .routers import configuration, downloads, health, mcp, media, movies, requests
 from .routers import settings as settings_router
 from .routers import shows
 from .services.event_bus import get_event_bus
-from .services.websocket_bridge import (
-    initialize_websocket_bridge,
-    shutdown_websocket_bridge,
-)
+from .services.websocket_bridge import initialize_websocket_bridge, shutdown_websocket_bridge
 
 # Configure logging
 logging.basicConfig(
@@ -59,7 +54,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
     Application lifespan handler.
 
@@ -132,6 +127,7 @@ app = FastAPI(
     redoc_url=_settings.redoc_url,
     openapi_url=_settings.openapi_url,
     lifespan=lifespan,
+    redirect_slashes=True,  # Automatically redirect /path to /path/ if needed
 )
 
 # Add rate limiter to app state
@@ -237,16 +233,21 @@ static_dir = Path(__file__).parent / "static"
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+# Mount UI static files (React app)
+ui_dist_dir = Path(__file__).parent.parent / "ui" / "dist"
+if ui_dist_dir.exists():
+    app.mount("/assets", StaticFiles(directory=str(ui_dist_dir / "assets")), name="assets")
+
 
 # ============================================================================
 # Root Endpoints
 # ============================================================================
 
 
-@app.get("/", tags=["root"])
-async def root() -> dict:
+@app.get("/api", tags=["root"])
+async def api_info() -> dict:
     """
-    Root endpoint with API information.
+    API information endpoint.
 
     Returns:
         dict: API information
@@ -280,27 +281,27 @@ async def ping() -> dict:
 class ConnectionManager:
     """Manages WebSocket connections."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize connection manager."""
         self.active_connections: list[WebSocket] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket) -> None:
         """Accept and store new connection."""
         await websocket.accept()
         self.active_connections.append(websocket)
         logger.info(f"WebSocket connected. Active connections: {len(self.active_connections)}")
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket) -> None:
         """Remove connection from list."""
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
         logger.info(f"WebSocket disconnected. Active connections: {len(self.active_connections)}")
 
-    async def send_personal_message(self, message: dict, websocket: WebSocket):
+    async def send_personal_message(self, message: dict, websocket: WebSocket) -> None:
         """Send message to specific connection."""
         await websocket.send_json(message)
 
-    async def broadcast(self, message: dict):
+    async def broadcast(self, message: dict) -> None:
         """Send message to all active connections."""
         dead_connections = []
         for connection in self.active_connections:
@@ -319,8 +320,8 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket(f"{_settings.api_v1_prefix}/ws")
+async def websocket_endpoint(websocket: WebSocket) -> None:
     """
     WebSocket endpoint for real-time updates.
 
@@ -354,6 +355,37 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(websocket)
+
+
+# ============================================================================
+# UI Catch-all Route (SPA)
+# ============================================================================
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_spa(full_path: str) -> FileResponse:
+    """
+    Catch-all route to serve the React SPA.
+
+    This serves index.html for all non-API routes, allowing React Router
+    to handle client-side routing.
+
+    Args:
+        full_path: The requested path
+
+    Returns:
+        FileResponse: The index.html file
+    """
+    ui_dist_dir = Path(__file__).parent.parent / "ui" / "dist"
+    index_file = ui_dist_dir / "index.html"
+
+    if index_file.exists():
+        return FileResponse(str(index_file))
+
+    # Fallback if UI not built
+    from fastapi import HTTPException
+
+    raise HTTPException(status_code=503, detail="UI not available")
 
 
 # ============================================================================

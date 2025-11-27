@@ -1,15 +1,12 @@
-import { useEffect, useState } from "react";
-import { Logo } from "./Logo";
+import { useEffect, useState } from 'react';
+import { Logo } from './Logo';
 
 interface SplashScreenProps {
   onComplete: () => void;
   minDisplayTime?: number;
 }
 
-export const SplashScreen = ({
-  onComplete,
-  minDisplayTime = 2000,
-}: SplashScreenProps) => {
+export const SplashScreen = ({ onComplete, minDisplayTime = 2000 }: SplashScreenProps) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -46,12 +43,8 @@ export const SplashScreen = ({
         </div>
 
         {/* App Name */}
-        <h1 className="text-6xl font-bold text-white mb-2 tracking-tight">
-          AutoArr
-        </h1>
-        <p className="text-xl text-text-secondary mb-8">
-          Intelligent Media, Automated.
-        </p>
+        <h1 className="text-6xl font-bold text-white mb-2 tracking-tight">AutoArr</h1>
+        <p className="text-xl text-text-secondary mb-8">Intelligent Media, Automated.</p>
 
         {/* Loading Bar */}
         <div className="w-64 mx-auto">

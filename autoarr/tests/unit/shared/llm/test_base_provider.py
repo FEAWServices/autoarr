@@ -21,11 +21,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import pytest
 
-from autoarr.shared.llm.base_provider import (
-    BaseLLMProvider,
-    LLMMessage,
-    LLMResponse,
-)
+from autoarr.shared.llm.base_provider import BaseLLMProvider, LLMMessage, LLMResponse
 
 
 class MockLLMProvider(BaseLLMProvider):

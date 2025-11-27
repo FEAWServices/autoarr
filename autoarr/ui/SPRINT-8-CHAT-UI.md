@@ -209,13 +209,11 @@ Features:
 **40+ comprehensive tests covering:**
 
 1. **Loading & Initial State** (6 tests)
-
    - Page loads and renders
    - Empty state display
    - Performance (< 2s load)
 
 2. **User Interactions** (9 tests)
-
    - Typing in input
    - Sending messages (button & Enter key)
    - Shift+Enter for newlines
@@ -224,7 +222,6 @@ Features:
    - Empty message validation
 
 3. **Message Display** (7 tests)
-
    - Message alignment
    - Typing indicator
    - Auto-scroll behavior
@@ -232,7 +229,6 @@ Features:
    - Avatar display
 
 4. **Content Request Flow** (9 tests)
-
    - Processing states
    - Classification responses
    - Content cards display
@@ -241,33 +237,28 @@ Features:
    - Loading states
 
 5. **Disambiguation** (3 tests)
-
    - Multiple matches
    - Selection handling
    - "None of these" option
 
 6. **Request Status** (4 tests)
-
    - Status display
    - Progress tracking
    - Retry functionality
    - Real-time updates
 
 7. **Chat History** (3 tests)
-
    - Persistence across reloads
    - Clear functionality
    - Search filtering
 
 8. **Mobile Responsiveness** (4 tests)
-
    - All viewport sizes
    - Touch targets
    - Layout adaptation
    - Virtual keyboard
 
 9. **Accessibility** (10 tests)
-
    - ARIA labels
    - Keyboard navigation
    - Screen reader support
@@ -276,7 +267,6 @@ Features:
    - Color contrast
 
 10. **Error Handling** (5 tests)
-
     - Network errors
     - API failures
     - Timeout handling

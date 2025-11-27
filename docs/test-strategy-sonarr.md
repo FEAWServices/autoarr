@@ -83,37 +83,31 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_client_requires_url**
-
    - GIVEN: Missing or empty URL
    - WHEN: Creating SonarrClient
    - THEN: Raises ValueError
 
 2. **test_client_requires_api_key**
-
    - GIVEN: Missing or empty API key
    - WHEN: Creating SonarrClient
    - THEN: Raises ValueError
 
 3. **test_client_normalizes_url**
-
    - GIVEN: URL with trailing slash
    - WHEN: Creating SonarrClient
    - THEN: URL is normalized (slash removed)
 
 4. **test_client_accepts_custom_timeout**
-
    - GIVEN: Custom timeout value
    - WHEN: Creating SonarrClient
    - THEN: Client stores timeout correctly
 
 5. **test_client_validates_connection_on_create**
-
    - GIVEN: validate_connection=True
    - WHEN: Using factory method
    - THEN: Makes health check request
 
 6. **test_health_check_returns_true_when_healthy**
-
    - GIVEN: Sonarr responds with valid status
    - WHEN: Calling health_check()
    - THEN: Returns True
@@ -128,55 +122,46 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_get_series_returns_all_series**
-
    - GIVEN: Sonarr has multiple series
    - WHEN: Calling get_series()
    - THEN: Returns list of all series
 
 2. **test_get_series_by_id_returns_specific_series**
-
    - GIVEN: Valid series ID
    - WHEN: Calling get_series_by_id(id)
    - THEN: Returns specific series data
 
 3. **test_get_series_by_id_raises_on_not_found**
-
    - GIVEN: Invalid series ID
    - WHEN: Calling get_series_by_id(id)
    - THEN: Raises SonarrClientError with 404
 
 4. **test_add_series_sends_correct_payload**
-
    - GIVEN: Series data with tvdbId, quality profile, root folder
    - WHEN: Calling add_series()
    - THEN: POST request with correct JSON payload
 
 5. **test_add_series_validates_required_fields**
-
    - GIVEN: Missing tvdbId or root folder
    - WHEN: Calling add_series()
    - THEN: Raises ValueError
 
 6. **test_add_series_with_monitoring_options**
-
    - GIVEN: Monitoring configuration
    - WHEN: Calling add_series()
    - THEN: Includes monitored and seasonFolder flags
 
 7. **test_search_series_returns_lookup_results**
-
    - GIVEN: Search term
    - WHEN: Calling search_series(term)
    - THEN: Returns list of matching series from TVDB
 
 8. **test_search_series_by_tvdb_id**
-
    - GIVEN: TVDB ID
    - WHEN: Calling search_series(tvdb:12345)
    - THEN: Returns specific series lookup
 
 9. **test_delete_series_removes_series**
-
    - GIVEN: Valid series ID
    - WHEN: Calling delete_series(id)
    - THEN: Sends DELETE request
@@ -191,25 +176,21 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_get_episodes_returns_series_episodes**
-
    - GIVEN: Valid series ID
    - WHEN: Calling get_episodes(series_id)
    - THEN: Returns all episodes for series
 
 2. **test_get_episodes_filters_by_season**
-
    - GIVEN: Series ID and season number
    - WHEN: Calling get_episodes(series_id, season=1)
    - THEN: Returns only season 1 episodes
 
 3. **test_get_episode_by_id_returns_specific_episode**
-
    - GIVEN: Valid episode ID
    - WHEN: Calling get_episode_by_id(id)
    - THEN: Returns episode details
 
 4. **test_search_episode_triggers_episode_search**
-
    - GIVEN: Episode ID
    - WHEN: Calling search_episode(episode_id)
    - THEN: POSTs command to search for episode
@@ -224,19 +205,16 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_execute_command_posts_to_command_endpoint**
-
    - GIVEN: Command name and body
    - WHEN: Calling \_execute_command()
    - THEN: POSTs to /api/v3/command
 
 2. **test_get_command_status_returns_command_info**
-
    - GIVEN: Command ID
    - WHEN: Calling get_command(id)
    - THEN: Returns command status and progress
 
 3. **test_series_search_triggers_series_search**
-
    - GIVEN: Series ID
    - WHEN: Calling search_series_command(series_id)
    - THEN: POSTs SeriesSearch command
@@ -251,31 +229,26 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_get_calendar_returns_upcoming_episodes**
-
    - GIVEN: Date range
    - WHEN: Calling get_calendar(start, end)
    - THEN: Returns episodes airing in range
 
 2. **test_get_calendar_defaults_to_today**
-
    - GIVEN: No date parameters
    - WHEN: Calling get_calendar()
    - THEN: Returns today's upcoming episodes
 
 3. **test_get_queue_returns_download_queue**
-
    - GIVEN: Active downloads
    - WHEN: Calling get_queue()
    - THEN: Returns queue with download status
 
 4. **test_get_queue_supports_pagination**
-
    - GIVEN: page and pageSize params
    - WHEN: Calling get_queue(page=2, pageSize=20)
    - THEN: Includes pagination in request
 
 5. **test_get_wanted_missing_returns_missing_episodes**
-
    - GIVEN: Missing episodes
    - WHEN: Calling get_wanted_missing()
    - THEN: Returns paginated list of missing episodes
@@ -290,37 +263,31 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_handles_401_unauthorized**
-
    - GIVEN: Invalid API key
    - WHEN: Making any request
    - THEN: Raises SonarrClientError with auth message
 
 2. **test_handles_404_not_found**
-
    - GIVEN: Non-existent resource
    - WHEN: GET request
    - THEN: Raises SonarrClientError with 404
 
 3. **test_handles_500_server_error**
-
    - GIVEN: Server error
    - WHEN: Any request
    - THEN: Raises SonarrClientError
 
 4. **test_handles_connection_timeout**
-
    - GIVEN: Network timeout
    - WHEN: Any request
    - THEN: Raises SonarrConnectionError
 
 5. **test_handles_invalid_json_response**
-
    - GIVEN: Non-JSON response
    - WHEN: Parsing response
    - THEN: Raises SonarrClientError
 
 6. **test_retries_on_transient_errors**
-
    - GIVEN: Transient 503 error
    - WHEN: Making request
    - THEN: Retries up to max_retries
@@ -335,13 +302,11 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_includes_api_key_in_headers**
-
    - GIVEN: Any request
    - WHEN: Making API call
    - THEN: Includes X-Api-Key header
 
 2. **test_api_key_not_in_url**
-
    - GIVEN: Any request
    - WHEN: Making API call
    - THEN: API key NOT in query params
@@ -358,13 +323,11 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_server_registers_all_tools**
-
    - GIVEN: Server initialization
    - WHEN: Server starts
    - THEN: All 10 tools are registered
 
 2. **test_server_requires_configuration**
-
    - GIVEN: Missing config
    - WHEN: Creating server
    - THEN: Raises appropriate error
@@ -379,55 +342,46 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_get_series_tool_execution**
-
    - GIVEN: get_series tool call
    - WHEN: Tool is executed
    - THEN: Calls client.get_series() and formats response
 
 2. **test_get_series_by_id_tool_execution**
-
    - GIVEN: get_series_by_id with ID argument
    - WHEN: Tool is executed
    - THEN: Calls client.get_series_by_id(id)
 
 3. **test_add_series_tool_execution**
-
    - GIVEN: add_series with required params
    - WHEN: Tool is executed
    - THEN: Calls client.add_series() with correct data
 
 4. **test_search_series_tool_execution**
-
    - GIVEN: search_series with term
    - WHEN: Tool is executed
    - THEN: Calls client.search_series(term)
 
 5. **test_get_episodes_tool_execution**
-
    - GIVEN: get_episodes with series_id
    - WHEN: Tool is executed
    - THEN: Calls client.get_episodes(series_id)
 
 6. **test_search_episode_tool_execution**
-
    - GIVEN: search_episode with episode_id
    - WHEN: Tool is executed
    - THEN: Calls client.search_episode(episode_id)
 
 7. **test_get_wanted_tool_execution**
-
    - GIVEN: get_wanted tool call
    - WHEN: Tool is executed
    - THEN: Calls client.get_wanted_missing()
 
 8. **test_get_calendar_tool_execution**
-
    - GIVEN: get_calendar with date range
    - WHEN: Tool is executed
    - THEN: Calls client.get_calendar()
 
 9. **test_get_queue_tool_execution**
-
    - GIVEN: get_queue tool call
    - WHEN: Tool is executed
    - THEN: Calls client.get_queue()
@@ -442,13 +396,11 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_tool_schemas_are_valid_json_schema**
-
    - GIVEN: All tool definitions
    - WHEN: Validating schemas
    - THEN: All conform to JSON Schema spec
 
 2. **test_required_parameters_are_enforced**
-
    - GIVEN: Tool call missing required param
    - WHEN: Validating input
    - THEN: Raises validation error
@@ -465,11 +417,9 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_full_series_workflow**
-
    - Search for series → Add series → Get series → Delete series
 
 2. **test_episode_search_workflow**
-
    - Get series → Get episodes → Search for missing episode
 
 3. **test_queue_monitoring_workflow**
@@ -480,11 +430,9 @@ Creates Sonarr command responses:
 **Test Specifications:**
 
 1. **test_mcp_tool_list_request**
-
    - Verify all tools are listed in capability response
 
 2. **test_mcp_tool_execution_flow**
-
    - Send tool execution request → Receive formatted response
 
 3. **test_mcp_error_handling**

@@ -8,25 +8,25 @@
 /**
  * Message type discriminator
  */
-export type MessageType = "user" | "assistant" | "system";
+export type MessageType = 'user' | 'assistant' | 'system';
 
 /**
  * Content type from classification
  */
-export type ContentType = "movie" | "tv" | "unknown";
+export type ContentType = 'movie' | 'tv' | 'unknown';
 
 /**
  * Request status lifecycle
  */
 export type RequestStatus =
-  | "submitted"
-  | "classified"
-  | "searching"
-  | "pending_confirmation"
-  | "downloading"
-  | "completed"
-  | "failed"
-  | "cancelled";
+  | 'submitted'
+  | 'classified'
+  | 'searching'
+  | 'pending_confirmation'
+  | 'downloading'
+  | 'completed'
+  | 'failed'
+  | 'cancelled';
 
 /**
  * Content classification result from LLM
@@ -110,13 +110,13 @@ export interface ChatState {
  * WebSocket event types for real-time updates
  */
 export type WebSocketEventType =
-  | "request-submitted"
-  | "request-classified"
-  | "request-searching"
-  | "request-downloading"
-  | "request-completed"
-  | "request-failed"
-  | "download-progress";
+  | 'request-submitted'
+  | 'request-classified'
+  | 'request-searching'
+  | 'request-downloading'
+  | 'request-completed'
+  | 'request-failed'
+  | 'download-progress';
 
 /**
  * WebSocket event payload

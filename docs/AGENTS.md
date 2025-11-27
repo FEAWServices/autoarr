@@ -326,7 +326,6 @@ Ensure TDD approach is followed.
 **Documentation Types**:
 
 1. **Technical Docs**:
-
    - Architecture Decision Records (ADRs)
    - API reference
    - MCP server specifications
@@ -334,7 +333,6 @@ Ensure TDD approach is followed.
    - Event schemas
 
 2. **User Docs**:
-
    - Installation guide
    - Quick start guide
    - Configuration guide

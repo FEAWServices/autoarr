@@ -95,10 +95,10 @@ class AllServicesConfig(BaseModel):
 class AllServicesConfigResponse(BaseModel):
     """Response with all service configurations."""
 
-    sabnzbd: Optional[ServiceConnectionConfigResponse] = None
-    sonarr: Optional[ServiceConnectionConfigResponse] = None
-    radarr: Optional[ServiceConnectionConfigResponse] = None
-    plex: Optional[ServiceConnectionConfigResponse] = None
+    sabnzbd: ServiceConnectionConfigResponse
+    sonarr: ServiceConnectionConfigResponse
+    radarr: ServiceConnectionConfigResponse
+    plex: ServiceConnectionConfigResponse
 
 
 class TestConnectionRequest(BaseModel):
@@ -166,6 +166,7 @@ async def get_service_status(service_name: str, orchestrator: "MCPOrchestrator")
 # ============================================================================
 
 
+@router.get("", response_model=AllServicesConfigResponse)
 @router.get("/", response_model=AllServicesConfigResponse)
 async def get_all_settings(
     orchestrator: "MCPOrchestrator" = Depends(get_orchestrator),
@@ -224,49 +225,33 @@ async def get_all_settings(
     plex_status = await get_service_status("plex", orchestrator)
 
     return AllServicesConfigResponse(
-        sabnzbd=(
-            ServiceConnectionConfigResponse(
-                enabled=sabn_enabled,
-                url=sabn_url,
-                api_key_masked=mask_api_key(sabn_key),
-                timeout=sabn_timeout,
-                status=sabnzbd_status,
-            )
-            if sabn_enabled
-            else None
+        sabnzbd=ServiceConnectionConfigResponse(
+            enabled=sabn_enabled,
+            url=sabn_url,
+            api_key_masked=mask_api_key(sabn_key),
+            timeout=sabn_timeout,
+            status=sabnzbd_status,
         ),
-        sonarr=(
-            ServiceConnectionConfigResponse(
-                enabled=son_enabled,
-                url=son_url,
-                api_key_masked=mask_api_key(son_key),
-                timeout=son_timeout,
-                status=sonarr_status,
-            )
-            if son_enabled
-            else None
+        sonarr=ServiceConnectionConfigResponse(
+            enabled=son_enabled,
+            url=son_url,
+            api_key_masked=mask_api_key(son_key),
+            timeout=son_timeout,
+            status=sonarr_status,
         ),
-        radarr=(
-            ServiceConnectionConfigResponse(
-                enabled=rad_enabled,
-                url=rad_url,
-                api_key_masked=mask_api_key(rad_key),
-                timeout=rad_timeout,
-                status=radarr_status,
-            )
-            if rad_enabled
-            else None
+        radarr=ServiceConnectionConfigResponse(
+            enabled=rad_enabled,
+            url=rad_url,
+            api_key_masked=mask_api_key(rad_key),
+            timeout=rad_timeout,
+            status=radarr_status,
         ),
-        plex=(
-            ServiceConnectionConfigResponse(
-                enabled=plex_enabled,
-                url=plex_url,
-                api_key_masked=mask_api_key(plex_key),
-                timeout=plex_timeout,
-                status=plex_status,
-            )
-            if plex_enabled
-            else None
+        plex=ServiceConnectionConfigResponse(
+            enabled=plex_enabled,
+            url=plex_url,
+            api_key_masked=mask_api_key(plex_key),
+            timeout=plex_timeout,
+            status=plex_status,
         ),
     )
 
@@ -400,16 +385,14 @@ async def update_service_settings(
     # Attempt to reconnect to the service
     try:
         if config.enabled:
-            await orchestrator.reconnect_server(service)
+            await orchestrator.reconnect(service)
             logger.info(f"Successfully reconnected to {service}")
         else:
             logger.info(f"Service {service} disabled")
     except Exception as e:
         logger.error(f"Failed to reconnect to {service}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Settings saved but failed to connect: {str(e)}",
-        )
+        # Don't fail the save if reconnect fails - settings are already saved
+        logger.warning(f"Settings saved but reconnect failed: {str(e)}")
 
     return {
         "success": True,
@@ -590,7 +573,7 @@ async def save_all_settings(
     ]:
         if service_config and service_config.enabled:
             try:
-                await orchestrator.reconnect_server(service_name)
+                await orchestrator.reconnect(service_name)
                 logger.info(f"Successfully reconnected to {service_name}")
             except Exception as e:
                 logger.error(f"Failed to reconnect to {service_name}: {e}")

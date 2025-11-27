@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 # AutoArr - Intelligent Media Automation for Synology NAS
 # This compose file is optimized for Synology DSM with Container Manager
@@ -71,10 +71,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
+          cpus: "2"
           memory: 1G
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
 
     # Health check to monitor container status
@@ -84,7 +84,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
 # Optional: Connect to existing media stack network
 # Uncomment if your Sonarr/Radarr/SABnzbd/Plex are on a custom Docker network
 # networks:

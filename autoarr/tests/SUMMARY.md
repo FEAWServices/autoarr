@@ -213,7 +213,6 @@ docker-compose up sabnzbd
 ### Master Documents
 
 1. **TEST-STRATEGY.md** (20+ pages)
-
    - Complete test strategy
    - TDD workflow
    - Coverage strategy
@@ -221,7 +220,6 @@ docker-compose up sabnzbd
    - Performance benchmarks
 
 2. **tests/unit/mcp_servers/sabnzbd/README.md**
-
    - Detailed unit test documentation
    - Test patterns
    - Factory usage

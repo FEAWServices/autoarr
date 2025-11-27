@@ -215,6 +215,7 @@ class TestClaudeProviderComplete:
     @pytest.mark.asyncio
     async def test_complete_handles_rate_limit(self, provider):
         """Test completion handles rate limit errors with retry."""
+        import httpx
         from anthropic import RateLimitError
 
         messages = [LLMMessage(role="user", content="Test")]
@@ -225,13 +226,22 @@ class TestClaudeProviderComplete:
         mock_message.stop_reason = "end_turn"
         mock_message.usage = MagicMock(input_tokens=10, output_tokens=5)
 
+        # Create a mock httpx.Response for the RateLimitError
+        mock_response = MagicMock(spec=httpx.Response)
+        mock_response.status_code = 429
+        mock_response.headers = {"retry-after": "1"}
+
         # Create mock client and set it
         mock_client = MagicMock()
         mock_client.messages = AsyncMock()
         # Fail once with rate limit, then succeed
         mock_client.messages.create = AsyncMock(
             side_effect=[
-                RateLimitError("Rate limit exceeded"),
+                RateLimitError(
+                    "Rate limit exceeded",
+                    response=mock_response,
+                    body={"error": {"message": "Rate limit exceeded"}},
+                ),
                 mock_message,
             ]
         )

@@ -11,6 +11,7 @@ This document verifies that all AutoArr dependencies are compatible with the GNU
 ✅ **All major dependencies are GPL-3.0 compatible**
 
 AutoArr uses only permissive open-source licenses that are compatible with GPL-3.0, primarily:
+
 - MIT License
 - BSD Licenses
 - Apache License 2.0
@@ -18,90 +19,96 @@ AutoArr uses only permissive open-source licenses that are compatible with GPL-3
 
 ## License Compatibility Matrix
 
-| License Type | GPL-3.0 Compatible | Notes |
-|-------------|-------------------|-------|
-| MIT | ✅ Yes | Most common, very permissive |
-| BSD (2/3-Clause) | ✅ Yes | Permissive like MIT |
-| Apache 2.0 | ✅ Yes | Compatible with GPL-3.0 |
-| PSF (Python) | ✅ Yes | Python's own license |
-| LGPL | ✅ Yes | GNU Lesser GPL |
-| GPL-2.0+ | ✅ Yes | Compatible with GPL-3.0 |
+| License Type     | GPL-3.0 Compatible | Notes                        |
+| ---------------- | ------------------ | ---------------------------- |
+| MIT              | ✅ Yes             | Most common, very permissive |
+| BSD (2/3-Clause) | ✅ Yes             | Permissive like MIT          |
+| Apache 2.0       | ✅ Yes             | Compatible with GPL-3.0      |
+| PSF (Python)     | ✅ Yes             | Python's own license         |
+| LGPL             | ✅ Yes             | GNU Lesser GPL               |
+| GPL-2.0+         | ✅ Yes             | Compatible with GPL-3.0      |
 
 ## Core Dependencies
 
 ### Backend (Python)
 
-| Package | Version | License | Compatible |
-|---------|---------|---------|-----------|
-| fastapi | ^0.119.1 | MIT | ✅ Yes |
-| uvicorn | ^0.38.0 | BSD | ✅ Yes |
-| pydantic | ^2.12.3 | MIT | ✅ Yes |
-| sqlalchemy | ^2.0.44 | MIT | ✅ Yes |
-| anthropic | ^0.71.0 | MIT | ✅ Yes |
-| mcp | ^1.18.0 | MIT | ✅ Yes |
-| httpx | ^0.27.0 | BSD | ✅ Yes |
-| redis | ^6.4.0 | MIT | ✅ Yes |
-| aiosqlite | ^0.21.0 | MIT | ✅ Yes |
-| python-multipart | ^0.0.20 | Apache 2.0 | ✅ Yes |
-| python-jose | ^3.3.0 | MIT | ✅ Yes |
-| passlib | ^1.7.4 | BSD | ✅ Yes |
-| alembic | ^1.17.0 | MIT | ✅ Yes |
-| asyncpg | ^0.30.0 | Apache 2.0 | ✅ Yes |
-| beautifulsoup4 | ^4.14.2 | MIT | ✅ Yes |
+| Package          | Version  | License    | Compatible |
+| ---------------- | -------- | ---------- | ---------- |
+| fastapi          | ^0.119.1 | MIT        | ✅ Yes     |
+| uvicorn          | ^0.38.0  | BSD        | ✅ Yes     |
+| pydantic         | ^2.12.3  | MIT        | ✅ Yes     |
+| sqlalchemy       | ^2.0.44  | MIT        | ✅ Yes     |
+| anthropic        | ^0.71.0  | MIT        | ✅ Yes     |
+| mcp              | ^1.18.0  | MIT        | ✅ Yes     |
+| httpx            | ^0.27.0  | BSD        | ✅ Yes     |
+| redis            | ^6.4.0   | MIT        | ✅ Yes     |
+| aiosqlite        | ^0.21.0  | MIT        | ✅ Yes     |
+| python-multipart | ^0.0.20  | Apache 2.0 | ✅ Yes     |
+| python-jose      | ^3.3.0   | MIT        | ✅ Yes     |
+| passlib          | ^1.7.4   | BSD        | ✅ Yes     |
+| alembic          | ^1.17.0  | MIT        | ✅ Yes     |
+| asyncpg          | ^0.30.0  | Apache 2.0 | ✅ Yes     |
+| beautifulsoup4   | ^4.14.2  | MIT        | ✅ Yes     |
 
 ### Frontend (Node.js/React)
 
-| Package | Version | License | Compatible |
-|---------|---------|---------|-----------|
-| react | ^19.2.0 | MIT | ✅ Yes |
-| react-dom | ^19.2.0 | MIT | ✅ Yes |
-| react-router-dom | ^7.9.4 | MIT | ✅ Yes |
-| @tanstack/react-query | ^5.90.5 | MIT | ✅ Yes |
-| zustand | ^5.0.8 | MIT | ✅ Yes |
-| tailwindcss | ^4.1.15 | MIT | ✅ Yes |
-| lucide-react | ^0.546.0 | ISC | ✅ Yes |
-| clsx | ^2.0.0 | MIT | ✅ Yes |
-| react-hot-toast | ^2.4.1 | MIT | ✅ Yes |
+| Package               | Version  | License | Compatible |
+| --------------------- | -------- | ------- | ---------- |
+| react                 | ^19.2.0  | MIT     | ✅ Yes     |
+| react-dom             | ^19.2.0  | MIT     | ✅ Yes     |
+| react-router-dom      | ^7.9.4   | MIT     | ✅ Yes     |
+| @tanstack/react-query | ^5.90.5  | MIT     | ✅ Yes     |
+| zustand               | ^5.0.8   | MIT     | ✅ Yes     |
+| tailwindcss           | ^4.1.15  | MIT     | ✅ Yes     |
+| lucide-react          | ^0.546.0 | ISC     | ✅ Yes     |
+| clsx                  | ^2.0.0   | MIT     | ✅ Yes     |
+| react-hot-toast       | ^2.4.1   | MIT     | ✅ Yes     |
 
 ### Development Dependencies
 
-| Package | License | Compatible |
-|---------|---------|-----------|
-| pytest | MIT | ✅ Yes |
-| black | MIT | ✅ Yes |
-| flake8 | MIT | ✅ Yes |
-| mypy | MIT | ✅ Yes |
-| playwright | Apache 2.0 | ✅ Yes |
-| eslint | MIT | ✅ Yes |
-| prettier | MIT | ✅ Yes |
-| vite | MIT | ✅ Yes |
+| Package    | License    | Compatible |
+| ---------- | ---------- | ---------- |
+| pytest     | MIT        | ✅ Yes     |
+| black      | MIT        | ✅ Yes     |
+| flake8     | MIT        | ✅ Yes     |
+| mypy       | MIT        | ✅ Yes     |
+| playwright | Apache 2.0 | ✅ Yes     |
+| eslint     | MIT        | ✅ Yes     |
+| prettier   | MIT        | ✅ Yes     |
+| vite       | MIT        | ✅ Yes     |
 
 ## GPL-3.0 Compatibility Rules
 
 ### What Can Be Combined with GPL-3.0?
 
 ✅ **Permissive Licenses** (MIT, BSD, Apache 2.0)
+
 - These allow the code to be relicensed under GPL-3.0
 - No conflicts with copyleft requirements
 
 ✅ **LGPL** (Lesser GPL)
+
 - Designed to be compatible with GPL
 - Can be dynamically linked
 
 ✅ **GPL-2.0-or-later**
+
 - Can upgrade to GPL-3.0
 - Fully compatible
 
 ### What Cannot Be Combined with GPL-3.0?
 
 ❌ **Proprietary licenses**
+
 - Conflicts with GPL's copyleft requirements
 
 ❌ **GPL-2.0-only** (without "or later" clause)
+
 - Technically incompatible with GPL-3.0
 - None of our dependencies use this
 
 ❌ **Non-commercial or academic-only licenses**
+
 - GPL requires freedom for commercial use
 
 ## Verification Process

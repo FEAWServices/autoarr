@@ -44,16 +44,13 @@ This checklist guides you through implementing the Sonarr MCP Server to pass all
   ```
 
 - [ ] **Define exception classes**
-
   - [ ] `SonarrClientError(Exception)` - Base exception
   - [ ] `SonarrConnectionError(SonarrClientError)` - Connection failures
 
 - [ ] **Implement SonarrClient class**
 
   **Initialization:**
-
   - [ ] `__init__(url, api_key, timeout=30.0)`
-
     - Validate URL (not empty)
     - Validate API key (not empty)
     - Normalize URL (remove trailing slash)
@@ -61,7 +58,6 @@ This checklist guides you through implementing the Sonarr MCP Server to pass all
     - Initialize \_client as None
 
   - [ ] `@classmethod async create(url, api_key, timeout, validate_connection)`
-
     - Create instance
     - Optionally call health_check()
     - Return instance
@@ -70,7 +66,6 @@ This checklist guides you through implementing the Sonarr MCP Server to pass all
   - [ ] `async __aenter__() / __aexit__()` - Context manager
 
   **Core Methods:**
-
   - [ ] `_get_client()` - Get or create AsyncClient
   - [ ] `_build_url(endpoint)` - Build `/api/v3/{endpoint}` URL
   - [ ] `async _request(method, endpoint, **kwargs)`
@@ -81,37 +76,29 @@ This checklist guides you through implementing the Sonarr MCP Server to pass all
     - Parse JSON response
 
   **Series Operations (5 methods):**
-
   - [ ] `async get_series() -> List[Dict]`
-
     - GET /api/v3/series
 
   - [ ] `async get_series_by_id(series_id: int) -> Dict`
-
     - GET /api/v3/series/{id}
     - Raise SonarrClientError on 404
 
   - [ ] `async add_series(series_data: Dict) -> Dict`
-
     - Validate required fields (tvdbId, rootFolderPath)
     - POST /api/v3/series
     - Return created series
 
   - [ ] `async search_series(term: str) -> List[Dict]`
-
     - GET /api/v3/series/lookup?term={term}
 
   - [ ] `async delete_series(series_id, delete_files=False, add_import_exclusion=False)`
     - DELETE /api/v3/series/{id}?deleteFiles={bool}&addImportExclusion={bool}
 
   **Episode Operations (3 methods):**
-
   - [ ] `async get_episodes(series_id: int, season_number: Optional[int] = None) -> List[Dict]`
-
     - GET /api/v3/episode?seriesId={id}&seasonNumber={num}
 
   - [ ] `async get_episode_by_id(episode_id: int) -> Dict`
-
     - GET /api/v3/episode/{id}
 
   - [ ] `async search_episode(episode_id: int) -> Dict`
@@ -120,43 +107,33 @@ This checklist guides you through implementing the Sonarr MCP Server to pass all
     - Return command response
 
   **Command Operations (5 methods):**
-
   - [ ] `async _execute_command(name: str, body: Dict) -> Dict`
-
     - POST /api/v3/command
     - Body: {"name": name, ...body}
 
   - [ ] `async get_command(command_id: int) -> Dict`
-
     - GET /api/v3/command/{id}
 
   - [ ] `async search_series_command(series_id: int) -> Dict`
-
     - Execute SeriesSearch command
 
   - [ ] `async refresh_series(series_id: int) -> Dict`
-
     - Execute RefreshSeries command
 
   - [ ] `async rescan_series(series_id: int) -> Dict`
     - Execute RescanSeries command
 
   **Other Operations (4 methods):**
-
   - [ ] `async get_calendar(start_date: str = None, end_date: str = None) -> List[Dict]`
-
     - GET /api/v3/calendar?start={date}&end={date}
 
   - [ ] `async get_queue(page: int = 1, page_size: int = 20) -> Dict`
-
     - GET /api/v3/queue?page={num}&pageSize={num}
 
   - [ ] `async get_wanted_missing(page: int = 1, page_size: int = 20, include_series: bool = None) -> Dict`
-
     - GET /api/v3/wanted/missing?page={num}&pageSize={num}
 
   - [ ] `async get_system_status() -> Dict`
-
     - GET /api/v3/system/status
 
   - [ ] `async health_check() -> bool`
@@ -180,9 +157,7 @@ This checklist guides you through implementing the Sonarr MCP Server to pass all
 - [ ] **Implement SonarrMCPServer class**
 
   **Initialization:**
-
   - [ ] `__init__(client: SonarrClient)`
-
     - Validate client is not None
     - Store client
     - Set name = "sonarr"
@@ -195,66 +170,53 @@ This checklist guides you through implementing the Sonarr MCP Server to pass all
     - Register call_tool handler
 
   **Tool Definition:**
-
   - [ ] `_get_tools() -> List[Tool]`
-
     - Return list of 10 Tool objects with schemas
 
     **Tool 1: sonarr_get_series**
-
     - Description: List all TV series
     - Input schema: {} (no required params)
 
     **Tool 2: sonarr_get_series_by_id**
-
     - Description: Get specific series details
     - Required: series_id (integer)
 
     **Tool 3: sonarr_add_series**
-
     - Description: Add new TV series
     - Required: title, tvdb_id, quality_profile_id, root_folder_path
     - Optional: monitored, season_folder
 
     **Tool 4: sonarr_search_series**
-
     - Description: Search for TV shows
     - Required: term (string)
 
     **Tool 5: sonarr_get_episodes**
-
     - Description: Get episodes for a series
     - Required: series_id
     - Optional: season_number
 
     **Tool 6: sonarr_search_episode**
-
     - Description: Trigger episode search
     - Required: episode_id
 
     **Tool 7: sonarr_get_wanted**
-
     - Description: Get missing/wanted episodes
     - Optional: page, page_size, include_series
 
     **Tool 8: sonarr_get_calendar**
-
     - Description: Get upcoming episodes
     - Optional: start_date, end_date
 
     **Tool 9: sonarr_get_queue**
-
     - Description: Get download queue
     - Optional: page, page_size
 
     **Tool 10: sonarr_delete_series**
-
     - Description: Remove a series
     - Required: series_id
     - Optional: delete_files, add_import_exclusion
 
   **Tool Execution:**
-
   - [ ] `async _call_tool(name: str, arguments: Dict) -> List[TextContent]`
     - Try/except wrapper
     - Dispatch to handler based on name
@@ -263,7 +225,6 @@ This checklist guides you through implementing the Sonarr MCP Server to pass all
     - Return as List[TextContent]
 
   **Tool Handlers (10 methods):**
-
   - [ ] `async _handle_get_series(arguments)` → call client.get_series()
   - [ ] `async _handle_get_series_by_id(arguments)` → validate series_id, call client
   - [ ] `async _handle_add_series(arguments)` → build series_data dict, call client

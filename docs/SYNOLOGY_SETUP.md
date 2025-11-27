@@ -139,7 +139,6 @@ services:
 #### Configuring Each Service
 
 1. In the AutoArr Settings UI, for each service:
-
    - Enter the **URL** (e.g., `http://192.168.1.100:8989` for Sonarr)
    - Enter the **API Key** or **Token**
    - Click **Test Connection** to verify
@@ -298,7 +297,6 @@ docker-compose up -d
 ### Container Won't Start
 
 1. Check Container Manager logs:
-
    - Go to **Container** tab
    - Select `autoarr` container
    - Click **Logs**
@@ -317,7 +315,6 @@ docker-compose up -d
    ```
 
 2. Check firewall rules on Synology:
-
    - Control Panel → Security → Firewall
    - Ensure ports are allowed
 

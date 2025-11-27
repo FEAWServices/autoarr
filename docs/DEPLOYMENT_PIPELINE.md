@@ -18,12 +18,10 @@ The pipeline runs on:
 ### Build Process
 
 1. **Multi-stage Docker build**:
-
    - Stage 1: Build React frontend (Node.js)
    - Stage 2: Build Python backend + copy frontend assets
 
 2. **Multi-platform images**:
-
    - `linux/amd64` (Intel/AMD processors)
    - `linux/arm64` (ARM processors, Apple Silicon, Synology ARM NAS)
 

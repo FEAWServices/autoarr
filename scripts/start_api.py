@@ -5,8 +5,8 @@ Startup script for the AutoArr FastAPI Gateway.
 This script starts the FastAPI server with proper configuration.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add project root to Python path

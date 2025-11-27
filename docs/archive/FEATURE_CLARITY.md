@@ -39,11 +39,13 @@ AutoArr follows the **same model as Sonarr and Radarr**:
 ## Premium Services (Future - Undefined)
 
 There **may** be optional premium services in the future that provide:
+
 - Advanced cloud-based AI models
 - Enhanced MCP coordination services
 - Premium support channels
 
 **But these are:**
+
 - Not yet designed or implemented
 - Completely optional add-ons
 - Not required for any core functionality
@@ -111,6 +113,7 @@ AutoArr uses a **simple, integrated architecture** (not complex microservices):
 ```
 
 **Key Design Principles:**
+
 - **Single container** - Easy deployment, low resource usage
 - **Direct API integration** - No complex MCP protocol overhead
 - **Local LLM** - Privacy-first, no external dependencies
@@ -124,6 +127,7 @@ AutoArr uses a **simple, integrated architecture** (not complex microservices):
 **Previous documentation mentioned MCP (Model Context Protocol) extensively.**
 
 **Current reality:**
+
 - MCP is **not required** for core functionality
 - Direct API integration with Sonarr/Radarr/SABnzbd/Plex is simpler and more reliable
 - MCP may be used internally for optional features, but it's not a user-facing requirement
@@ -147,6 +151,7 @@ llm = Llama(
 ```
 
 **Benefits:**
+
 - ✅ **Privacy** - Nothing leaves your server
 - ✅ **No API costs** - No Claude/OpenAI subscription needed
 - ✅ **Fast** - Local inference, no network latency
@@ -154,6 +159,7 @@ llm = Llama(
 - ✅ **Efficient** - Quantized model uses ~3GB RAM
 
 **Performance:**
+
 - Content classification: ~200ms
 - Natural language parsing: ~500ms
 - Configuration analysis: ~1-2s
@@ -163,16 +169,19 @@ llm = Llama(
 ## Resource Requirements
 
 **Minimum:**
+
 - 4GB RAM (2GB for app, 2GB for LLM)
 - 2 CPU cores
 - 10GB disk space
 
 **Recommended:**
+
 - 8GB RAM
 - 4 CPU cores
 - 20GB disk space
 
 **Perfect for:**
+
 - Synology NAS (DS920+, DS1520+, etc.)
 - Raspberry Pi 4 (8GB model)
 - Any x86 Linux server
@@ -185,26 +194,31 @@ llm = Llama(
 All features are **open source and free**:
 
 ### Phase 1: Foundation ✅ (Complete)
+
 - Service API integrations
 - Basic configuration management
 - Web UI framework
 
 ### Phase 2: Intelligence 🚧 (In Progress)
+
 - Configuration auditing
 - Best practices database
 - Recommendation engine
 
 ### Phase 3: Automation 📅 (Next)
+
 - Download monitoring
 - Automatic retry logic
 - Failure pattern recognition
 
 ### Phase 4: Natural Language 📅 (Next)
+
 - Chat interface
 - Content requests ("Add Inception in 4K")
 - Smart classification (movie vs TV)
 
 ### Phase 5: Polish 📅 (Future)
+
 - Enhanced UI/UX
 - Mobile app
 - Advanced analytics
@@ -227,13 +241,13 @@ AutoArr is community-driven open source:
 
 ## Comparison to Similar Projects
 
-| Project | License | Model |
-|---------|---------|-------|
-| **Sonarr** | GPL-3.0 | 100% open source |
-| **Radarr** | GPL-3.0 | 100% open source |
-| **AutoArr** | GPL-3.0 | **100% open source** |
-| Overseerr | MIT | 100% open source |
-| Plex | Proprietary | Freemium (Plex Pass) |
+| Project     | License     | Model                |
+| ----------- | ----------- | -------------------- |
+| **Sonarr**  | GPL-3.0     | 100% open source     |
+| **Radarr**  | GPL-3.0     | 100% open source     |
+| **AutoArr** | GPL-3.0     | **100% open source** |
+| Overseerr   | MIT         | 100% open source     |
+| Plex        | Proprietary | Freemium (Plex Pass) |
 
 **AutoArr follows the Sonarr/Radarr model** - trusted, transparent, community-first.
 
@@ -264,6 +278,7 @@ A: Old documentation. Current design uses direct API integration (simpler).
 ## Summary
 
 **AutoArr is:**
+
 - ✅ 100% open source (GPL-3.0)
 - ✅ Self-hosted, single container
 - ✅ Local LLM, no external APIs
@@ -271,6 +286,7 @@ A: Old documentation. Current design uses direct API integration (simpler).
 - ✅ Community-driven development
 
 **AutoArr is NOT:**
+
 - ❌ Freemium with premium features
 - ❌ Requiring external API subscriptions
 - ❌ Using complex MCP protocol
@@ -281,6 +297,7 @@ A: Old documentation. Current design uses direct API integration (simpler).
 ---
 
 **For the latest architecture and build instructions, see:**
+
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical architecture
 - [BUILD-PLAN.md](./BUILD-PLAN.md) - Development roadmap
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - How to contribute

@@ -288,12 +288,10 @@ See `/app/docs/API_TESTING_GUIDE.md` for comprehensive curl examples.
 ### Resolved Issues
 
 1. **Test Fixture Cache Issue**
-
    - **Problem**: LRU cache on `get_orchestrator_config` prevented proper testing
    - **Solution**: Added cache clearing in test fixtures, used `None` parameter with mocked `get_settings()`
 
 2. **Lifespan Testing Complexity**
-
    - **Problem**: Testing FastAPI lifespan handlers with the actual app instance caused issues
    - **Solution**: Created separate FastAPI instances for testing, comprehensive mocking of database and orchestrator
 
@@ -422,13 +420,11 @@ All implementation requirements were met without blocking issues.
 ### Immediate Improvements (Sprint 3)
 
 1. **Increase Router Coverage**
-
    - Add tests for error cases in service routers
    - Target 85%+ coverage for all routers
    - Focus on settings.py (currently 64.8%)
 
 2. **Database Layer Testing**
-
    - Add comprehensive tests for database.py (currently 40.7%)
    - Test connection pooling and transactions
    - Test migration logic
@@ -441,26 +437,22 @@ All implementation requirements were met without blocking issues.
 ### Future Enhancements (Phase 2)
 
 1. **Authentication & Authorization**
-
    - Add JWT token authentication
    - Implement user management
    - Add API key support
    - Role-based access control
 
 2. **Rate Limiting**
-
    - Per-endpoint rate limits
    - Per-user rate limits
    - Configurable quotas
 
 3. **Caching**
-
    - Redis integration for response caching
    - Cache health check results
    - Cache tool discovery results
 
 4. **WebSocket Support**
-
    - Real-time updates for long-running operations
    - Live download progress
    - Server-sent events for notifications

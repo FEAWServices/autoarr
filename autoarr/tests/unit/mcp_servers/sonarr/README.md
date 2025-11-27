@@ -17,14 +17,12 @@ Comprehensive unit tests for the `SonarrClient` class that handles all HTTP comm
 **Test Categories:**
 
 - **Initialization & Connection** (8 tests)
-
   - URL and API key validation
   - Connection validation
   - Health checks
   - Context manager support
 
 - **Series Operations** (10 tests)
-
   - Get all series
   - Get series by ID
   - Add series with validation
@@ -32,31 +30,26 @@ Comprehensive unit tests for the `SonarrClient` class that handles all HTTP comm
   - Delete series with options
 
 - **Episode Operations** (5 tests)
-
   - Get episodes (with season filtering)
   - Get episode by ID
   - Search for episodes
   - Command tracking
 
 - **Command Operations** (4 tests)
-
   - Command execution
   - Command status retrieval
   - Series search command
   - Refresh/rescan commands
 
 - **Calendar, Queue & Wanted** (6 tests)
-
   - Calendar with date ranges
   - Download queue with pagination
   - Wanted/missing episodes
 
 - **System Status** (1 test)
-
   - System status retrieval
 
 - **Error Handling** (7 tests)
-
   - 401 Unauthorized
   - 404 Not Found
   - 500 Server Error
@@ -66,13 +59,11 @@ Comprehensive unit tests for the `SonarrClient` class that handles all HTTP comm
   - Max retry limits
 
 - **Authentication & Request Building** (4 tests)
-
   - API key in headers (NOT in URL)
   - Correct API v3 URL construction
   - Content-Type headers
 
 - **Resource Management** (3 tests)
-
   - Connection cleanup
   - HTTP client reuse
   - Concurrent requests
@@ -95,19 +86,16 @@ Comprehensive unit tests for the `SonarrMCPServer` class that exposes Sonarr fun
 **Test Categories:**
 
 - **Server Initialization** (3 tests)
-
   - Client requirement validation
   - Proper initialization
   - MCP handler setup
 
 - **Tool Registration** (10 tests)
-
   - All 10 required tools registered
   - Correct schemas for each tool
   - Required parameter validation
 
 - **Tool Execution** (11 tests)
-
   - Get series
   - Get series by ID
   - Add series
@@ -120,7 +108,6 @@ Comprehensive unit tests for the `SonarrMCPServer` class that exposes Sonarr fun
   - Delete series
 
 - **Error Handling** (6 tests)
-
   - Unknown tool names
   - Client errors
   - Missing required parameters
@@ -129,14 +116,12 @@ Comprehensive unit tests for the `SonarrMCPServer` class that exposes Sonarr fun
   - Unexpected exceptions
 
 - **Response Formatting** (4 tests)
-
   - Success response format
   - Error response format
   - Valid JSON responses
   - Response metadata
 
 - **MCP Protocol Compliance** (4 tests)
-
   - JSON Schema validation
   - Naming conventions
   - Informative descriptions
@@ -160,31 +145,26 @@ Integration tests validating client interaction with Sonarr API (mocked at HTTP 
 **Test Categories:**
 
 - Full Series Lifecycle (2 tests)
-
   - Search → Add → Get → Delete workflow
   - Episode search and monitoring workflow
 
 - API Endpoint Validation (3 tests)
-
   - API v3 prefix usage
   - X-Api-Key header verification
   - Content-Type headers
 
 - Error Scenarios (4 tests)
-
   - Sonarr 404 error format
   - 400 validation errors
   - 401 unauthorized
   - 503 retry logic
 
 - Data Integrity (3 tests)
-
   - Complex structure preservation
   - Pagination handling
   - Unicode/special characters
 
 - Performance (2 tests)
-
   - Concurrent requests
   - Large response sets
 
@@ -203,29 +183,24 @@ End-to-end tests validating MCP protocol compliance and complete workflows.
 **Test Categories:**
 
 - E2E MCP Workflows (2 tests)
-
   - Complete series management via MCP
   - Episode search workflow via MCP
 
 - MCP Protocol Compliance (3 tests)
-
   - Response format compliance
   - Schema validation enforcement
   - Error response format
 
 - Error Propagation (3 tests)
-
   - Client errors through MCP
   - Validation errors through MCP
   - Connection errors through MCP
 
 - Data Transformation (2 tests)
-
   - Complex data preservation
   - Paginated data preservation
 
 - Calendar & Queue via MCP (2 tests)
-
   - Calendar retrieval
   - Wanted episodes retrieval
 

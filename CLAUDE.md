@@ -13,12 +13,29 @@
 
 **Status**: v1.0 feature-complete (100% of BUILD-PLAN implemented)
 
-### Two-Product Strategy
+### Two-Product Strategy (Separate Repositories)
 
-**AutoArr (GPL-3.0)**: 100% open source, complete media automation with local LLM
-**AutoArrX (Premium)**: Optional privacy-first cloud intelligence service
+**AutoArr (GPL-3.0)** - This repo (`/app`)
+
+- 100% open source, complete media automation with local LLM
+- Self-hosted, works standalone without premium
+
+**AutoArrX (Premium)** - Separate repo (`/autoarr-premium`)
+
+- Optional privacy-first cloud SaaS
+- AutoArr instances connect TO it via secure outbound WebSocket (like Plex)
+- No firewall configuration needed on user's network
 
 See [docs/VISION_AND_PRICING.md](docs/VISION_AND_PRICING.md) for complete details.
+
+### Multi-Repo Development
+
+When working in the devcontainer, both repos are available:
+
+- `/app` - AutoArr GPL (this repo)
+- `/autoarr-premium` - AutoArr Premium SaaS (separate repo)
+
+Use `bash scripts/test-all.sh` to run tests across both repos.
 
 ## 🏗️ Architecture
 
@@ -198,12 +215,19 @@ autoarr/tests/
 │   ├── test_config_audit_flow.py
 │   ├── test_download_recovery_flow.py
 │   └── test_content_request_flow.py
-└── security/                  # Security tests
-    └── test_security.py
+├── security/                  # Security tests
+│   └── test_security.py
+└── post-deployment/           # Post-deployment smoke tests
+    ├── run-all-tests.sh       # Test suite runner
+    ├── test-health.sh         # Health endpoint tests
+    ├── test-ui-accessible.sh  # UI accessibility tests
+    ├── test-settings-api.sh   # Settings save tests
+    └── README.md              # Test documentation
 
 autoarr/ui/tests/              # Frontend E2E tests
 ├── chat.spec.ts
 ├── activity.spec.ts
+├── settings.spec.ts
 └── ...
 ```
 
@@ -216,12 +240,46 @@ poetry run pytest tests/integration/       # Integration tests
 poetry run pytest tests/e2e/               # E2E tests
 poetry run pytest --cov                    # With coverage
 
-# Frontend
-cd autoarr/ui
-pnpm exec playwright test                  # All E2E tests
-pnpm exec playwright test --ui             # Interactive mode
-pnpm exec playwright show-report           # View reports
+# Frontend E2E Tests (Playwright)
+# IMPORTANT: Run inside Docker container for reliable results!
+# See "Running Playwright E2E Tests" section below.
+
+# Post-Deployment Tests
+bash run-post-deployment-tests.sh          # Quick runner
+cd tests/post-deployment
+bash run-all-tests.sh                      # Full suite
+bash test-settings-api.sh                  # Settings test only
 ```
+
+### Running Playwright E2E Tests
+
+**IMPORTANT FOR CLAUDE CODE**: Playwright tests MUST be run inside the Docker container, NOT from the devcontainer. Running from devcontainer causes network/memory issues due to Windows filesystem mounts.
+
+```bash
+# 1. Start the local test container (if not running)
+DOCKER_HOST=unix:///var/run/docker.sock docker-compose -f docker/docker-compose.local-test.yml up -d
+
+# 2. Run E2E tests INSIDE the container
+./scripts/run-e2e-tests.sh                           # Run all tests
+./scripts/run-e2e-tests.sh tests/home.spec.ts        # Run specific file
+./scripts/run-e2e-tests.sh "dashboard"               # Run tests matching pattern
+
+# Or manually via docker exec:
+DOCKER_HOST=unix:///var/run/docker.sock docker exec autoarr-local \
+  sh -c "cd /app/autoarr/ui && pnpm exec playwright test --config=playwright-container.config.ts"
+```
+
+**Why run inside container?**
+
+- Tests run against `localhost:8088` (same container as app)
+- No network hops or port mapping issues
+- No Windows filesystem memory problems
+- Fast, reliable feedback
+
+**Config files:**
+
+- `playwright-container.config.ts` - For running inside Docker container
+- `playwright.config.ts` - For CI/GitHub Actions (starts own dev server)
 
 ## 📚 Key Services
 
@@ -321,11 +379,28 @@ See `/app/docs/BUGS.md` for tracked issues.
 ### Docker Deployment
 
 ```bash
-# Production
-docker-compose -f docker/docker-compose.yml up -d
+# Production (for end users)
+docker-compose -f docker/docker-compose.production.yml up -d
+
+# Local Testing (for developers, with host network)
+docker-compose -f docker/docker-compose.local-test.yml up -d
 
 # Synology NAS
 docker-compose -f docker/docker-compose.synology.yml up -d
+
+# VS Code DevContainer
+# Open repo in VS Code → "Reopen in Container"
+```
+
+### Docker Files Structure
+
+```
+docker/
+├── Dockerfile.production         # Multi-stage build for CI/users
+├── Dockerfile.local-test         # Lightweight local testing
+├── docker-compose.production.yml # End-user deployment
+├── docker-compose.local-test.yml # Developer testing (host network)
+└── docker-compose.synology.yml   # Synology NAS deployment
 ```
 
 ### Environment Variables
@@ -366,7 +441,6 @@ See `.env.example` for complete list.
    ```
 
 4. **Use existing patterns**:
-
    - Follow existing service structure
    - Use async/await consistently
    - Mock external services in tests

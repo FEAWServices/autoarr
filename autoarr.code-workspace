@@ -6,7 +6,11 @@
     },
     {
       "name": "AutoArr Premium (Proprietary)",
-      "path": "/workspaces/autoarr-premium"
+      "path": "../autoarr-premium"
+    },
+    {
+      "name": "Common Tools",
+      "path": ".common"
     }
   ],
   "settings": {
@@ -19,7 +23,7 @@
     "python.formatting.provider": "black",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": true
+      "source.organizeImports": "explicit"
     },
     "files.exclude": {
       "**/__pycache__": true,
@@ -38,7 +42,7 @@
       "editor.defaultFormatter": "ms-python.black-formatter",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
-        "source.organizeImports": true
+        "source.organizeImports": "explicit"
       }
     },
     "[typescript]": {

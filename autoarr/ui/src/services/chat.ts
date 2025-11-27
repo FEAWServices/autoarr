@@ -14,11 +14,10 @@ import {
   ConfirmationPayload,
   ConfirmationResponse,
   RequestInfo,
-} from "../types/chat";
+} from '../types/chat';
 
 // Use environment variable with fallback to correct port (8088, not 8000)
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8088/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088/api/v1';
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 
 class ChatService {
@@ -35,9 +34,9 @@ class ChatService {
       const payload: ContentRequestPayload = { query };
 
       const response = await fetch(`${API_BASE_URL}/request/content`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
         signal: controller.signal,
@@ -47,7 +46,7 @@ class ChatService {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({
-          detail: "An error occurred while processing your request",
+          detail: 'An error occurred while processing your request',
         }));
         throw new Error(error.detail || `HTTP ${response.status}`);
       }
@@ -58,15 +57,13 @@ class ChatService {
       clearTimeout(timeoutId);
 
       if (error instanceof Error) {
-        if (error.name === "AbortError") {
-          throw new Error(
-            "Request timed out. The server is taking too long to respond.",
-          );
+        if (error.name === 'AbortError') {
+          throw new Error('Request timed out. The server is taking too long to respond.');
         }
         throw error;
       }
 
-      throw new Error("An unexpected error occurred");
+      throw new Error('An unexpected error occurred');
     }
   }
 
@@ -80,7 +77,7 @@ class ChatService {
   async confirmSelection(
     requestId: string,
     tmdbId: number,
-    quality?: string,
+    quality?: string
   ): Promise<ConfirmationResponse> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
@@ -93,9 +90,9 @@ class ChatService {
       };
 
       const response = await fetch(`${API_BASE_URL}/request/confirm`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
         signal: controller.signal,
@@ -105,7 +102,7 @@ class ChatService {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({
-          detail: "Failed to add content to library",
+          detail: 'Failed to add content to library',
         }));
         throw new Error(error.detail || `HTTP ${response.status}`);
       }
@@ -116,13 +113,13 @@ class ChatService {
       clearTimeout(timeoutId);
 
       if (error instanceof Error) {
-        if (error.name === "AbortError") {
-          throw new Error("Request timed out. Please try again.");
+        if (error.name === 'AbortError') {
+          throw new Error('Request timed out. Please try again.');
         }
         throw error;
       }
 
-      throw new Error("Failed to confirm selection");
+      throw new Error('Failed to confirm selection');
     }
   }
 
@@ -133,19 +130,16 @@ class ChatService {
    */
   async getRequestStatus(requestId: string): Promise<RequestInfo> {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/request/status/${requestId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`${API_BASE_URL}/request/status/${requestId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+      });
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({
-          detail: "Failed to fetch request status",
+          detail: 'Failed to fetch request status',
         }));
         throw new Error(error.detail || `HTTP ${response.status}`);
       }
@@ -156,7 +150,7 @@ class ChatService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error("Failed to get request status");
+      throw new Error('Failed to get request status');
     }
   }
 
@@ -166,19 +160,16 @@ class ChatService {
    */
   async cancelRequest(requestId: string): Promise<void> {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/request/cancel/${requestId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`${API_BASE_URL}/request/cancel/${requestId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+      });
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({
-          detail: "Failed to cancel request",
+          detail: 'Failed to cancel request',
         }));
         throw new Error(error.detail || `HTTP ${response.status}`);
       }
@@ -186,7 +177,7 @@ class ChatService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error("Failed to cancel request");
+      throw new Error('Failed to cancel request');
     }
   }
 
@@ -197,19 +188,16 @@ class ChatService {
    */
   async retryRequest(requestId: string): Promise<ContentRequestResponse> {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/request/retry/${requestId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`${API_BASE_URL}/request/retry/${requestId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+      });
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({
-          detail: "Failed to retry request",
+          detail: 'Failed to retry request',
         }));
         throw new Error(error.detail || `HTTP ${response.status}`);
       }
@@ -220,7 +208,7 @@ class ChatService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error("Failed to retry request");
+      throw new Error('Failed to retry request');
     }
   }
 }

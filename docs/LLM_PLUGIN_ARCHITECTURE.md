@@ -121,6 +121,7 @@ class BaseLLMProvider(ABC):
 **Location**: `/app/autoarr/shared/llm/claude_provider.py`
 
 **Configuration**:
+
 ```env
 LLM_PROVIDER=claude
 CLAUDE_API_KEY=sk-ant-xxx
@@ -129,12 +130,14 @@ CLAUDE_MAX_TOKENS=4096
 ```
 
 **Features**:
+
 - Full Claude API support (Sonnet, Opus, Haiku)
 - Streaming responses
 - Function calling support
 - Vision capabilities
 
 **Usage**:
+
 ```python
 provider = ClaudeProvider({
     "api_key": os.getenv("CLAUDE_API_KEY"),
@@ -151,6 +154,7 @@ response = await provider.complete(messages=[
 **Location**: `/app/autoarr/shared/llm/ollama_provider.py`
 
 **Configuration**:
+
 ```env
 LLM_PROVIDER=ollama
 OLLAMA_URL=http://localhost:11434
@@ -159,12 +163,14 @@ OLLAMA_TIMEOUT=120
 ```
 
 **Features**:
+
 - Local model inference
 - No API key required
 - Supports Qwen, Llama, Mistral, etc.
 - Model download/management
 
 **Usage**:
+
 ```python
 provider = OllamaProvider({
     "base_url": "http://localhost:11434",
@@ -184,6 +190,7 @@ response = await provider.complete(messages=[
 **Location**: `/autoarr-paid/autoarr_premium/shared/llm/custom_model_provider.py`
 
 **Configuration**:
+
 ```env
 LLM_PROVIDER=custom
 CUSTOM_MODEL_PATH=/models/autoarr-premium-v1.0
@@ -192,12 +199,14 @@ CUSTOM_MODEL_QUANTIZATION=4bit
 ```
 
 **Features**:
+
 - Custom-trained models
 - Optimized for media domain
 - GPU acceleration support
 - Quantization for efficiency
 
 **Usage**:
+
 ```python
 provider = CustomModelProvider({
     "model_path": "/models/autoarr-premium-v1.0",
@@ -403,6 +412,7 @@ async def test_ollama_provider():
 ### Migrating Existing Code
 
 **Before** (Direct Claude usage):
+
 ```python
 from anthropic import AsyncAnthropic
 
@@ -414,6 +424,7 @@ response = await client.messages.create(
 ```
 
 **After** (Provider abstraction):
+
 ```python
 from autoarr.shared.llm.provider_factory import LLMProviderFactory
 from autoarr.shared.llm.base_provider import LLMMessage

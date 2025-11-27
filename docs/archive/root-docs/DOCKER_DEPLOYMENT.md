@@ -18,12 +18,14 @@ This guide explains how to deploy both the free (GPL-3.0) and premium (proprieta
 ### System Requirements
 
 **Free Version:**
+
 - Docker 20.10+ and Docker Compose 2.0+
 - 4GB RAM minimum (8GB recommended for Ollama)
 - 20GB disk space (more if using large Ollama models)
 - CPU: 2+ cores recommended
 
 **Premium Version:**
+
 - Docker 20.10+ and Docker Compose 2.0+
 - 8GB RAM minimum (16GB recommended)
 - 50GB disk space (for ML models and data)
@@ -69,6 +71,7 @@ nano .env
 ```
 
 Required configuration:
+
 - `SECRET_KEY`: Generate with `openssl rand -hex 32`
 - `SABNZBD_API_KEY`: From SABnzbd Config → General
 - `SONARR_API_KEY`: From Sonarr Settings → General
@@ -145,6 +148,7 @@ nano .env
 ```
 
 Required configuration:
+
 - `LICENSE_KEY`: Your premium license key
 - `SECRET_KEY`: Generate with `openssl rand -hex 32`
 - `MODEL_DIR`: Path to directory containing trained model
@@ -408,6 +412,7 @@ VLLM_URL=http://vllm:8080
 ### GPU Acceleration (Premium)
 
 1. Install nvidia-docker:
+
 ```bash
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
 curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
@@ -418,6 +423,7 @@ sudo systemctl restart docker
 ```
 
 2. Verify GPU access:
+
 ```bash
 docker run --rm --gpus all nvidia/cuda:11.8.0-base-ubuntu22.04 nvidia-smi
 ```

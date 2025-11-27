@@ -159,7 +159,9 @@ test.describe("Chat - Message Input Interactions", () => {
     await expect(input).toHaveValue("Add Inception to my library");
   });
 
-  test("can send message with button or Enter and input clears", async ({ page }) => {
+  test("can send message with button or Enter and input clears", async ({
+    page,
+  }) => {
     // Mock API response
     await page.route(`${API_BASE_URL}/request/content`, async (route) => {
       await route.fulfill({
@@ -313,7 +315,9 @@ test.describe("Chat - Message Display", () => {
     await page.goto(`${BASE_URL}/chat`);
   });
 
-  test("messages display with correct alignment and styling", async ({ page }) => {
+  test("messages display with correct alignment and styling", async ({
+    page,
+  }) => {
     const input = page.getByRole("textbox", {
       name: /message input|request a movie/i,
     });
@@ -343,7 +347,8 @@ test.describe("Chat - Message Display", () => {
     expect(assistantClasses).toMatch(/justify-start|mr-auto|items-start/);
 
     // Check assistant message timestamp
-    const assistantTimestamp = assistantMessage.getByTestId("message-timestamp");
+    const assistantTimestamp =
+      assistantMessage.getByTestId("message-timestamp");
     await expect(assistantTimestamp).toBeVisible();
 
     // Check for system messages if present

@@ -75,19 +75,16 @@ graph LR
 ### Benefits of MCP
 
 1. **Standardization**
-
    - Unified interface across all services
    - Consistent error handling
    - Clear contracts via JSON schemas
 
 2. **LLM Integration**
-
    - LLMs can discover available tools
    - Type-safe function calling
    - Natural language to structured commands
 
 3. **Modularity**
-
    - Add new services without changing core
    - Services can evolve independently
    - Easy testing and mocking

@@ -33,6 +33,7 @@ This document outlines the comprehensive test strategy for Sprint 5 (Monitoring 
 ### 1.2 Core Functionality Tests
 
 #### Queue Polling (8 tests)
+
 - ✅ `test_poll_queue_success` - Verify successful queue polling
 - ✅ `test_poll_queue_empty` - Handle empty queue state
 - ✅ `test_poll_queue_connection_error` - Graceful connection error handling
@@ -41,12 +42,14 @@ This document outlines the comprehensive test strategy for Sprint 5 (Monitoring 
 - ✅ `test_polling_performance_with_large_queue` - Performance with 100+ items
 
 #### Failed Download Detection (7 tests)
+
 - ✅ `test_detect_failed_download_from_history` - Identify failed downloads
 - ✅ `test_detect_failed_download_status_codes` - Test various failure statuses
 - ✅ `test_ignore_non_failure_statuses` - Filter out success statuses
 - ✅ `test_detect_multiple_failed_downloads` - Handle multiple failures
 
 #### Failure Pattern Recognition (5 tests)
+
 - ✅ `test_recognize_recurring_failure_pattern` - Same content fails repeatedly
 - ✅ `test_recognize_disk_space_failure_pattern` - Disk space issues
 - ✅ `test_recognize_network_failure_pattern` - Network/connection issues
@@ -54,31 +57,37 @@ This document outlines the comprehensive test strategy for Sprint 5 (Monitoring 
 - ✅ `test_no_pattern_with_isolated_failures` - Isolated failures don't trigger patterns
 
 #### Alert Generation (4 tests)
+
 - ✅ `test_generate_alert_on_failure_detection` - Alerts emitted for failures
 - ✅ `test_alert_contains_failure_details` - Alert includes metadata
 - ✅ `test_no_alert_when_disabled` - Respects configuration
 - ✅ `test_alert_throttling_prevents_spam` - Prevents duplicate alerts
 
 #### Wanted List Monitoring (3 tests)
+
 - ✅ `test_monitor_sonarr_wanted_list` - Track missing episodes
 - ✅ `test_monitor_radarr_wanted_list` - Track missing movies
 - ✅ `test_correlate_wanted_with_failed_downloads` - Link wanted items to failures
 
 #### State Change Tracking (3 tests)
+
 - ✅ `test_track_download_state_changes` - Track state transitions
 - ✅ `test_track_completion_state_change` - Handle completion
 - ✅ `test_no_event_when_state_unchanged` - Avoid redundant events
 
 #### Error Handling (3 tests)
+
 - ✅ `test_handle_orchestrator_timeout` - Timeout handling
 - ✅ `test_handle_malformed_queue_data` - Invalid data handling
 - ✅ `test_continue_monitoring_after_error` - Recovery after errors
 
 #### Event Emission (2 tests)
+
 - ✅ `test_emit_event_with_correlation_id` - Correlation ID propagation
 - ✅ `test_emit_event_with_timestamp` - Timestamp inclusion
 
 #### Performance & Concurrency (2 tests)
+
 - ✅ `test_concurrent_polling_does_not_overlap` - Prevent overlapping polls
 - ✅ `test_polling_performance_with_large_queue` - Handle large queues efficiently
 
@@ -131,24 +140,28 @@ create_wanted_episode(series_id, season, episode, ...)
 ### 2.2 Core Functionality Tests
 
 #### Automatic Retry Triggering (4 tests)
+
 - ✅ `test_trigger_retry_on_failed_download` - Automatic retry initiation
 - ✅ `test_trigger_retry_respects_max_attempts` - Enforce max retry limit
 - ✅ `test_trigger_retry_increments_attempt_counter` - Track attempt count
 - ✅ `test_no_duplicate_concurrent_retries` - Prevent duplicate retries
 
 #### Immediate Retry Strategy (4 tests)
+
 - ✅ `test_immediate_retry_for_transient_failure` - Quick retry for transient errors
 - ✅ `test_immediate_retry_categories` - Identify transient failure types
 - ✅ `test_immediate_retry_executes_without_delay` - Zero-delay execution
 
 #### Exponential Backoff Strategy (6 tests)
+
 - ✅ `test_exponential_backoff_for_repeated_failures` - Backoff after multiple failures
-- ✅ `test_backoff_delay_calculation` - Calculate delay: base * multiplier^retry_count
+- ✅ `test_backoff_delay_calculation` - Calculate delay: base \* multiplier^retry_count
 - ✅ `test_backoff_delay_max_cap` - Cap delay at max (default: 1 hour)
 - ✅ `test_backoff_retry_schedules_future_attempt` - Schedule delayed retry
 - ✅ `test_scheduled_retry_executes_at_correct_time` - Execute at scheduled time
 
 #### Quality Fallback Strategy (9 tests)
+
 - ✅ `test_quality_fallback_when_high_quality_fails` - Try lower quality
 - ✅ `test_quality_fallback_identifies_quality_from_filename` - Parse quality from name
 - ✅ `test_quality_fallback_selects_lower_quality` - Choose appropriate fallback
@@ -157,43 +170,51 @@ create_wanted_episode(series_id, season, episode, ...)
 - ✅ `test_no_quality_fallback_when_at_lowest` - No fallback at lowest quality
 
 Quality Fallback Chain:
+
 ```
 2160p → 1080p → 720p → HDTV
 BluRay → WEB-DL → HDTV
 ```
 
 #### Max Retry Limit Enforcement (3 tests)
+
 - ✅ `test_enforce_max_retry_limit` - Stop at max attempts (default: 3)
 - ✅ `test_max_retry_limit_per_download` - Independent counters per download
 - ✅ `test_configurable_max_retry_limit` - Respect configuration changes
 
 #### Success/Failure Tracking (3 tests)
+
 - ✅ `test_track_successful_retry` - Record successful retries
 - ✅ `test_track_failed_retry` - Record failed retries
 - ✅ `test_track_retry_strategy_effectiveness` - Calculate success rates per strategy
 
 #### Sonarr/Radarr Coordination (4 tests)
+
 - ✅ `test_coordinate_with_sonarr_for_episode_search` - Trigger Sonarr search
 - ✅ `test_coordinate_with_radarr_for_movie_search` - Trigger Radarr search
 - ✅ `test_extract_series_info_from_filename` - Parse series/season/episode
 - ✅ `test_extract_movie_info_from_filename` - Parse movie name/year
 
 #### Event Emission (4 tests)
+
 - ✅ `test_emit_recovery_attempted_event` - Emit on retry attempt
 - ✅ `test_emit_recovery_success_event` - Emit on successful retry
 - ✅ `test_emit_max_retries_exceeded_event` - Emit when max reached
 - ✅ `test_events_include_correlation_id` - Maintain event correlation
 
 #### Error Handling (3 tests)
+
 - ✅ `test_handle_orchestrator_error_during_retry` - Handle MCP errors
 - ✅ `test_handle_invalid_download_data` - Validate input data
 - ✅ `test_handle_concurrent_retry_requests` - Support concurrent retries
 
 #### Strategy Selection Logic (2 tests)
+
 - ✅ `test_strategy_selection_based_on_failure_reason` - Choose strategy by failure type
 - ✅ `test_strategy_selection_considers_retry_count` - Adjust strategy by attempt count
 
 #### Configuration (3 tests)
+
 - ✅ `test_disable_immediate_retry` - Respect config flags
 - ✅ `test_disable_quality_fallback` - Disable strategies as configured
 - ✅ `test_custom_backoff_parameters` - Custom backoff settings
@@ -246,6 +267,7 @@ create_retry_attempt(nzo_id, strategy, attempt_number, success, ...)
 ### 3.2 Core Functionality Tests
 
 #### Event Publishing (5 tests)
+
 - ✅ `test_publish_event_to_subscriber` - Basic publish/subscribe
 - ✅ `test_publish_event_with_no_subscribers` - Handle no subscribers gracefully
 - ✅ `test_publish_multiple_events_sequentially` - Sequential publishing
@@ -253,6 +275,7 @@ create_retry_attempt(nzo_id, strategy, attempt_number, success, ...)
 - ✅ `test_publish_preserves_event_data` - Data integrity preservation
 
 #### Event Subscription (6 tests)
+
 - ✅ `test_subscribe_handler_to_event_type` - Subscribe mechanism
 - ✅ `test_subscribe_multiple_handlers_to_same_event` - Multiple subscribers
 - ✅ `test_subscribe_same_handler_to_multiple_event_types` - Multi-type subscription
@@ -261,17 +284,20 @@ create_retry_attempt(nzo_id, strategy, attempt_number, success, ...)
 - ✅ `test_subscribe_with_event_filter` - Filtered subscriptions
 
 #### Event Correlation (4 tests)
+
 - ✅ `test_event_includes_correlation_id` - Correlation ID preservation
 - ✅ `test_auto_generate_correlation_id_if_missing` - Auto-generate IDs
 - ✅ `test_correlate_related_events` - Link related events
 - ✅ `test_track_event_chain_by_correlation_id` - Track event workflows
 
 #### Multiple Subscribers (3 tests)
+
 - ✅ `test_all_subscribers_receive_event` - Fan-out to all subscribers
 - ✅ `test_subscriber_execution_order` - Order guarantees (or parallel)
 - ✅ `test_subscriber_failure_does_not_affect_others` - Isolation on failure
 
 #### Dead Letter Queue (6 tests)
+
 - ✅ `test_failed_event_delivery_to_dead_letter_queue` - DLQ on failure
 - ✅ `test_dead_letter_includes_error_info` - Error metadata capture
 - ✅ `test_dead_letter_retry_count` - Track retry attempts
@@ -280,31 +306,37 @@ create_retry_attempt(nzo_id, strategy, attempt_number, success, ...)
 - ✅ `test_replay_dead_letter_event` - Replay failed events
 
 #### Async Event Handlers (3 tests)
+
 - ✅ `test_async_handler_execution` - Async handler support
 - ✅ `test_concurrent_async_handlers` - Concurrent execution
 - ✅ `test_mixed_sync_async_handlers` - Mixed handler types
 
 #### Error Handling (4 tests)
+
 - ✅ `test_handle_handler_exception` - Graceful exception handling
 - ✅ `test_handle_invalid_event_type` - Invalid type handling
 - ✅ `test_handle_handler_timeout` - Slow handler timeouts
 - ✅ `test_handle_concurrent_publishes` - Concurrent publish support
 
 #### Event Metadata (3 tests)
+
 - ✅ `test_event_includes_timestamp` - Timestamp inclusion
 - ✅ `test_event_includes_source` - Source tracking
 - ✅ `test_event_immutability` - Prevent handler mutations
 
 #### Performance (2 tests)
+
 - ✅ `test_publish_performance_with_many_subscribers` - 100+ subscribers
 - ✅ `test_subscribe_unsubscribe_performance` - 1000+ operations
 
 #### Event Filtering & Routing (3 tests)
+
 - ✅ `test_wildcard_subscription` - Subscribe to all event types
 - ✅ `test_event_routing_by_pattern` - Data-based routing
 - ✅ `test_event_priority_handling` - Priority-based execution
 
 #### Thread Safety & Concurrency (2 tests)
+
 - ✅ `test_thread_safe_subscribe_unsubscribe` - Concurrent sub/unsub
 - ✅ `test_concurrent_publish_to_same_handler` - Concurrent publishes
 
@@ -376,6 +408,7 @@ class EventType(Enum):
 ### 4.2 Core Functionality Tests
 
 #### Activity Creation (5 tests)
+
 - ✅ `test_create_activity_success` - Basic activity creation
 - ✅ `test_create_activity_with_metadata` - Metadata inclusion
 - ✅ `test_create_activity_auto_timestamp` - Auto timestamp generation
@@ -383,42 +416,51 @@ class EventType(Enum):
 - ✅ `test_create_activity_different_severities` - All severity levels
 
 #### Activity Retrieval (3 tests)
+
 - ✅ `test_get_activities_all` - Retrieve all activities
 - ✅ `test_get_activity_by_id` - Get specific activity
 - ✅ `test_get_nonexistent_activity` - Handle missing activity
 
 #### Filtering by Service (2 tests)
+
 - ✅ `test_filter_activities_by_service` - Single service filter
 - ✅ `test_filter_by_multiple_services` - Multi-service filter
 
 #### Filtering by Activity Type (2 tests)
+
 - ✅ `test_filter_activities_by_type` - Single type filter
 - ✅ `test_filter_by_multiple_activity_types` - Multi-type filter
 
 #### Filtering by Severity (2 tests)
+
 - ✅ `test_filter_activities_by_severity` - Specific severity
 - ✅ `test_filter_by_minimum_severity` - Minimum severity level (WARNING+)
 
 #### Date Range Filtering (3 tests)
+
 - ✅ `test_filter_activities_by_date_range` - Start and end date
 - ✅ `test_filter_activities_after_date` - Start date only
 - ✅ `test_filter_activities_before_date` - End date only
 
 #### Correlation ID Filtering (2 tests)
+
 - ✅ `test_filter_activities_by_correlation_id` - Track related activities
 - ✅ `test_get_activity_workflow_by_correlation_id` - Get complete workflow
 
 #### Search Query (2 tests)
+
 - ✅ `test_search_activities_by_message` - Search message content
 - ✅ `test_search_activities_by_metadata` - Search metadata content
 
 #### Pagination (4 tests)
+
 - ✅ `test_paginate_activities` - First page
 - ✅ `test_paginate_activities_second_page` - Second page navigation
 - ✅ `test_paginate_activities_last_page` - Last page with partial results
 - ✅ `test_pagination_with_filters` - Pagination + filters
 
 #### Statistics Aggregation (5 tests)
+
 - ✅ `test_get_activity_statistics` - Overall statistics
 - ✅ `test_get_statistics_for_date_range` - Time-bound statistics
 - ✅ `test_get_statistics_by_service` - Service breakdown
@@ -426,22 +468,27 @@ class EventType(Enum):
 - ✅ `test_get_activity_trend_over_time` - Trend analysis
 
 #### Database Model (2 tests)
+
 - ✅ `test_activity_model_fields` - All required fields present
 - ✅ `test_activity_timestamp_indexing` - Efficient timestamp queries
 
 #### Concurrent Operations (2 tests)
+
 - ✅ `test_concurrent_activity_creation` - Concurrent writes
 - ✅ `test_concurrent_reads_and_writes` - Mixed operations
 
 #### Activity Cleanup (2 tests)
+
 - ✅ `test_delete_old_activities` - Delete by cutoff date
 - ✅ `test_cleanup_by_retention_policy` - Retention policy enforcement
 
 #### Performance (2 tests)
+
 - ✅ `test_query_performance_with_large_dataset` - 1000+ activities
 - ✅ `test_pagination_performance` - Efficient pagination
 
 #### Error Handling (2 tests)
+
 - ✅ `test_handle_database_error_on_create` - Database error handling
 - ✅ `test_handle_invalid_filter_parameters` - Invalid filter handling
 
@@ -537,6 +584,7 @@ E2E Tests:         ~27 test cases  (10%) [To be created]
 ### 5.2 Unit Test Coverage (70%)
 
 **Created Test Files:**
+
 - `test_monitoring_service.py` - 50 tests
 - `test_recovery_service.py` - 45 tests
 - `test_event_bus.py` - 55 tests
@@ -545,6 +593,7 @@ E2E Tests:         ~27 test cases  (10%) [To be created]
 **Total:** 190 unit tests
 
 **Characteristics:**
+
 - Fast execution (< 0.1s per test)
 - All external dependencies mocked
 - Focus on business logic and edge cases
@@ -577,6 +626,7 @@ E2E Tests:         ~27 test cases  (10%) [To be created]
 **Total:** ~55 integration tests
 
 **Characteristics:**
+
 - Moderate execution time (0.5-2s per test)
 - Real service interactions (no mocking between components)
 - May use test database or in-memory database
@@ -607,6 +657,7 @@ E2E Tests:         ~27 test cases  (10%) [To be created]
 **Total:** ~27 E2E tests
 
 **Characteristics:**
+
 - Slow execution (5-60s per test)
 - Real services (SABnzbd, Sonarr, Radarr, PostgreSQL)
 - Docker Compose test environment
@@ -619,12 +670,14 @@ E2E Tests:         ~27 test cases  (10%) [To be created]
 ### 6.1 Shared Fixtures (`conftest.py`)
 
 **Already Available:**
+
 - `mock_database` - Mock database instance
 - `mock_httpx_response` - HTTP response factory
 - `async_client` - Async HTTP client
 - `load_test_data` - JSON test data loader
 
 **New Fixtures Required:**
+
 ```python
 @pytest.fixture
 def mock_orchestrator():
@@ -650,6 +703,7 @@ def recovery_config():
 ### 6.2 Test Data Factories
 
 **Monitoring Service:**
+
 ```python
 create_queue_item(nzo_id, filename, status, ...)
 create_history_item(nzo_id, name, status, fail_message, ...)
@@ -657,17 +711,20 @@ create_wanted_episode(series_id, season, episode, ...)
 ```
 
 **Recovery Service:**
+
 ```python
 create_failed_download(nzo_id, name, failure_reason, ...)
 create_retry_attempt(nzo_id, strategy, success, ...)
 ```
 
 **Event Bus:**
+
 ```python
 create_event(event_type, data, correlation_id, ...)
 ```
 
 **Activity Log:**
+
 ```python
 create_activity(service, activity_type, severity, ...)
 create_activity_filter(service, type, severity, dates, ...)
@@ -676,12 +733,14 @@ create_activity_filter(service, type, severity, dates, ...)
 ### 6.3 Mock Behavior Requirements
 
 **MCP Orchestrator Mock:**
+
 ```python
 mock_orchestrator.call_tool.return_value = {...}
 mock_orchestrator.is_connected.return_value = True
 ```
 
 **Event Bus Mock:**
+
 ```python
 mock_event_bus.publish(event) -> None
 mock_event_bus.subscribe(event_type, handler) -> Subscription
@@ -689,6 +748,7 @@ mock_event_bus.unsubscribe(subscription) -> None
 ```
 
 **Activity Repository Mock:**
+
 ```python
 mock_repo.create_activity(**kwargs) -> ActivityLog
 mock_repo.get_activities(filter) -> List[ActivityLog]
@@ -712,12 +772,14 @@ mock_repo.get_statistics(...) -> ActivityStatistics
 **For each service:**
 
 1. **Red Phase** - Run tests (should fail)
+
    ```bash
    pytest autoarr/tests/unit/services/test_monitoring_service.py -v
    # All tests should fail (no implementation yet)
    ```
 
 2. **Green Phase** - Implement minimum code to pass tests
+
    ```bash
    # Implement service in autoarr/api/services/monitoring_service.py
    pytest autoarr/tests/unit/services/test_monitoring_service.py -v
@@ -725,6 +787,7 @@ mock_repo.get_statistics(...) -> ActivityStatistics
    ```
 
 3. **Refactor Phase** - Improve code quality
+
    ```bash
    # Refactor implementation
    pytest autoarr/tests/unit/services/test_monitoring_service.py -v
@@ -762,6 +825,7 @@ mock_repo.get_statistics(...) -> ActivityStatistics
 ### 7.4 Post-Implementation
 
 **After each service:**
+
 - [ ] All unit tests passing (100%)
 - [ ] Code coverage ≥ 85%
 - [ ] No linter errors (flake8, mypy)
@@ -770,6 +834,7 @@ mock_repo.get_statistics(...) -> ActivityStatistics
 - [ ] Documentation updated
 
 **After all services:**
+
 - [ ] Create integration tests (55 tests)
 - [ ] Create E2E tests (27 tests)
 - [ ] Run full test suite
@@ -784,6 +849,7 @@ mock_repo.get_statistics(...) -> ActivityStatistics
 ### 8.1 Overall Coverage Target: 85%+
 
 **Coverage Metrics:**
+
 ```bash
 # Run with coverage
 pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=html
@@ -798,6 +864,7 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=html
 ### 8.2 Critical Path Coverage: 100%
 
 **Must have 100% coverage:**
+
 - Failure detection logic
 - Retry strategy selection
 - Event correlation tracking
@@ -807,6 +874,7 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=html
 ### 8.3 Edge Case Coverage
 
 **Included edge cases:**
+
 - Empty results (empty queue, no failures)
 - Malformed API responses
 - Connection timeouts
@@ -823,21 +891,25 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=html
 ### 9.1 Service Performance Targets
 
 **Monitoring Service:**
+
 - Queue polling: < 500ms for 100 items
 - Failure detection: < 100ms per history check
 - Pattern recognition: < 200ms for 50 failures
 
 **Recovery Service:**
+
 - Retry triggering: < 100ms (excluding backoff delay)
 - Strategy selection: < 10ms
 - Concurrent retries: 10+ simultaneous
 
 **Event Bus:**
+
 - Publish latency: < 10ms per event
 - Subscriber fanout: < 50ms for 100 subscribers
 - Throughput: 1000+ events/second
 
 **Activity Log:**
+
 - Activity creation: < 50ms
 - Query with filters: < 200ms for 1000 items
 - Pagination: < 100ms per page
@@ -846,6 +918,7 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=html
 ### 9.2 Performance Test Cases
 
 **Included in test suite:**
+
 - `test_polling_performance_with_large_queue` - 100 items
 - `test_publish_performance_with_many_subscribers` - 100 subscribers
 - `test_query_performance_with_large_dataset` - 1000 activities
@@ -859,11 +932,13 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=html
 ### 10.1 MCP Protocol Compliance
 
 **Event Bus Integration:**
+
 - Events must conform to MCP event schema
 - Correlation IDs follow MCP correlation format
 - Event metadata includes MCP-required fields
 
 **Testing:**
+
 - Verify event structure matches MCP spec
 - Test MCP error event handling
 - Validate correlation ID format
@@ -871,16 +946,19 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=html
 ### 10.2 Event Processing Patterns
 
 **Event Ordering:**
+
 - Events processed in publish order (or document if parallel)
 - State transitions validated for correctness
 - No lost events in error scenarios
 
 **Event Correlation:**
+
 - Correlation IDs propagated across service boundaries
 - Complete workflows trackable via correlation
 - Activity log preserves correlation chains
 
 **Testing:**
+
 - `test_correlate_related_events` - Chain validation
 - `test_track_event_chain_by_correlation_id` - Workflow tracking
 - `test_get_activity_workflow_by_correlation_id` - Complete workflow
@@ -890,6 +968,7 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=html
 **Configurable Parameters:**
 
 **Monitoring Config:**
+
 ```python
 poll_interval: int = 60              # seconds
 failure_detection_enabled: bool = True
@@ -899,6 +978,7 @@ alert_on_failure: bool = True
 ```
 
 **Recovery Config:**
+
 ```python
 max_retry_attempts: int = 3
 immediate_retry_enabled: bool = True
@@ -910,6 +990,7 @@ backoff_multiplier: int = 2
 ```
 
 **Testing:**
+
 - `test_disable_immediate_retry` - Config flags
 - `test_custom_backoff_parameters` - Custom values
 - `test_configurable_max_retry_limit` - Limit changes
@@ -921,16 +1002,19 @@ backoff_multiplier: int = 2
 ### 11.1 Error Categories
 
 **Transient Errors** (Retry immediately):
+
 - Connection timeout
 - Network unreachable
 - Temporary server error (50x)
 
 **Persistent Errors** (Exponential backoff):
+
 - CRC errors
 - PAR2 repair failures
 - Unpacking errors
 
 **System Errors** (Alert, no retry):
+
 - Disk full
 - Permission denied
 - Invalid configuration
@@ -938,16 +1022,19 @@ backoff_multiplier: int = 2
 ### 11.2 Error Handling Tests
 
 **Graceful Degradation:**
+
 - `test_poll_queue_connection_error` - Continue monitoring
 - `test_handle_orchestrator_error_during_retry` - Log and continue
 - `test_subscriber_failure_does_not_affect_others` - Isolate failures
 
 **Dead Letter Queue:**
+
 - `test_failed_event_delivery_to_dead_letter_queue` - Capture failures
 - `test_dead_letter_includes_error_info` - Error details
 - `test_replay_dead_letter_event` - Retry capability
 
 **Validation:**
+
 - `test_handle_malformed_queue_data` - Invalid data
 - `test_handle_invalid_download_data` - Data validation
 - `test_handle_invalid_filter_parameters` - Parameter validation
@@ -959,6 +1046,7 @@ backoff_multiplier: int = 2
 ### 12.1 Code Documentation
 
 **Each service must include:**
+
 - Module docstring with service description
 - Function/method docstrings with:
   - Purpose
@@ -968,6 +1056,7 @@ backoff_multiplier: int = 2
   - Examples (for complex functions)
 
 **Example:**
+
 ```python
 async def trigger_retry(self, failed_download: FailedDownload) -> RecoveryResult:
     """
@@ -996,11 +1085,13 @@ async def trigger_retry(self, failed_download: FailedDownload) -> RecoveryResult
 ### 12.2 Test Documentation
 
 **Each test must include:**
+
 - Docstring describing what is being tested
 - Clear Arrange-Act-Assert structure
 - Comments for complex assertions
 
 **Example:**
+
 ```python
 @pytest.mark.asyncio
 async def test_exponential_backoff_for_repeated_failures(recovery_service):
@@ -1095,6 +1186,7 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=xml
 ### 14.1 Test Success Criteria
 
 **All tests must:**
+
 - ✅ Pass consistently (no flaky tests)
 - ✅ Complete in < 5 seconds total (unit tests)
 - ✅ Use proper mocking (no external dependencies)
@@ -1103,6 +1195,7 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=xml
 - ✅ Cover edge cases and error scenarios
 
 **Coverage must achieve:**
+
 - ✅ Overall: 85%+ for all services
 - ✅ Critical paths: 100%
 - ✅ Error handling: 90%+
@@ -1111,6 +1204,7 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=xml
 ### 14.2 Code Quality Criteria
 
 **All code must:**
+
 - ✅ Pass flake8 linting (no errors)
 - ✅ Pass mypy type checking
 - ✅ Be formatted with black
@@ -1121,6 +1215,7 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=xml
 ### 14.3 Integration Criteria
 
 **Services must:**
+
 - ✅ Emit events with proper correlation IDs
 - ✅ Handle event bus failures gracefully
 - ✅ Log all significant activities
@@ -1157,6 +1252,7 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=xml
 ### 15.2 Post-Sprint Activities
 
 **After Sprint 5-6 completion:**
+
 - [ ] Update BUILD-PLAN.md status
 - [ ] Create implementation documentation
 - [ ] Performance optimization if needed
@@ -1169,30 +1265,31 @@ pytest autoarr/tests/unit/services/ --cov=autoarr.api.services --cov-report=xml
 
 ### 16.1 Test Count Summary
 
-| Service | Test File | Test Cases | Lines of Code |
-|---------|-----------|------------|---------------|
-| Monitoring | test_monitoring_service.py | 50 | 789 |
-| Recovery | test_recovery_service.py | 45 | 848 |
-| Event Bus | test_event_bus.py | 55 | 767 |
-| Activity Log | test_activity_log.py | 40 | 712 |
-| **TOTAL** | **4 files** | **190** | **3,116** |
+| Service      | Test File                  | Test Cases | Lines of Code |
+| ------------ | -------------------------- | ---------- | ------------- |
+| Monitoring   | test_monitoring_service.py | 50         | 789           |
+| Recovery     | test_recovery_service.py   | 45         | 848           |
+| Event Bus    | test_event_bus.py          | 55         | 767           |
+| Activity Log | test_activity_log.py       | 40         | 712           |
+| **TOTAL**    | **4 files**                | **190**    | **3,116**     |
 
 ### 16.2 Test Category Breakdown
 
-| Category | Test Count | % of Total |
-|----------|------------|------------|
-| Core Functionality | 95 | 50% |
-| Error Handling | 28 | 15% |
-| Edge Cases | 25 | 13% |
-| Performance | 12 | 6% |
-| Concurrency | 15 | 8% |
-| Configuration | 15 | 8% |
+| Category           | Test Count | % of Total |
+| ------------------ | ---------- | ---------- |
+| Core Functionality | 95         | 50%        |
+| Error Handling     | 28         | 15%        |
+| Edge Cases         | 25         | 13%        |
+| Performance        | 12         | 6%         |
+| Concurrency        | 15         | 8%         |
+| Configuration      | 15         | 8%         |
 
 ### 16.3 Assertion Density
 
 **Average assertions per test:** 3.2
 
 **Test quality metrics:**
+
 - Tests with docstrings: 100%
 - Tests with AAA structure: 100%
 - Tests with mock assertions: 100%
@@ -1211,6 +1308,7 @@ This test strategy document provides a complete blueprint for implementing Sprin
 5. **TDD Compliance:** Tests written BEFORE implementation
 
 **Implementation can now proceed with confidence that:**
+
 - All requirements are clearly defined
 - Test coverage will be comprehensive
 - Edge cases are documented

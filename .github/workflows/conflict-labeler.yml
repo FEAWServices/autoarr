@@ -1,0 +1,40 @@
+name: Conflict Labeler
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request_target:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  conflict-check:
+    name: Check for Merge Conflicts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Check for merge conflicts
+        uses: eps1lon/actions-label-merge-conflict@v3.0.2
+        with:
+          dirtyLabel: "conflict"
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          commentOnDirty: |
+            This PR has merge conflicts that need to be resolved before it can be merged.
+
+            Please rebase or merge the target branch into your feature branch:
+            ```bash
+            git fetch origin
+            git rebase origin/main  # or origin/develop
+            # Resolve conflicts, then:
+            git push --force-with-lease
+            ```
+          commentOnClean: ""
