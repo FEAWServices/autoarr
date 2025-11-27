@@ -12,7 +12,8 @@ import type {
   ApplyConfigResponse,
 } from "../types/config";
 
-const API_BASE_URL = import.meta.env?.VITE_API_URL || "/api/v1";
+// Use relative URL - this automatically uses the same host/port as the page
+const API_BASE_URL = "/api/v1";
 
 // ============================================================================
 // API Client Functions
