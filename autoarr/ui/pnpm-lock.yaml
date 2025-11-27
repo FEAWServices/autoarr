@@ -6,14 +6,14 @@ settings:
 
 dependencies:
   '@tanstack/react-query':
-    specifier: ^5.90.10
-    version: 5.90.10(react@19.2.0)
+    specifier: ^5.90.11
+    version: 5.90.11(react@19.2.0)
   clsx:
     specifier: ^2.0.0
     version: 2.1.1
   lucide-react:
-    specifier: ^0.554.0
-    version: 0.554.0(react@19.2.0)
+    specifier: ^0.555.0
+    version: 0.555.0(react@19.2.0)
   react:
     specifier: ^19.2.0
     version: 19.2.0
@@ -35,8 +35,8 @@ dependencies:
 
 devDependencies:
   '@playwright/test':
-    specifier: ^1.56.1
-    version: 1.56.1
+    specifier: ^1.57.0
+    version: 1.57.0
   '@tailwindcss/postcss':
     specifier: ^4.1.17
     version: 4.1.17
@@ -60,7 +60,7 @@ devDependencies:
     version: 10.4.22(postcss@8.5.6)
   axe-playwright:
     specifier: ^2.2.2
-    version: 2.2.2(playwright@1.56.1)
+    version: 2.2.2(playwright@1.57.0)
   eslint:
     specifier: ^9.39.1
     version: 9.39.1
@@ -80,8 +80,8 @@ devDependencies:
     specifier: ^8.4.32
     version: 8.5.6
   prettier:
-    specifier: ^3.1.1
-    version: 3.6.2
+    specifier: ^3.7.0
+    version: 3.7.0
   stylelint:
     specifier: ^16.26.0
     version: 16.26.0(typescript@5.9.3)
@@ -745,12 +745,12 @@ packages:
       fastq: 1.19.1
     dev: true
 
-  /@playwright/test@1.56.1:
-    resolution: {integrity: sha512-vSMYtL/zOcFpvJCW71Q/OEGQb7KYBPAdKh35WNSkaZA75JlAO8ED8UN6GUNTm3drWomcbcqRPFqQbLae8yBTdg==}
+  /@playwright/test@1.57.0:
+    resolution: {integrity: sha512-6TyEnHgd6SArQO8UO2OMTxshln3QMWBtPGrOCgs3wVEmQmwyuNtB10IZMfmYDE0riwNR1cu4q+pPcxMVtaG3TA==}
     engines: {node: '>=18'}
     hasBin: true
     dependencies:
-      playwright: 1.56.1
+      playwright: 1.57.0
     dev: true
 
   /@rolldown/pluginutils@1.0.0-beta.47:
@@ -1087,16 +1087,16 @@ packages:
       tailwindcss: 4.1.17
     dev: true
 
-  /@tanstack/query-core@5.90.10:
-    resolution: {integrity: sha512-EhZVFu9rl7GfRNuJLJ3Y7wtbTnENsvzp+YpcAV7kCYiXni1v8qZh++lpw4ch4rrwC0u/EZRnBHIehzCGzwXDSQ==}
+  /@tanstack/query-core@5.90.11:
+    resolution: {integrity: sha512-f9z/nXhCgWDF4lHqgIE30jxLe4sYv15QodfdPDKYAk7nAEjNcndy4dHz3ezhdUaR23BpWa4I2EH4/DZ0//Uf8A==}
     dev: false
 
-  /@tanstack/react-query@5.90.10(react@19.2.0):
-    resolution: {integrity: sha512-BKLss9Y8PQ9IUjPYQiv3/Zmlx92uxffUOX8ZZNoQlCIZBJPT5M+GOMQj7xislvVQ6l1BstBjcX0XB/aHfFYVNw==}
+  /@tanstack/react-query@5.90.11(react@19.2.0):
+    resolution: {integrity: sha512-3uyzz01D1fkTLXuxF3JfoJoHQMU2fxsfJwE+6N5hHy0dVNoZOvwKP8Z2k7k1KDeD54N20apcJnG75TBAStIrBA==}
     peerDependencies:
       react: ^18 || ^19
     dependencies:
-      '@tanstack/query-core': 5.90.10
+      '@tanstack/query-core': 5.90.11
       react: 19.2.0
     dev: false
 
@@ -1401,7 +1401,7 @@ packages:
       mustache: 4.2.0
     dev: true
 
-  /axe-playwright@2.2.2(playwright@1.56.1):
+  /axe-playwright@2.2.2(playwright@1.57.0):
     resolution: {integrity: sha512-h350/grzDCPgpuWV7eEOqr/f61Xn07Gi9f9B3Ew4rW6/nFtpdEJYW6jgRATorgAGXjEAYFTnaY3sEys39wDw4A==}
     peerDependencies:
       playwright: '>1.0.0'
@@ -1411,7 +1411,7 @@ packages:
       axe-html-reporter: 2.2.11(axe-core@4.11.0)
       junit-report-builder: 5.1.1
       picocolors: 1.1.1
-      playwright: 1.56.1
+      playwright: 1.57.0
     dev: true
 
   /balanced-match@1.0.2:
@@ -2334,8 +2334,8 @@ packages:
       yallist: 3.1.1
     dev: true
 
-  /lucide-react@0.554.0(react@19.2.0):
-    resolution: {integrity: sha512-St+z29uthEJVx0Is7ellNkgTEhaeSoA42I7JjOCBCrc5X6LYMGSv0P/2uS5HDLTExP5tpiqRD2PyUEOS6s9UXA==}
+  /lucide-react@0.555.0(react@19.2.0):
+    resolution: {integrity: sha512-D8FvHUGbxWBRQM90NZeIyhAvkFfsh3u9ekrMvJ30Z6gnpBHS6HC6ldLg7tL45hwiIz/u66eKDtdA23gwwGsAHA==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
     dependencies:
@@ -2519,18 +2519,18 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /playwright-core@1.56.1:
-    resolution: {integrity: sha512-hutraynyn31F+Bifme+Ps9Vq59hKuUCz7H1kDOcBs+2oGguKkWTU50bBWrtz34OUWmIwpBTWDxaRPXrIXkgvmQ==}
+  /playwright-core@1.57.0:
+    resolution: {integrity: sha512-agTcKlMw/mjBWOnD6kFZttAAGHgi/Nw0CZ2o6JqWSbMlI219lAFLZZCyqByTsvVAJq5XA5H8cA6PrvBRpBWEuQ==}
     engines: {node: '>=18'}
     hasBin: true
     dev: true
 
-  /playwright@1.56.1:
-    resolution: {integrity: sha512-aFi5B0WovBHTEvpM3DzXTUaeN6eN0qWnTkKx4NQaH4Wvcmc153PdaY2UBdSYKaGYw+UyWXSVyxDUg5DoPEttjw==}
+  /playwright@1.57.0:
+    resolution: {integrity: sha512-ilYQj1s8sr2ppEJ2YVadYBN0Mb3mdo9J0wQ+UuDhzYqURwSoW4n1Xs5vs7ORwgDGmyEh33tRMeS8KhdkMoLXQw==}
     engines: {node: '>=18'}
     hasBin: true
     dependencies:
-      playwright-core: 1.56.1
+      playwright-core: 1.57.0
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
@@ -2574,8 +2574,8 @@ packages:
     engines: {node: '>= 0.8.0'}
     dev: true
 
-  /prettier@3.6.2:
-    resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
+  /prettier@3.7.0:
+    resolution: {integrity: sha512-pBiBj/gjRY9Qpk1b7cDda6Rbwvkaggos779AHQ0Ek/odwDx6xG6DRBxtnp1QmxbuD7pAO8/SQ8vuhtGv9LoLWA==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
