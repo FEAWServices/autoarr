@@ -15,8 +15,9 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-    "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans",
+    "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
@@ -111,7 +112,8 @@ body {
 }
 
 .gradient-mesh {
-  background: radial-gradient(at 40% 20%, hsl(var(--primary) / 30%) 0, transparent 50%),
+  background:
+    radial-gradient(at 40% 20%, hsl(var(--primary) / 30%) 0, transparent 50%),
     radial-gradient(at 80% 0%, hsl(var(--primary-glow) / 30%) 0, transparent 50%),
     radial-gradient(at 0% 50%, hsl(var(--secondary) / 30%) 0, transparent 50%);
 }
