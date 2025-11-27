@@ -1,11 +1,11 @@
-import { render } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
-import { BrowserRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import App from "../App";
+import { render } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import App from '../App';
 
 // Mock the WebSocket service
-vi.mock("../services/websocket", () => ({
+vi.mock('../services/websocket', () => ({
   default: {
     connect: vi.fn(),
     disconnect: vi.fn(),
@@ -30,23 +30,21 @@ const renderWithProviders = (ui: React.ReactElement) => {
   return render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>{ui}</BrowserRouter>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
 };
 
-describe("App", () => {
-  it("renders without crashing", () => {
+describe('App', () => {
+  it('renders without crashing', () => {
     renderWithProviders(<App />);
     // App should render something
     expect(document.body).toBeInTheDocument();
   });
 
-  it("renders the sidebar", () => {
+  it('renders the sidebar', () => {
     renderWithProviders(<App />);
     // Check for common sidebar elements
-    const sidebar =
-      document.querySelector('[class*="sidebar"]') ||
-      document.querySelector("nav");
+    const sidebar = document.querySelector('[class*="sidebar"]') || document.querySelector('nav');
     expect(sidebar || document.body).toBeInTheDocument();
   });
 });

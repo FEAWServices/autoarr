@@ -1,27 +1,18 @@
-import { useState, useRef, useEffect } from "react";
-import { useChatStore } from "../stores/chatStore";
-import { chatService } from "../services/chat";
-import { websocketService } from "../services/websocket";
-import { ChatMessage } from "../components/Chat/ChatMessage";
-import { TypingIndicator } from "../components/Chat/TypingIndicator";
-import { RequestStatus } from "../components/Chat/RequestStatus";
-import {
-  MessageCircle,
-  Send,
-  Trash2,
-  Search as SearchIcon,
-  Wifi,
-  WifiOff,
-} from "lucide-react";
-import { ChatSearch } from "../components/Chat/ChatSearch";
+import { useState, useRef, useEffect } from 'react';
+import { useChatStore } from '../stores/chatStore';
+import { chatService } from '../services/chat';
+import { websocketService } from '../services/websocket';
+import { ChatMessage } from '../components/Chat/ChatMessage';
+import { TypingIndicator } from '../components/Chat/TypingIndicator';
+import { RequestStatus } from '../components/Chat/RequestStatus';
+import { MessageCircle, Send, Trash2, Search as SearchIcon, Wifi, WifiOff } from 'lucide-react';
+import { ChatSearch } from '../components/Chat/ChatSearch';
 
 export const Chat = () => {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState(
-    websocketService.getState(),
-  );
+  const [connectionStatus, setConnectionStatus] = useState(websocketService.getState());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -41,7 +32,7 @@ export const Chat = () => {
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -87,27 +78,27 @@ export const Chat = () => {
       }
 
       // Add system message for important status changes
-      if (event.type === "request-completed" && data.title) {
+      if (event.type === 'request-completed' && data.title) {
         addMessage({
           id: `system-${Date.now()}`,
-          type: "system",
+          type: 'system',
           content: `✓ Download completed: ${data.title}`,
           timestamp: new Date(event.timestamp),
         });
-      } else if (event.type === "request-failed" && data.title) {
+      } else if (event.type === 'request-failed' && data.title) {
         addMessage({
           id: `system-${Date.now()}`,
-          type: "system",
+          type: 'system',
           content: `✗ Download failed: ${data.title}`,
           timestamp: new Date(event.timestamp),
         });
       }
     };
 
-    websocketService.on("all", handleWebSocketEvent);
+    websocketService.on('all', handleWebSocketEvent);
 
     return () => {
-      websocketService.off("all", handleWebSocketEvent);
+      websocketService.off('all', handleWebSocketEvent);
     };
   }, [currentRequests, updateRequestStatus, addMessage]);
 
@@ -122,13 +113,13 @@ export const Chat = () => {
     // Add user message
     addMessage({
       id: `user-${Date.now()}`,
-      type: "user",
+      type: 'user',
       content: trimmedInput,
       timestamp: new Date(),
     });
 
     // Clear input
-    setInput("");
+    setInput('');
 
     // Show typing indicator
     setTyping(true);
@@ -145,7 +136,7 @@ export const Chat = () => {
       // Add assistant response
       addMessage({
         id: `assistant-${Date.now()}`,
-        type: "assistant",
+        type: 'assistant',
         content: response.message,
         timestamp: new Date(),
         metadata: {
@@ -159,7 +150,7 @@ export const Chat = () => {
       if (response.requiresConfirmation && response.classification) {
         updateRequestStatus(response.requestId, {
           requestId: response.requestId,
-          status: "pending_confirmation",
+          status: 'pending_confirmation',
           title: response.classification.title,
           type: response.classification.type,
           createdAt: new Date().toISOString(),
@@ -168,14 +159,13 @@ export const Chat = () => {
       }
     } catch (err) {
       setTyping(false);
-      const errorMessage =
-        err instanceof Error ? err.message : "An error occurred";
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);
 
       // Add error message
       addMessage({
         id: `assistant-${Date.now()}`,
-        type: "assistant",
+        type: 'assistant',
         content: `Sorry, I encountered an error: ${errorMessage}`,
         timestamp: new Date(),
         metadata: {
@@ -196,15 +186,12 @@ export const Chat = () => {
     setIsProcessing(true);
 
     try {
-      const response = await chatService.confirmSelection(
-        currentRequestId,
-        tmdbId,
-      );
+      const response = await chatService.confirmSelection(currentRequestId, tmdbId);
 
       // Add confirmation message
       addMessage({
         id: `assistant-${Date.now()}`,
-        type: "assistant",
+        type: 'assistant',
         content: response.message,
         timestamp: new Date(),
         metadata: {
@@ -227,12 +214,11 @@ export const Chat = () => {
       // Clear current request ID
       setCurrentRequestId(null);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to add content";
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add content';
 
       addMessage({
         id: `assistant-${Date.now()}`,
-        type: "assistant",
+        type: 'assistant',
         content: `Sorry, I couldn't add that: ${errorMessage}`,
         timestamp: new Date(),
         metadata: {
@@ -248,16 +234,16 @@ export const Chat = () => {
   const handleNoneOfThese = () => {
     addMessage({
       id: `user-${Date.now()}`,
-      type: "user",
+      type: 'user',
       content: "None of these match what I'm looking for",
       timestamp: new Date(),
     });
 
     addMessage({
       id: `assistant-${Date.now()}`,
-      type: "assistant",
+      type: 'assistant',
       content:
-        "I understand. Can you provide more details like the year, actors, or a more specific title?",
+        'I understand. Can you provide more details like the year, actors, or a more specific title?',
       timestamp: new Date(),
     });
 
@@ -266,7 +252,7 @@ export const Chat = () => {
 
   // Handle Enter key
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -274,24 +260,17 @@ export const Chat = () => {
 
   // Handle clear history
   const handleClearHistory = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to clear all chat history? This cannot be undone.",
-      )
-    ) {
+    if (window.confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
       clearHistory();
     }
   };
 
   const activeRequests = Array.from(currentRequests.values()).filter(
-    (req) => req.status === "downloading" || req.status === "searching",
+    (req) => req.status === 'downloading' || req.status === 'searching'
   );
 
   return (
-    <div
-      data-testid="chat-container"
-      className="flex flex-col h-full bg-background-primary"
-    >
+    <div data-testid="chat-container" className="flex flex-col h-full bg-background-primary">
       {/* Header */}
       <div className="flex-shrink-0 border-b border-background-tertiary bg-background-secondary px-6 py-4">
         <div className="flex items-center justify-between">
@@ -312,7 +291,7 @@ export const Chat = () => {
               className="flex items-center gap-2 px-3 py-1.5 bg-background-tertiary rounded-full"
               aria-label={`Connection status: ${connectionStatus}`}
             >
-              {connectionStatus === "connected" ? (
+              {connectionStatus === 'connected' ? (
                 <>
                   <Wifi className="w-4 h-4 text-status-success" />
                   <span className="text-xs text-status-success">Connected</span>
@@ -321,9 +300,7 @@ export const Chat = () => {
                 <>
                   <WifiOff className="w-4 h-4 text-status-warning" />
                   <span className="text-xs text-status-warning">
-                    {connectionStatus === "connecting"
-                      ? "Connecting..."
-                      : "Disconnected"}
+                    {connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
                   </span>
                 </>
               )}
@@ -383,12 +360,10 @@ export const Chat = () => {
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <MessageCircle className="w-16 h-16 text-text-muted mb-4" />
-            <h2 className="text-xl font-semibold text-text-primary mb-2">
-              Start a Conversation
-            </h2>
+            <h2 className="text-xl font-semibold text-text-primary mb-2">Start a Conversation</h2>
             <p className="text-text-secondary max-w-md">
-              Ask me to add movies or TV shows to your library. For example:
-              "Add Inception" or "I want to watch Breaking Bad"
+              Ask me to add movies or TV shows to your library. For example: "Add Inception" or "I
+              want to watch Breaking Bad"
             </p>
           </div>
         ) : (

@@ -7,9 +7,9 @@
  * - Color-coded health scores
  */
 
-import { Download, Tv, Film, Server } from "lucide-react";
-import type { ServiceHealth } from "../../types/config";
-import { formatDistanceToNow } from "../../utils/date";
+import { Download, Tv, Film, Server } from 'lucide-react';
+import type { ServiceHealth } from '../../types/config';
+import { formatDistanceToNow } from '../../utils/date';
 
 interface ServiceCardProps {
   serviceHealth: ServiceHealth;
@@ -23,30 +23,28 @@ const serviceIcons = {
 };
 
 const serviceNames = {
-  sabnzbd: "SABnzbd",
-  sonarr: "Sonarr",
-  radarr: "Radarr",
-  plex: "Plex",
+  sabnzbd: 'SABnzbd',
+  sonarr: 'Sonarr',
+  radarr: 'Radarr',
+  plex: 'Plex',
 };
 
 function getHealthColor(score: number): string {
-  if (score >= 80) return "text-green-600 dark:text-green-400";
-  if (score >= 60) return "text-yellow-600 dark:text-yellow-400";
-  return "text-red-600 dark:text-red-400";
+  if (score >= 80) return 'text-green-600 dark:text-green-400';
+  if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
+  return 'text-red-600 dark:text-red-400';
 }
 
 function getHealthBgColor(score: number): string {
-  if (score >= 80) return "bg-green-50 dark:bg-green-900/20";
-  if (score >= 60) return "bg-yellow-50 dark:bg-yellow-900/20";
-  return "bg-red-50 dark:bg-red-900/20";
+  if (score >= 80) return 'bg-green-50 dark:bg-green-900/20';
+  if (score >= 60) return 'bg-yellow-50 dark:bg-yellow-900/20';
+  return 'bg-red-50 dark:bg-red-900/20';
 }
 
 export function ServiceCard({ serviceHealth }: ServiceCardProps) {
   const serviceName =
-    serviceNames[serviceHealth.service as keyof typeof serviceNames] ||
-    serviceHealth.service;
-  const Icon =
-    serviceIcons[serviceHealth.service as keyof typeof serviceIcons] || Server;
+    serviceNames[serviceHealth.service as keyof typeof serviceNames] || serviceHealth.service;
+  const Icon = serviceIcons[serviceHealth.service as keyof typeof serviceIcons] || Server;
   const healthColor = getHealthColor(serviceHealth.healthScore);
   const healthBgColor = getHealthBgColor(serviceHealth.healthScore);
 
@@ -81,18 +79,14 @@ export function ServiceCard({ serviceHealth }: ServiceCardProps) {
             aria-label={`Health score: ${serviceHealth.healthScore} out of 100`}
             title={`Health score: ${serviceHealth.healthScore}/100`}
           >
-            <span className={`text-sm font-bold ${healthColor}`}>
-              {serviceHealth.healthScore}
-            </span>
+            <span className={`text-sm font-bold ${healthColor}`}>{serviceHealth.healthScore}</span>
           </div>
         </div>
 
         {/* Recommendations Count */}
         <div className="space-y-2 mb-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 dark:text-gray-400">
-              High Priority
-            </span>
+            <span className="text-gray-600 dark:text-gray-400">High Priority</span>
             <span
               className="font-semibold text-red-600 dark:text-red-400"
               data-testid="rec-count-high"
@@ -102,9 +96,7 @@ export function ServiceCard({ serviceHealth }: ServiceCardProps) {
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 dark:text-gray-400">
-              Medium Priority
-            </span>
+            <span className="text-gray-600 dark:text-gray-400">Medium Priority</span>
             <span
               className="font-semibold text-yellow-600 dark:text-yellow-400"
               data-testid="rec-count-medium"
@@ -114,9 +106,7 @@ export function ServiceCard({ serviceHealth }: ServiceCardProps) {
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 dark:text-gray-400">
-              Low Priority
-            </span>
+            <span className="text-gray-600 dark:text-gray-400">Low Priority</span>
             <span
               className="font-semibold text-blue-600 dark:text-blue-400"
               data-testid="rec-count-low"

@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Download, Tv, Film, Server, Activity } from "lucide-react";
-import { SplashScreen } from "./components/SplashScreen";
-import { MainLayout } from "./layouts/MainLayout";
-import { Search } from "./pages/Search";
-import { Settings } from "./pages/Settings";
-import { Placeholder } from "./pages/Placeholder";
-import { Dashboard } from "./components/Dashboard";
-import ConfigAuditPage from "./pages/ConfigAudit";
-import { Chat } from "./pages/Chat";
-import { useThemeStore } from "./stores/themeStore";
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Download, Tv, Film, Server, Activity } from 'lucide-react';
+import { SplashScreen } from './components/SplashScreen';
+import { MainLayout } from './layouts/MainLayout';
+import { Search } from './pages/Search';
+import { Settings } from './pages/Settings';
+import { Placeholder } from './pages/Placeholder';
+import { Dashboard } from './components/Dashboard';
+import ConfigAuditPage from './pages/ConfigAudit';
+import { Chat } from './pages/Chat';
+import { useThemeStore } from './stores/themeStore';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -18,9 +18,9 @@ function App() {
   // Initialize dark mode on mount
   useEffect(() => {
     if (isDarkMode) {
-      document.documentElement.classList.add("dark");
+      document.documentElement.classList.add('dark');
     } else {
-      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
 
@@ -29,9 +29,7 @@ function App() {
   };
 
   if (showSplash) {
-    return (
-      <SplashScreen onComplete={handleSplashComplete} minDisplayTime={2000} />
-    );
+    return <SplashScreen onComplete={handleSplashComplete} minDisplayTime={2000} />;
   }
 
   return (

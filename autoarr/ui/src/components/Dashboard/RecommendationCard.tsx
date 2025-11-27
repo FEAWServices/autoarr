@@ -7,30 +7,26 @@
  * - Current vs recommended values
  */
 
-import type { Recommendation } from "../../types/config";
+import type { Recommendation } from '../../types/config';
 
 interface RecommendationCardProps {
   recommendation: Recommendation;
 }
 
 const priorityColors = {
-  high: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-  medium:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  low: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  high: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  low: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
 const categoryLabels = {
-  performance: "Performance",
-  security: "Security",
-  best_practices: "Best Practices",
+  performance: 'Performance',
+  security: 'Security',
+  best_practices: 'Best Practices',
 };
 
-export function RecommendationCard({
-  recommendation,
-}: RecommendationCardProps) {
-  const priorityColor =
-    priorityColors[recommendation.priority as keyof typeof priorityColors];
+export function RecommendationCard({ recommendation }: RecommendationCardProps) {
+  const priorityColor = priorityColors[recommendation.priority as keyof typeof priorityColors];
   const categoryLabel =
     categoryLabels[recommendation.category as keyof typeof categoryLabels] ||
     recommendation.category;
@@ -54,9 +50,7 @@ export function RecommendationCard({
               {recommendation.service.toUpperCase()}
             </span>
             <span className="text-gray-400 dark:text-gray-600">•</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {categoryLabel}
-            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">{categoryLabel}</span>
           </div>
         </div>
 
@@ -71,9 +65,7 @@ export function RecommendationCard({
       </div>
 
       {/* Description */}
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-        {recommendation.description}
-      </p>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{recommendation.description}</p>
 
       {/* Values */}
       {recommendation.current_value && (
@@ -85,9 +77,7 @@ export function RecommendationCard({
             </div>
           </div>
           <div>
-            <div className="text-gray-500 dark:text-gray-400 mb-1">
-              Recommended
-            </div>
+            <div className="text-gray-500 dark:text-gray-400 mb-1">Recommended</div>
             <div className="font-mono font-medium text-gray-900 dark:text-gray-100 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">
               {recommendation.recommended_value}
             </div>

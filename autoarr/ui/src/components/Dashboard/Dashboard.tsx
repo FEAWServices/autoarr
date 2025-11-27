@@ -10,20 +10,13 @@
  * - WCAG 2.1 AA accessibility compliance
  */
 
-import { useState, useMemo } from "react";
-import { AlertCircle, CheckCircle, Loader2, RefreshCw } from "lucide-react";
-import {
-  useRecommendations,
-  useAuditMutation,
-} from "../../hooks/useConfigAudit";
-import { ServiceCard } from "./ServiceCard";
-import { RecommendationCard } from "./RecommendationCard";
-import type {
-  ServiceHealth,
-  SystemHealth,
-  Recommendation,
-} from "../../types/config";
-import toast, { Toaster } from "react-hot-toast";
+import { useState, useMemo } from 'react';
+import { AlertCircle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
+import { useRecommendations, useAuditMutation } from '../../hooks/useConfigAudit';
+import { ServiceCard } from './ServiceCard';
+import { RecommendationCard } from './RecommendationCard';
+import type { ServiceHealth, SystemHealth, Recommendation } from '../../types/config';
+import toast, { Toaster } from 'react-hot-toast';
 
 export function Dashboard() {
   const [isRunningAudit, setIsRunningAudit] = useState(false);
@@ -51,22 +44,22 @@ export function Dashboard() {
         lowPriority: 0,
         services: [
           {
-            service: "sabnzbd",
+            service: 'sabnzbd',
             healthScore: 100,
             recommendations: { high: 0, medium: 0, low: 0 },
           },
           {
-            service: "sonarr",
+            service: 'sonarr',
             healthScore: 100,
             recommendations: { high: 0, medium: 0, low: 0 },
           },
           {
-            service: "radarr",
+            service: 'radarr',
             healthScore: 100,
             recommendations: { high: 0, medium: 0, low: 0 },
           },
           {
-            service: "plex",
+            service: 'plex',
             healthScore: 100,
             recommendations: { high: 0, medium: 0, low: 0 },
           },
@@ -75,7 +68,7 @@ export function Dashboard() {
     }
 
     const recommendations = recommendationsData.recommendations;
-    const services = ["sabnzbd", "sonarr", "radarr", "plex"];
+    const services = ['sabnzbd', 'sonarr', 'radarr', 'plex'];
 
     const serviceHealthMap: Record<string, ServiceHealth> = {};
 
@@ -93,9 +86,7 @@ export function Dashboard() {
     recommendations.forEach((rec) => {
       const service = rec.service.toLowerCase();
       if (serviceHealthMap[service]) {
-        serviceHealthMap[service].recommendations[
-          rec.priority as "high" | "medium" | "low"
-        ]++;
+        serviceHealthMap[service].recommendations[rec.priority as 'high' | 'medium' | 'low']++;
       }
     });
 
@@ -111,21 +102,12 @@ export function Dashboard() {
     // Calculate overall health
     const totalServices = services.length;
     const overallScore = Math.round(
-      Object.values(serviceHealthMap).reduce(
-        (sum, s) => sum + s.healthScore,
-        0,
-      ) / totalServices,
+      Object.values(serviceHealthMap).reduce((sum, s) => sum + s.healthScore, 0) / totalServices
     );
 
-    const highPriority = recommendations.filter(
-      (r) => r.priority === "high",
-    ).length;
-    const mediumPriority = recommendations.filter(
-      (r) => r.priority === "medium",
-    ).length;
-    const lowPriority = recommendations.filter(
-      (r) => r.priority === "low",
-    ).length;
+    const highPriority = recommendations.filter((r) => r.priority === 'high').length;
+    const mediumPriority = recommendations.filter((r) => r.priority === 'medium').length;
+    const lowPriority = recommendations.filter((r) => r.priority === 'low').length;
 
     return {
       overallScore,
@@ -143,11 +125,11 @@ export function Dashboard() {
 
     try {
       await auditMutation.mutateAsync({
-        services: ["sabnzbd", "sonarr", "radarr", "plex"],
+        services: ['sabnzbd', 'sonarr', 'radarr', 'plex'],
         includeWebSearch: false,
       });
 
-      toast.success("Audit completed successfully!", {
+      toast.success('Audit completed successfully!', {
         icon: <CheckCircle className="w-5 h-5" />,
         duration: 4000,
       });
@@ -155,7 +137,7 @@ export function Dashboard() {
       // Refetch recommendations
       await refetch();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       toast.error(`Failed to run audit: ${errorMessage}`, {
         icon: <AlertCircle className="w-5 h-5" />,
         duration: 5000,
@@ -171,10 +153,10 @@ export function Dashboard() {
       <Toaster
         position="top-right"
         toastOptions={{
-          className: "dark:bg-gray-800 dark:text-white",
+          className: 'dark:bg-gray-800 dark:text-white',
           style: {
-            borderRadius: "8px",
-            padding: "12px 16px",
+            borderRadius: '8px',
+            padding: '12px 16px',
           },
         }}
       />
@@ -199,9 +181,7 @@ export function Dashboard() {
             aria-live="polite"
           >
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <span className="ml-3 text-gray-600 dark:text-gray-400">
-              Loading dashboard...
-            </span>
+            <span className="ml-3 text-gray-600 dark:text-gray-400">Loading dashboard...</span>
           </div>
         )}
 
@@ -219,9 +199,7 @@ export function Dashboard() {
                   Failed to load recommendations
                 </h3>
                 <p className="text-sm text-red-700 dark:text-red-300">
-                  {error instanceof Error
-                    ? error.message
-                    : "An unknown error occurred"}
+                  {error instanceof Error ? error.message : 'An unknown error occurred'}
                 </p>
               </div>
             </div>
@@ -282,17 +260,15 @@ export function Dashboard() {
                     <span
                       className={
                         systemHealth.overallScore >= 80
-                          ? "text-green-600 dark:text-green-400"
+                          ? 'text-green-600 dark:text-green-400'
                           : systemHealth.overallScore >= 60
-                            ? "text-yellow-600 dark:text-yellow-400"
-                            : "text-red-600 dark:text-red-400"
+                            ? 'text-yellow-600 dark:text-yellow-400'
+                            : 'text-red-600 dark:text-red-400'
                       }
                     >
                       {systemHealth.overallScore}
                     </span>
-                    <span className="text-base text-gray-500 dark:text-gray-400">
-                      /100
-                    </span>
+                    <span className="text-base text-gray-500 dark:text-gray-400">/100</span>
                   </div>
                 </div>
 
@@ -310,9 +286,7 @@ export function Dashboard() {
                 </div>
 
                 <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-                  <div className="text-sm text-red-700 dark:text-red-400 mb-1">
-                    High Priority
-                  </div>
+                  <div className="text-sm text-red-700 dark:text-red-400 mb-1">High Priority</div>
                   <div
                     className="text-3xl font-bold text-red-600 dark:text-red-400"
                     data-testid="total-high-priority"
@@ -336,9 +310,7 @@ export function Dashboard() {
                 </div>
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 sm:col-span-2 lg:col-span-1">
-                  <div className="text-sm text-blue-700 dark:text-blue-400 mb-1">
-                    Low Priority
-                  </div>
+                  <div className="text-sm text-blue-700 dark:text-blue-400 mb-1">Low Priority</div>
                   <div
                     className="text-3xl font-bold text-blue-600 dark:text-blue-400"
                     data-testid="total-low-priority"
@@ -366,39 +338,31 @@ export function Dashboard() {
             </div>
 
             {/* Recommendations List */}
-            {recommendationsData &&
-              recommendationsData.recommendations.length > 0 && (
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                    Active Recommendations
-                  </h2>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {recommendationsData.recommendations.map(
-                      (recommendation: Recommendation) => (
-                        <RecommendationCard
-                          key={recommendation.id}
-                          recommendation={recommendation}
-                        />
-                      ),
-                    )}
-                  </div>
+            {recommendationsData && recommendationsData.recommendations.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                  Active Recommendations
+                </h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {recommendationsData.recommendations.map((recommendation: Recommendation) => (
+                    <RecommendationCard key={recommendation.id} recommendation={recommendation} />
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
             {/* No Recommendations State */}
-            {recommendationsData &&
-              recommendationsData.recommendations.length === 0 && (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-8 text-center">
-                  <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-1">
-                    All Systems Optimal
-                  </h3>
-                  <p className="text-green-700 dark:text-green-300">
-                    No configuration recommendations at this time. Your services
-                    are well configured!
-                  </p>
-                </div>
-              )}
+            {recommendationsData && recommendationsData.recommendations.length === 0 && (
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-8 text-center">
+                <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-1">
+                  All Systems Optimal
+                </h3>
+                <p className="text-green-700 dark:text-green-300">
+                  No configuration recommendations at this time. Your services are well configured!
+                </p>
+              </div>
+            )}
           </>
         )}
       </div>

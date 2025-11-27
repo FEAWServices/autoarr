@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { useState } from 'react';
+import { NavLink, Link } from 'react-router-dom';
 import {
   Download,
   Tv,
@@ -13,19 +13,19 @@ import {
   X,
   Moon,
   Sun,
-} from "lucide-react";
-import { Logo } from "./Logo";
-import { useThemeStore } from "../stores/themeStore";
+} from 'lucide-react';
+import { Logo } from './Logo';
+import { useThemeStore } from '../stores/themeStore';
 
 const navItems = [
-  { path: "/chat", icon: MessageCircle, label: "Chat" },
-  { path: "/search", icon: Search, label: "Search" },
-  { path: "/downloads", icon: Download, label: "Downloads" },
-  { path: "/shows", icon: Tv, label: "TV Shows" },
-  { path: "/movies", icon: Film, label: "Movies" },
-  { path: "/media", icon: Server, label: "Media Server" },
-  { path: "/activity", icon: Activity, label: "Activity" },
-  { path: "/settings", icon: Settings, label: "Settings" },
+  { path: '/chat', icon: MessageCircle, label: 'Chat' },
+  { path: '/search', icon: Search, label: 'Search' },
+  { path: '/downloads', icon: Download, label: 'Downloads' },
+  { path: '/shows', icon: Tv, label: 'TV Shows' },
+  { path: '/movies', icon: Film, label: 'Movies' },
+  { path: '/media', icon: Server, label: 'Media Server' },
+  { path: '/activity', icon: Activity, label: 'Activity' },
+  { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export const Sidebar = () => {
@@ -68,7 +68,7 @@ export const Sidebar = () => {
           border-r border-background-tertiary/50
           flex flex-col
           transition-transform duration-300 ease-in-out
-          ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
         {/* Logo - clickable home button */}
@@ -100,8 +100,8 @@ export const Sidebar = () => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${
                   isActive
-                    ? "bg-gradient-primary text-white shadow-glow scale-105"
-                    : "text-text-secondary hover:text-white hover:bg-background-tertiary/50 hover:scale-102"
+                    ? 'bg-gradient-primary text-white shadow-glow scale-105'
+                    : 'text-text-secondary hover:text-white hover:bg-background-tertiary/50 hover:scale-102'
                 }`
               }
             >
@@ -111,9 +111,7 @@ export const Sidebar = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-primary-600/20 animate-shimmer" />
                   )}
                   <item.icon className="w-5 h-5 relative z-10 transition-transform duration-300 group-hover:scale-110" />
-                  <span className="font-medium relative z-10">
-                    {item.label}
-                  </span>
+                  <span className="font-medium relative z-10">{item.label}</span>
                 </>
               )}
             </NavLink>
@@ -129,12 +127,12 @@ export const Sidebar = () => {
             aria-label="Toggle dark mode"
           >
             <span className="text-sm text-text-secondary group-hover:text-white transition-colors">
-              {isDarkMode ? "Dark Mode" : "Light Mode"}
+              {isDarkMode ? 'Dark Mode' : 'Light Mode'}
             </span>
             <div className="relative w-12 h-6 bg-background-elevated rounded-full transition-colors duration-300">
               <div
                 className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-gradient-primary shadow-lg transition-transform duration-300 flex items-center justify-center ${
-                  isDarkMode ? "translate-x-6" : "translate-x-0"
+                  isDarkMode ? 'translate-x-6' : 'translate-x-0'
                 }`}
               >
                 {isDarkMode ? (

@@ -1,13 +1,5 @@
-import { RequestInfo, RequestStatus as StatusType } from "../../types/chat";
-import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  Download,
-  Search,
-  AlertCircle,
-  RotateCw,
-} from "lucide-react";
+import { RequestInfo, RequestStatus as StatusType } from '../../types/chat';
+import { CheckCircle, XCircle, Clock, Download, Search, AlertCircle, RotateCw } from 'lucide-react';
 
 interface RequestStatusProps {
   request: RequestInfo;
@@ -17,86 +9,80 @@ interface RequestStatusProps {
 
 const getStatusConfig = (status: StatusType) => {
   switch (status) {
-    case "submitted":
+    case 'submitted':
       return {
         icon: Clock,
-        color: "text-text-muted",
-        bgColor: "bg-background-tertiary",
-        label: "Submitted",
+        color: 'text-text-muted',
+        bgColor: 'bg-background-tertiary',
+        label: 'Submitted',
       };
-    case "classified":
+    case 'classified':
       return {
         icon: CheckCircle,
-        color: "text-blue-400",
-        bgColor: "bg-blue-500/10",
-        label: "Classified",
+        color: 'text-blue-400',
+        bgColor: 'bg-blue-500/10',
+        label: 'Classified',
       };
-    case "searching":
+    case 'searching':
       return {
         icon: Search,
-        color: "text-blue-400",
-        bgColor: "bg-blue-500/10",
-        label: "Searching",
+        color: 'text-blue-400',
+        bgColor: 'bg-blue-500/10',
+        label: 'Searching',
       };
-    case "pending_confirmation":
+    case 'pending_confirmation':
       return {
         icon: Clock,
-        color: "text-yellow-400",
-        bgColor: "bg-yellow-500/10",
-        label: "Awaiting Confirmation",
+        color: 'text-yellow-400',
+        bgColor: 'bg-yellow-500/10',
+        label: 'Awaiting Confirmation',
       };
-    case "downloading":
+    case 'downloading':
       return {
         icon: Download,
-        color: "text-green-400",
-        bgColor: "bg-green-500/10",
-        label: "Downloading",
+        color: 'text-green-400',
+        bgColor: 'bg-green-500/10',
+        label: 'Downloading',
       };
-    case "completed":
+    case 'completed':
       return {
         icon: CheckCircle,
-        color: "text-status-success",
-        bgColor: "bg-green-500/10",
-        label: "Completed",
+        color: 'text-status-success',
+        bgColor: 'bg-green-500/10',
+        label: 'Completed',
       };
-    case "failed":
+    case 'failed':
       return {
         icon: XCircle,
-        color: "text-status-error",
-        bgColor: "bg-red-500/10",
-        label: "Failed",
+        color: 'text-status-error',
+        bgColor: 'bg-red-500/10',
+        label: 'Failed',
       };
-    case "cancelled":
+    case 'cancelled':
       return {
         icon: AlertCircle,
-        color: "text-text-muted",
-        bgColor: "bg-background-tertiary",
-        label: "Cancelled",
+        color: 'text-text-muted',
+        bgColor: 'bg-background-tertiary',
+        label: 'Cancelled',
       };
     default:
       return {
         icon: Clock,
-        color: "text-text-muted",
-        bgColor: "bg-background-tertiary",
+        color: 'text-text-muted',
+        bgColor: 'bg-background-tertiary',
         label: status,
       };
   }
 };
 
-export const RequestStatus = ({
-  request,
-  onRetry,
-  onCancel,
-}: RequestStatusProps) => {
+export const RequestStatus = ({ request, onRetry, onCancel }: RequestStatusProps) => {
   const config = getStatusConfig(request.status);
   const Icon = config.icon;
 
-  const showProgressBar =
-    request.status === "downloading" && request.progress !== undefined;
-  const showRetry = request.status === "failed" && onRetry;
+  const showProgressBar = request.status === 'downloading' && request.progress !== undefined;
+  const showRetry = request.status === 'failed' && onRetry;
   const showCancel =
-    (request.status === "downloading" || request.status === "searching") &&
-    onCancel;
+    (request.status === 'downloading' || request.status === 'searching') && onCancel;
 
   return (
     <div
@@ -168,7 +154,7 @@ export const RequestStatus = ({
       )}
 
       {/* Error Message */}
-      {request.status === "failed" && request.error && (
+      {request.status === 'failed' && request.error && (
         <div className="text-sm text-status-error bg-red-500/10 px-3 py-2 rounded">
           {request.error}
         </div>
@@ -177,10 +163,8 @@ export const RequestStatus = ({
       {/* Timestamps */}
       <div className="flex justify-between text-xs text-text-muted">
         <span>Started: {new Date(request.createdAt).toLocaleTimeString()}</span>
-        {request.status === "completed" && (
-          <span>
-            Completed: {new Date(request.updatedAt).toLocaleTimeString()}
-          </span>
+        {request.status === 'completed' && (
+          <span>Completed: {new Date(request.updatedAt).toLocaleTimeString()}</span>
         )}
       </div>
     </div>

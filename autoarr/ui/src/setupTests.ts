@@ -1,7 +1,7 @@
-import "@testing-library/jest-dom";
+import '@testing-library/jest-dom';
 
 // Mock window.matchMedia for components that use media queries
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
     matches: false,
@@ -21,7 +21,7 @@ class MockIntersectionObserver {
   unobserve = () => {};
   disconnect = () => {};
 }
-Object.defineProperty(window, "IntersectionObserver", {
+Object.defineProperty(window, 'IntersectionObserver', {
   writable: true,
   value: MockIntersectionObserver,
 });
@@ -32,7 +32,7 @@ class MockResizeObserver {
   unobserve = () => {};
   disconnect = () => {};
 }
-Object.defineProperty(window, "ResizeObserver", {
+Object.defineProperty(window, 'ResizeObserver', {
   writable: true,
   value: MockResizeObserver,
 });

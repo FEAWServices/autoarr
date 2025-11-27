@@ -12,9 +12,9 @@
  * - Event-based message handling
  */
 
-import { WebSocketEvent, WebSocketEventType } from "../types/chat";
+import { WebSocketEvent, WebSocketEventType } from '../types/chat';
 
-type ConnectionState = "connecting" | "connected" | "disconnected" | "error";
+type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
 
 type EventHandler = (event: WebSocketEvent) => void;
 
@@ -31,10 +31,9 @@ class WebSocketService {
   private config: Required<WebSocketConfig>;
   private reconnectAttempts = 0;
   private reconnectTimeoutId?: number;
-  private eventHandlers: Map<WebSocketEventType | "all", EventHandler[]> =
-    new Map();
+  private eventHandlers: Map<WebSocketEventType | 'all', EventHandler[]> = new Map();
   private stateChangeHandlers: Array<(state: ConnectionState) => void> = [];
-  private connectionState: ConnectionState = "disconnected";
+  private connectionState: ConnectionState = 'disconnected';
 
   constructor(config: WebSocketConfig) {
     this.config = {
@@ -50,22 +49,19 @@ class WebSocketService {
    * Connect to WebSocket server
    */
   connect(): void {
-    if (
-      this.ws?.readyState === WebSocket.OPEN ||
-      this.ws?.readyState === WebSocket.CONNECTING
-    ) {
+    if (this.ws?.readyState === WebSocket.OPEN || this.ws?.readyState === WebSocket.CONNECTING) {
       return;
     }
 
-    this.setConnectionState("connecting");
+    this.setConnectionState('connecting');
 
     try {
       this.ws = new WebSocket(this.config.url);
 
       this.ws.onopen = () => {
-        console.log("WebSocket connected");
+        console.log('WebSocket connected');
         this.reconnectAttempts = 0;
-        this.setConnectionState("connected");
+        this.setConnectionState('connected');
       };
 
       this.ws.onmessage = (event) => {
@@ -73,13 +69,13 @@ class WebSocketService {
       };
 
       this.ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        this.setConnectionState("error");
+        console.error('WebSocket error:', error);
+        this.setConnectionState('error');
       };
 
       this.ws.onclose = (event) => {
-        console.log("WebSocket closed:", event.code, event.reason);
-        this.setConnectionState("disconnected");
+        console.log('WebSocket closed:', event.code, event.reason);
+        this.setConnectionState('disconnected');
 
         // Attempt reconnection if not a normal closure
         if (event.code !== 1000 && event.code !== 1001) {
@@ -87,8 +83,8 @@ class WebSocketService {
         }
       };
     } catch (error) {
-      console.error("Failed to create WebSocket:", error);
-      this.setConnectionState("error");
+      console.error('Failed to create WebSocket:', error);
+      this.setConnectionState('error');
       this.scheduleReconnect();
     }
   }
@@ -103,11 +99,11 @@ class WebSocketService {
     }
 
     if (this.ws) {
-      this.ws.close(1000, "Client disconnect");
+      this.ws.close(1000, 'Client disconnect');
       this.ws = null;
     }
 
-    this.setConnectionState("disconnected");
+    this.setConnectionState('disconnected');
   }
 
   /**
@@ -117,14 +113,14 @@ class WebSocketService {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(data));
     } else {
-      console.warn("WebSocket is not open. Message not sent:", data);
+      console.warn('WebSocket is not open. Message not sent:', data);
     }
   }
 
   /**
    * Register event handler for specific event type
    */
-  on(eventType: WebSocketEventType | "all", handler: EventHandler): void {
+  on(eventType: WebSocketEventType | 'all', handler: EventHandler): void {
     const handlers = this.eventHandlers.get(eventType) || [];
     handlers.push(handler);
     this.eventHandlers.set(eventType, handlers);
@@ -133,7 +129,7 @@ class WebSocketService {
   /**
    * Unregister event handler
    */
-  off(eventType: WebSocketEventType | "all", handler: EventHandler): void {
+  off(eventType: WebSocketEventType | 'all', handler: EventHandler): void {
     const handlers = this.eventHandlers.get(eventType);
     if (handlers) {
       const filtered = handlers.filter((h) => h !== handler);
@@ -159,10 +155,7 @@ class WebSocketService {
    * Check if WebSocket is connected
    */
   isConnected(): boolean {
-    return (
-      this.ws?.readyState === WebSocket.OPEN &&
-      this.connectionState === "connected"
-    );
+    return this.ws?.readyState === WebSocket.OPEN && this.connectionState === 'connected';
   }
 
   /**
@@ -177,10 +170,10 @@ class WebSocketService {
       typeHandlers.forEach((handler) => handler(event));
 
       // Call "all" handlers
-      const allHandlers = this.eventHandlers.get("all") || [];
+      const allHandlers = this.eventHandlers.get('all') || [];
       allHandlers.forEach((handler) => handler(event));
     } catch (error) {
-      console.error("Failed to parse WebSocket message:", error, data);
+      console.error('Failed to parse WebSocket message:', error, data);
     }
   }
 
@@ -189,19 +182,16 @@ class WebSocketService {
    */
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.config.maxReconnectAttempts) {
-      console.error("Max reconnection attempts reached");
+      console.error('Max reconnection attempts reached');
       return;
     }
 
     const delay = Math.min(
-      this.config.reconnectInterval *
-        Math.pow(this.config.reconnectDecay, this.reconnectAttempts),
-      this.config.maxReconnectInterval,
+      this.config.reconnectInterval * Math.pow(this.config.reconnectDecay, this.reconnectAttempts),
+      this.config.maxReconnectInterval
     );
 
-    console.log(
-      `Scheduling reconnection in ${delay}ms (attempt ${this.reconnectAttempts + 1})`,
-    );
+    console.log(`Scheduling reconnection in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);
 
     this.reconnectTimeoutId = window.setTimeout(() => {
       this.reconnectAttempts++;
@@ -224,14 +214,13 @@ class WebSocketService {
 // Derive WebSocket URL from current browser location (same host/port as the page)
 function getWebSocketUrl(): string {
   // In browser, use current location to determine WebSocket URL
-  if (typeof window !== "undefined") {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${protocol}//${window.location.host}/api/v1/ws`;
   }
   // Fallback for SSR or tests
-  const API_BASE =
-    import.meta.env.VITE_API_URL || "http://localhost:8088/api/v1";
-  return API_BASE.replace(/^http/, "ws") + "/ws";
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8088/api/v1';
+  return API_BASE.replace(/^http/, 'ws') + '/ws';
 }
 const WS_URL = getWebSocketUrl();
 
@@ -244,11 +233,11 @@ export const websocketService = new WebSocketService({
 });
 
 // Auto-connect on module load
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   websocketService.connect();
 
   // Cleanup on page unload
-  window.addEventListener("beforeunload", () => {
+  window.addEventListener('beforeunload', () => {
     websocketService.disconnect();
   });
 }

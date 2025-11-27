@@ -1,18 +1,18 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { useThemeStore } from "../../stores/themeStore";
+import { describe, it, expect, beforeEach } from 'vitest';
+import { useThemeStore } from '../../stores/themeStore';
 
-describe("themeStore", () => {
+describe('themeStore', () => {
   beforeEach(() => {
     // Reset store state before each test
     useThemeStore.setState({ isDarkMode: false });
   });
 
-  it("should have initial state", () => {
+  it('should have initial state', () => {
     const { isDarkMode } = useThemeStore.getState();
     expect(isDarkMode).toBe(false);
   });
 
-  it("should toggle dark mode", () => {
+  it('should toggle dark mode', () => {
     const { toggleDarkMode } = useThemeStore.getState();
 
     // Initially light mode (from beforeEach reset)
@@ -27,7 +27,7 @@ describe("themeStore", () => {
     expect(useThemeStore.getState().isDarkMode).toBe(false);
   });
 
-  it("should set dark mode directly", () => {
+  it('should set dark mode directly', () => {
     const { setDarkMode } = useThemeStore.getState();
 
     setDarkMode(true);
