@@ -10,10 +10,12 @@
 ## Context and Problem Statement
 
 AutoArr has two products:
+
 1. **AutoArr (GPL-3.0)** - 100% open source, local-only, free forever
 2. **AutoArr Premium** - ML-powered features, advanced recovery, licensed product
 
 We need a repository structure that:
+
 - Clearly separates GPL from proprietary code
 - Prevents accidental license violations
 - Allows efficient development across both products
@@ -33,6 +35,7 @@ We need a repository structure that:
 ### Option 1: Monorepo with Subdirectories
 
 **Structure:**
+
 ```
 autoarr/
 ├── autoarr/          # GPL-3.0
@@ -41,11 +44,13 @@ autoarr/
 ```
 
 **Pros:**
+
 - ✅ Fast iteration (one repo)
 - ✅ Easy code sharing
 - ✅ Single CI/CD setup
 
 **Cons:**
+
 - ❌ Risk of mixing GPL/proprietary code
 - ❌ Premium code visible in GPL repo history
 - ❌ Complex git subtree split when going public
@@ -54,6 +59,7 @@ autoarr/
 ### Option 2: Separate Repositories + VS Code Workspace ✅ CHOSEN
 
 **Structure:**
+
 ```
 FEAWServices/autoarr          (Private → Public when ready)
   ├── autoarr/                # GPL-3.0 code
@@ -74,6 +80,7 @@ Development:
 ```
 
 **Pros:**
+
 - ✅ **Perfect legal separation** - No GPL/proprietary mixing possible
 - ✅ **Clean history** - GPL repo can go public instantly
 - ✅ **Independent versioning** - v1.0.0 GPL, v2.5.0 Premium
@@ -82,12 +89,14 @@ Development:
 - ✅ **VS Code workspace** - Still feels like one project during development
 
 **Cons:**
+
 - ⚠️ Slightly slower switching (minimal with workspace)
 - ⚠️ Must avoid code duplication (use shared package if needed)
 
 ### Option 3: Git Submodules
 
 **Structure:**
+
 ```
 autoarr-workspace/
 ├── autoarr/ (submodule)
@@ -95,9 +104,11 @@ autoarr-workspace/
 ```
 
 **Pros:**
+
 - ✅ Technically linked repos
 
 **Cons:**
+
 - ❌ Submodules are notoriously painful
 - ❌ Complex for contributors
 - ❌ CI/CD nightmare
@@ -115,6 +126,7 @@ This provides the best balance of legal safety, development efficiency, and futu
 #### Repository Structure
 
 **AutoArr (GPL) Repository:**
+
 ```
 FEAWServices/autoarr/
 ├── autoarr/
@@ -140,6 +152,7 @@ FEAWServices/autoarr/
 ```
 
 **AutoArr Premium Repository:**
+
 ```
 FEAWServices/autoarr-premium/
 ├── autoarr_premium/
@@ -166,6 +179,7 @@ FEAWServices/autoarr-premium/
 #### VS Code Workspace Configuration
 
 `autoarr.code-workspace`:
+
 ```json
 {
   "folders": [
@@ -184,6 +198,7 @@ FEAWServices/autoarr-premium/
 #### Dependency Management
 
 **Premium can import GPL:**
+
 ```python
 # In autoarr-premium/pyproject.toml
 [tool.poetry.dependencies]
@@ -193,18 +208,21 @@ autoarr = "^1.0.0"  # Published package
 ```
 
 **GPL NEVER imports Premium:**
+
 - GPL must be completely standalone
 - No Premium dependencies or references
 
 #### Development Workflow
 
 1. **Clone both repos:**
+
    ```bash
    git clone git@github.com:FEAWServices/autoarr.git
    git clone git@github.com:FEAWServices/autoarr-premium.git
    ```
 
 2. **Open workspace:**
+
    ```bash
    code autoarr/autoarr.code-workspace
    ```
@@ -218,11 +236,13 @@ autoarr = "^1.0.0"  # Published package
 #### Deployment Targets
 
 **GPL → Docker Hub:**
+
 ```bash
 docker pull autoarr/autoarr:latest
 ```
 
 **Premium → Azure Container Registry:**
+
 ```bash
 docker pull autoarr.azurecr.io/autoarr-premium:latest
 ```
@@ -249,11 +269,13 @@ docker pull autoarr.azurecr.io/autoarr-premium:latest
 ### Avoiding Code Duplication
 
 **Option A: Publish shared package (future):**
+
 ```bash
 pip install autoarr-shared  # MIT-licensed shared utilities
 ```
 
 **Option B: Copy minimal utilities (current):**
+
 - Accept some duplication for simplicity
 - Only share critical utilities
 

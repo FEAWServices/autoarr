@@ -1,0 +1,81 @@
+# =============================================================================
+# AutoArr Local Development Environment
+# =============================================================================
+# This docker-compose file runs AutoArr for local development with hot reload.
+#
+# Access Points:
+#   - http://localhost:18088 - Full application (Vite dev server + API proxy)
+#
+# Hot Reloading:
+#   - Backend: Python code changes detected automatically (uvicorn reload)
+#   - Frontend: Vite HMR - instant updates on save (no refresh needed!)
+#
+# Usage:
+#   docker-compose -f docker/docker-compose.local-test.yml up -d
+#   docker-compose -f docker/docker-compose.local-test.yml logs -f
+#   docker-compose -f docker/docker-compose.local-test.yml down
+# =============================================================================
+
+name: autoarr_app
+
+services:
+  autoarr:
+    image: autoarr:dev
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    container_name: autoarr-local
+    restart: unless-stopped
+
+    ports:
+      - "18088:5173" # Vite dev server (frontend + API proxy)
+      - "18089:8088" # Direct backend access (optional)
+
+    environment:
+      APP_ENV: development
+      LOG_LEVEL: DEBUG
+      PORT: 8088
+      PYTHONPATH: /app
+      DATABASE_URL: sqlite:////data/autoarr.db
+      REDIS_URL: memory://
+      VITE_DEV_MODE: "true"
+      # Reduce file watcher memory usage
+      WATCHFILES_FORCE_POLLING: "true"
+
+    # Memory limits to prevent OOM
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 1G
+
+    volumes:
+      # Mount source code from Windows
+      - c:/Git/autoarr/autoarr:/app/autoarr:cached
+      - c:/Git/autoarr/scripts:/app/scripts:cached
+
+      # Persistent data
+      - autoarr-data:/data
+      - autoarr-logs:/app/logs
+
+    # Run both backend and frontend dev servers
+    # Backend: no --reload to avoid file watcher memory issues on Windows mounts
+    # Frontend: Vite handles its own efficient file watching
+    command: >
+      sh -c "
+        cd /app/autoarr/ui && pnpm install --frozen-lockfile &&
+        (uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &) &&
+        pnpm run dev --host 0.0.0.0 --port 5173
+      "
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+volumes:
+  autoarr-data:
+  autoarr-logs:

@@ -1,0 +1,1 @@
+"""Integration-level contract tests."""

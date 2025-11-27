@@ -1,0 +1,261 @@
+/**
+ * AutoArr Theme Variables
+ *
+ * Visual Spark inspired design system with engaging purple/pink palette.
+ * HSL-based colors for better theme customization.
+ */
+
+@layer base {
+  :root {
+    /* ============================================
+       Core Design System (HSL Values)
+       Matching temp-branding for engaging look
+       ============================================ */
+
+    /* Background colors - deep navy with purple undertones */
+    --background: 222 47% 11%;
+    --foreground: 280 10% 95%;
+
+    /* Card/surface colors */
+    --card: 222 47% 15%;
+    --card-foreground: 280 10% 95%;
+    --popover: 222 47% 15%;
+    --popover-foreground: 280 10% 95%;
+
+    /* Primary - vibrant purple */
+    --primary: 280 85% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 290 90% 70%;
+
+    /* Secondary - deeper purple */
+    --secondary: 260 70% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted colors */
+    --muted: 222 47% 20%;
+    --muted-foreground: 280 10% 65%;
+
+    /* Accent - magenta/pink */
+    --accent: 300 80% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border/Input/Ring */
+    --border: 222 47% 25%;
+    --input: 222 47% 25%;
+    --ring: 280 85% 60%;
+
+    /* Radius - more curved for modern look */
+    --radius: 0.75rem;
+
+    /* ============================================
+       Theme.Park Compatible Variables
+       ============================================ */
+
+    /* Background colors */
+    --main-bg-color: hsl(var(--background));
+    --modal-bg-color: hsl(var(--card));
+    --modal-header-color: hsl(222deg 47% 18%);
+
+    /* Button colors */
+    --button-color: hsl(var(--primary));
+    --button-color-hover: hsl(280deg 85% 50%);
+    --button-text: hsl(var(--primary-foreground));
+    --button-text-hover: #fff;
+
+    /* Accent/brand color */
+    --accent-color: hsl(var(--primary));
+    --accent-color-hover: hsl(var(--primary-glow));
+
+    /* Text colors */
+    --text: hsl(var(--foreground));
+    --text-muted: hsl(var(--muted-foreground));
+
+    /* Link colors */
+    --link-color: hsl(var(--accent));
+    --link-color-hover: hsl(300deg 80% 75%);
+
+    /* ============================================
+       AutoArr Extended Variables
+       ============================================ */
+
+    /* Surface aliases */
+    --aa-surface-base: var(--main-bg-color);
+    --aa-surface-raised: var(--modal-bg-color);
+    --aa-surface-elevated: var(--modal-header-color);
+    --aa-surface-overlay: rgb(0 0 0 / 50%);
+
+    /* Primary/accent aliases */
+    --aa-primary: var(--accent-color);
+    --aa-primary-hover: var(--accent-color-hover);
+    --aa-primary-glow: hsl(var(--primary-glow));
+
+    /* Text aliases */
+    --aa-text-primary: var(--text);
+    --aa-text-secondary: hsl(280deg 10% 75%);
+    --aa-text-muted: var(--text-muted);
+
+    /* Status colors */
+    --aa-success: #10b981;
+    --aa-success-light: #34d399;
+    --aa-warning: #f59e0b;
+    --aa-warning-light: #fbbf24;
+    --aa-error: #ef4444;
+    --aa-error-light: #f87171;
+    --aa-info: hsl(var(--accent));
+    --aa-info-light: hsl(300deg 80% 75%);
+
+    /* Border colors - using primary for accent borders */
+    --aa-border: hsl(var(--border));
+    --aa-border-strong: hsl(222deg 47% 30%);
+    --aa-border-focus: hsl(var(--primary));
+    --aa-border-primary: hsl(var(--primary) / 20%);
+
+    /* ============================================
+       Accent Customization (Hue-based)
+       ============================================ */
+
+    /* Base accent hue - purple by default */
+    --accent-hue: 280;
+    --accent-saturation: 85%;
+    --accent-lightness: 60%;
+
+    /* Computed accent colors from hue */
+    --accent-custom: hsl(var(--accent-hue) var(--accent-saturation) var(--accent-lightness));
+    --accent-custom-hover: hsl(
+      var(--accent-hue) var(--accent-saturation) calc(var(--accent-lightness) + 10%)
+    );
+    --accent-custom-active: hsl(
+      var(--accent-hue) var(--accent-saturation) calc(var(--accent-lightness) - 10%)
+    );
+    --accent-custom-glow: hsl(
+      var(--accent-hue) var(--accent-saturation) var(--accent-lightness) / 30%
+    );
+
+    /* ============================================
+       Effects - Shadows, Glows, Glass
+       ============================================ */
+
+    /* Shadows */
+    --aa-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 30%);
+    --aa-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 40%);
+    --aa-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 50%);
+    --aa-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 50%);
+
+    /* Glow effects - purple glow matching primary */
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 30%);
+    --aa-shadow-glow: 0 0 40px hsl(var(--primary) / 30%);
+    --aa-shadow-glow-lg: 0 0 60px hsl(var(--primary) / 40%);
+    --aa-shadow-glow-hover: 0 0 30px rgb(168 85 247 / 30%);
+
+    /* Glass effect */
+    --aa-glass-bg: hsl(var(--card) / 50%);
+    --aa-glass-border: hsl(var(--primary) / 20%);
+    --aa-glass-blur: 12px;
+
+    /* ============================================
+       Gradients
+       ============================================ */
+
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(320deg 85% 65%));
+    --gradient-hero: linear-gradient(180deg, hsl(var(--background)), hsl(280deg 50% 15%));
+    --aa-gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    --aa-gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--primary)));
+    --aa-gradient-hero: linear-gradient(180deg, hsl(var(--background)), hsl(280deg 50% 15%));
+    --aa-gradient-mesh: radial-gradient(at 40% 20%, hsl(var(--primary) / 30%) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsl(var(--primary-glow) / 30%) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsl(var(--secondary) / 30%) 0px, transparent 50%);
+
+    /* ============================================
+       Transitions
+       ============================================ */
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --aa-transition-fast: 150ms ease;
+    --aa-transition-normal: 300ms ease;
+    --aa-transition-slow: 500ms ease;
+
+    /* ============================================
+       Border Radius - more curved
+       ============================================ */
+
+    --aa-radius-sm: 0.375rem;
+    --aa-radius-md: 0.5rem;
+    --aa-radius-lg: var(--radius);
+    --aa-radius-xl: 1rem;
+    --aa-radius-full: 9999px;
+
+    /* ============================================
+       Sidebar Variables - *arr family style
+       ============================================ */
+
+    --sidebar-background: hsl(222deg 47% 11%);
+    --sidebar-foreground: 280 10% 95%;
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: hsl(222deg 47% 18%);
+    --sidebar-active-background: hsl(222deg 47% 18%);
+    --sidebar-accent-foreground: 280 10% 95%;
+    --sidebar-border: hsl(222deg 47% 18%);
+    --sidebar-ring: var(--primary);
+  }
+
+  /* ============================================
+     Dark Mode (deeper colors)
+     ============================================ */
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 280 10% 98%;
+    --sidebar-background: 222 47% 10%;
+    --sidebar-accent: 222 47% 15%;
+    --sidebar-border: 222 47% 15%;
+  }
+
+  /* ============================================
+     Theme Mode Classes
+     ============================================ */
+
+  .theme-dark {
+    color-scheme: dark;
+  }
+
+  .theme-light {
+    color-scheme: light;
+  }
+}
+
+/* ============================================
+   Global Border Style
+   ============================================ */
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
+
+/* ============================================
+   Theme Transition
+   ============================================ */
+
+:root {
+  transition:
+    --main-bg-color var(--aa-transition-normal),
+    --modal-bg-color var(--aa-transition-normal),
+    --accent-color var(--aa-transition-normal),
+    --text var(--aa-transition-normal);
+}
+
+.theme-loading,
+.theme-loading * {
+  transition: none !important;
+}

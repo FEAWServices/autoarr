@@ -26,20 +26,17 @@ Successfully implemented a comprehensive Web Search Service following strict Tes
 #### Test Categories:
 
 1. **Data Models** (6 tests)
-
    - SearchQuery creation and validation
    - SearchResult creation and score validation
    - BestPractice creation and priority validation
 
 2. **Brave Search Client** (4 tests)
-
    - API integration and result parsing
    - Error handling (rate limits, API errors)
    - Empty result handling
    - API key authentication
 
 3. **Redis Caching** (6 tests)
-
    - Cache storage and retrieval
    - Cache miss handling
    - Cache invalidation
@@ -47,19 +44,16 @@ Successfully implemented a comprehensive Web Search Service following strict Tes
    - Cache hit verification (no HTTP request made)
 
 4. **Content Extraction** (3 tests)
-
    - HTML content extraction and cleaning
    - Markdown parsing
    - Script/style removal
 
 5. **Best Practices Extraction** (3 tests)
-
    - Pattern matching for recommendations
    - Priority assignment (high/medium/low)
    - Category classification
 
 6. **Search Result Scoring** (4 tests)
-
    - Keyword relevance scoring
    - Source authority weighting
    - Result ranking
@@ -87,7 +81,6 @@ Successfully implemented a comprehensive Web Search Service following strict Tes
    ```
 
 2. **WebSearchService Class**
-
    - Brave Search API integration with proper authentication
    - Multi-layered relevance scoring (title 40%, snippet 30%, authority 20%, URL 10%)
    - Redis caching with configurable TTLs
@@ -96,7 +89,6 @@ Successfully implemented a comprehensive Web Search Service following strict Tes
    - Category and priority classification
 
 3. **Caching Strategy**
-
    - Search results: 24 hours TTL
    - Best practices: 7 days TTL
    - MD5 hash-based cache keys
@@ -149,14 +141,12 @@ autoarr/api/services/web_search_service.py    227 statements    27 missed    88%
 ### ✅ Required Features (BUILD-PLAN.md Task 3.3)
 
 1. **Brave Search API Client** ✅
-
    - Authentication with API key in headers
    - Query parameter handling
    - Result parsing from JSON response
    - Error handling for rate limits (429) and other errors
 
 2. **Redis Caching** ✅
-
    - Search results cached for 24 hours
    - Best practices cached for 7 days
    - Cache key generation using MD5 hashing
@@ -164,14 +154,12 @@ autoarr/api/services/web_search_service.py    227 statements    27 missed    88%
    - LRU eviction (Redis default)
 
 3. **Content Extraction** ✅
-
    - HTML parsing with BeautifulSoup4
    - Removes scripts, styles, navigation, headers, footers
    - Markdown support
    - Text cleanup and whitespace handling
 
 4. **Best Practices Extraction** ✅
-
    - Pattern matching for "Set X to Y"
    - Pattern matching for "Enable/Disable X"
    - List item extraction
@@ -323,19 +311,16 @@ BestPractice(
 ### Test Scenario Results:
 
 1. **First Search** (Cache Miss)
-
    - API call made to Brave Search
    - Results cached with 24-hour TTL
    - Processing time: ~500ms
 
 2. **Second Search** (Cache Hit)
-
    - Results retrieved from Redis
    - No API call made (verified in tests)
    - Processing time: ~50ms (10x faster)
 
 3. **Cache Invalidation**
-
    - Successfully removes cache entry
    - Next search triggers API call
 
@@ -380,15 +365,12 @@ beautifulsoup4 = "^4.14.2"  # HTML/Markdown parsing
 ### ✅ All Resolved
 
 1. **Issue**: pytest-httpx URL matching with query parameters
-
    - **Solution**: Used `re.compile()` with regex patterns instead of `url__regex` parameter
 
 2. **Issue**: Cache key format in tests
-
    - **Solution**: Updated tests to use `_get_cache_key()` method for proper key generation
 
 3. **Issue**: Test assertions for ranked results
-
    - **Solution**: Made tests flexible to handle different ranking orders based on relevance scores
 
 4. **Issue**: Coverage timeout with full test suite

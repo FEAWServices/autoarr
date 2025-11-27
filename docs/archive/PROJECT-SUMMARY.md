@@ -205,24 +205,20 @@ claude-code create component \
 ### Week 1 (This Week!)
 
 1. **Register domains** (Monday)
-
    - autoarr.io (primary)
    - autoarr.dev (docs)
    - getautoarr.com (marketing)
 
 2. **Create GitHub org** (Monday)
-
    - Organization: autoarr
    - Repository: autoarr
    - Add documentation from this package
 
 3. **Reserve social handles** (Monday)
-
    - Twitter: @autoarr
    - Discord: /autoarr
 
 4. **Set up development environment** (Tuesday)
-
    - Clone repo
    - Run docker-compose
    - Get test app API keys

@@ -15,7 +15,6 @@ sys.path.insert(0, str(root_dir))
 
 from autoarr.api.database import BestPracticesRepository, Database, init_database
 
-
 # ============================================================================
 # Best Practices Data
 # ============================================================================

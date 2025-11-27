@@ -11,6 +11,15 @@ if ! command -v node &> /dev/null; then
     echo "✅ Node.js installed: $(node --version)"
 fi
 
+# Install pnpm if not already installed
+if ! command -v pnpm &> /dev/null; then
+    echo "📦 Installing pnpm..."
+    curl -fsSL https://get.pnpm.io/install.sh | sh -
+    export PNPM_HOME="/root/.local/share/pnpm"
+    export PATH="$PNPM_HOME:$PATH"
+    echo "✅ pnpm installed: $(pnpm --version)"
+fi
+
 # Install Claude CLI if not already installed
 if ! command -v claude &> /dev/null; then
     echo "🤖 Installing Claude CLI..."
@@ -49,7 +58,7 @@ if [ -f ".env" ]; then
     fi
 
     # Configure GitHub CLI authentication
-    if [ ! -z "$GITHUB_ADMIN_TOKEN" ]; then
+    if [ ! -z "$GH_TOKEN" ]; then
         echo "🔑 Configuring GitHub CLI authentication..."
         # Add GH_TOKEN export to bash profile for persistent authentication
         if ! grep -q "export GH_TOKEN" ~/.bashrc 2>/dev/null; then
@@ -57,20 +66,24 @@ if [ -f ".env" ]; then
             echo "# GitHub CLI authentication (auto-configured by devcontainer)" >> ~/.bashrc
             echo "if [ -f /app/.env ]; then" >> ~/.bashrc
             echo "    source /app/.env" >> ~/.bashrc
-            echo "    export GH_TOKEN=\"\$GITHUB_ADMIN_TOKEN\"" >> ~/.bashrc
+            echo "    export GH_TOKEN" >> ~/.bashrc
             echo "fi" >> ~/.bashrc
         fi
-        # Export for current session
-        export GH_TOKEN="$GITHUB_ADMIN_TOKEN"
-        # Verify authentication
+        # Check if already authenticated (e.g., via GH_TOKEN env var)
         if gh auth status > /dev/null 2>&1; then
-            echo "✅ GitHub CLI authenticated as $(gh api user -q .login)"
+            echo "✅ GitHub CLI already authenticated as $(gh api user -q .login)"
         else
-            echo "⚠️  GitHub CLI authentication check failed"
+            # Only try to login if not already authenticated
+            echo "$GH_TOKEN" | gh auth login --with-token
+            if gh auth status > /dev/null 2>&1; then
+                echo "✅ GitHub CLI authenticated as $(gh api user -q .login)"
+            else
+                echo "⚠️  GitHub CLI authentication check failed"
+            fi
         fi
     else
-        echo "⚠️  GITHUB_ADMIN_TOKEN not found in .env - GitHub CLI not authenticated"
-        echo "   Add GITHUB_ADMIN_TOKEN=your_token to .env to enable GitHub CLI features"
+        echo "⚠️  GH_TOKEN not found in .env - GitHub CLI not authenticated"
+        echo "   Add GH_TOKEN=your_token to .env to enable GitHub CLI features"
     fi
 fi
 
@@ -88,6 +101,19 @@ if [ -f ".pre-commit-config.yaml" ]; then
     poetry run pre-commit install || true
 fi
 
+# Install frontend dependencies and Playwright
+if [ -d "autoarr/ui" ]; then
+    echo "📦 Installing frontend dependencies..."
+    cd autoarr/ui
+    export PNPM_HOME="/root/.local/share/pnpm"
+    export PATH="$PNPM_HOME:$PATH"
+    pnpm install
+    echo "🎭 Installing Playwright browsers..."
+    pnpm exec playwright install --with-deps chromium
+    cd /app
+    echo "✅ Frontend dependencies and Playwright installed"
+fi
+
 # Display versions
 echo ""
 echo "✅ Setup complete!"
@@ -100,7 +126,9 @@ claude --version 2>/dev/null || echo "Claude CLI: not installed"
 gh --version 2>/dev/null || echo "GitHub CLI: not installed"
 echo ""
 echo "🎯 Next steps:"
-echo "  - Run tests: poetry run pytest"
+echo "  - Run Python tests: poetry run pytest"
+echo "  - Run Playwright tests: cd autoarr/ui && pnpm exec playwright test"
+echo "  - Run post-deployment tests: bash run-post-deployment-tests.sh"
 echo "  - Start API: poetry run python -m api.main"
 echo "  - Access API docs: http://localhost:8088/docs"
 echo ""

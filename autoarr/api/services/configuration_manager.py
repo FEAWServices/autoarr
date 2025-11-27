@@ -27,11 +27,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from autoarr.api.database import (
-    AuditResultsRepository,
-    BestPractice,
-    BestPracticesRepository,
-)
+from autoarr.api.database import AuditResultsRepository, BestPractice, BestPracticesRepository
 from autoarr.api.services.models import (
     ApplyRecommendationRequest,
     ApplyRecommendationResponse,

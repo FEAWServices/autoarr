@@ -4,9 +4,9 @@
  * Form for adding/editing service connections with auto-discovery
  */
 
-import React, { useState, useEffect } from "react";
-import { Search, Loader, Check, AlertCircle, X } from "lucide-react";
-import type { ServiceConnection } from "./ServiceConnectionCard";
+import React, { useState, useEffect } from 'react';
+import { Search, Loader, Check, AlertCircle, X } from 'lucide-react';
+import type { ServiceConnection } from './ServiceConnectionCard';
 
 interface ServiceConnectionFormProps {
   connection?: ServiceConnection;
@@ -15,7 +15,7 @@ interface ServiceConnectionFormProps {
 }
 
 interface DiscoveredService {
-  type: ServiceConnection["type"];
+  type: ServiceConnection['type'];
   url: string;
   name: string;
 }
@@ -26,16 +26,14 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
   onCancel,
 }) => {
   const [formData, setFormData] = useState({
-    type: connection?.type || ("sabnzbd" as ServiceConnection["type"]),
-    name: connection?.name || "",
-    url: connection?.url || "",
-    apiKey: connection?.apiKey || "",
+    type: connection?.type || ('sabnzbd' as ServiceConnection['type']),
+    name: connection?.name || '',
+    url: connection?.url || '',
+    apiKey: connection?.apiKey || '',
   });
 
   const [discovering, setDiscovering] = useState(false);
-  const [discoveredServices, setDiscoveredServices] = useState<
-    DiscoveredService[]
-  >([]);
+  const [discoveredServices, setDiscoveredServices] = useState<DiscoveredService[]>([]);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{
     success: boolean;
@@ -57,11 +55,11 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
     setDiscoveredServices([]);
 
     try {
-      const response = await fetch("/api/services/discover");
+      const response = await fetch('/api/services/discover');
       const services = await response.json();
       setDiscoveredServices(services);
     } catch (error) {
-      console.error("Discovery failed:", error);
+      console.error('Discovery failed:', error);
     } finally {
       setDiscovering(false);
     }
@@ -82,9 +80,9 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
     setTestResult(null);
 
     try {
-      const response = await fetch("/api/services/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/services/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: formData.type,
           url: formData.url,
@@ -97,19 +95,19 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
       if (result.success) {
         setTestResult({
           success: true,
-          message: "Connection successful!",
+          message: 'Connection successful!',
           version: result.version,
         });
       } else {
         setTestResult({
           success: false,
-          message: result.error || "Connection failed",
+          message: result.error || 'Connection failed',
         });
       }
     } catch (error) {
       setTestResult({
         success: false,
-        message: error instanceof Error ? error.message : "Connection failed",
+        message: error instanceof Error ? error.message : 'Connection failed',
       });
     } finally {
       setTesting(false);
@@ -123,8 +121,8 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
     try {
       await onSave(formData);
     } catch (error) {
-      console.error("Save failed:", error);
-      alert("Failed to save connection");
+      console.error('Save failed:', error);
+      alert('Failed to save connection');
     } finally {
       setSaving(false);
     }
@@ -134,13 +132,9 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
     <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
-          {connection ? "Edit" : "Add"} Service Connection
+          {connection ? 'Edit' : 'Add'} Service Connection
         </h2>
-        <button
-          onClick={onCancel}
-          className="text-gray-500 hover:text-gray-700"
-          title="Close"
-        >
+        <button onClick={onCancel} className="text-gray-500 hover:text-gray-700" title="Close">
           <X className="w-6 h-6" />
         </button>
       </div>
@@ -149,9 +143,7 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
       {!connection && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-blue-900">
-              Auto-Discovery
-            </h3>
+            <h3 className="text-lg font-semibold text-blue-900">Auto-Discovery</h3>
             <button
               onClick={handleDiscover}
               disabled={discovering}
@@ -184,24 +176,16 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">
-                        {service.name}
-                      </p>
-                      <p className="text-sm text-gray-600 font-mono">
-                        {service.url}
-                      </p>
+                      <p className="font-medium text-gray-900">{service.name}</p>
+                      <p className="text-sm text-gray-600 font-mono">{service.url}</p>
                     </div>
-                    <span className="text-sm text-blue-600 capitalize">
-                      {service.type}
-                    </span>
+                    <span className="text-sm text-blue-600 capitalize">{service.type}</span>
                   </div>
                 </button>
               ))}
             </div>
           ) : discovering ? (
-            <p className="text-sm text-blue-700">
-              Scanning network for services...
-            </p>
+            <p className="text-sm text-blue-700">Scanning network for services...</p>
           ) : (
             <p className="text-sm text-blue-700">
               No services found. Enter details manually below.
@@ -214,15 +198,13 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Service Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Service Type
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
           <select
             value={formData.type}
             onChange={(e) =>
               setFormData({
                 ...formData,
-                type: e.target.value as ServiceConnection["type"],
+                type: e.target.value as ServiceConnection['type'],
               })
             }
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -237,9 +219,7 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
 
         {/* Connection Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Connection Name
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Connection Name</label>
           <input
             type="text"
             value={formData.name}
@@ -252,9 +232,7 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
 
         {/* URL */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            URL
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">URL</label>
           <input
             type="url"
             value={formData.url}
@@ -263,31 +241,22 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
             required
           />
-          <p className="mt-1 text-xs text-gray-500">
-            Include http:// or https:// and port number
-          </p>
+          <p className="mt-1 text-xs text-gray-500">Include http:// or https:// and port number</p>
         </div>
 
         {/* API Key */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            API Key
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">API Key</label>
           <input
             type="password"
             value={formData.apiKey}
-            onChange={(e) =>
-              setFormData({ ...formData, apiKey: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
             placeholder="••••••••••••••••••••••••••••••••"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
             required
           />
           <p className="mt-1 text-xs text-gray-500">
-            Found in{" "}
-            {formData.type === "sabnzbd"
-              ? "Config → General"
-              : "Settings → General"}
+            Found in {formData.type === 'sabnzbd' ? 'Config → General' : 'Settings → General'}
           </p>
         </div>
 
@@ -315,9 +284,7 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
         {testResult && (
           <div
             className={`p-4 rounded-lg border ${
-              testResult.success
-                ? "bg-green-50 border-green-200"
-                : "bg-red-50 border-red-200"
+              testResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
             }`}
           >
             <div className="flex items-start gap-2">
@@ -329,15 +296,13 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
               <div>
                 <p
                   className={`font-medium ${
-                    testResult.success ? "text-green-800" : "text-red-800"
+                    testResult.success ? 'text-green-800' : 'text-red-800'
                   }`}
                 >
                   {testResult.message}
                 </p>
                 {testResult.version && (
-                  <p className="text-sm text-green-700 mt-1">
-                    Version: {testResult.version}
-                  </p>
+                  <p className="text-sm text-green-700 mt-1">Version: {testResult.version}</p>
                 )}
               </div>
             </div>
@@ -358,11 +323,7 @@ export const ServiceConnectionForm: React.FC<ServiceConnectionFormProps> = ({
             disabled={saving || !testResult?.success}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
-            {saving
-              ? "Saving..."
-              : connection
-                ? "Update Connection"
-                : "Add Connection"}
+            {saving ? 'Saving...' : connection ? 'Update Connection' : 'Add Connection'}
           </button>
         </div>
       </form>

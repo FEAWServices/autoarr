@@ -11,6 +11,7 @@
 This assessment evaluates the current state of the AutoArr GPL application through comprehensive documentation review, code quality analysis via linters, and exhaustive test execution across unit, integration, and E2E test suites.
 
 **Key Findings**:
+
 - ✅ **Strong Foundation**: Core MCP integration, configuration management, and monitoring services are well-implemented
 - ⚠️ **Incomplete Features**: 3-4 critical features marked as complete but not implemented
 - ❌ **Test Coverage Gap**: 67% actual vs 85% target (18% below goal)
@@ -22,15 +23,15 @@ This assessment evaluates the current state of the AutoArr GPL application throu
 
 ### Project Completion Assessment
 
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| BUILD-PLAN Sprints | 10/10 Complete | ~7.5/10 Complete | ⚠️ Overstated |
-| Test Coverage | 85%+ | 67% | ❌ Below Target |
-| Unit Tests | All Passing | 912 passed, 46 skipped | ✅ Good |
-| Integration Tests | All Passing | 64 passed, 6 failed | ⚠️ Issues |
-| E2E Tests | All Passing | Multiple failures | ❌ Broken |
-| Code Quality | Clean | 2 minor warnings | ✅ Good |
-| Production Ready | Yes | No | ❌ Not Yet |
+| Metric             | Target         | Actual                 | Status          |
+| ------------------ | -------------- | ---------------------- | --------------- |
+| BUILD-PLAN Sprints | 10/10 Complete | ~7.5/10 Complete       | ⚠️ Overstated   |
+| Test Coverage      | 85%+           | 67%                    | ❌ Below Target |
+| Unit Tests         | All Passing    | 912 passed, 46 skipped | ✅ Good         |
+| Integration Tests  | All Passing    | 64 passed, 6 failed    | ⚠️ Issues       |
+| E2E Tests          | All Passing    | Multiple failures      | ❌ Broken       |
+| Code Quality       | Clean          | 2 minor warnings       | ✅ Good         |
+| Production Ready   | Yes            | No                     | ❌ Not Yet      |
 
 **Actual Completion**: ~70-75% complete for functional GPL release
 
@@ -43,48 +44,54 @@ This assessment evaluates the current state of the AutoArr GPL application throu
 #### Linter Results
 
 **Black Formatter**: ✅ **PASS**
+
 ```
 All done! ✨ 🍰 ✨
 157 files would be left unchanged.
 ```
 
 **Flake8**: ⚠️ **2 WARNINGS**
+
 ```
 autoarr/api/config.py:145:101: E501 line too long (106 > 100 characters)
 autoarr/api/config.py:146:101: E501 line too long (102 > 100 characters)
 ```
+
 **Action Required**: Fix line length violations
 
 **Code Coverage**: **67%** (Target: 85%+)
+
 - **Gap**: 18 percentage points below target
 - **Impact**: Insufficient test coverage for production confidence
 
 #### Coverage by Component
 
-| Component | Coverage | Status |
-|-----------|----------|--------|
-| MCP Servers | 87-98% | ✅ Excellent |
-| Configuration Manager | 95% | ✅ Excellent |
-| Event Bus | 95% | ✅ Excellent |
-| Activity Log | 95% | ✅ Excellent |
-| Monitoring Service | 86% | ✅ Good |
-| Recovery Service | 94% | ✅ Excellent |
-| Request Handler | 93% | ✅ Excellent |
-| **LLM Agent** | **59%** | ❌ Low |
-| **Web Search Service** | **63%** | ❌ Low |
-| **Settings Router** | **52%** | ❌ Low |
-| **Requests Router** | **50%** | ❌ Low |
-| **Claude Provider** | **26%** | ❌ Very Low |
-| **Config Manager** | **24%** | ❌ Very Low |
+| Component              | Coverage | Status       |
+| ---------------------- | -------- | ------------ |
+| MCP Servers            | 87-98%   | ✅ Excellent |
+| Configuration Manager  | 95%      | ✅ Excellent |
+| Event Bus              | 95%      | ✅ Excellent |
+| Activity Log           | 95%      | ✅ Excellent |
+| Monitoring Service     | 86%      | ✅ Good      |
+| Recovery Service       | 94%      | ✅ Excellent |
+| Request Handler        | 93%      | ✅ Excellent |
+| **LLM Agent**          | **59%**  | ❌ Low       |
+| **Web Search Service** | **63%**  | ❌ Low       |
+| **Settings Router**    | **52%**  | ❌ Low       |
+| **Requests Router**    | **50%**  | ❌ Low       |
+| **Claude Provider**    | **26%**  | ❌ Very Low  |
+| **Config Manager**     | **24%**  | ❌ Very Low  |
 
 ### Frontend
 
 **ESLint**: ✅ **PASS**
+
 ```
 No errors, no warnings
 ```
 
 **Dependencies**: ✅ All installed and current
+
 - React 19.2.0
 - TypeScript 5.9.3
 - Vite 7.2.2
@@ -107,6 +114,7 @@ Time: 87.09s
 ```
 
 **Analysis**:
+
 - Core functionality well-tested
 - 46 tests intentionally skipped (likely environment-dependent)
 - Good test execution speed
@@ -122,6 +130,7 @@ Time: 19.75s
 ```
 
 **Failed Tests** (all in `test_llm_agent_integration.py`):
+
 1. `test_end_to_end_configuration_analysis`
 2. `test_handles_medium_priority_recommendation`
 3. `test_handles_low_priority_recommendation`
@@ -136,6 +145,7 @@ Time: 19.75s
 **Result**: ❌ **FAILING** (multiple critical issues)
 
 #### Import Errors (2 test files)
+
 ```
 ERROR: test_config_audit_flow.py
   ImportError: cannot import name 'ConfigAudit' from 'autoarr.api.models'
@@ -145,11 +155,13 @@ ERROR: test_download_recovery_flow.py
 ```
 
 #### API Integration Tests
+
 ```
 9 failed, 6 passed, 2 skipped, 25 warnings, 2 errors
 ```
 
 **Failed Tests**:
+
 - Health endpoints (connection issues)
 - Configuration endpoints
 - Downloads endpoints
@@ -160,6 +172,7 @@ ERROR: test_download_recovery_flow.py
 - Timeout handling
 
 #### Content Request Flow
+
 ```
 All 9 tests ERROR (cannot start due to import errors)
 ```
@@ -172,31 +185,31 @@ All 9 tests ERROR (cannot start due to import errors)
 
 ### Critical Priority
 
-| ID | Description | Status | Impact |
-|----|-------------|--------|--------|
-| BUG-001 | Database initialization in tests | ✅ FIXED | None |
+| ID      | Description                      | Status   | Impact |
+| ------- | -------------------------------- | -------- | ------ |
+| BUG-001 | Database initialization in tests | ✅ FIXED | None   |
 
 ### High Priority
 
-| ID | Description | Status | Impact |
-|----|-------------|--------|--------|
+| ID      | Description                               | Status  | Impact                      |
+| ------- | ----------------------------------------- | ------- | --------------------------- |
 | BUG-002 | MCP Orchestrator timeout not configurable | ❌ OPEN | Long operations may timeout |
-| BUG-003 | WebSocket endpoints not implemented | ❌ OPEN | **No real-time updates** |
+| BUG-003 | WebSocket endpoints not implemented       | ❌ OPEN | **No real-time updates**    |
 
 ### Medium Priority
 
-| ID | Description | Status | Impact |
-|----|-------------|--------|--------|
-| BUG-004 | Content request endpoint missing | ❌ OPEN | **Core feature broken** |
-| BUG-005 | Download retry endpoint missing | ❌ OPEN | **Recovery feature broken** |
-| BUG-006 | Activity log correlation filtering broken | ❌ OPEN | Debugging difficult |
-| BUG-007 | Rate limiting not implemented | ❌ OPEN | **Security vulnerability** |
-| BUG-008 | API documentation examples missing | ❌ OPEN | Poor DX |
+| ID      | Description                               | Status  | Impact                      |
+| ------- | ----------------------------------------- | ------- | --------------------------- |
+| BUG-004 | Content request endpoint missing          | ❌ OPEN | **Core feature broken**     |
+| BUG-005 | Download retry endpoint missing           | ❌ OPEN | **Recovery feature broken** |
+| BUG-006 | Activity log correlation filtering broken | ❌ OPEN | Debugging difficult         |
+| BUG-007 | Rate limiting not implemented             | ❌ OPEN | **Security vulnerability**  |
+| BUG-008 | API documentation examples missing        | ❌ OPEN | Poor DX                     |
 
 ### Low Priority
 
-| ID | Description | Status | Impact |
-|----|-------------|--------|--------|
+| ID      | Description                      | Status  | Impact                    |
+| ------- | -------------------------------- | ------- | ------------------------- |
 | BUG-009 | Frontend dependency audit needed | ❌ OPEN | Potential vulnerabilities |
 
 **Total Open Bugs**: 8
@@ -214,11 +227,13 @@ All 9 tests ERROR (cannot start due to import errors)
 **Impact**: HIGH - Core value proposition unavailable
 
 **Evidence**:
+
 - Endpoint `/ws` returns 404 Not Found
 - All WebSocket E2E tests skip with "WebSocket not implemented"
 - `websocket_manager.py` exists but not integrated with FastAPI app
 
 **Work Required**:
+
 1. Add WebSocket route to `autoarr/api/main.py`
 2. Connect WebSocketManager to event bus
 3. Implement connection lifecycle management
@@ -237,12 +252,14 @@ All 9 tests ERROR (cannot start due to import errors)
 **Impact**: HIGH - Flagship feature not functional
 
 **Evidence**:
+
 - Endpoint `/api/v1/requests/content` returns 404 Not Found
 - E2E tests fail with import errors (`ConfigAudit`, `ActivityLog` not exported)
 - LLM classification code exists but not wired to API
 - Request handler service implemented but no router endpoint
 
 **Work Required**:
+
 1. Fix model exports in `autoarr/api/models.py`
 2. Implement `/api/v1/requests/content` POST endpoint
 3. Wire up LLM classification to request handler
@@ -262,12 +279,14 @@ All 9 tests ERROR (cannot start due to import errors)
 **Impact**: MEDIUM-HIGH - Autonomous recovery unavailable
 
 **Evidence**:
+
 - Endpoint `/api/v1/downloads/retry` returns 404 Not Found
 - Recovery service exists with good tests (94% coverage)
 - Monitoring service implemented but no retry API
 - E2E recovery flow tests all skip
 
 **Work Required**:
+
 1. Implement `/api/v1/downloads/retry` POST endpoint
 2. Wire recovery service to API router
 3. Fix activity log correlation ID filtering
@@ -286,11 +305,13 @@ All 9 tests ERROR (cannot start due to import errors)
 **Impact**: MEDIUM - Production security risk
 
 **Evidence**:
+
 - No rate limiting middleware in application
 - Unlimited requests accepted
 - DoS vulnerability present
 
 **Work Required**:
+
 1. Install `slowapi` dependency
 2. Implement rate limiting middleware
 3. Configure per-endpoint limits
@@ -309,11 +330,13 @@ All 9 tests ERROR (cannot start due to import errors)
 **Impact**: LOW - Performance unknown
 
 **Evidence**:
+
 - Locust tests created but never run
 - No performance baseline established
 - No bottleneck analysis completed
 
 **Work Required**:
+
 1. Execute Locust load tests
 2. Document performance results
 3. Identify bottlenecks
@@ -328,25 +351,27 @@ All 9 tests ERROR (cannot start due to import errors)
 
 ### Components Below 70% Coverage
 
-| Component | Coverage | Gap | Priority |
-|-----------|----------|-----|----------|
-| Claude Provider | 26% | 59% | HIGH |
-| Config Manager | 24% | 61% | HIGH |
-| Requests Router | 50% | 35% | HIGH |
-| Settings Router | 52% | 33% | MEDIUM |
-| LLM Agent | 59% | 26% | MEDIUM |
-| Provider Factory | 61% | 24% | MEDIUM |
-| Web Search Service | 63% | 22% | MEDIUM |
+| Component          | Coverage | Gap | Priority |
+| ------------------ | -------- | --- | -------- |
+| Claude Provider    | 26%      | 59% | HIGH     |
+| Config Manager     | 24%      | 61% | HIGH     |
+| Requests Router    | 50%      | 35% | HIGH     |
+| Settings Router    | 52%      | 33% | MEDIUM   |
+| LLM Agent          | 59%      | 26% | MEDIUM   |
+| Provider Factory   | 61%      | 24% | MEDIUM   |
+| Web Search Service | 63%      | 22% | MEDIUM   |
 
 ### Untested Code Paths
 
 **Duplicate MCP Server Code** (0% coverage):
+
 - `autoarr/mcp_servers/[sabnzbd|sonarr|radarr|plex]/` - Old location
 - `autoarr/mcp_servers/mcp_servers/[sabnzbd|sonarr|radarr|plex]/` - New location
 
 **Issue**: Code appears duplicated across two directory structures.
 
 **Recommendation**:
+
 - Remove old MCP server code, OR
 - Clarify which is canonical and delete other
 - Consolidate to single location
@@ -358,6 +383,7 @@ All 9 tests ERROR (cannot start due to import errors)
 ### Duplicate Code
 
 **Location**: MCP Servers exist in two places:
+
 1. `/autoarr/mcp_servers/[service]/` - 0% coverage
 2. `/autoarr/mcp_servers/mcp_servers/[service]/` - 87-98% coverage
 
@@ -368,6 +394,7 @@ All 9 tests ERROR (cannot start due to import errors)
 ### Model Export Issues
 
 **Problem**: E2E tests import models that don't exist in `autoarr/api/models.py`:
+
 - `ConfigAudit` - Needed by config audit flow tests
 - `ActivityLog` - Needed by recovery flow tests
 
@@ -381,44 +408,44 @@ All 9 tests ERROR (cannot start due to import errors)
 
 ### Immediate Priority (Critical - Must Fix)
 
-| Task | Effort | Impact |
-|------|--------|--------|
-| Fix E2E test import errors | 2-4 hours | Enables E2E validation |
-| Fix flake8 line length warnings | 15 minutes | Code quality |
-| Implement WebSocket endpoint | 1-2 days | **Core feature** |
-| Implement content request endpoint | 2-3 days | **Core feature** |
-| Fix LLM integration test failures | 4-6 hours | Validation |
+| Task                               | Effort     | Impact                 |
+| ---------------------------------- | ---------- | ---------------------- |
+| Fix E2E test import errors         | 2-4 hours  | Enables E2E validation |
+| Fix flake8 line length warnings    | 15 minutes | Code quality           |
+| Implement WebSocket endpoint       | 1-2 days   | **Core feature**       |
+| Implement content request endpoint | 2-3 days   | **Core feature**       |
+| Fix LLM integration test failures  | 4-6 hours  | Validation             |
 
 **Subtotal**: 4-6 days
 
 ### High Priority (Should Fix)
 
-| Task | Effort | Impact |
-|------|--------|--------|
-| Implement download retry endpoint | 1 day | Key feature |
-| Add rate limiting | 4-6 hours | Security |
-| Activity log correlation filtering | 2-4 hours | Debugging |
-| Increase test coverage to 85%+ | 2-3 days | Quality |
+| Task                               | Effort    | Impact      |
+| ---------------------------------- | --------- | ----------- |
+| Implement download retry endpoint  | 1 day     | Key feature |
+| Add rate limiting                  | 4-6 hours | Security    |
+| Activity log correlation filtering | 2-4 hours | Debugging   |
+| Increase test coverage to 85%+     | 2-3 days  | Quality     |
 
 **Subtotal**: 4-5 days
 
 ### Medium Priority (Nice to Have)
 
-| Task | Effort | Impact |
-|------|--------|--------|
-| Execute load tests | 1-2 days | Performance validation |
-| MCP timeout configuration | 4-6 hours | Reliability |
-| API documentation examples | 1 day | Developer experience |
-| Remove duplicate MCP code | 4-6 hours | Code clarity |
+| Task                       | Effort    | Impact                 |
+| -------------------------- | --------- | ---------------------- |
+| Execute load tests         | 1-2 days  | Performance validation |
+| MCP timeout configuration  | 4-6 hours | Reliability            |
+| API documentation examples | 1 day     | Developer experience   |
+| Remove duplicate MCP code  | 4-6 hours | Code clarity           |
 
 **Subtotal**: 3-4 days
 
 ### Low Priority (Polish)
 
-| Task | Effort | Impact |
-|------|--------|--------|
+| Task                      | Effort    | Impact   |
+| ------------------------- | --------- | -------- |
 | Frontend dependency audit | 2-4 hours | Security |
-| Update all documentation | 1 day | Accuracy |
+| Update all documentation  | 1 day     | Accuracy |
 
 **Subtotal**: 1-2 days
 
@@ -426,20 +453,21 @@ All 9 tests ERROR (cannot start due to import errors)
 
 ## Total Remaining Effort
 
-| Category | Effort | Urgency |
-|----------|--------|---------|
-| Critical (Must Fix) | 4-6 days | Blocking v1.0 |
-| High Priority | 4-5 days | Needed for v1.0 |
-| Medium Priority | 3-4 days | Post-v1.0 |
-| Low Priority | 1-2 days | Post-v1.0 |
-| **Total** | **12-17 days** | - |
-| **Minimum Viable (Critical + High)** | **8-11 days** | For v1.0 |
+| Category                             | Effort         | Urgency         |
+| ------------------------------------ | -------------- | --------------- |
+| Critical (Must Fix)                  | 4-6 days       | Blocking v1.0   |
+| High Priority                        | 4-5 days       | Needed for v1.0 |
+| Medium Priority                      | 3-4 days       | Post-v1.0       |
+| Low Priority                         | 1-2 days       | Post-v1.0       |
+| **Total**                            | **12-17 days** | -               |
+| **Minimum Viable (Critical + High)** | **8-11 days**  | For v1.0        |
 
 ---
 
 ## What's Working Well ✅
 
 ### Core Infrastructure
+
 - ✅ **MCP Server Integration**: All 4 servers (SABnzbd, Sonarr, Radarr, Plex) fully implemented with 87-98% coverage
 - ✅ **Configuration Manager**: Excellent implementation, 95% coverage
 - ✅ **Event Bus**: Robust pub/sub system, 95% coverage
@@ -448,18 +476,21 @@ All 9 tests ERROR (cannot start due to import errors)
 - ✅ **Recovery Service**: Business logic complete, 94% coverage
 
 ### Code Quality
+
 - ✅ **Python Formatting**: Consistent Black formatting (157 files)
 - ✅ **Frontend Linting**: Clean ESLint pass
 - ✅ **Type Safety**: Good type hint coverage
 - ✅ **Async/Await**: Consistent async patterns
 
 ### Testing
+
 - ✅ **Test Suite Size**: 789+ tests across all levels
 - ✅ **Unit Tests**: 912 passing tests, good coverage of core logic
 - ✅ **Test Structure**: Well-organized pyramid (unit/integration/e2e)
 - ✅ **Fixtures**: Comprehensive test fixtures and factories
 
 ### Documentation
+
 - ✅ **Volume**: 80+ markdown documentation files
 - ✅ **Architecture**: Detailed architecture documentation
 - ✅ **API Reference**: Complete API documentation
@@ -559,6 +590,7 @@ All 9 tests ERROR (cannot start due to import errors)
 ## Success Criteria for v1.0
 
 ### Must Have (Blocking)
+
 - [ ] All E2E tests passing (0 failures)
 - [ ] Test coverage ≥ 85%
 - [ ] WebSocket real-time updates working
@@ -569,6 +601,7 @@ All 9 tests ERROR (cannot start due to import errors)
 - [ ] Security audit passed
 
 ### Should Have (Strongly Recommended)
+
 - [ ] Load tests executed and passed
 - [ ] Performance metrics documented
 - [ ] All documentation accurate
@@ -576,6 +609,7 @@ All 9 tests ERROR (cannot start due to import errors)
 - [ ] All linter warnings fixed
 
 ### Nice to Have (Post-v1.0)
+
 - [ ] Frontend E2E tests validated
 - [ ] Advanced retry strategies
 - [ ] Enhanced API documentation
@@ -600,6 +634,7 @@ However, **3 critical user-facing features** are incomplete despite being marked
 **Recommendation**: **Do not release v1.0 until critical features are implemented and tested**. The existing test infrastructure is excellent and will provide high confidence once the missing implementations are complete.
 
 **Path to v1.0**:
+
 1. Week 1: Implement 3 critical endpoints (WebSocket, content request, retry)
 2. Week 2: Fix test failures, add rate limiting, increase coverage to 85%
 3. Week 3: Load testing, security audit, documentation updates

@@ -4,15 +4,16 @@
  * Provides data fetching, caching, and state management for audit operations
  */
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
   ConfigAuditResponse,
   RecommendationsListResponse,
   ApplyConfigRequest,
   ApplyConfigResponse,
-} from "../types/config";
+} from '../types/config';
 
-const API_BASE_URL = import.meta.env?.VITE_API_URL || "/api/v1";
+// Use relative URL - this automatically uses the same host/port as the page
+const API_BASE_URL = '/api/v1';
 
 // ============================================================================
 // API Client Functions
@@ -23,34 +24,43 @@ async function fetchRecommendations(
   priority?: string,
   category?: string,
   page: number = 1,
-  pageSize: number = 100,
+  pageSize: number = 100
 ): Promise<RecommendationsListResponse> {
   const params = new URLSearchParams();
-  if (service) params.append("service", service);
-  if (priority) params.append("priority", priority);
-  if (category) params.append("category", category);
-  params.append("page", page.toString());
-  params.append("page_size", pageSize.toString());
+  if (service) params.append('service', service);
+  if (priority) params.append('priority', priority);
+  if (category) params.append('category', category);
+  params.append('page', page.toString());
+  params.append('page_size', pageSize.toString());
 
-  const response = await fetch(
-    `${API_BASE_URL}/config/recommendations?${params}`,
-  );
+  const url = `${API_BASE_URL}/config/recommendations?${params}`;
+  console.log('[DEBUG] Fetching recommendations from:', url);
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch recommendations: ${response.statusText}`);
+  try {
+    const response = await fetch(url);
+    console.log('[DEBUG] Response status:', response.status);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch recommendations: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('[DEBUG] Recommendations data:', data);
+    return data;
+  } catch (error) {
+    console.error('[DEBUG] Fetch error:', error);
+    throw error;
   }
-
-  return response.json();
 }
 
 async function triggerAudit(
-  services: string[] = ["sabnzbd", "sonarr", "radarr", "plex"],
-  includeWebSearch: boolean = false,
+  services: string[] = ['sabnzbd', 'sonarr', 'radarr', 'plex'],
+  includeWebSearch: boolean = false
 ): Promise<ConfigAuditResponse> {
   const response = await fetch(`${API_BASE_URL}/config/audit`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       services,
@@ -65,13 +75,11 @@ async function triggerAudit(
   return response.json();
 }
 
-async function applyRecommendations(
-  request: ApplyConfigRequest,
-): Promise<ApplyConfigResponse> {
+async function applyRecommendations(request: ApplyConfigRequest): Promise<ApplyConfigResponse> {
   const response = await fetch(`${API_BASE_URL}/config/apply`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(request),
   });
@@ -92,12 +100,11 @@ export function useRecommendations(
   priority?: string,
   category?: string,
   page: number = 1,
-  pageSize: number = 100,
+  pageSize: number = 100
 ) {
   return useQuery({
-    queryKey: ["recommendations", service, priority, category, page, pageSize],
-    queryFn: () =>
-      fetchRecommendations(service, priority, category, page, pageSize),
+    queryKey: ['recommendations', service, priority, category, page, pageSize],
+    queryFn: () => fetchRecommendations(service, priority, category, page, pageSize),
     staleTime: 30000, // 30 seconds
     retry: 2,
   });
@@ -116,7 +123,7 @@ export function useAuditMutation() {
     }) => triggerAudit(services, includeWebSearch),
     onSuccess: () => {
       // Invalidate and refetch recommendations
-      queryClient.invalidateQueries({ queryKey: ["recommendations"] });
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] });
     },
   });
 }
@@ -128,7 +135,7 @@ export function useApplyRecommendations() {
     mutationFn: applyRecommendations,
     onSuccess: () => {
       // Invalidate and refetch recommendations
-      queryClient.invalidateQueries({ queryKey: ["recommendations"] });
+      queryClient.invalidateQueries({ queryKey: ['recommendations'] });
     },
   });
 }

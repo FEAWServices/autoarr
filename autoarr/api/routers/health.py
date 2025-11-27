@@ -24,6 +24,7 @@ system health and individual service health.
 
 import time
 from datetime import datetime
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -73,9 +74,10 @@ async def health_check(
     connected_servers = orchestrator.get_connected_servers()
 
     if not connected_servers:
-        # No servers connected - system is unhealthy
+        # No servers connected yet - system is healthy but awaiting configuration
+        # This is the expected state on fresh install
         return HealthCheckResponse(
-            status="unhealthy",
+            status="healthy",
             services={},
             timestamp=datetime.utcnow().isoformat() + "Z",
         )
@@ -113,6 +115,80 @@ async def health_check(
         services=services,
         timestamp=datetime.utcnow().isoformat() + "Z",
     )
+
+
+@router.get("/health/database", tags=["health"])
+async def database_health() -> Dict[str, Any]:
+    """
+    Database health check.
+
+    Check if the database is configured and accessible.
+
+    Returns:
+        dict: Database health status
+
+    Example:
+        ```
+        GET /health/database
+        {
+            "status": "healthy",
+            "configured": true,
+            "type": "sqlite",
+            "message": "Database connection successful"
+        }
+        ```
+    """
+    from ..config import get_settings
+    from ..database import get_database
+
+    settings = get_settings()
+
+    if not settings.database_url:
+        return {
+            "status": "unconfigured",
+            "configured": False,
+            "type": None,
+            "message": "DATABASE_URL not configured. Settings will not persist.",
+        }
+
+    try:
+        db = get_database()
+        # Try to get a session to verify connection
+        async with db.session() as session:
+            # Execute a simple query to verify connectivity
+            from sqlalchemy import text
+
+            await session.execute(text("SELECT 1"))
+
+        # Determine database type from URL
+        db_type = "unknown"
+        if "sqlite" in settings.database_url:
+            db_type = "sqlite"
+        elif "postgresql" in settings.database_url:
+            db_type = "postgresql"
+        elif "mysql" in settings.database_url:
+            db_type = "mysql"
+
+        return {
+            "status": "healthy",
+            "configured": True,
+            "type": db_type,
+            "message": "Database connection successful",
+        }
+    except RuntimeError as e:
+        return {
+            "status": "error",
+            "configured": True,
+            "type": None,
+            "message": f"Database not initialized: {str(e)}",
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "configured": True,
+            "type": None,
+            "message": f"Database connection failed: {str(e)}",
+        }
 
 
 @router.get("/health/{service}", response_model=ServiceHealth, tags=["health"])
@@ -182,7 +258,7 @@ async def service_health(
 async def circuit_breaker_status(
     service: str,
     orchestrator: MCPOrchestrator = Depends(get_orchestrator),
-) -> dict:
+) -> Dict[str, Any]:
     """
     Get circuit breaker status for a service.
 
@@ -212,4 +288,5 @@ async def circuit_breaker_status(
             detail=f"Invalid service name. Must be one of: {', '.join(valid_services)}",
         )
 
-    return orchestrator.get_circuit_breaker_state(service)
+    result: Dict[str, Any] = orchestrator.get_circuit_breaker_state(service)
+    return result

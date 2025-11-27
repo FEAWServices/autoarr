@@ -76,7 +76,9 @@ class TestLLMAgentIntegration:
 
         # Mock the provider's complete method
         with patch.object(
-            agent, "_ensure_provider", return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response))
+            agent,
+            "_ensure_provider",
+            return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response)),
         ):
             # Act
             recommendation = await agent.analyze_configuration(context)
@@ -121,7 +123,9 @@ class TestLLMAgentIntegration:
         )
 
         with patch.object(
-            agent, "_ensure_provider", return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response))
+            agent,
+            "_ensure_provider",
+            return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response)),
         ):
             # Act
             recommendation = await agent.analyze_configuration(context)
@@ -157,7 +161,9 @@ class TestLLMAgentIntegration:
         )
 
         with patch.object(
-            agent, "_ensure_provider", return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response))
+            agent,
+            "_ensure_provider",
+            return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response)),
         ):
             # Act
             recommendation = await agent.analyze_configuration(context)
@@ -208,7 +214,9 @@ class TestLLMAgentIntegration:
         )
 
         with patch.object(
-            agent, "_ensure_provider", return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response))
+            agent,
+            "_ensure_provider",
+            return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response)),
         ):
             # Act
             for context in contexts:
@@ -272,7 +280,9 @@ class TestLLMAgentIntegration:
         )
 
         with patch.object(
-            agent, "_ensure_provider", return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response))
+            agent,
+            "_ensure_provider",
+            return_value=AsyncMock(complete=AsyncMock(return_value=mock_llm_response)),
         ):
             # Act
             recommendation = await agent.analyze_configuration(context)

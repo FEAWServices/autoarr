@@ -1,0 +1,104 @@
+# PR Labeler Configuration
+# Labels are applied based on which files are changed in the PR
+# https://github.com/actions/labeler
+
+# Backend labels
+backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "autoarr/api/**"
+          - "autoarr/shared/**"
+          - "autoarr/mcp_servers/**"
+          - "pyproject.toml"
+          - "poetry.lock"
+
+python:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.py"
+
+# Frontend labels
+frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "autoarr/ui/**"
+
+react:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "autoarr/ui/src/**/*.tsx"
+          - "autoarr/ui/src/**/*.ts"
+
+css:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "autoarr/ui/**/*.css"
+          - "autoarr/ui/tailwind.config.js"
+
+# Documentation
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "**/*.md"
+          - "README.md"
+          - "CONTRIBUTING.md"
+          - "LICENSE"
+
+# Tests
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "autoarr/tests/**"
+          - "autoarr/ui/tests/**"
+          - "**/*.spec.ts"
+          - "**/*.test.ts"
+          - "**/test_*.py"
+          - "**/*_test.py"
+
+# Infrastructure
+docker:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docker/**"
+          - "**/Dockerfile*"
+          - "**/docker-compose*.yml"
+          - ".dockerignore"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/workflows/**"
+          - ".github/actions/**"
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "pyproject.toml"
+          - "poetry.lock"
+          - "autoarr/ui/package.json"
+          - "autoarr/ui/pnpm-lock.yaml"
+
+# Configuration
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.json"
+          - "*.yaml"
+          - "*.yml"
+          - "*.toml"
+          - ".env*"
+
+# MCP Servers
+mcp:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "autoarr/mcp_servers/**"
+
+# Security
+security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "autoarr/tests/security/**"
+          - "**/*security*"
+          - "**/*auth*"

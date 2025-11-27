@@ -83,13 +83,11 @@ class MCPOrchestrator:
 All tests in this strategy are written **BEFORE** implementation:
 
 1. **RED Phase** ✗
-
    - Write failing test
    - Test should fail because feature doesn't exist
    - Validates test is actually testing something
 
 2. **GREEN Phase** ✓
-
    - Write minimal code to make test pass
    - Focus on functionality, not perfection
    - Get to green as quickly as possible

@@ -28,7 +28,6 @@ from typing import AsyncGenerator, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from ..config import get_settings
-from ..rate_limiter import limiter
 from ..models_config import (
     ApplyConfigRequest,
     ApplyConfigResponse,
@@ -38,6 +37,7 @@ from ..models_config import (
     DetailedRecommendation,
     RecommendationsListResponse,
 )
+from ..rate_limiter import limiter
 from ..services.config_manager import ConfigurationManager, get_config_manager_instance
 
 logger = logging.getLogger(__name__)

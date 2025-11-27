@@ -14,6 +14,7 @@ AutoArr is an intelligent orchestration layer for your media automation stack (S
 ## Prerequisites
 
 You need:
+
 1. **Your existing media services** (SABnzbd, Sonarr, Radarr) already installed and running
 2. **Docker Desktop** installed and running
 3. **API keys** from each service
@@ -29,6 +30,7 @@ You need:
 ```
 
 This will check:
+
 - ✅ Your .env file is configured
 - ✅ Your services are accessible
 - ✅ Docker is running
@@ -45,6 +47,7 @@ nano .env
 ```
 
 **Required changes:**
+
 ```bash
 # Your actual service URLs (adjust if not localhost)
 SABNZBD_URL=http://localhost:8080
@@ -61,6 +64,7 @@ ANTHROPIC_API_KEY=sk-ant-<your_key_here>
 ```
 
 **How to get API keys:**
+
 - **SABnzbd**: Config → General → API Key
 - **Sonarr**: Settings → General → Security → API Key
 - **Radarr**: Settings → General → Security → API Key
@@ -74,6 +78,7 @@ ANTHROPIC_API_KEY=sk-ant-<your_key_here>
 ```
 
 This will:
+
 - ✅ Build AutoArr backend Docker image
 - ✅ Start the backend service
 - ✅ Wait for everything to be ready
@@ -91,6 +96,7 @@ pnpm dev
 ### 5. Access AutoArr
 
 Open your browser:
+
 - **Frontend UI**: http://localhost:3000
 - **API Docs**: http://localhost:8088/docs
 - **Health Check**: http://localhost:8088/health
@@ -98,18 +104,21 @@ Open your browser:
 ## What Can I Test?
 
 ### Configuration Audit
+
 1. Go to Dashboard
 2. Click "Run Configuration Audit"
 3. Review AI-powered recommendations
 4. Apply optimizations with one click
 
 ### Natural Language Requests
+
 1. Go to Chat interface
 2. Type: "Add Dune Part 2 in 4K"
 3. Watch AutoArr classify, search, and add the content
 4. Get real-time status updates
 
 ### Service Monitoring
+
 1. View Dashboard
 2. See health status of all services
 3. Browse movies (Radarr) and shows (Sonarr)
@@ -120,6 +129,7 @@ Open your browser:
 ### "Cannot connect to services"
 
 **Solutions:**
+
 - Verify services are running: `curl http://localhost:8080` (SABnzbd)
 - Check API keys are correct (no spaces)
 - If services are in Docker, use `host.docker.internal` instead of `localhost`
@@ -128,6 +138,7 @@ Open your browser:
 ### "AI features not working"
 
 **Solutions:**
+
 - Get Anthropic API key: https://console.anthropic.com/
 - Add to `.env`: `ANTHROPIC_API_KEY=sk-ant-your-key`
 - Restart backend: `docker-compose -f docker-compose.dev.yml restart`
@@ -135,6 +146,7 @@ Open your browser:
 ### "Docker build fails"
 
 **Solutions:**
+
 - Clear cache: `docker-compose -f docker-compose.dev.yml build --no-cache`
 - Check disk space: `docker system df`
 - Update Docker Desktop
@@ -179,6 +191,7 @@ docker-compose -f docker-compose.dev.yml up -d
 AutoArr is currently at **v0.5 (85% complete)**:
 
 ✅ **Working:**
+
 - Configuration intelligence with AI recommendations
 - Service health monitoring
 - Browse and manage movies/shows
@@ -187,6 +200,7 @@ AutoArr is currently at **v0.5 (85% complete)**:
 - Full UI with Dashboard, Chat, Settings
 
 ⏳ **In Progress:**
+
 - Autonomous download monitoring
 - Automatic failure recovery
 - Advanced retry strategies

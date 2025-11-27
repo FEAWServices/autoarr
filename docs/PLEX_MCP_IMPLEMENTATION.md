@@ -94,45 +94,38 @@ async def _request(self, method: str, endpoint: str, ...) -> Any:
 #### 8 MCP Tools Implemented
 
 1. **plex_get_libraries**
-
    - List all library sections
    - No parameters required
    - Returns: Array of library objects
 
 2. **plex_get_library_items**
-
    - Get items in a specific library
    - Required: `library_id`
    - Optional: `limit`, `offset`
    - Returns: Array of media items
 
 3. **plex_get_recently_added**
-
    - Recently added content
    - Optional: `limit`
    - Returns: Array of recent items
 
 4. **plex_get_on_deck**
-
    - Continue watching items
    - Optional: `limit`
    - Returns: Array of in-progress items
 
 5. **plex_get_sessions**
-
    - Currently playing sessions
    - No parameters required
    - Returns: Array of active sessions
 
 6. **plex_search**
-
    - Search for content
    - Required: `query`
    - Optional: `limit`, `section_id`
    - Returns: Array of search results
 
 7. **plex_refresh_library**
-
    - Trigger library scan
    - Required: `library_id`
    - Returns: Success confirmation
@@ -167,31 +160,26 @@ Tool(
 #### Pydantic Models
 
 1. **PlexLibrary**
-
    - Library metadata (title, type, key)
    - Agent and scanner information
    - Timestamps and UUID
 
 2. **PlexMediaItem**
-
    - Generic media item model
    - Supports movies, episodes, tracks
    - Optional fields for different media types
 
 3. **PlexSession**
-
    - Active playback session
    - User and player information
    - Playback position (`viewOffset`)
 
 4. **PlexServerIdentity**
-
    - Server identification
    - Version and platform info
    - Capabilities and features
 
 5. **PlexHistoryRecord**
-
    - Watch history entry
    - Viewed timestamp
    - Account and device info
@@ -284,17 +272,14 @@ Each example demonstrates:
 ### Plex-Specific Challenges Solved
 
 1. **Dual Format Responses**
-
    - Problem: Plex returns XML or JSON
    - Solution: Automatic format detection and parsing
 
 2. **MediaContainer Wrapping**
-
    - Problem: Responses wrapped in `MediaContainer` object
    - Solution: Flexible extraction logic
 
 3. **Variable Child Keys**
-
    - Problem: Children can be `Metadata`, `Video`, `Directory`, or `Track`
    - Solution: Try multiple keys in order
 
@@ -496,7 +481,6 @@ These could be added if needed.
    ```
 
 3. **Error Handling**:
-
    - Log all errors
    - Retry transient failures
    - Alert on authentication failures

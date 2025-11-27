@@ -9,9 +9,9 @@
  * - Request status updates
  */
 
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { Message, RequestInfo, RequestStatus } from "../types/chat";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Message, RequestInfo, RequestStatus } from '../types/chat';
 
 interface ChatStore {
   // State
@@ -41,14 +41,14 @@ interface ChatStore {
 
   // Utility Actions
   getFilteredMessages: (filter?: {
-    type?: "movie" | "tv";
+    type?: 'movie' | 'tv';
     status?: RequestStatus;
     searchTerm?: string;
   }) => Message[];
 }
 
-const STORAGE_KEY = "autoarr-chat-history";
-const STORAGE_VERSION = "1.0";
+const STORAGE_KEY = 'autoarr-chat-history';
+const STORAGE_VERSION = '1.0';
 const MAX_RETENTION_DAYS = 30;
 
 // Helper to clean old messages
@@ -76,7 +76,7 @@ const loadFromStorage = (): Message[] => {
 
     return cleanOldMessages(messages);
   } catch (error) {
-    console.error("Failed to load chat history:", error);
+    console.error('Failed to load chat history:', error);
     return [];
   }
 };
@@ -91,7 +91,7 @@ const saveToStorage = (messages: Message[]): void => {
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error("Failed to save chat history:", error);
+    console.error('Failed to save chat history:', error);
   }
 };
 
@@ -199,12 +199,12 @@ export const useChatStore = create<ChatStore>()(
       },
     }),
     {
-      name: "chat-storage",
+      name: 'chat-storage',
       partialize: (state) => ({
         messages: state.messages,
       }),
-    },
-  ),
+    }
+  )
 );
 
 // Helper hook to add system message
@@ -214,7 +214,7 @@ export const useAddSystemMessage = () => {
   return (content: string) => {
     addMessage({
       id: `system-${Date.now()}`,
-      type: "system",
+      type: 'system',
       content,
       timestamp: new Date(),
     });
@@ -225,10 +225,10 @@ export const useAddSystemMessage = () => {
 export const useAddUserMessage = () => {
   const addMessage = useChatStore((state) => state.addMessage);
 
-  return (content: string, metadata?: Message["metadata"]) => {
+  return (content: string, metadata?: Message['metadata']) => {
     addMessage({
       id: `user-${Date.now()}`,
-      type: "user",
+      type: 'user',
       content,
       timestamp: new Date(),
       metadata,
@@ -240,10 +240,10 @@ export const useAddUserMessage = () => {
 export const useAddAssistantMessage = () => {
   const addMessage = useChatStore((state) => state.addMessage);
 
-  return (content: string, metadata?: Message["metadata"]) => {
+  return (content: string, metadata?: Message['metadata']) => {
     addMessage({
       id: `assistant-${Date.now()}`,
-      type: "assistant",
+      type: 'assistant',
       content,
       timestamp: new Date(),
       metadata,

@@ -377,25 +377,21 @@ After extensive analysis, **AutoArr** is the recommended name for this project. 
 #### Action Items
 
 1. ✅ Register domains:
-
    - autoarr.io (primary)
    - autoarr.dev (developer docs)
    - getautoarr.com (marketing)
 
 2. ✅ Reserve social handles:
-
    - @autoarr (Twitter)
    - /autoarr (GitHub)
    - /autoarr (Discord)
 
 3. ✅ Create brand assets:
-
    - Logo (circular arrows "A")
    - Color palette (Blue + Green)
    - Typography (Roboto/Inter)
 
 4. ✅ File trademark:
-
    - "AutoArr™" in software category
    - United States Patent and Trademark Office
 
@@ -432,13 +428,11 @@ After extensive analysis, **AutoArr** is the recommended name for this project. 
 Before final decision, we recommend:
 
 1. **Poll the community** (r/sonarr, r/radarr)
-
    - Present top 3 names
    - Gather feedback
    - Gauge excitement
 
 2. **A/B test landing pages**
-
    - Create simple landing pages
    - Track engagement metrics
    - Measure conversion intent

@@ -1,4 +1,4 @@
-import { LucideIcon } from "lucide-react";
+import { LucideIcon } from 'lucide-react';
 
 interface PlaceholderProps {
   icon: LucideIcon;
@@ -6,11 +6,7 @@ interface PlaceholderProps {
   description: string;
 }
 
-export const Placeholder = ({
-  icon: Icon,
-  title,
-  description,
-}: PlaceholderProps) => {
+export const Placeholder = ({ icon: Icon, title, description }: PlaceholderProps) => {
   return (
     <div className="flex items-center justify-center h-full p-8">
       <div className="text-center max-w-md">

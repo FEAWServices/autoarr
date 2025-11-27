@@ -1,17 +1,17 @@
-import { useState } from "react";
-import { Search as SearchIcon, Film } from "lucide-react";
+import { useState } from 'react';
+import { Search as SearchIcon, Film } from 'lucide-react';
 
 interface SearchResult {
   id: string;
   title: string;
-  type: "movie" | "show";
+  type: 'movie' | 'show';
   description: string;
   poster: string;
   year?: number;
 }
 
 export const Search = () => {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -24,23 +24,21 @@ export const Search = () => {
       // Mock results
       setResults([
         {
-          id: "1",
-          title: "The Simpsons",
-          type: "show",
+          id: '1',
+          title: 'The Simpsons',
+          type: 'show',
           description:
-            "This animated comedy focuses on the everyday life of the Simpson family in the misfit city of Springfield.",
-          poster:
-            "https://via.placeholder.com/200x300/4a5568/ffffff?text=The+Simpsons",
+            'This animated comedy focuses on the everyday life of the Simpson family in the misfit city of Springfield.',
+          poster: 'https://via.placeholder.com/200x300/4a5568/ffffff?text=The+Simpsons',
           year: 1989,
         },
         {
-          id: "2",
-          title: "Mission: Impossible - Dead Reckoning Part One",
-          type: "movie",
+          id: '2',
+          title: 'Mission: Impossible - Dead Reckoning Part One',
+          type: 'movie',
           description:
-            "Ethan Hunt and his IMF team embark on their most dangerous mission yet: To track down a terrifying new weapon that...",
-          poster:
-            "https://via.placeholder.com/200x300/2d3748/ffffff?text=Mission+Impossible",
+            'Ethan Hunt and his IMF team embark on their most dangerous mission yet: To track down a terrifying new weapon that...',
+          poster: 'https://via.placeholder.com/200x300/2d3748/ffffff?text=Mission+Impossible',
           year: 2023,
         },
       ]);
@@ -49,7 +47,7 @@ export const Search = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.preventDefault();
       handleSearch();
     }
@@ -57,24 +55,21 @@ export const Search = () => {
 
   const handleAddToSonarr = (result: SearchResult) => {
     // TODO: Implement add to Sonarr
-    console.log("Add to Sonarr:", result);
+    console.log('Add to Sonarr:', result);
   };
 
   const handleAddToRadarr = (result: SearchResult) => {
     // TODO: Implement add to Radarr
-    console.log("Add to Radarr:", result);
+    console.log('Add to Radarr:', result);
   };
 
   return (
     <div className="flex flex-col h-full bg-background-primary">
       {/* Header */}
       <div className="px-8 py-12">
-        <h1 className="text-4xl font-bold text-white mb-3">
-          Search and Add to Your Library
-        </h1>
+        <h1 className="text-4xl font-bold text-white mb-3">Search and Add to Your Library</h1>
         <p className="text-text-secondary text-lg">
-          Use natural language to find and add movies and TV shows to your
-          collection.
+          Use natural language to find and add movies and TV shows to your collection.
         </p>
       </div>
 
@@ -115,22 +110,20 @@ export const Search = () => {
                   <div className="mb-2">
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                        result.type === "show"
-                          ? "bg-primary/20 text-primary"
-                          : "bg-yellow-500/20 text-yellow-500"
+                        result.type === 'show'
+                          ? 'bg-primary/20 text-primary'
+                          : 'bg-yellow-500/20 text-yellow-500'
                       }`}
                     >
-                      {result.type === "show" ? "TV Show" : "Movie"}
+                      {result.type === 'show' ? 'TV Show' : 'Movie'}
                     </span>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    {result.title}
-                  </h3>
+                  <h3 className="text-xl font-bold text-white mb-2">{result.title}</h3>
                   <p className="text-text-secondary text-sm mb-4 line-clamp-3">
                     {result.description}
                   </p>
                   <div className="mt-auto">
-                    {result.type === "show" ? (
+                    {result.type === 'show' ? (
                       <button
                         onClick={() => handleAddToSonarr(result)}
                         className="w-full bg-primary hover:bg-primary-dark text-white py-3 px-4 rounded-lg transition-colors font-semibold"

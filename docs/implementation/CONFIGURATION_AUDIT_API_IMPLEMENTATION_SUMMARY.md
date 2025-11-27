@@ -328,12 +328,10 @@ Rate limiting is **documented but not yet implemented**. The following limits ar
 ### Ready to Integrate:
 
 1. **Best Practices Database (Task 3.1)**
-
    - Replace mock recommendations with database queries
    - Use BestPracticesRepository for data access
 
 2. **Web Search Service (Task 3.3)**
-
    - Enable real web search when include_web_search=true
    - Fetch latest recommendations from web sources
 
@@ -370,13 +368,11 @@ Current implementation uses `/app/autoarr/api/services/config_manager.py` which:
 ### Optimization Opportunities:
 
 1. **Caching:**
-
    - Cache audit results for 15 minutes
    - Cache best practices database queries
    - Use Redis for distributed caching
 
 2. **Async Operations:**
-
    - Parallel service audits
    - Background audit processing
    - Async apply operations
@@ -418,19 +414,16 @@ Current implementation uses `/app/autoarr/api/services/config_manager.py` which:
 ### Future Enhancements:
 
 1. **Rate Limiting Implementation**
-
    - Add Redis-based rate limiting
    - Implement middleware
    - Add rate limit headers
 
 2. **Real Service Integration**
-
    - Connect to Best Practices Database
    - Integrate Web Search Service
    - Connect to real service APIs
 
 3. **Advanced Features**
-
    - Scheduled audits
    - Email notifications
    - Configuration diff viewing

@@ -20,24 +20,28 @@ AutoArr (free version) provides intelligent orchestration for media automation s
 ## 🎁 Free Version Features
 
 ### Configuration Intelligence
+
 - **Automated Configuration Auditing**: Scan all connected applications
 - **Best Practices Recommendations**: Compare against community standards
 - **Local LLM Integration**: Ollama with Qwen, Llama, Mistral support
 - **One-Click Application**: Apply recommendations with rollback safety
 
 ### Natural Language Interface
+
 - **Content Requests**: Ask for movies/TV shows in plain English
 - **Intelligent Classification**: Automatically determine movie vs TV show
 - **TMDB Integration**: Rich metadata and search capabilities
 - **Direct Integration**: Seamless connection to Sonarr/Radarr
 
 ### MCP Integrations
+
 - **SABnzbd**: Queue monitoring and management
 - **Sonarr**: TV show automation
 - **Radarr**: Movie automation
 - **Plex**: Library management (optional)
 
 ### Modern Web UI
+
 - **Responsive Design**: Mobile-first, works on all devices
 - **Real-Time Updates**: WebSocket-based live status
 - **Accessibility**: WCAG 2.1 AA compliant
@@ -46,6 +50,7 @@ AutoArr (free version) provides intelligent orchestration for media automation s
 ## 🛠️ Technology Stack
 
 **Backend**:
+
 - Python 3.11+ with FastAPI
 - SQLite/PostgreSQL
 - Ollama for local LLM inference
@@ -53,12 +58,14 @@ AutoArr (free version) provides intelligent orchestration for media automation s
 - WebSocket for real-time updates
 
 **Frontend**:
+
 - React 18 + TypeScript
 - Tailwind CSS
 - Zustand for state management
 - Playwright for E2E testing
 
 **Infrastructure**:
+
 - Docker + Docker Compose
 - Single container deployment
 - Synology/QNAP support
@@ -67,6 +74,7 @@ AutoArr (free version) provides intelligent orchestration for media automation s
 ## 🤝 Community Development Model
 
 ### How We Work
+
 - **Public Development**: All development happens in the open on GitHub
 - **Community Contributions**: Pull requests welcome from anyone
 - **Transparent Roadmap**: Public issue tracker and project boards
@@ -74,6 +82,7 @@ AutoArr (free version) provides intelligent orchestration for media automation s
 - **Support**: Community Discord, GitHub Discussions, documentation
 
 ### Contributing
+
 - **Code Contributions**: Follow TDD, maintain 85%+ test coverage
 - **Documentation**: Help improve guides, tutorials, troubleshooting
 - **Bug Reports**: Detailed issues help everyone
@@ -83,24 +92,28 @@ AutoArr (free version) provides intelligent orchestration for media automation s
 ## 🚀 Roadmap (Free Version)
 
 ### Phase 1: Foundation (Completed)
+
 - ✅ MCP server integrations
 - ✅ Configuration auditing
 - ✅ Basic LLM integration (Claude)
 - ✅ Web UI with activity tracking
 
 ### Phase 2: Local LLM (In Progress)
+
 - 🔄 Ollama integration with Qwen 2.5
 - 🔄 Plugin architecture for LLM providers
 - 🔄 Improved prompt templates
 - 🔄 Model management utilities
 
 ### Phase 3: Enhanced Features (Next)
+
 - 📋 Advanced filtering and search
 - 📋 Custom notification systems
 - 📋 Backup/restore configurations
 - 📋 Multi-user support
 
 ### Phase 4: Community Plugins
+
 - 📋 Plugin system for custom integrations
 - 📋 Community plugin marketplace
 - 📋 Custom theme support
@@ -109,18 +122,21 @@ AutoArr (free version) provides intelligent orchestration for media automation s
 ## 💻 System Requirements
 
 ### Minimum
+
 - 2GB RAM
 - 2 CPU cores
 - 10GB disk space
 - Docker or Docker Compose
 
 ### Recommended
+
 - 4GB RAM
 - 4 CPU cores
 - 20GB disk space (for local LLM models)
 - SSD storage
 
 ### Ollama Models
+
 - **Qwen 2.5 7B**: ~4GB (recommended)
 - **Llama 3.1 8B**: ~4.7GB
 - **Mistral 7B**: ~4.1GB
@@ -140,6 +156,7 @@ We chose GPL-3.0 to ensure AutoArr remains free and open forever:
 AutoArr also offers a premium version with advanced AI features and autonomous capabilities. The premium version is **completely optional** - the free version is fully functional and will always remain free.
 
 Premium features include:
+
 - Custom-trained AI models with media domain expertise
 - Autonomous download recovery
 - Advanced quality cascade optimization
@@ -159,6 +176,7 @@ The existence of a premium version helps sustain development of the free version
 ## 🎓 Inspiration
 
 AutoArr builds on the shoulders of giants:
+
 - **Sonarr/Radarr**: Media automation excellence
 - **SABnzbd**: Reliable download management
 - **Plex**: Beautiful media serving

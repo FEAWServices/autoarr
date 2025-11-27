@@ -18,27 +18,32 @@ AutoArr is a 100% free and open source intelligent orchestration layer for media
 ## Documentation Index
 
 ### Getting Started
+
 - [Quick Start](../QUICK_START.md) - Installation and setup
 - [Configuration](../CONFIGURATION.md) - Environment variables and settings
 - [Docker Setup](../DOCKER_SETUP.md) - Docker deployment
 
 ### User Guides
+
 - [API Reference](../API_REFERENCE.md) - Complete API documentation
 - [MCP Server Guide](../MCP_SERVER_GUIDE.md) - MCP server development
 - [Troubleshooting](../TROUBLESHOOTING.md) - Common issues and solutions
 
 ### Architecture
+
 - [Architecture Overview](../ARCHITECTURE.md) - System design
 - [Architecture Deep Dive](../ARCHITECTURE_DEEP_DIVE.md) - Detailed technical docs
 - [Build Plan](../BUILD-PLAN.md) - 20-week development plan
 
 ### Development
+
 - [Contributing](../CONTRIBUTING.md) - How to contribute
 - [Development Guide](../DEVELOPMENT.md) - Local development setup
 - [Testing](../TESTING.md) - Testing strategy
 - [Code Examples](../CODE-EXAMPLES.md) - Example code
 
 ### Deployment
+
 - [Deployment Guide](../DEPLOYMENT.md) - Production deployment
 - [Synology Setup](../SYNOLOGY_SETUP.md) - Synology NAS deployment
 - [Docker Compose](../../docker/) - Docker compose files
@@ -46,21 +51,25 @@ AutoArr is a 100% free and open source intelligent orchestration layer for media
 ## Feature Documentation
 
 ### Configuration Intelligence
+
 - Configuration auditing
 - Intelligent recommendations
 - Quality profile analysis
 
 ### Download Recovery
+
 - Automatic failure detection
 - Intelligent retry strategies
 - SABnzbd integration
 
 ### Natural Language Interface
+
 - Chat-based content requests
 - Movie/TV classification
 - Web search integration (TMDB, Brave)
 
 ### Monitoring
+
 - Real-time activity feed
 - WebSocket live updates
 - System health monitoring
@@ -72,6 +81,7 @@ See [API_REFERENCE.md](../API_REFERENCE.md) for complete API documentation.
 **Base URL:** `http://localhost:8000`
 
 **Key Endpoints:**
+
 - `/api/v1/config/audit` - Configuration auditing
 - `/api/v1/monitoring/queue` - Queue monitoring
 - `/api/v1/recovery/failures` - Download failures
@@ -82,12 +92,14 @@ See [API_REFERENCE.md](../API_REFERENCE.md) for complete API documentation.
 ## Technology Stack
 
 **Backend:**
+
 - Python 3.11+ with FastAPI
 - SQLite/PostgreSQL
 - MCP (Model Context Protocol)
 - Claude 3.5 Sonnet
 
 **Frontend:**
+
 - React 18 + TypeScript
 - Tailwind CSS
 - Zustand state management

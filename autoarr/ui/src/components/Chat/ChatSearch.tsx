@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { useChatStore } from "../../stores/chatStore";
-import { RequestStatus } from "../../types/chat";
-import { X, Film, Tv } from "lucide-react";
+import { useState } from 'react';
+import { useChatStore } from '../../stores/chatStore';
+import { RequestStatus } from '../../types/chat';
+import { X, Film, Tv } from 'lucide-react';
 
 interface ChatSearchProps {
   onClose: () => void;
 }
 
 export const ChatSearch = ({ onClose }: ChatSearchProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<"movie" | "tv" | undefined>();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<'movie' | 'tv' | undefined>();
   const [filterStatus, setFilterStatus] = useState<RequestStatus | undefined>();
 
   const { getFilteredMessages } = useChatStore();
@@ -23,9 +23,7 @@ export const ChatSearch = ({ onClose }: ChatSearchProps) => {
   return (
     <div className="bg-background-tertiary rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-text-primary">
-          Search Messages
-        </h3>
+        <h3 className="text-lg font-semibold text-text-primary">Search Messages</h3>
         <button
           onClick={onClose}
           className="p-1 hover:bg-background-hover rounded transition-colors"
@@ -55,29 +53,29 @@ export const ChatSearch = ({ onClose }: ChatSearchProps) => {
             onClick={() => setFilterType(undefined)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               filterType === undefined
-                ? "bg-primary-default text-white"
-                : "bg-background-secondary text-text-secondary hover:text-text-primary"
+                ? 'bg-primary-default text-white'
+                : 'bg-background-secondary text-text-secondary hover:text-text-primary'
             }`}
           >
             All
           </button>
           <button
-            onClick={() => setFilterType("movie")}
+            onClick={() => setFilterType('movie')}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              filterType === "movie"
-                ? "bg-primary-default text-white"
-                : "bg-background-secondary text-text-secondary hover:text-text-primary"
+              filterType === 'movie'
+                ? 'bg-primary-default text-white'
+                : 'bg-background-secondary text-text-secondary hover:text-text-primary'
             }`}
           >
             <Film className="w-4 h-4" />
             Movies
           </button>
           <button
-            onClick={() => setFilterType("tv")}
+            onClick={() => setFilterType('tv')}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              filterType === "tv"
-                ? "bg-primary-default text-white"
-                : "bg-background-secondary text-text-secondary hover:text-text-primary"
+              filterType === 'tv'
+                ? 'bg-primary-default text-white'
+                : 'bg-background-secondary text-text-secondary hover:text-text-primary'
             }`}
           >
             <Tv className="w-4 h-4" />
@@ -88,11 +86,9 @@ export const ChatSearch = ({ onClose }: ChatSearchProps) => {
         {/* Status Filter */}
         <div className="flex gap-2">
           <select
-            value={filterStatus || ""}
+            value={filterStatus || ''}
             onChange={(e) =>
-              setFilterStatus(
-                e.target.value ? (e.target.value as RequestStatus) : undefined,
-              )
+              setFilterStatus(e.target.value ? (e.target.value as RequestStatus) : undefined)
             }
             className="px-3 py-1.5 rounded-lg text-sm font-medium bg-background-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-default"
             aria-label="Filter by status"
@@ -109,7 +105,7 @@ export const ChatSearch = ({ onClose }: ChatSearchProps) => {
       {/* Results */}
       <div className="text-sm text-text-muted mb-2">
         {filteredMessages.length} message
-        {filteredMessages.length !== 1 ? "s" : ""} found
+        {filteredMessages.length !== 1 ? 's' : ''} found
       </div>
 
       {searchTerm && filteredMessages.length === 0 && (

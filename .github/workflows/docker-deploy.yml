@@ -72,9 +72,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile
+          file: ./docker/Dockerfile.production
           platforms: linux/amd64,linux/arm64
-          push: true  # Always push when CI succeeds on main/develop
+          push: true # Always push when CI succeeds on main/develop
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -116,14 +116,14 @@ jobs:
             echo "Pull and run with:" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
             echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
-            echo "docker-compose -f docker/docker-compose.yml up -d" >> $GITHUB_STEP_SUMMARY
+            echo "docker-compose -f docker/docker-compose.production.yml up -d" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           elif [ "${{ github.event.workflow_run.head_branch }}" == "develop" ]; then
             echo "### 🧪 Staging Deployment" >> $GITHUB_STEP_SUMMARY
             echo "Pull and run with:" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
             echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging" >> $GITHUB_STEP_SUMMARY
-            echo "docker-compose -f docker/docker-compose.staging.yml up -d" >> $GITHUB_STEP_SUMMARY
+            echo "docker-compose -f docker/docker-compose.production.yml up -d" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           fi
 
@@ -180,6 +180,6 @@ jobs:
           echo "**Commit:** \`${{ github.event.workflow_run.head_sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Deployment Options:" >> $GITHUB_STEP_SUMMARY
-          echo "- **Docker Compose:** \`docker-compose -f docker/docker-compose.yml up -d\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docker Compose:** \`docker-compose -f docker/docker-compose.production.yml up -d\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Synology NAS:** Update container in Container Manager" >> $GITHUB_STEP_SUMMARY
           echo "- **Docker CLI:** \`docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY

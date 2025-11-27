@@ -119,53 +119,45 @@ class TestSABnzbdClientQueue:
 #### Test Classes
 
 1. **TestSABnzbdClientInitialization** (5 tests)
-
    - URL and API key validation
    - URL normalization
    - Custom timeout support
    - Connection validation
 
 2. **TestSABnzbdClientQueue** (6 tests)
-
    - Get queue operations
    - Pagination support
    - Pause/resume queue
    - NZO ID filtering
 
 3. **TestSABnzbdClientHistory** (4 tests)
-
    - Get history operations
    - Pagination support
    - Filter by status/category
 
 4. **TestSABnzbdClientDownloadManagement** (5 tests)
-
    - Retry failed downloads
    - Delete downloads
    - Pause/resume downloads
 
 5. **TestSABnzbdClientConfiguration** (6 tests)
-
    - Get configuration
    - Set configuration values
    - Batch updates
    - Section-specific operations
 
 6. **TestSABnzbdClientStatus** (4 tests)
-
    - Version information
    - Server status
    - Health checks
 
 7. **TestSABnzbdClientErrorHandling** (8 tests)
-
    - HTTP error codes (401, 500, 503)
    - Connection timeouts
    - Invalid JSON
    - Retry logic
 
 8. **TestSABnzbdClientRequestBuilding** (3 tests)
-
    - URL construction
    - API key inclusion
    - Parameter encoding
@@ -186,58 +178,49 @@ class TestSABnzbdClientQueue:
 #### Test Classes
 
 1. **TestSABnzbdMCPServerInitialization** (5 tests)
-
    - Client requirement
    - Server name/version
    - Startup validation
 
 2. **TestSABnzbdMCPServerToolRegistration** (8 tests)
-
    - All 5 tools registered
    - Tool descriptions
    - Tool schemas
    - Tool count verification
 
 3. **TestSABnzbdMCPServerGetQueueTool** (5 tests)
-
    - Schema validation
    - Client method calls
    - Parameter passing
    - Response formatting
 
 4. **TestSABnzbdMCPServerGetHistoryTool** (4 tests)
-
    - Schema validation
    - Filter support
    - Response formatting
 
 5. **TestSABnzbdMCPServerRetryDownloadTool** (4 tests)
-
    - Required parameters
    - Client method calls
    - Success status
 
 6. **TestSABnzbdMCPServerGetConfigTool** (4 tests)
-
    - Optional parameters
    - Section filtering
    - Complete config retrieval
 
 7. **TestSABnzbdMCPServerSetConfigTool** (4 tests)
-
    - Required parameters
    - Parameter validation
    - Success status
 
 8. **TestSABnzbdMCPServerErrorHandling** (6 tests)
-
    - Client error propagation
    - Invalid tool names
    - Parameter validation
    - Error response format
 
 9. **TestSABnzbdMCPServerProtocolCompliance** (4 tests)
-
    - MCP protocol methods
    - JSON Schema compliance
    - Response format
@@ -258,29 +241,24 @@ class TestSABnzbdClientQueue:
 #### Test Classes
 
 1. **TestSABnzbdClientIntegration** (7 tests)
-
    - Real SABnzbd connection
    - Real API responses
    - Error handling with real server
 
 2. **TestSABnzbdMCPServerIntegration** (5 tests)
-
    - Tools with real data
    - Real error scenarios
 
 3. **TestSABnzbdEndToEndWorkflows** (2 tests)
-
    - Queue monitoring workflow
    - Configuration audit workflow
 
 4. **TestSABnzbdPerformance** (4 tests)
-
    - Concurrent requests
    - Sequential requests
    - Large data handling
 
 5. **TestSABnzbdReliability** (3 tests)
-
    - Failure recovery
    - State persistence
    - Long-running stability

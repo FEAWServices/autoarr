@@ -8,21 +8,17 @@
 /**
  * Priority levels for recommendations
  */
-export type Priority = "high" | "medium" | "low";
+export type Priority = 'high' | 'medium' | 'low';
 
 /**
  * Category types for recommendations
  */
-export type Category =
-  | "performance"
-  | "security"
-  | "best_practices"
-  | "download";
+export type Category = 'performance' | 'security' | 'best_practices' | 'download';
 
 /**
  * Service names
  */
-export type Service = "sabnzbd" | "sonarr" | "radarr" | "plex";
+export type Service = 'sabnzbd' | 'sonarr' | 'radarr' | 'plex';
 
 /**
  * Configuration recommendation model
@@ -106,7 +102,7 @@ export interface ApplyConfigResponse {
 /**
  * Sort options for recommendations
  */
-export type SortOption = "priority" | "service" | "category";
+export type SortOption = 'priority' | 'service' | 'category';
 
 /**
  * Audit history item

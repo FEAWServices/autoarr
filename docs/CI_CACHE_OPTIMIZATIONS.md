@@ -161,25 +161,25 @@ NODE_OPTIONS=--max-old-space-size=4096
 
 ### First Run (Cold Cache)
 
-| Job                  | Before | After  | Improvement |
-| -------------------- | ------ | ------ | ----------- |
-| Frontend Lint        | 8 min  | 6 min  | 25% faster  |
-| Frontend Build       | 10 min | 8 min  | 20% faster  |
-| Frontend E2E         | 25 min | 20 min | 20% faster  |
-| Python Lint          | 5 min  | 4 min  | 20% faster  |
-| Python Test (3.11)   | 15 min | 12 min | 20% faster  |
-| Python Test (3.12)   | 15 min | 12 min | 20% faster  |
+| Job                | Before | After  | Improvement |
+| ------------------ | ------ | ------ | ----------- |
+| Frontend Lint      | 8 min  | 6 min  | 25% faster  |
+| Frontend Build     | 10 min | 8 min  | 20% faster  |
+| Frontend E2E       | 25 min | 20 min | 20% faster  |
+| Python Lint        | 5 min  | 4 min  | 20% faster  |
+| Python Test (3.11) | 15 min | 12 min | 20% faster  |
+| Python Test (3.12) | 15 min | 12 min | 20% faster  |
 
 ### Second Run (Warm Cache)
 
-| Job                  | Before | After  | Improvement |
-| -------------------- | ------ | ------ | ----------- |
-| Frontend Lint        | 8 min  | 2 min  | **75%**     |
-| Frontend Build       | 10 min | 3 min  | **70%**     |
-| Frontend E2E         | 25 min | 10 min | **60%**     |
-| Python Lint          | 5 min  | 2 min  | **60%**     |
-| Python Test (3.11)   | 15 min | 5 min  | **66%**     |
-| Python Test (3.12)   | 15 min | 5 min  | **66%**     |
+| Job                | Before | After  | Improvement |
+| ------------------ | ------ | ------ | ----------- |
+| Frontend Lint      | 8 min  | 2 min  | **75%**     |
+| Frontend Build     | 10 min | 3 min  | **70%**     |
+| Frontend E2E       | 25 min | 10 min | **60%**     |
+| Python Lint        | 5 min  | 2 min  | **60%**     |
+| Python Test (3.11) | 15 min | 5 min  | **66%**     |
+| Python Test (3.12) | 15 min | 5 min  | **66%**     |
 
 ### Concurrent Runs
 

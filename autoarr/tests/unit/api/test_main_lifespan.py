@@ -379,9 +379,10 @@ class TestAppConfiguration:
         assert any("/api/v1/media" in route for route in routes)
 
     def test_root_endpoint_exists(self):
-        """Test that root endpoint exists."""
+        """Test that API info endpoint exists."""
         routes = [route.path for route in app.routes]
-        assert "/" in routes
+        # The app uses /api for API info and /{full_path:path} for SPA catch-all
+        assert "/api" in routes
 
     def test_ping_endpoint_exists(self):
         """Test that ping endpoint exists."""
