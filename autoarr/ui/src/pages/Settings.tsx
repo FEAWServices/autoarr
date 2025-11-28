@@ -101,7 +101,7 @@ const ServiceSection = ({
       <div className="relative">
         <input
           type={showKeys[service] ? 'text' : 'password'}
-          value={showToken ? config.token ?? '' : config.apiKey ?? ''}
+          value={showToken ? (config.token ?? '') : (config.apiKey ?? '')}
           onChange={(e) =>
             onChange(showToken ? { token: e.target.value } : { apiKey: e.target.value })
           }

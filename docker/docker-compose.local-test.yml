@@ -4,7 +4,7 @@
 # This docker-compose file runs AutoArr for local development with hot reload.
 #
 # Access Points:
-#   - http://localhost:18088 - Full application (Vite dev server + API proxy)
+#   - http://localhost:9080  - Full application (Vite dev server + API proxy)
 #   - http://localhost:6006  - Storybook (component library)
 #
 # Hot Reloading:
@@ -30,8 +30,8 @@ services:
     restart: unless-stopped
 
     ports:
-      - "18088:5173" # Vite dev server (frontend + API proxy)
-      - "18089:8088" # Direct backend access (optional)
+      - "9080:5173" # Vite dev server (frontend + API proxy)
+      - "9081:8088" # Direct backend access (optional)
 
     environment:
       APP_ENV: development
@@ -42,7 +42,7 @@ services:
       REDIS_URL: memory://
       VITE_DEV_MODE: "true"
       # HMR client port - tells Vite to use the mapped port for WebSocket
-      VITE_HMR_CLIENT_PORT: "18088"
+      VITE_HMR_CLIENT_PORT: "9080"
       # Reduce file watcher memory usage
       WATCHFILES_FORCE_POLLING: "true"
 
