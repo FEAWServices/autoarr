@@ -6,11 +6,13 @@ specific rules and best practices.
 ## Core Requirements
 
 1. **Root Directory Cleanup**
-   - KEEP in root: Only README.md, CLAUDE.md, and AGENTS.md (uppercase)
+
+   - KEEP in root: Only README.md, claude.md, AGENTS.md and contributing.md
    - MOVE everything else: All other .md files should be relocated to
      appropriate /docs folders
 
 2. **Monolith Monorepo Structure**
+
    - **Platform-level docs**: `/docs/` (architecture, infrastructure, monorepo guides)
    - **Monolith app docs**: `apps/monolith/docs/` (shared monolith configuration, deployment)
    - **Individual app docs**: `apps/monolith/src/app/{app}/docs/` (app-specific features, design)
@@ -24,9 +26,11 @@ specific rules and best practices.
    - **Shared package docs**: `packages/{package}/` (README.md only, keep concise)
 
 3. **Infrastructure Documentation Exception**
+
    - Infrastructure has docs in TWO locations with clear separation:
 
    **`/infrastructure/`** - IaC Code + Design Docs
+
    - KEEP: `README.md` (must be concise, 200-350 lines max)
    - KEEP: `TERRAFORM-*.md` (Terraform-specific documentation)
    - KEEP: `docs/` subdirectory (architecture designs only - immutable)
@@ -38,6 +42,7 @@ specific rules and best practices.
      - DEPLOYMENT-STRATEGY.md
 
    **`/docs/infrastructure/`** - Operational Guides (frequently updated)
+
    - `guides/` - Step-by-step HOW-TO guides (prerequisites, quick-start,
      troubleshooting, monitoring, disaster-recovery)
    - `deployment/` - Specific deployment scenarios (B2C, GitOps, CI/CD, staging,
@@ -45,6 +50,7 @@ specific rules and best practices.
    - `security/` - Security checklists and procedures
 
    **Rules**:
+
    - Design docs stay in `/infrastructure/docs/` (rarely change after initial
      design)
    - Operational guides go in `/docs/infrastructure/` (updated frequently)
@@ -62,16 +68,19 @@ specific rules and best practices.
 ## Additional Best Practices to Implement
 
 5. **Standardize Naming Conventions**
+
    - Use lowercase with hyphens: `api-guide.md` not `API_Guide.md`
    - Add dates to archived files: `_archive/2024-01-15-old-setup.md`
    - Use clear, descriptive names: `database-schema.md` not `db.md`
 
 6. **Create Index Files**
+
    - Add a `README.md` in each `/docs/` folder
    - Include a table of contents linking to all documents in that folder
    - Add brief descriptions for each linked document
 
 7. **Categorize by Type** Within each `/docs/` folder, create subdirectories:
+
    - `/docs/guides/` - How-to guides and tutorials
    - `/docs/api/` - API documentation
    - `/docs/architecture/` - System design and architecture docs
