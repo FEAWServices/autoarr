@@ -14,7 +14,7 @@
 set -e
 
 CONTAINER_NAME="autoarr-local"
-DOCKER_HOST="${DOCKER_HOST:-unix:///var/run/docker.sock}"
+export DOCKER_HOST="${DOCKER_HOST:-unix:///var/run/docker.sock}"
 
 # Check if container is running
 if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
