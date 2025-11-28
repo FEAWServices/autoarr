@@ -61,9 +61,13 @@ const ServiceSection = ({
   testConnection: (service: string) => void;
 }) => (
   <div
-    className="bg-gray-800 rounded-lg p-8 space-y-6"
+    className="bg-gray-800 rounded-lg space-y-6"
     data-testid={`service-card-${service}`}
     data-component="ServiceCard"
+    style={{
+      margin: 'var(--service-card-margin, 10px)',
+      padding: 'var(--service-card-padding, 10px)',
+    }}
   >
     <div className="flex items-center justify-between pb-2" data-component="ServiceCardHeader">
       <h3 className="text-lg font-semibold text-white py-1">{title}</h3>
@@ -120,8 +124,9 @@ const ServiceSection = ({
       <button
         onClick={() => testConnection(service)}
         disabled={!config.enabled || testResults[service] === 'testing'}
-        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         data-component="ServiceCardTestButton"
+        style={{ padding: 'var(--service-card-test-button-padding, 10px)' }}
       >
         {testResults[service] === 'testing' ? (
           'Testing...'
@@ -326,6 +331,7 @@ export const Settings = () => {
             to="/settings/appearance"
             className="flex items-center justify-between p-4 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
             data-component="QuickSettingsLink-Appearance"
+            style={{ margin: 'var(--quick-settings-link-margin, 10px)' }}
           >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-[var(--accent-color)]/10">
@@ -345,6 +351,7 @@ export const Settings = () => {
             to="/settings/config-audit"
             className="flex items-center justify-between p-4 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
             data-component="QuickSettingsLink-ConfigAudit"
+            style={{ margin: 'var(--quick-settings-link-margin, 10px)' }}
           >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-green-500/10">

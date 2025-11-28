@@ -24,5 +24,11 @@ export default defineConfig({
         ? parseInt(process.env.VITE_HMR_CLIENT_PORT)
         : undefined,
     },
+    // File watching for Docker/Windows volume mounts
+    watch: {
+      // Use polling for Windows volume mounts (required for HMR to work)
+      usePolling: true,
+      interval: 1000,
+    },
   },
 });

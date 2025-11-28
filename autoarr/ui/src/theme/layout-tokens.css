@@ -117,6 +117,18 @@
   /** Section heading bottom margin (for h2 section titles) */
   --section-heading-mb: 24px;
 
+  /** Service card margin */
+  --service-card-margin: 10px;
+
+  /** Service card padding */
+  --service-card-padding: 10px;
+
+  /** Quick settings link margin */
+  --quick-settings-link-margin: 10px;
+
+  /** Service card test button padding */
+  --service-card-test-button-padding: 10px;
+
   /* ==========================================
    * GLOBAL ACCENT
    * ========================================== */

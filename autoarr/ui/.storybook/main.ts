@@ -10,5 +10,16 @@ const config: StorybookConfig = {
     '@storybook/addon-onboarding',
   ],
   framework: '@storybook/react-vite',
+  viteFinal: async (config) => {
+    // Enable polling for Docker/Windows volume mounts (required for HMR)
+    config.server = {
+      ...config.server,
+      watch: {
+        usePolling: true,
+        interval: 1000,
+      },
+    };
+    return config;
+  },
 };
 export default config;

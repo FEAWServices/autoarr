@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MemoryRouter } from 'react-router-dom';
+import { within, expect } from 'storybook/test';
 import { Settings } from '../Settings';
 
 /**
@@ -148,5 +149,24 @@ export const Tablet: Story = {
     viewport: {
       defaultViewport: 'tablet',
     },
+  },
+};
+
+/**
+ * Test that service cards have the correct margin applied via CSS.
+ * This verifies that the `--service-card-margin` CSS variable is working.
+ */
+export const ServiceCardMarginTest: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Find the SABnzbd service card
+    const sabnzbdCard = canvas.getByTestId('service-card-sabnzbd');
+
+    // Get computed styles
+    const computedStyle = window.getComputedStyle(sabnzbdCard);
+
+    // Assert margin is 10px (from --service-card-margin CSS variable)
+    expect(computedStyle.margin).toBe('10px');
   },
 };

@@ -80,6 +80,9 @@ services:
       retries: 3
       start_period: 90s
 
+    networks:
+      - autoarr-net
+
   # Storybook - Component library and design system
   storybook:
     image: autoarr:dev
@@ -121,6 +124,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
+
+    networks:
+      - autoarr-net
+
+networks:
+  autoarr-net:
+    driver: bridge
 
 volumes:
   autoarr-data:
