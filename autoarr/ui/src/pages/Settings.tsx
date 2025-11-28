@@ -65,8 +65,8 @@ const ServiceSection = ({
     data-testid={`service-card-${service}`}
     data-component="ServiceCard"
   >
-    <div className="flex items-center justify-between" data-component="ServiceCardHeader">
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
+    <div className="flex items-center justify-between pb-2" data-component="ServiceCardHeader">
+      <h3 className="text-lg font-semibold text-white py-1">{title}</h3>
       <label className="flex items-center gap-2">
         <input
           type="checkbox"
@@ -79,7 +79,7 @@ const ServiceSection = ({
     </div>
 
     <div data-component="ServiceCardUrlField">
-      <label className="block text-sm font-medium text-gray-300 mb-2">URL</label>
+      <label className="block text-sm font-medium text-gray-300 mb-3 py-1">URL</label>
       <input
         type="text"
         value={config.url ?? ''}
@@ -91,7 +91,7 @@ const ServiceSection = ({
     </div>
 
     <div data-component="ServiceCardApiKeyField">
-      <label className="block text-sm font-medium text-gray-300 mb-2">
+      <label className="block text-sm font-medium text-gray-300 mb-3 py-1">
         {showToken ? 'Token' : 'API Key'}
       </label>
       <div className="relative">

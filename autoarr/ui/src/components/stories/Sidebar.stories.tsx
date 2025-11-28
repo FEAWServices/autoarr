@@ -27,6 +27,13 @@ import { Sidebar } from '../Sidebar';
  * | Left border indicator | border-l-[3px] | 3px |
  * | Icon size | w-[18px] h-[18px] | 18px |
  * | Icon margin | mr-2 | 8px |
+ *
+ * ## Typography Spacing Tokens (Global)
+ * | Token | Value | Description |
+ * |-------|-------|-------------|
+ * | `--h3-padding-y` | 8px | Vertical padding on H3 headings |
+ * | `--label-padding-y` | 4px | Vertical padding on labels |
+ * | `--section-heading-mb` | 24px | Bottom margin on H2 section titles |
  */
 const meta = {
   title: 'Layout/Sidebar',
