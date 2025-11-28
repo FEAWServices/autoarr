@@ -99,6 +99,25 @@
   --page-padding: 50px;
 
   /* ==========================================
+   * TYPOGRAPHY SPACING
+   * ========================================== */
+
+  /** H3 heading vertical padding */
+  --h3-padding-y: 8px;
+
+  /** H3 heading bottom margin */
+  --h3-margin-bottom: 16px;
+
+  /** Label vertical padding */
+  --label-padding-y: 4px;
+
+  /** Label bottom margin */
+  --label-margin-bottom: 8px;
+
+  /** Section heading bottom margin (for h2 section titles) */
+  --section-heading-mb: 24px;
+
+  /* ==========================================
    * GLOBAL ACCENT
    * ========================================== */
 

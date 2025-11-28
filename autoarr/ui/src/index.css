@@ -376,3 +376,40 @@ body {
 .sidebar-item-active:hover {
   background: hsl(var(--primary) / 20%);
 }
+
+/* ============================================
+   Typography Spacing - Global H3 and Label Padding
+   Use CSS variables from layout-tokens.css
+   ============================================ */
+
+/* H3 Headings - consistent spacing */
+h3 {
+  padding-top: var(--h3-padding-y, 8px);
+  padding-bottom: var(--h3-padding-y, 8px);
+}
+
+/* Labels in forms - consistent spacing */
+label {
+  display: block;
+  padding-top: var(--label-padding-y, 4px);
+  padding-bottom: var(--label-padding-y, 4px);
+}
+
+/* Section headings (h2) */
+h2 {
+  margin-bottom: var(--section-heading-mb, 24px);
+}
+
+/* Specific label styling in settings forms */
+.settings-label {
+  padding-top: var(--label-padding-y, 4px);
+  padding-bottom: var(--label-padding-y, 4px);
+  margin-bottom: var(--label-margin-bottom, 8px);
+}
+
+/* Card title styling */
+.card-title {
+  padding-top: var(--h3-padding-y, 8px);
+  padding-bottom: var(--h3-padding-y, 8px);
+  margin-bottom: var(--h3-margin-bottom, 16px);
+}

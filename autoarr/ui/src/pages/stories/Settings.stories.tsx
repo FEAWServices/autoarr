@@ -47,6 +47,7 @@ import { Settings } from '../Settings';
  *
  * ## CSS Variables (Design Tokens)
  *
+ * ### Layout Tokens
  * | Token | Value | Description |
  * |-------|-------|-------------|
  * | `--page-padding` | 50px | Page container padding (all sides) |
@@ -55,6 +56,15 @@ import { Settings } from '../Settings';
  * | `--accent-color` | varies by theme | Hover/active accent |
  * | `--text` | varies by theme | Primary text |
  * | `--text-muted` | varies by theme | Secondary text |
+ *
+ * ### Typography Spacing Tokens
+ * | Token | Value | Description |
+ * |-------|-------|-------------|
+ * | `--h3-padding-y` | 8px | Vertical padding on H3 headings |
+ * | `--h3-margin-bottom` | 16px | Bottom margin on H3 headings |
+ * | `--label-padding-y` | 4px | Vertical padding on labels |
+ * | `--label-margin-bottom` | 8px | Bottom margin on labels |
+ * | `--section-heading-mb` | 24px | Bottom margin on H2 section titles |
  *
  * ## Layout Structure
  * ```
