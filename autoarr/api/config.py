@@ -23,9 +23,9 @@ loading values from environment variables and .env files.
 """
 
 from functools import lru_cache
-from typing import Any, List, Optional, Union
+from typing import List, Optional
 
-from pydantic import field_validator, model_validator
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -56,21 +56,23 @@ class Settings(BaseSettings):
     # ============================================================================
 
     secret_key: str = "dev_secret_key_change_in_production"
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    # Note: These accept comma-separated strings from .env (e.g., "http://a,http://b")
+    cors_origins: str = "http://localhost:3000,http://localhost:5173"
     cors_allow_credentials: bool = True
-    cors_allow_methods: List[str] = ["*"]
-    cors_allow_headers: List[str] = ["*"]
+    cors_allow_methods: str = "*"
+    cors_allow_headers: str = "*"
 
-    # Validators for comma-separated list fields from .env
-    @field_validator("cors_origins", "cors_allow_methods", "cors_allow_headers", mode="before")
-    @classmethod
-    def parse_comma_separated_list(cls, v: Any) -> List[str]:
-        """Parse comma-separated string into list."""
-        if isinstance(v, str):
-            return [item.strip() for item in v.split(",") if item.strip()]
-        if isinstance(v, list):
-            return v
-        return []
+    def get_cors_origins(self) -> List[str]:
+        """Get CORS origins as a list."""
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    def get_cors_methods(self) -> List[str]:
+        """Get CORS methods as a list."""
+        return [m.strip() for m in self.cors_allow_methods.split(",") if m.strip()]
+
+    def get_cors_headers(self) -> List[str]:
+        """Get CORS headers as a list."""
+        return [h.strip() for h in self.cors_allow_headers.split(",") if h.strip()]
 
     # ============================================================================
     # Rate Limiting Settings
