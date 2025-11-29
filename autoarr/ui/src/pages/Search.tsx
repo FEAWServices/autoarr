@@ -64,10 +64,7 @@ export const Search = () => {
   };
 
   return (
-    <div
-      className="flex flex-col h-full bg-background-primary"
-      style={{ padding: 'var(--page-padding)' }}
-    >
+    <div className="flex flex-col h-full bg-background-primary p-12">
       {/* Header */}
       <div className="py-6">
         <h1 className="text-4xl font-bold text-white mb-3">Search and Add to Your Library</h1>

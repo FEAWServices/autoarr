@@ -5,206 +5,257 @@
 @import url("./theme/layout-tokens.css");
 
 /* ============================================
-   Base Styles
+   @layer base - Element defaults
+   These are foundational styles for HTML elements
    ============================================ */
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@layer base {
+  /* Root element setup */
+  #root {
+    @apply w-screen h-screen overflow-hidden;
+  }
 
-body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans",
-    "Droid Sans", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
+  body {
+    @apply font-sans antialiased overflow-hidden;
 
-#root {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  /* Form element defaults */
+  button,
+  input,
+  select,
+  textarea {
+    @apply p-1.5;
+  }
+
+  button {
+    @apply m-1;
+  }
+
+  /* Typography defaults */
+  h2 {
+    @apply mb-6;
+  }
+
+  h3 {
+    @apply py-2;
+  }
+
+  label {
+    @apply block py-1;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+
+    @apply rounded;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
+  }
 }
 
 /* ============================================
-   Custom Scrollbar (matching theme)
+   @layer components - Reusable component classes
+   Use @apply for consistency with Tailwind utilities
    ============================================ */
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+@layer components {
+  /* Card variants */
+  .glass-card {
+    @apply backdrop-blur-md transition-all duration-300 ease-out;
 
-::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-}
+    background: hsl(var(--card) / 50%);
+    border: 1px solid hsl(var(--primary) / 20%);
+    border-radius: var(--radius);
+  }
 
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 4px;
-}
+  .glass-card:hover {
+    @apply scale-[1.02];
 
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary));
+    box-shadow: 0 0 30px rgb(168 85 247 / 30%);
+    border-color: hsl(var(--primary) / 40%);
+  }
+
+  .solid-card {
+    @apply transition-all duration-300 ease-out;
+
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+  }
+
+  .solid-card:hover {
+    border-color: hsl(var(--primary) / 30%);
+    box-shadow: 0 0 20px rgb(168 85 247 / 20%);
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply font-medium border-none cursor-pointer transition-all duration-300 ease-out;
+    @apply px-5 py-2.5 rounded-lg;
+
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  .btn-primary:hover {
+    @apply -translate-y-px;
+
+    background: hsl(280deg 85% 50%);
+    box-shadow: 0 0 30px rgb(168 85 247 / 40%);
+  }
+
+  .btn-secondary {
+    @apply font-medium border-none cursor-pointer transition-all duration-300 ease-out;
+    @apply px-5 py-2.5 rounded-lg;
+
+    background: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
+  }
+
+  .btn-secondary:hover {
+    background: hsl(260deg 70% 45%);
+    box-shadow: 0 0 25px rgb(124 58 237 / 30%);
+  }
+
+  .btn-ghost {
+    @apply bg-transparent font-medium cursor-pointer transition-all duration-300 ease-out;
+    @apply px-5 py-2.5 rounded-lg border border-transparent;
+
+    color: hsl(var(--foreground));
+  }
+
+  .btn-ghost:hover {
+    background: hsl(var(--muted));
+    border-color: hsl(var(--primary) / 20%);
+  }
+
+  /* Focus ring */
+  .focus-ring:focus,
+  .focus-ring:focus-visible {
+    @apply outline-none;
+
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--ring));
+  }
+
+  /* Sidebar active state */
+  .sidebar-item-active {
+    @apply border-l-[3px];
+
+    background: hsl(var(--primary) / 15%);
+    border-left-color: hsl(var(--primary));
+    color: hsl(var(--primary));
+  }
+
+  .sidebar-item-active:hover {
+    background: hsl(var(--primary) / 20%);
+  }
+
+  /* Textarea auto-size */
+  .textarea-auto-size {
+    @apply min-h-12 max-h-[200px];
+  }
 }
 
 /* ============================================
-   Glassmorphic Card Styles
+   @layer utilities - Custom utility classes
+   Single-purpose classes extending Tailwind
    ============================================ */
 
-.glass-card {
-  background: hsl(var(--card) / 50%);
-  backdrop-filter: blur(12px);
-  border: 1px solid hsl(var(--primary) / 20%);
-  border-radius: var(--radius);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+@layer utilities {
+  /* Gradient utilities */
+  .gradient-text {
+    @apply bg-clip-text;
 
-.glass-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 30px rgb(168 85 247 / 30%);
-  border-color: hsl(var(--primary) / 40%);
-}
+    -webkit-text-fill-color: transparent;
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--primary)),
+      hsl(var(--accent)),
+      hsl(var(--primary-glow))
+    );
+  }
 
-/* Solid card variant */
-.solid-card {
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(320deg 85% 65%));
+  }
 
-.solid-card:hover {
-  border-color: hsl(var(--primary) / 30%);
-  box-shadow: 0 0 20px rgb(168 85 247 / 20%);
+  .gradient-hero {
+    background: linear-gradient(180deg, hsl(var(--background)), hsl(280deg 50% 15%));
+  }
+
+  .gradient-mesh {
+    background:
+      radial-gradient(at 40% 20%, hsl(var(--primary) / 30%) 0, transparent 50%),
+      radial-gradient(at 80% 0%, hsl(var(--primary-glow) / 30%) 0, transparent 50%),
+      radial-gradient(at 0% 50%, hsl(var(--secondary) / 30%) 0, transparent 50%);
+  }
+
+  /* Glow utilities */
+  .glow {
+    box-shadow: 0 0 40px hsl(var(--primary) / 30%);
+  }
+
+  .glow-lg {
+    box-shadow: 0 0 60px hsl(var(--primary) / 40%);
+  }
+
+  .glow-hover:hover {
+    box-shadow: 0 0 30px rgb(168 85 247 / 30%);
+  }
+
+  /* Shadow utilities */
+  .shadow-glass {
+    box-shadow: 0 0 40px hsl(var(--primary) / 20%);
+  }
+
+  .shadow-glass-hover {
+    box-shadow: 0 0 60px hsl(var(--primary) / 30%);
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 40px hsl(var(--primary) / 30%);
+  }
+
+  .shadow-glow-lg {
+    box-shadow: 0 0 60px hsl(var(--primary) / 40%);
+  }
+
+  .shadow-glow-hover:hover {
+    box-shadow: 0 0 30px rgb(168 85 247 / 30%);
+  }
+
+  /* Animation delay utilities */
+  .delay-100 {
+    animation-delay: 0.1s;
+  }
+
+  .delay-200 {
+    animation-delay: 0.2s;
+  }
+
+  .delay-300 {
+    animation-delay: 0.3s;
+  }
 }
 
 /* ============================================
-   Gradient Text
-   ============================================ */
-
-.gradient-text {
-  background: linear-gradient(
-    135deg,
-    hsl(var(--primary)),
-    hsl(var(--accent)),
-    hsl(var(--primary-glow))
-  );
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* ============================================
-   Gradient Backgrounds
-   ============================================ */
-
-.gradient-primary {
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(320deg 85% 65%));
-}
-
-.gradient-hero {
-  background: linear-gradient(180deg, hsl(var(--background)), hsl(280deg 50% 15%));
-}
-
-.gradient-mesh {
-  background:
-    radial-gradient(at 40% 20%, hsl(var(--primary) / 30%) 0, transparent 50%),
-    radial-gradient(at 80% 0%, hsl(var(--primary-glow) / 30%) 0, transparent 50%),
-    radial-gradient(at 0% 50%, hsl(var(--secondary) / 30%) 0, transparent 50%);
-}
-
-/* ============================================
-   Glow Effects
-   ============================================ */
-
-.glow {
-  box-shadow: 0 0 40px hsl(var(--primary) / 30%);
-}
-
-.glow-lg {
-  box-shadow: 0 0 60px hsl(var(--primary) / 40%);
-}
-
-.glow-hover:hover {
-  box-shadow: 0 0 30px rgb(168 85 247 / 30%);
-}
-
-/* ============================================
-   Button Styles
-   ============================================ */
-
-.btn-primary {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  padding: 0.625rem 1.25rem;
-  border-radius: var(--radius);
-  font-weight: 500;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: none;
-  cursor: pointer;
-}
-
-.btn-primary:hover {
-  background: hsl(280deg 85% 50%);
-  box-shadow: 0 0 30px rgb(168 85 247 / 40%);
-  transform: translateY(-1px);
-}
-
-.btn-secondary {
-  background: hsl(var(--secondary));
-  color: hsl(var(--secondary-foreground));
-  padding: 0.625rem 1.25rem;
-  border-radius: var(--radius);
-  font-weight: 500;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: none;
-  cursor: pointer;
-}
-
-.btn-secondary:hover {
-  background: hsl(260deg 70% 45%);
-  box-shadow: 0 0 25px rgb(124 58 237 / 30%);
-}
-
-.btn-ghost {
-  background: transparent;
-  color: hsl(var(--foreground));
-  padding: 0.625rem 1.25rem;
-  border-radius: var(--radius);
-  font-weight: 500;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid transparent;
-  cursor: pointer;
-}
-
-.btn-ghost:hover {
-  background: hsl(var(--muted));
-  border-color: hsl(var(--primary) / 20%);
-}
-
-/* ============================================
-   Animation Delays
-   ============================================ */
-
-.delay-100 {
-  animation-delay: 0.1s;
-}
-
-.delay-200 {
-  animation-delay: 0.2s;
-}
-
-.delay-300 {
-  animation-delay: 0.3s;
-}
-
-/* ============================================
-   Loading Animations
+   Animations (outside layers - always available)
    ============================================ */
 
 @keyframes loading-bar {
@@ -217,10 +268,6 @@ body {
   }
 }
 
-.loading-bar {
-  animation: loading-bar 2s ease-out forwards;
-}
-
 @keyframes bounce {
   0%,
   100% {
@@ -230,6 +277,10 @@ body {
   50% {
     transform: translateY(-25%);
   }
+}
+
+.loading-bar {
+  animation: loading-bar 2s ease-out forwards;
 }
 
 /* Typing indicator animation */
@@ -249,172 +300,27 @@ body {
 }
 
 /* ============================================
-   Progress Bar Utility
+   Progress Bar (data attribute based)
    ============================================ */
 
-.progress-bar[data-progress="0"] {
-  width: 0%;
-}
-
-.progress-bar[data-progress="5"] {
-  width: 5%;
-}
-
-.progress-bar[data-progress="10"] {
-  width: 10%;
-}
-
-.progress-bar[data-progress="15"] {
-  width: 15%;
-}
-
-.progress-bar[data-progress="20"] {
-  width: 20%;
-}
-
-.progress-bar[data-progress="25"] {
-  width: 25%;
-}
-
-.progress-bar[data-progress="30"] {
-  width: 30%;
-}
-
-.progress-bar[data-progress="35"] {
-  width: 35%;
-}
-
-.progress-bar[data-progress="40"] {
-  width: 40%;
-}
-
-.progress-bar[data-progress="45"] {
-  width: 45%;
-}
-
-.progress-bar[data-progress="50"] {
-  width: 50%;
-}
-
-.progress-bar[data-progress="55"] {
-  width: 55%;
-}
-
-.progress-bar[data-progress="60"] {
-  width: 60%;
-}
-
-.progress-bar[data-progress="65"] {
-  width: 65%;
-}
-
-.progress-bar[data-progress="70"] {
-  width: 70%;
-}
-
-.progress-bar[data-progress="75"] {
-  width: 75%;
-}
-
-.progress-bar[data-progress="80"] {
-  width: 80%;
-}
-
-.progress-bar[data-progress="85"] {
-  width: 85%;
-}
-
-.progress-bar[data-progress="90"] {
-  width: 90%;
-}
-
-.progress-bar[data-progress="95"] {
-  width: 95%;
-}
-
-.progress-bar[data-progress="100"] {
-  width: 100%;
-}
-
-/* ============================================
-   Textarea Utilities
-   ============================================ */
-
-.textarea-auto-size {
-  min-height: 48px;
-  max-height: 200px;
-}
-
-/* ============================================
-   Focus Ring Styles
-   ============================================ */
-
-.focus-ring:focus {
-  outline: none;
-  box-shadow:
-    0 0 0 2px hsl(var(--background)),
-    0 0 0 4px hsl(var(--ring));
-}
-
-.focus-ring:focus-visible {
-  outline: none;
-  box-shadow:
-    0 0 0 2px hsl(var(--background)),
-    0 0 0 4px hsl(var(--ring));
-}
-
-/* ============================================
-   Sidebar Active State
-   ============================================ */
-
-.sidebar-item-active {
-  background: hsl(var(--primary) / 15%);
-  border-left: 3px solid hsl(var(--primary));
-  color: hsl(var(--primary));
-}
-
-.sidebar-item-active:hover {
-  background: hsl(var(--primary) / 20%);
-}
-
-/* ============================================
-   Typography Spacing - Global H3 and Label Padding
-   Use CSS variables from layout-tokens.css
-   ============================================ */
-
-/* H3 Headings - consistent spacing */
-h3 {
-  padding-top: var(--h3-padding-y, 8px);
-  padding-bottom: var(--h3-padding-y, 8px);
-}
-
-/* Labels in forms - consistent spacing */
-label {
-  display: block;
-  padding-top: var(--label-padding-y, 4px);
-  padding-bottom: var(--label-padding-y, 4px);
-}
-
-/* Section headings (h2) */
-h2 {
-  margin-bottom: var(--section-heading-mb, 24px);
-}
-
-/* Specific label styling in settings forms */
-.settings-label {
-  padding-top: var(--label-padding-y, 4px);
-  padding-bottom: var(--label-padding-y, 4px);
-  margin-bottom: var(--label-margin-bottom, 8px);
-}
-
-/* Card title styling */
-.card-title {
-  padding-top: var(--h3-padding-y, 8px);
-  padding-bottom: var(--h3-padding-y, 8px);
-  margin-bottom: var(--h3-margin-bottom, 16px);
-}
-
-/* Service cards - consistent margin (use !important to override Tailwind space-y) */
-[data-testid^="service-card-"] {
-  margin: var(--service-card-margin, 10px) !important;
-}
+.progress-bar[data-progress="0"] { width: 0%; }
+.progress-bar[data-progress="5"] { width: 5%; }
+.progress-bar[data-progress="10"] { width: 10%; }
+.progress-bar[data-progress="15"] { width: 15%; }
+.progress-bar[data-progress="20"] { width: 20%; }
+.progress-bar[data-progress="25"] { width: 25%; }
+.progress-bar[data-progress="30"] { width: 30%; }
+.progress-bar[data-progress="35"] { width: 35%; }
+.progress-bar[data-progress="40"] { width: 40%; }
+.progress-bar[data-progress="45"] { width: 45%; }
+.progress-bar[data-progress="50"] { width: 50%; }
+.progress-bar[data-progress="55"] { width: 55%; }
+.progress-bar[data-progress="60"] { width: 60%; }
+.progress-bar[data-progress="65"] { width: 65%; }
+.progress-bar[data-progress="70"] { width: 70%; }
+.progress-bar[data-progress="75"] { width: 75%; }
+.progress-bar[data-progress="80"] { width: 80%; }
+.progress-bar[data-progress="85"] { width: 85%; }
+.progress-bar[data-progress="90"] { width: 90%; }
+.progress-bar[data-progress="95"] { width: 95%; }
+.progress-bar[data-progress="100"] { width: 100%; }

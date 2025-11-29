@@ -61,13 +61,9 @@ const ServiceSection = ({
   testConnection: (service: string) => void;
 }) => (
   <div
-    className="bg-gray-800 rounded-lg space-y-6"
+    className="bg-gray-800 rounded-lg space-y-6 m-2.5 p-2.5"
     data-testid={`service-card-${service}`}
     data-component="ServiceCard"
-    style={{
-      margin: 'var(--service-card-margin, 10px)',
-      padding: 'var(--service-card-padding, 10px)',
-    }}
   >
     <div className="flex items-center justify-between pb-2" data-component="ServiceCardHeader">
       <h3 className="text-lg font-semibold text-white py-1">{title}</h3>
@@ -89,7 +85,7 @@ const ServiceSection = ({
         value={config.url ?? ''}
         onChange={(e) => onChange({ url: e.target.value })}
         placeholder="http://localhost:8080"
-        className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="w-full bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         data-component="ServiceCardUrlInput"
       />
     </div>
@@ -101,12 +97,12 @@ const ServiceSection = ({
       <div className="relative">
         <input
           type={showKeys[service] ? 'text' : 'password'}
-          value={showToken ? (config.token ?? '') : (config.apiKey ?? '')}
+          value={showToken ? config.token ?? '' : config.apiKey ?? ''}
           onChange={(e) =>
             onChange(showToken ? { token: e.target.value } : { apiKey: e.target.value })
           }
           placeholder={showToken ? 'your_plex_token' : 'your_api_key'}
-          className="w-full px-4 py-3 pr-20 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full pr-20 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           data-component="ServiceCardApiKeyInput"
         />
         <button
@@ -124,9 +120,8 @@ const ServiceSection = ({
       <button
         onClick={() => testConnection(service)}
         disabled={!config.enabled || testResults[service] === 'testing'}
-        className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-2.5 py-2.5"
         data-component="ServiceCardTestButton"
-        style={{ padding: 'var(--service-card-test-button-padding, 10px)' }}
       >
         {testResults[service] === 'testing' ? (
           'Testing...'
@@ -174,6 +169,7 @@ export const Settings = () => {
 
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [saveError, setSaveError] = useState<string>('');
   const [testResults, setTestResults] = useState<
     Record<string, 'idle' | 'testing' | 'success' | 'error'>
   >({});
@@ -234,6 +230,10 @@ export const Settings = () => {
 
   const handleSave = async () => {
     setSaveStatus('saving');
+    setSaveError('');
+    const failedServices: string[] = [];
+    const errorMessages: string[] = [];
+
     try {
       // Save each service individually
       const services: Array<'sabnzbd' | 'sonarr' | 'radarr' | 'plex'> = [
@@ -258,25 +258,46 @@ export const Settings = () => {
           timeout: 30.0, // Default timeout
         };
 
-        const response = await fetch(`/api/v1/settings/${service}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        try {
+          const response = await fetch(`/api/v1/settings/${service}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.detail || `Failed to save ${service}`);
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorDetail = errorData.detail || `HTTP ${response.status}`;
+            failedServices.push(service);
+            errorMessages.push(`${service}: ${errorDetail}`);
+          }
+        } catch (networkError) {
+          failedServices.push(service);
+          errorMessages.push(
+            `${service}: Network error - ${
+              networkError instanceof Error ? networkError.message : 'Cannot reach server'
+            }`
+          );
         }
       });
 
       await Promise.all(savePromises);
-      setSaveStatus('success');
-      setTimeout(() => setSaveStatus('idle'), 3000);
+
+      if (failedServices.length > 0) {
+        setSaveStatus('error');
+        setSaveError(`Failed to save: ${failedServices.join(', ')}. ${errorMessages.join('; ')}`);
+        setTimeout(() => setSaveStatus('idle'), 8000);
+      } else {
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      }
     } catch (error) {
       console.error('Failed to save settings:', error);
       setSaveStatus('error');
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      setSaveError(
+        error instanceof Error ? error.message : 'An unexpected error occurred while saving'
+      );
+      setTimeout(() => setSaveStatus('idle'), 8000);
     }
   };
 
@@ -314,8 +335,7 @@ export const Settings = () => {
 
   return (
     <div
-      className="max-w-4xl mx-auto"
-      style={{ padding: 'var(--page-padding)' }}
+      className="max-w-4xl mx-auto p-12"
       data-testid="settings-page"
       data-component="SettingsPage"
     >
@@ -329,9 +349,8 @@ export const Settings = () => {
         <div className="space-y-3" data-component="QuickSettingsLinks">
           <Link
             to="/settings/appearance"
-            className="flex items-center justify-between p-4 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
+            className="flex items-center justify-between p-4 m-2.5 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
             data-component="QuickSettingsLink-Appearance"
-            style={{ margin: 'var(--quick-settings-link-margin, 10px)' }}
           >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-[var(--accent-color)]/10">
@@ -349,9 +368,8 @@ export const Settings = () => {
 
           <Link
             to="/settings/config-audit"
-            className="flex items-center justify-between p-4 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
+            className="flex items-center justify-between p-4 m-2.5 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
             data-component="QuickSettingsLink-ConfigAudit"
-            style={{ margin: 'var(--quick-settings-link-margin, 10px)' }}
           >
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-green-500/10">
@@ -480,7 +498,7 @@ export const Settings = () => {
                     })
                   }
                   placeholder="sk-ant-..."
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
@@ -501,7 +519,7 @@ export const Settings = () => {
                     app: { ...settings.app, logLevel: e.target.value },
                   })
                 }
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="DEBUG">Debug</option>
                 <option value="INFO">Info</option>
@@ -521,7 +539,7 @@ export const Settings = () => {
                   })
                 }
                 placeholder="America/New_York"
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           </div>
@@ -532,7 +550,7 @@ export const Settings = () => {
           <button
             onClick={handleSave}
             disabled={saveStatus === 'saving'}
-            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             data-component="SaveButton"
           >
             <Save className="w-5 h-5" />
@@ -547,9 +565,12 @@ export const Settings = () => {
           )}
 
           {saveStatus === 'error' && (
-            <div className="flex items-center gap-2 text-red-400">
-              <AlertCircle className="w-5 h-5" />
-              <span>Failed to save settings</span>
+            <div className="flex items-start gap-2 text-red-400 max-w-xl">
+              <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+              <div className="flex flex-col">
+                <span className="font-medium">Failed to save settings</span>
+                {saveError && <span className="text-sm text-red-300 mt-1">{saveError}</span>}
+              </div>
             </div>
           )}
         </div>
