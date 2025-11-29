@@ -389,6 +389,7 @@ async def update_service_settings(
     # This allows the API to respond immediately while reconnection happens in background
     reconnecting = False
     if config.enabled:
+
         async def background_reconnect():
             try:
                 await orchestrator.reconnect(service)
