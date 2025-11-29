@@ -190,15 +190,14 @@
     --aa-radius-full: 9999px;
 
     /* ============================================
-       Sidebar Variables - *arr family style
+       Sidebar Colors - *arr family style
+       (Layout dimensions in layout-tokens.css)
        ============================================ */
-
     --sidebar-background: hsl(222deg 47% 11%);
     --sidebar-foreground: 280 10% 95%;
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: hsl(222deg 47% 18%);
-    --sidebar-active-background: hsl(222deg 47% 18%);
     --sidebar-accent-foreground: 280 10% 95%;
     --sidebar-border: hsl(222deg 47% 18%);
     --sidebar-ring: var(--primary);

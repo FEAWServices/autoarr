@@ -148,10 +148,7 @@ export function Dashboard() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-gray-50 dark:bg-gray-900"
-      style={{ padding: 'var(--page-padding)' }}
-    >
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-12">
       {/* Toast Container */}
       <Toaster
         position="top-right"
