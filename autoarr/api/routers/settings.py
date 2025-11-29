@@ -22,6 +22,7 @@ This module provides endpoints for users to view and update configuration
 settings through the API/UI without needing to edit .env files.
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, Optional
@@ -384,22 +385,28 @@ async def update_service_settings(
         settings.plex_token = config.api_key_or_token or ""
         settings.plex_timeout = config.timeout
 
-    # Attempt to reconnect to the service
-    try:
-        if config.enabled:
-            await orchestrator.reconnect(service)
-            logger.info(f"Successfully reconnected to {service}")
-        else:
-            logger.info(f"Service {service} disabled")
-    except Exception as e:
-        logger.error(f"Failed to reconnect to {service}: {e}")
-        # Don't fail the save if reconnect fails - settings are already saved
-        logger.warning(f"Settings saved but reconnect failed: {str(e)}")
+    # Schedule reconnection as background task (non-blocking)
+    # This allows the API to respond immediately while reconnection happens in background
+    reconnecting = False
+    if config.enabled:
+        async def background_reconnect():
+            try:
+                await orchestrator.reconnect(service)
+                logger.info(f"Background reconnect to {service} succeeded")
+            except Exception as e:
+                logger.warning(f"Background reconnect to {service} failed: {e}")
+
+        asyncio.create_task(background_reconnect())
+        reconnecting = True
+        logger.info(f"Scheduled background reconnect for {service}")
+    else:
+        logger.info(f"Service {service} disabled, skipping reconnect")
 
     return {
         "success": True,
-        "message": f"Successfully updated and saved {service} configuration",
+        "message": f"Settings saved for {service}",
         "service": service,
+        "reconnecting": reconnecting,
     }
 
 

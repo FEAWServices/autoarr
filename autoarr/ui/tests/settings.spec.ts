@@ -238,4 +238,140 @@ test.describe('Settings Page', () => {
     // The save button exists but we don't click it since validation isn't implemented
     await expect(page.getByRole('button', { name: /save/i })).toBeVisible();
   });
+
+  test('should show validation error when service is enabled without API key', async ({
+    page,
+  }) => {
+    // Find the SABnzbd enabled checkbox and check it
+    const sabnzbdCard = page.getByTestId('service-card-sabnzbd');
+    const enabledCheckbox = sabnzbdCard.getByRole('checkbox', { name: /enabled/i });
+
+    // Make sure checkbox is checked (enable the service)
+    if (!(await enabledCheckbox.isChecked())) {
+      await enabledCheckbox.click();
+    }
+    await expect(enabledCheckbox).toBeChecked();
+
+    // Make sure API key is empty
+    const apiKeyInput = sabnzbdCard.getByPlaceholder(/your_api_key/);
+    await apiKeyInput.clear();
+
+    // Click save button
+    const saveButton = page.getByRole('button', { name: /save/i });
+    await saveButton.click();
+
+    // Should show validation error message
+    await expect(page.getByText(/api key.*required|cannot enable.*without.*api key/i)).toBeVisible({
+      timeout: 3000,
+    });
+
+    // Save should NOT have been called (no success message)
+    await expect(page.getByText(/saved successfully/i)).not.toBeVisible();
+  });
+
+  test('should allow save when service is enabled with API key', async ({ page }) => {
+    // Mock the API endpoint to return success
+    await page.route('**/api/v1/settings/**', async (route) => {
+      if (route.request().method() === 'PUT') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            message: 'Successfully updated and saved configuration',
+            service: 'sabnzbd',
+          }),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    // Find the SABnzbd card
+    const sabnzbdCard = page.getByTestId('service-card-sabnzbd');
+    const enabledCheckbox = sabnzbdCard.getByRole('checkbox', { name: /enabled/i });
+
+    // Enable the service
+    if (!(await enabledCheckbox.isChecked())) {
+      await enabledCheckbox.click();
+    }
+
+    // Fill in API key
+    const apiKeyInput = sabnzbdCard.getByPlaceholder(/your_api_key/);
+    await apiKeyInput.fill('test-api-key-12345');
+
+    // Click save button
+    const saveButton = page.getByRole('button', { name: /save/i });
+    await saveButton.click();
+
+    // Should show success message (no validation error)
+    await expect(page.getByText(/saved successfully|success/i)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should allow save when service is disabled without API key', async ({ page }) => {
+    // Mock the API endpoint to return success
+    await page.route('**/api/v1/settings/**', async (route) => {
+      if (route.request().method() === 'PUT') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            message: 'Successfully updated and saved configuration',
+            service: 'sabnzbd',
+          }),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    // Find the SABnzbd card
+    const sabnzbdCard = page.getByTestId('service-card-sabnzbd');
+    const enabledCheckbox = sabnzbdCard.getByRole('checkbox', { name: /enabled/i });
+
+    // Make sure service is disabled
+    if (await enabledCheckbox.isChecked()) {
+      await enabledCheckbox.click();
+    }
+    await expect(enabledCheckbox).not.toBeChecked();
+
+    // Make sure API key is empty
+    const apiKeyInput = sabnzbdCard.getByPlaceholder(/your_api_key/);
+    await apiKeyInput.clear();
+
+    // Click save button
+    const saveButton = page.getByRole('button', { name: /save/i });
+    await saveButton.click();
+
+    // Should show success (disabled services don't need API key)
+    await expect(page.getByText(/saved successfully|success/i)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should show validation errors for multiple services missing API keys', async ({
+    page,
+  }) => {
+    // Enable multiple services without API keys
+    const services = ['sabnzbd', 'sonarr', 'radarr'];
+
+    for (const service of services) {
+      const card = page.getByTestId(`service-card-${service}`);
+      const checkbox = card.getByRole('checkbox', { name: /enabled/i });
+      if (!(await checkbox.isChecked())) {
+        await checkbox.click();
+      }
+      // Clear API key
+      const apiKeyInput = card.getByPlaceholder(/your_api_key/);
+      await apiKeyInput.clear();
+    }
+
+    // Click save
+    const saveButton = page.getByRole('button', { name: /save/i });
+    await saveButton.click();
+
+    // Should show validation error mentioning multiple services or generic message
+    await expect(
+      page.getByText(/api key.*required|cannot enable.*without.*api key|validation/i)
+    ).toBeVisible({ timeout: 3000 });
+  });
 });
