@@ -23,9 +23,9 @@ loading values from environment variables and .env files.
 """
 
 from functools import lru_cache
-from typing import List, Optional
+from typing import Any, List, Optional, Union
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -60,6 +60,17 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = True
     cors_allow_methods: List[str] = ["*"]
     cors_allow_headers: List[str] = ["*"]
+
+    # Validators for comma-separated list fields from .env
+    @field_validator("cors_origins", "cors_allow_methods", "cors_allow_headers", mode="before")
+    @classmethod
+    def parse_comma_separated_list(cls, v: Any) -> List[str]:
+        """Parse comma-separated string into list."""
+        if isinstance(v, str):
+            return [item.strip() for item in v.split(",") if item.strip()]
+        if isinstance(v, list):
+            return v
+        return []
 
     # ============================================================================
     # Rate Limiting Settings

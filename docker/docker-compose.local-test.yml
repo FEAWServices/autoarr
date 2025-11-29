@@ -1,21 +1,34 @@
 # =============================================================================
-# AutoArr Local Development Environment
+# AutoArr Local Test Environment
 # =============================================================================
-# This docker-compose file runs AutoArr for local development with hot reload.
+# Runs AutoArr for local testing using the SAME base image as devcontainer.
+# Both containers share the same Windows mount for consistent node_modules.
 #
 # Access Points:
 #   - http://localhost:9080  - Full application (Vite dev server + API proxy)
+#   - http://localhost:9081  - Direct API access (optional)
 #   - http://localhost:6006  - Storybook (component library)
 #
 # Hot Reloading:
-#   - Backend: Python code changes detected automatically (uvicorn reload)
-#   - Frontend: Vite HMR - instant updates on save (no refresh needed!)
+#   - Backend: Python code changes detected automatically
+#   - Frontend: Vite HMR - instant updates on save
 #   - Storybook: Hot reload on component/story changes
 #
 # Usage:
+#   # Build the shared dev image first (from repo root):
+#   docker build -t autoarr:dev -f .devcontainer/Dockerfile .
+#
+#   # Then run:
 #   docker-compose -f docker/docker-compose.local-test.yml up -d
 #   docker-compose -f docker/docker-compose.local-test.yml logs -f
 #   docker-compose -f docker/docker-compose.local-test.yml down
+#
+# Architecture:
+#   DevContainer and Local Test Container share:
+#   - Same base image (autoarr:dev from .devcontainer/Dockerfile)
+#   - Same Windows mount (c:/Git/autoarr -> /app)
+#   - Same node_modules (no duplication)
+#   - Same Python .venv
 # =============================================================================
 
 name: autoarr_app
@@ -25,7 +38,7 @@ services:
     image: autoarr:dev
     build:
       context: ..
-      dockerfile: docker/Dockerfile.dev
+      dockerfile: .devcontainer/Dockerfile
     container_name: autoarr-local
     restart: unless-stopped
 
@@ -43,33 +56,36 @@ services:
       VITE_DEV_MODE: "true"
       # HMR client port - tells Vite to use the mapped port for WebSocket
       VITE_HMR_CLIENT_PORT: "9080"
-      # Reduce file watcher memory usage
-      WATCHFILES_FORCE_POLLING: "true"
+      # pnpm configuration
+      PNPM_HOME: "/root/.local/share/pnpm"
 
-    # Memory limits to prevent OOM
+    # Memory limits
     deploy:
       resources:
         limits:
           memory: 2G
+          cpus: "1.5"
         reservations:
           memory: 512M
 
     volumes:
-      # Mount source code from Windows
-      - c:/Git/autoarr/autoarr:/app/autoarr:cached
-      - c:/Git/autoarr/scripts:/app/scripts:cached
-
+      # Mount source code from Windows - SAME path as devcontainer
+      - c:/Git/autoarr:/app:cached
+      # Shared pnpm store (same volume as devcontainer)
+      - autoarr-pnpm-store:/root/.local/share/pnpm/store
       # Persistent data
       - autoarr-data:/data
       - autoarr-logs:/app/logs
 
-    # Run both backend and frontend dev servers
-    # Backend: no --reload to avoid file watcher memory issues on Windows mounts
-    # Frontend: Vite handles its own efficient file watching
+    # Install deps if needed, then run both servers
+    # Uses --prefer-offline to use cached packages when possible
     command: >
       sh -c "
-        cd /app/autoarr/ui && pnpm install --frozen-lockfile &&
-        (uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &) &&
+        cd /app &&
+        poetry install --no-interaction --only main &&
+        cd /app/autoarr/ui &&
+        pnpm install --prefer-offline &&
+        (cd /app && poetry run uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &) &&
         pnpm run dev --host 0.0.0.0 --port 5173
       "
 
@@ -88,7 +104,7 @@ services:
     image: autoarr:dev
     build:
       context: ..
-      dockerfile: docker/Dockerfile.dev
+      dockerfile: .devcontainer/Dockerfile
     container_name: autoarr-storybook
     restart: unless-stopped
 
@@ -97,24 +113,27 @@ services:
 
     environment:
       NODE_ENV: development
-      # Reduce file watcher memory usage
-      WATCHFILES_FORCE_POLLING: "true"
+      PNPM_HOME: "/root/.local/share/pnpm"
 
-    # Memory limits
+    # Minimum memory limits
     deploy:
       resources:
         limits:
           memory: 1G
+          cpus: "0.5"
         reservations:
           memory: 256M
 
     volumes:
-      # Mount source code from Windows
-      - c:/Git/autoarr/autoarr:/app/autoarr:cached
+      # Mount source code from Windows - SAME path as devcontainer
+      - c:/Git/autoarr:/app:cached
+      # Shared pnpm store
+      - autoarr-pnpm-store:/root/.local/share/pnpm/store
 
     command: >
       sh -c "
-        cd /app/autoarr/ui && pnpm install --frozen-lockfile &&
+        cd /app/autoarr/ui &&
+        pnpm install --prefer-offline &&
         pnpm storybook --host 0.0.0.0 --port 6006 --no-open
       "
 
@@ -135,3 +154,6 @@ networks:
 volumes:
   autoarr-data:
   autoarr-logs:
+  # Shared pnpm store - same name as in devcontainer.json
+  autoarr-pnpm-store:
+    external: true
