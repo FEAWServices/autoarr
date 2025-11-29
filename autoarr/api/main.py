@@ -142,10 +142,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # CORS middleware (must be added before other middleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_settings.cors_origins,
+    allow_origins=_settings.get_cors_origins(),
     allow_credentials=_settings.cors_allow_credentials,
-    allow_methods=_settings.cors_allow_methods,
-    allow_headers=_settings.cors_allow_headers,
+    allow_methods=_settings.get_cors_methods(),
+    allow_headers=_settings.get_cors_headers(),
 )
 
 # Error handling middleware
