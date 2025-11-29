@@ -9,6 +9,7 @@ import {
   Palette,
   ChevronRight,
   ClipboardCheck,
+  RefreshCw,
 } from 'lucide-react';
 
 interface ServiceConfig {
@@ -153,14 +154,14 @@ const ServiceSection = ({
 
 export const Settings = () => {
   const [settings, setSettings] = useState<SettingsData>({
-    sabnzbd: { url: 'http://localhost:8080', apiKey: '', enabled: true },
-    sonarr: { url: 'http://localhost:8989', apiKey: '', enabled: true },
-    radarr: { url: 'http://localhost:7878', apiKey: '', enabled: true },
+    sabnzbd: { url: 'http://localhost:8080', apiKey: '', enabled: false },
+    sonarr: { url: 'http://localhost:8989', apiKey: '', enabled: false },
+    radarr: { url: 'http://localhost:7878', apiKey: '', enabled: false },
     plex: {
       url: 'http://localhost:32400',
       apiKey: '',
       token: '',
-      enabled: true,
+      enabled: false,
     },
     anthropic: { apiKey: '', enabled: false },
     brave: { apiKey: '', enabled: false },
@@ -170,6 +171,7 @@ export const Settings = () => {
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [saveError, setSaveError] = useState<string>('');
+  const [reconnectingServices, setReconnectingServices] = useState<string[]>([]);
   const [testResults, setTestResults] = useState<
     Record<string, 'idle' | 'testing' | 'success' | 'error'>
   >({});
@@ -231,17 +233,40 @@ export const Settings = () => {
   const handleSave = async () => {
     setSaveStatus('saving');
     setSaveError('');
+
+    // Validate: enabled services must have an API key
+    const services: Array<'sabnzbd' | 'sonarr' | 'radarr' | 'plex'> = [
+      'sabnzbd',
+      'sonarr',
+      'radarr',
+      'plex',
+    ];
+    const servicesWithoutApiKey: string[] = [];
+
+    for (const service of services) {
+      const config = settings[service];
+      const apiKeyOrToken =
+        service === 'plex' ? (config as ServiceConfig & { token: string }).token : config.apiKey;
+      if (config.enabled && !apiKeyOrToken?.trim()) {
+        servicesWithoutApiKey.push(service.charAt(0).toUpperCase() + service.slice(1));
+      }
+    }
+
+    if (servicesWithoutApiKey.length > 0) {
+      setSaveStatus('error');
+      setSaveError(
+        `API key required for enabled services: ${servicesWithoutApiKey.join(', ')}. ` +
+          `Please add an API key or disable the service.`
+      );
+      return;
+    }
+
     const failedServices: string[] = [];
     const errorMessages: string[] = [];
+    const servicesReconnecting: string[] = [];
 
     try {
       // Save each service individually
-      const services: Array<'sabnzbd' | 'sonarr' | 'radarr' | 'plex'> = [
-        'sabnzbd',
-        'sonarr',
-        'radarr',
-        'plex',
-      ];
 
       const savePromises = services.map(async (service) => {
         const serviceConfig = settings[service];
@@ -270,6 +295,12 @@ export const Settings = () => {
             const errorDetail = errorData.detail || `HTTP ${response.status}`;
             failedServices.push(service);
             errorMessages.push(`${service}: ${errorDetail}`);
+          } else {
+            // Check if the service is reconnecting in background
+            const data = await response.json();
+            if (data.reconnecting) {
+              servicesReconnecting.push(service);
+            }
           }
         } catch (networkError) {
           failedServices.push(service);
@@ -289,6 +320,12 @@ export const Settings = () => {
         setTimeout(() => setSaveStatus('idle'), 8000);
       } else {
         setSaveStatus('success');
+        // Track which services are reconnecting
+        if (servicesReconnecting.length > 0) {
+          setReconnectingServices(servicesReconnecting);
+          // Clear reconnecting status after 10 seconds (background reconnect should be done)
+          setTimeout(() => setReconnectingServices([]), 10000);
+        }
         setTimeout(() => setSaveStatus('idle'), 3000);
       }
     } catch (error) {
@@ -558,9 +595,26 @@ export const Settings = () => {
           </button>
 
           {saveStatus === 'success' && (
-            <div className="flex items-center gap-2 text-green-400">
-              <CheckCircle className="w-5 h-5" />
-              <span>Settings saved successfully!</span>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-green-400">
+                <CheckCircle className="w-5 h-5" />
+                <span>Settings saved successfully!</span>
+              </div>
+              {reconnectingServices.length > 0 && (
+                <div className="flex items-center gap-2 text-blue-400">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">
+                    Reconnecting to {reconnectingServices.join(', ')} in background...
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {saveStatus === 'idle' && reconnectingServices.length > 0 && (
+            <div className="flex items-center gap-2 text-blue-400">
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Reconnecting to {reconnectingServices.join(', ')}...</span>
             </div>
           )}
 
