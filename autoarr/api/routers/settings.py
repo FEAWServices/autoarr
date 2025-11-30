@@ -22,6 +22,7 @@ This module provides endpoints for users to view and update configuration
 settings through the API/UI without needing to edit .env files.
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, Optional
@@ -67,8 +68,10 @@ class ServiceConnectionConfig(BaseModel):
     """Configuration for a single service connection."""
 
     enabled: bool = Field(default=True, description="Whether this service is enabled")
-    url: str = Field(..., description="Service URL (e.g., http://localhost:8080)")
-    api_key_or_token: str = Field(..., description="API key or authentication token", min_length=1)
+    url: Optional[str] = Field(default="", description="Service URL (e.g., http://localhost:8080)")
+    api_key_or_token: Optional[str] = Field(
+        default="", description="API key or authentication token"
+    )
     timeout: float = Field(default=30.0, ge=1.0, le=300.0, description="Request timeout in seconds")
 
 
@@ -347,8 +350,8 @@ async def update_service_settings(
         await repo.save_service_settings(
             service_name=service,
             enabled=config.enabled,
-            url=config.url,
-            api_key_or_token=config.api_key_or_token,
+            url=config.url or "",
+            api_key_or_token=config.api_key_or_token or "",
             timeout=config.timeout,
         )
         logger.info(f"Saved {service} settings to database")
@@ -363,41 +366,48 @@ async def update_service_settings(
     settings = get_settings()
     if service == "sabnzbd":
         settings.sabnzbd_enabled = config.enabled
-        settings.sabnzbd_url = config.url
-        settings.sabnzbd_api_key = config.api_key_or_token
+        settings.sabnzbd_url = config.url or ""
+        settings.sabnzbd_api_key = config.api_key_or_token or ""
         settings.sabnzbd_timeout = config.timeout
     elif service == "sonarr":
         settings.sonarr_enabled = config.enabled
-        settings.sonarr_url = config.url
-        settings.sonarr_api_key = config.api_key_or_token
+        settings.sonarr_url = config.url or ""
+        settings.sonarr_api_key = config.api_key_or_token or ""
         settings.sonarr_timeout = config.timeout
     elif service == "radarr":
         settings.radarr_enabled = config.enabled
-        settings.radarr_url = config.url
-        settings.radarr_api_key = config.api_key_or_token
+        settings.radarr_url = config.url or ""
+        settings.radarr_api_key = config.api_key_or_token or ""
         settings.radarr_timeout = config.timeout
     elif service == "plex":
         settings.plex_enabled = config.enabled
-        settings.plex_url = config.url
-        settings.plex_token = config.api_key_or_token
+        settings.plex_url = config.url or ""
+        settings.plex_token = config.api_key_or_token or ""
         settings.plex_timeout = config.timeout
 
-    # Attempt to reconnect to the service
-    try:
-        if config.enabled:
-            await orchestrator.reconnect(service)
-            logger.info(f"Successfully reconnected to {service}")
-        else:
-            logger.info(f"Service {service} disabled")
-    except Exception as e:
-        logger.error(f"Failed to reconnect to {service}: {e}")
-        # Don't fail the save if reconnect fails - settings are already saved
-        logger.warning(f"Settings saved but reconnect failed: {str(e)}")
+    # Schedule reconnection as background task (non-blocking)
+    # This allows the API to respond immediately while reconnection happens in background
+    reconnecting = False
+    if config.enabled:
+
+        async def background_reconnect():
+            try:
+                await orchestrator.reconnect(service)
+                logger.info(f"Background reconnect to {service} succeeded")
+            except Exception as e:
+                logger.warning(f"Background reconnect to {service} failed: {e}")
+
+        asyncio.create_task(background_reconnect())
+        reconnecting = True
+        logger.info(f"Scheduled background reconnect for {service}")
+    else:
+        logger.info(f"Service {service} disabled, skipping reconnect")
 
     return {
         "success": True,
-        "message": f"Successfully updated and saved {service} configuration",
+        "message": f"Settings saved for {service}",
         "service": service,
+        "reconnecting": reconnecting,
     }
 
 
@@ -529,8 +539,8 @@ async def save_all_settings(
                 await repo.save_service_settings(
                     service_name=service_name,
                     enabled=service_config.enabled,
-                    url=service_config.url,
-                    api_key_or_token=service_config.api_key_or_token,
+                    url=service_config.url or "",
+                    api_key_or_token=service_config.api_key_or_token or "",
                     timeout=service_config.timeout,
                 )
                 logger.info(f"Saved {service_name} settings to database")
@@ -541,26 +551,26 @@ async def save_all_settings(
     # Update in-memory settings for immediate effect
     if config.sabnzbd:
         settings.sabnzbd_enabled = config.sabnzbd.enabled
-        settings.sabnzbd_url = config.sabnzbd.url
-        settings.sabnzbd_api_key = config.sabnzbd.api_key_or_token
+        settings.sabnzbd_url = config.sabnzbd.url or ""
+        settings.sabnzbd_api_key = config.sabnzbd.api_key_or_token or ""
         settings.sabnzbd_timeout = config.sabnzbd.timeout
 
     if config.sonarr:
         settings.sonarr_enabled = config.sonarr.enabled
-        settings.sonarr_url = config.sonarr.url
-        settings.sonarr_api_key = config.sonarr.api_key_or_token
+        settings.sonarr_url = config.sonarr.url or ""
+        settings.sonarr_api_key = config.sonarr.api_key_or_token or ""
         settings.sonarr_timeout = config.sonarr.timeout
 
     if config.radarr:
         settings.radarr_enabled = config.radarr.enabled
-        settings.radarr_url = config.radarr.url
-        settings.radarr_api_key = config.radarr.api_key_or_token
+        settings.radarr_url = config.radarr.url or ""
+        settings.radarr_api_key = config.radarr.api_key_or_token or ""
         settings.radarr_timeout = config.radarr.timeout
 
     if config.plex:
         settings.plex_enabled = config.plex.enabled
-        settings.plex_url = config.plex.url
-        settings.plex_token = config.plex.api_key_or_token
+        settings.plex_url = config.plex.url or ""
+        settings.plex_token = config.plex.api_key_or_token or ""
         settings.plex_timeout = config.plex.timeout
 
     # Reconnect to enabled services
@@ -692,7 +702,7 @@ async def discover_services() -> list[DiscoveredService]:
         ("plex", 32400),
     ]
 
-    async def check_service(service_type: str, port: int):
+    async def check_service(service_type: str, port: int) -> None:
         """Check if a service is running on localhost:port."""
         url = f"http://localhost:{port}"
         try:

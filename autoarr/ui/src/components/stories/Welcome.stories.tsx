@@ -50,6 +50,16 @@ import { Welcome } from '../../pages/Welcome';
  * | Icon box padding | p-5 | 20px |
  * | Icon margin | mb-8 | 32px |
  * | Title margin | mb-4 | 16px |
+ *
+ * ### Typography Spacing Tokens (Global)
+ * These CSS variables apply to all H3 headings and labels site-wide:
+ * | Token | Value | Description |
+ * |-------|-------|-------------|
+ * | `--h3-padding-y` | 8px | Vertical padding on H3 headings |
+ * | `--h3-margin-bottom` | 16px | Bottom margin on H3 headings |
+ * | `--label-padding-y` | 4px | Vertical padding on labels |
+ * | `--label-margin-bottom` | 8px | Bottom margin on labels |
+ * | `--section-heading-mb` | 24px | Bottom margin on H2 section titles |
  */
 const meta = {
   title: 'Pages/Welcome',

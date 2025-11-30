@@ -1,134 +1,135 @@
 #!/bin/bash
+# =============================================================================
+# DevContainer Post-Create Script
+# =============================================================================
+# Runs after the devcontainer is created. Since all tools (Node.js, pnpm,
+# Poetry, gh, claude) are now installed in the Dockerfile, this script
+# only needs to:
+#   1. Install project dependencies
+#   2. Configure git/GitHub authentication
+# =============================================================================
+
 set -e
 
 echo "🚀 Running post-create setup..."
+echo ""
 
-# Install Node.js if not already installed
-if ! command -v node &> /dev/null; then
-    echo "📦 Installing Node.js..."
-    curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
-    apt-get install -y nodejs
-    echo "✅ Node.js installed: $(node --version)"
-fi
+# -----------------------------------------------------------------------------
+# Git Configuration
+# -----------------------------------------------------------------------------
 
-# Install pnpm if not already installed
-if ! command -v pnpm &> /dev/null; then
-    echo "📦 Installing pnpm..."
-    curl -fsSL https://get.pnpm.io/install.sh | sh -
-    export PNPM_HOME="/root/.local/share/pnpm"
-    export PATH="$PNPM_HOME:$PATH"
-    echo "✅ pnpm installed: $(pnpm --version)"
-fi
-
-# Install Claude CLI if not already installed
-if ! command -v claude &> /dev/null; then
-    echo "🤖 Installing Claude CLI..."
-    if command -v npm &> /dev/null; then
-        npm install -g @anthropic-ai/claude-code
-        echo "✅ Claude CLI installed"
-    else
-        echo "⚠️ npm is not available. Cannot install Claude CLI."
-    fi
-fi
-
-# Install GitHub CLI if not already installed
-if ! command -v gh &> /dev/null; then
-    echo "🐙 Installing GitHub CLI..."
-    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-    chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-    apt-get update
-    apt-get install -y gh
-    echo "✅ GitHub CLI installed: $(gh --version)"
-fi
-
-# Install Poetry
-echo "📦 Installing Poetry..."
-curl -sSL https://install.python-poetry.org | python3 -
-export PATH="/root/.local/bin:$PATH"
-
-# Configure Git credentials and GitHub CLI
 if [ -f ".env" ]; then
-    echo "🔧 Configuring Git credentials..."
+    echo "🔧 Loading environment from .env..."
     source .env
-    if [ ! -z "$GIT_EMAIL" ] && [ ! -z "$GIT_NAME" ]; then
+
+    # Configure Git user
+    if [ -n "$GIT_EMAIL" ] && [ -n "$GIT_NAME" ]; then
         git config --global user.email "$GIT_EMAIL"
         git config --global user.name "$GIT_NAME"
         echo "✅ Git configured: $GIT_NAME <$GIT_EMAIL>"
     fi
 
     # Configure GitHub CLI authentication
-    if [ ! -z "$GH_TOKEN" ]; then
-        echo "🔑 Configuring GitHub CLI authentication..."
-        # Add GH_TOKEN export to bash profile for persistent authentication
+    if [ -n "$GH_TOKEN" ]; then
+        echo "🔑 Configuring GitHub CLI..."
+        # Add to bashrc for persistent auth
         if ! grep -q "export GH_TOKEN" ~/.bashrc 2>/dev/null; then
-            echo "" >> ~/.bashrc
-            echo "# GitHub CLI authentication (auto-configured by devcontainer)" >> ~/.bashrc
-            echo "if [ -f /app/.env ]; then" >> ~/.bashrc
-            echo "    source /app/.env" >> ~/.bashrc
-            echo "    export GH_TOKEN" >> ~/.bashrc
-            echo "fi" >> ~/.bashrc
+            cat >> ~/.bashrc << 'EOF'
+
+# GitHub CLI authentication (auto-configured by devcontainer)
+if [ -f /app/.env ]; then
+    source /app/.env
+    export GH_TOKEN
+fi
+EOF
         fi
-        # Check if already authenticated (e.g., via GH_TOKEN env var)
+
+        # Verify authentication
         if gh auth status > /dev/null 2>&1; then
-            echo "✅ GitHub CLI already authenticated as $(gh api user -q .login)"
+            echo "✅ GitHub CLI authenticated as $(gh api user -q .login 2>/dev/null || echo 'unknown')"
         else
-            # Only try to login if not already authenticated
-            echo "$GH_TOKEN" | gh auth login --with-token
+            echo "$GH_TOKEN" | gh auth login --with-token 2>/dev/null || true
             if gh auth status > /dev/null 2>&1; then
-                echo "✅ GitHub CLI authenticated as $(gh api user -q .login)"
+                echo "✅ GitHub CLI authenticated"
             else
-                echo "⚠️  GitHub CLI authentication check failed"
+                echo "⚠️  GitHub CLI authentication failed"
             fi
         fi
     else
         echo "⚠️  GH_TOKEN not found in .env - GitHub CLI not authenticated"
-        echo "   Add GH_TOKEN=your_token to .env to enable GitHub CLI features"
     fi
+else
+    echo "ℹ️  No .env file found - skipping git/GitHub configuration"
 fi
 
-# Configure Poetry
-echo "⚙️  Configuring Poetry..."
-poetry config virtualenvs.in-project true
+echo ""
 
-# Install Python dependencies
-echo "📚 Installing Python dependencies..."
-poetry install
+# -----------------------------------------------------------------------------
+# Python Dependencies
+# -----------------------------------------------------------------------------
 
-# Set up pre-commit hooks (optional)
-if [ -f ".pre-commit-config.yaml" ]; then
-    echo "🪝 Setting up pre-commit hooks..."
-    poetry run pre-commit install || true
-fi
+echo "📦 Installing Python dependencies..."
+cd /app
 
-# Install frontend dependencies and Playwright
+# Poetry is pre-installed in Dockerfile
+poetry install --no-interaction
+echo "✅ Python dependencies installed"
+
+echo ""
+
+# -----------------------------------------------------------------------------
+# Frontend Dependencies
+# -----------------------------------------------------------------------------
+
 if [ -d "autoarr/ui" ]; then
     echo "📦 Installing frontend dependencies..."
     cd autoarr/ui
-    export PNPM_HOME="/root/.local/share/pnpm"
-    export PATH="$PNPM_HOME:$PATH"
+
+    # pnpm is pre-installed in Dockerfile
     pnpm install
-    echo "🎭 Installing Playwright browsers..."
-    pnpm exec playwright install --with-deps chromium
+    echo "✅ Frontend dependencies installed"
+
     cd /app
-    echo "✅ Frontend dependencies and Playwright installed"
 fi
 
-# Display versions
 echo ""
-echo "✅ Setup complete!"
+
+# -----------------------------------------------------------------------------
+# Create pnpm store volume if it doesn't exist
+# -----------------------------------------------------------------------------
+
+echo "🗄️  Ensuring pnpm store volume exists..."
+if command -v docker &> /dev/null; then
+    docker volume create autoarr-pnpm-store 2>/dev/null || true
+    echo "✅ pnpm store volume ready"
+fi
+
+echo ""
+
+# -----------------------------------------------------------------------------
+# Summary
+# -----------------------------------------------------------------------------
+
+echo "============================================="
+echo "✅ DevContainer setup complete!"
+echo "============================================="
 echo ""
 echo "📌 Installed versions:"
-python --version
-poetry --version
-node --version 2>/dev/null || echo "Node.js: not installed"
-claude --version 2>/dev/null || echo "Claude CLI: not installed"
-gh --version 2>/dev/null || echo "GitHub CLI: not installed"
+echo "   Python:  $(python --version 2>&1 | cut -d' ' -f2)"
+echo "   Poetry:  $(poetry --version 2>&1 | cut -d' ' -f3)"
+echo "   Node.js: $(node --version 2>&1)"
+echo "   pnpm:    $(pnpm --version 2>&1)"
+echo "   gh:      $(gh --version 2>&1 | head -1 | cut -d' ' -f3)"
+echo "   claude:  $(claude --version 2>&1 || echo 'not available')"
 echo ""
-echo "🎯 Next steps:"
-echo "  - Run Python tests: poetry run pytest"
-echo "  - Run Playwright tests: cd autoarr/ui && pnpm exec playwright test"
-echo "  - Run post-deployment tests: bash run-post-deployment-tests.sh"
-echo "  - Start API: poetry run python -m api.main"
-echo "  - Access API docs: http://localhost:8088/docs"
+echo "🎯 Quick commands:"
+echo "   Run API:        cd /app && poetry run uvicorn autoarr.api.main:app --reload"
+echo "   Run UI:         cd /app/autoarr/ui && pnpm dev"
+echo "   Run tests:      poetry run pytest"
+echo "   Run E2E tests:  ./scripts/run-e2e-tests.sh"
+echo ""
+echo "🐳 Test container:"
+echo "   Start:  docker-compose -f docker/docker-compose.local-test.yml up -d"
+echo "   Logs:   docker-compose -f docker/docker-compose.local-test.yml logs -f"
+echo "   Stop:   docker-compose -f docker/docker-compose.local-test.yml down"
 echo ""

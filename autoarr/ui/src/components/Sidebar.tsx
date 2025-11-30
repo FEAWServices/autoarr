@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
   Download,
@@ -9,16 +9,16 @@ import {
   Activity,
   Search,
   MessageCircle,
-  Menu,
-  X,
-  Moon,
-  Sun,
   Home,
   ClipboardCheck,
   Palette,
 } from 'lucide-react';
-import { Logo } from './Logo';
-import { useThemeStore } from '../stores/themeStore';
+
+interface ServiceStatus {
+  key: string;
+  name: string;
+  connected: boolean;
+}
 
 interface NavItem {
   path: string;
@@ -48,15 +48,7 @@ const navItems: NavItem[] = [
 ];
 
 // Sidebar Item Component - follows *arr pattern
-const SidebarItem = ({
-  item,
-  isChild = false,
-  onCloseMobileMenu,
-}: {
-  item: NavItem;
-  isChild?: boolean;
-  onCloseMobileMenu: () => void;
-}) => {
+const SidebarItem = ({ item, isChild = false }: { item: NavItem; isChild?: boolean }) => {
   const location = useLocation();
 
   const isActive = location.pathname === item.path;
@@ -70,10 +62,9 @@ const SidebarItem = ({
     <div>
       <NavLink
         to={item.path}
-        onClick={onCloseMobileMenu}
         className={`
           flex items-center
-          border-l-[3px] transition-all duration-200 ease-in-out
+          border-l-[3px] transition-colors duration-200
           ${
             isActive
               ? 'border-l-[var(--accent-color)] text-[var(--accent-color)] bg-[var(--sidebar-accent)]'
@@ -99,12 +90,7 @@ const SidebarItem = ({
       {item.children && showChildren && (
         <div>
           {item.children.map((child) => (
-            <SidebarItem
-              key={child.path}
-              item={child}
-              isChild={true}
-              onCloseMobileMenu={onCloseMobileMenu}
-            />
+            <SidebarItem key={child.path} item={child} isChild={true} />
           ))}
         </div>
       )}
@@ -113,107 +99,112 @@ const SidebarItem = ({
 };
 
 export const Sidebar = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isDarkMode, toggleDarkMode } = useThemeStore();
+  const [services, setServices] = useState<ServiceStatus[]>([
+    { key: 'sabnzbd', name: 'SABnzbd', connected: false },
+    { key: 'sonarr', name: 'Sonarr', connected: false },
+    { key: 'radarr', name: 'Radarr', connected: false },
+    { key: 'plex', name: 'Plex', connected: false },
+  ]);
+  const [loading, setLoading] = useState(true);
 
-  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  useEffect(() => {
+    const checkServices = async () => {
+      const serviceKeys = ['sabnzbd', 'sonarr', 'radarr', 'plex'];
+      const results = await Promise.all(
+        serviceKeys.map(async (key) => {
+          try {
+            const response = await fetch(`/health/${key}`);
+            return { key, connected: response.ok };
+          } catch {
+            return { key, connected: false };
+          }
+        })
+      );
+
+      setServices((prev) =>
+        prev.map((service) => {
+          const result = results.find((r) => r.key === service.key);
+          return result ? { ...service, connected: result.connected } : service;
+        })
+      );
+      setLoading(false);
+    };
+
+    checkServices();
+    // Re-check every 30 seconds
+    const interval = setInterval(checkServices, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const connectedCount = services.filter((s) => s.connected).length;
 
   return (
-    <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={toggleMobileMenu}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-lg bg-card/80 backdrop-blur-md border border-primary/20 hover:bg-muted hover:border-primary/40 transition-all duration-300 shadow-lg hover:shadow-glow-hover"
-        aria-label="Toggle menu"
+    <aside
+      className="sticky top-0 h-screen flex flex-col"
+      style={{
+        width: 'var(--sidebar-width, 192px)',
+        minWidth: 'var(--sidebar-width, 192px)',
+        backgroundColor: 'var(--sidebar-background, hsl(222 47% 11%))',
+      }}
+    >
+      {/* Brand Header - *arr style */}
+      <Link
+        to="/"
+        className="flex items-center px-5 py-4 hover:bg-[var(--sidebar-accent)]/50 transition-colors duration-200"
       >
-        {isMobileMenuOpen ? (
-          <X className="w-6 h-6 text-foreground" />
-        ) : (
-          <Menu className="w-6 h-6 text-foreground" />
-        )}
-      </button>
+        <div>
+          <h1 className="text-xl font-bold text-white">AutoArr</h1>
+          <p className="text-xs text-muted-foreground">v1.0.0</p>
+        </div>
+      </Link>
 
-      {/* Mobile Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-fade-in"
-          onClick={closeMobileMenu}
-        />
-      )}
+      {/* Navigation - *arr style */}
+      <nav className="flex-1 overflow-y-auto py-2">
+        {navItems.map((item) => (
+          <SidebarItem key={item.path} item={item} />
+        ))}
+      </nav>
 
-      {/* Sidebar - following *arr family structure */}
-      <aside
-        className={`
-          fixed lg:sticky top-0 h-screen z-40
-          bg-[var(--sidebar-background)]
-          flex flex-col
-          transition-transform duration-300 ease-in-out
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        `}
-        style={{
-          width: 'var(--sidebar-width, 192px)',
-          backgroundColor: 'var(--sidebar-background, hsl(222 47% 11%))',
-        }}
+      {/* Footer - Service Status */}
+      <div
+        data-component="SidebarServiceStatus"
+        className="border-t border-[var(--sidebar-border)] py-3 px-4"
       >
-        {/* Logo/Brand Header - *arr style */}
-        <Link
-          to="/"
-          onClick={closeMobileMenu}
-          className="flex items-center gap-3 px-5 py-4 hover:bg-[var(--sidebar-accent)]/50 transition-colors duration-200"
-        >
-          <div className="transition-transform duration-200 hover:scale-105">
-            <Logo size="md" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">AutoArr</h1>
-            <p className="text-xs text-muted-foreground">v1.0.0</p>
-          </div>
-        </Link>
-
-        {/* Navigation - *arr style */}
-        <nav className="flex-1 overflow-y-auto py-2">
-          {navItems.map((item) => (
-            <SidebarItem key={item.path} item={item} onCloseMobileMenu={closeMobileMenu} />
-          ))}
-        </nav>
-
-        {/* Footer - Dark Mode Toggle & Status */}
-        <div className="border-t border-[var(--sidebar-border)] py-3 px-4 space-y-3">
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={toggleDarkMode}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-md bg-[var(--sidebar-accent)]/30 hover:bg-[var(--sidebar-accent)]/50 transition-colors duration-200"
-            aria-label="Toggle dark mode"
-          >
-            <span className="text-sm text-muted-foreground">
-              {isDarkMode ? 'Dark Mode' : 'Light Mode'}
-            </span>
-            <div className="relative w-10 h-5 bg-muted rounded-full transition-colors duration-200">
+        <div className="text-xs text-muted-foreground mb-2 px-1">
+          Services ({connectedCount}/{services.length})
+        </div>
+        <div className="grid grid-cols-2 gap-1">
+          {services.map((service) => (
+            <div
+              key={service.key}
+              data-testid={`sidebar-status-${service.key}`}
+              className="flex items-center gap-1.5 px-1 py-0.5"
+              title={service.connected ? `${service.name} connected` : `${service.name} offline`}
+            >
               <div
-                className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-[var(--accent-color)] shadow-sm transition-transform duration-200 flex items-center justify-center ${
-                  isDarkMode ? 'translate-x-5' : 'translate-x-0'
+                className={`w-1.5 h-1.5 rounded-full ${
+                  loading
+                    ? 'bg-muted-foreground animate-pulse'
+                    : service.connected
+                      ? 'bg-green-500'
+                      : 'bg-red-500'
+                }`}
+              />
+              <span
+                className={`text-xs truncate ${
+                  loading
+                    ? 'text-muted-foreground'
+                    : service.connected
+                      ? 'text-green-500'
+                      : 'text-red-500'
                 }`}
               >
-                {isDarkMode ? (
-                  <Moon className="w-2.5 h-2.5 text-white" />
-                ) : (
-                  <Sun className="w-2.5 h-2.5 text-white" />
-                )}
-              </div>
+                {service.name}
+              </span>
             </div>
-          </button>
-
-          {/* Status */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-            <span>Status</span>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-green-500 font-medium">Online</span>
-            </div>
-          </div>
+          ))}
         </div>
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 };

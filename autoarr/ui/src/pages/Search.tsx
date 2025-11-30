@@ -64,9 +64,9 @@ export const Search = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background-primary">
+    <div className="flex flex-col h-full bg-background-primary p-12">
       {/* Header */}
-      <div className="px-8 py-12">
+      <div className="py-6">
         <h1 className="text-4xl font-bold text-white mb-3">Search and Add to Your Library</h1>
         <p className="text-text-secondary text-lg">
           Use natural language to find and add movies and TV shows to your collection.
@@ -74,7 +74,7 @@ export const Search = () => {
       </div>
 
       {/* Search Input */}
-      <div className="px-8 mb-12">
+      <div className="mb-12">
         <div className="max-w-4xl">
           <div className="relative">
             <SearchIcon className="absolute left-6 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
@@ -91,7 +91,7 @@ export const Search = () => {
       </div>
 
       {/* Results */}
-      <div className="flex-1 overflow-y-auto px-8 pb-8">
+      <div className="flex-1 overflow-y-auto">
         {results.length > 0 ? (
           <div className="max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
             {results.map((result) => (
