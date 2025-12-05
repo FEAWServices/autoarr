@@ -21,7 +21,6 @@ import { test, expect } from "@playwright/test";
 // Test Configuration
 // ============================================================================
 
-const BASE_URL = "http://localhost:3000";
 const API_BASE_URL = "http://localhost:8088/api/v1";
 
 // Mock audit response data
@@ -72,7 +71,7 @@ const mockRecommendationsResponse = {
 
 test.describe("Dashboard - Loading and Initial State", () => {
   test("should display dashboard heading on load", async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto("/");
 
     // Wait for and verify main heading
     const heading = page.getByRole("heading", { name: /configuration audit/i });
@@ -80,7 +79,7 @@ test.describe("Dashboard - Loading and Initial State", () => {
   });
 
   test("should show loading state initially", async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto("/");
 
     // Check for loading indicator
     const loadingIndicator = page.getByTestId("dashboard-loading");
@@ -91,7 +90,7 @@ test.describe("Dashboard - Loading and Initial State", () => {
 
   test("should load within 10 seconds", async ({ page }) => {
     const startTime = Date.now();
-    await page.goto(BASE_URL);
+    await page.goto("/");
 
     // Wait for dashboard to be interactive
     await page.waitForSelector('[data-testid="dashboard-container"]', {
@@ -121,7 +120,7 @@ test.describe("Dashboard - Service Status Cards", () => {
       },
     );
 
-    await page.goto(BASE_URL);
+    await page.goto("/");
   });
 
   test("should display all 4 service status cards", async ({ page }) => {
@@ -212,7 +211,7 @@ test.describe("Dashboard - Run Audit Button", () => {
       },
     );
 
-    await page.goto(BASE_URL);
+    await page.goto("/");
 
     // Wait for dashboard to finish loading
     await page.waitForSelector('[data-testid="dashboard-container"]', {
@@ -359,7 +358,7 @@ test.describe("Dashboard - Error Handling", () => {
       },
     );
 
-    await page.goto(BASE_URL);
+    await page.goto("/");
 
     // Wait for dashboard to finish loading
     await page.waitForSelector('[data-testid="dashboard-container"]', {
@@ -451,7 +450,7 @@ test.describe("Dashboard - System Health Overview", () => {
       },
     );
 
-    await page.goto(BASE_URL);
+    await page.goto("/");
   });
 
   test("should display overall system health score", async ({ page }) => {
@@ -508,7 +507,7 @@ test.describe.skip("Dashboard - Mobile Responsiveness", () => {
         },
       );
 
-      await page.goto(BASE_URL);
+      await page.goto("/");
 
       // Dashboard should be visible
       const dashboard = page.getByTestId("dashboard-container");
@@ -542,7 +541,7 @@ test.describe("Dashboard - Accessibility", () => {
       },
     );
 
-    await page.goto(BASE_URL);
+    await page.goto("/");
   });
 
   test.skip("should have proper heading hierarchy", async ({ page }) => {
@@ -678,7 +677,7 @@ test.describe("Dashboard - Recommendation Cards", () => {
       },
     );
 
-    await page.goto(BASE_URL);
+    await page.goto("/");
   });
 
   test.skip("should display recommendation cards when recommendations exist", async ({

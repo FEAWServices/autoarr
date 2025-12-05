@@ -148,7 +148,7 @@ export function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       {/* Toast Container */}
       <Toaster
         position="top-right"
@@ -163,13 +163,10 @@ export function Dashboard() {
 
       <div className="max-w-7xl mx-auto" data-testid="dashboard-container">
         {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+        <div className="mb-3">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             Configuration Audit
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Monitor and optimize your media server configuration
-          </p>
         </div>
 
         {/* Loading State */}

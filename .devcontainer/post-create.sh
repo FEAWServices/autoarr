@@ -86,7 +86,8 @@ if [ -d "autoarr/ui" ]; then
     cd autoarr/ui
 
     # pnpm is pre-installed in Dockerfile
-    pnpm install
+    # --force avoids interactive prompt when node_modules needs reinstall
+    pnpm install --force
     echo "✅ Frontend dependencies installed"
 
     cd /app

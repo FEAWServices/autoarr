@@ -232,9 +232,13 @@ async def service_health(
 
     # Check if service is connected by checking if it's in _clients
     if service not in orchestrator._clients:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Service '{service}' is not connected",
+        # Return unconfigured status instead of error - this is expected for optional services
+        return ServiceHealth(
+            healthy=False,
+            latency_ms=None,
+            error="Service not configured",
+            last_check=datetime.utcnow().isoformat() + "Z",
+            circuit_breaker_state="unconfigured",
         )
 
     # Perform health check

@@ -5,11 +5,9 @@
 
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:3000";
-
 test.describe("Chat - Smoke Tests", () => {
   test("should load chat page successfully", async ({ page }) => {
-    await page.goto(`${BASE_URL}/chat`);
+    await page.goto("/chat");
 
     // Check that page loads
     const chatContainer = page.getByTestId("chat-container");
@@ -17,7 +15,7 @@ test.describe("Chat - Smoke Tests", () => {
   });
 
   test("should display chat interface elements", async ({ page }) => {
-    await page.goto(`${BASE_URL}/chat`);
+    await page.goto("/chat");
 
     // Verify key elements are present
     await expect(page.getByTestId("chat-container")).toBeVisible();
@@ -29,7 +27,7 @@ test.describe("Chat - Smoke Tests", () => {
   });
 
   test("should be able to type in input", async ({ page }) => {
-    await page.goto(`${BASE_URL}/chat`);
+    await page.goto("/chat");
 
     const input = page.getByRole("textbox", { name: /message input/i });
     await input.fill("Test message");

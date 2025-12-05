@@ -7,7 +7,7 @@ import { Search } from './pages/Search';
 import { Settings } from './pages/Settings';
 import { Appearance } from './pages/Appearance';
 import { Placeholder } from './pages/Placeholder';
-import { Welcome } from './pages/Welcome';
+import { Home } from './pages/Home';
 import ConfigAuditPage from './pages/ConfigAudit';
 import { Chat } from './pages/Chat';
 import { useThemeStore } from './stores/themeStore';
@@ -33,7 +33,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<Welcome />} />
+          <Route index element={<Home />} />
           <Route path="chat" element={<Chat />} />
           <Route path="search" element={<Search />} />
           <Route path="settings" element={<Settings />} />
