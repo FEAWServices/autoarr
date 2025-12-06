@@ -307,3 +307,86 @@ class TestLLMSettingsEndpoints:
             response = await test_llm_connection(request=request)
 
             assert response.success is False
+
+
+class TestLLMRouteOrdering:
+    """Tests to ensure LLM routes are not caught by /{service} catch-all route.
+
+    This is a regression test for the bug where /llm was matched by /{service}
+    resulting in 'Service llm not found' error.
+    """
+
+    @pytest.mark.asyncio
+    async def test_llm_routes_come_before_service_routes(self):
+        """Verify that /llm routes are defined before /{service} routes."""
+        from autoarr.api.routers.settings import router
+
+        # Get all routes from the router
+        routes = list(router.routes)
+        route_paths = [r.path for r in routes if hasattr(r, "path")]
+
+        # Find indices of key routes
+        llm_index = None
+        service_param_index = None
+
+        for i, path in enumerate(route_paths):
+            if path == "/llm" and llm_index is None:
+                llm_index = i
+            if path == "/{service}" and service_param_index is None:
+                service_param_index = i
+
+        # LLM routes must come before /{service} routes
+        assert llm_index is not None, "/llm route not found"
+        assert service_param_index is not None, "/{service} route not found"
+        assert llm_index < service_param_index, (
+            f"/llm route (index {llm_index}) must come before "
+            f"/{{service}} route (index {service_param_index})"
+        )
+
+    @pytest.mark.asyncio
+    async def test_llm_models_route_comes_before_service_routes(self):
+        """Verify that /llm/models route is defined before /{service} routes."""
+        from autoarr.api.routers.settings import router
+
+        routes = list(router.routes)
+        route_paths = [r.path for r in routes if hasattr(r, "path")]
+
+        llm_models_index = None
+        service_param_index = None
+
+        for i, path in enumerate(route_paths):
+            if path == "/llm/models" and llm_models_index is None:
+                llm_models_index = i
+            if path == "/{service}" and service_param_index is None:
+                service_param_index = i
+
+        assert llm_models_index is not None, "/llm/models route not found"
+        assert service_param_index is not None, "/{service} route not found"
+        assert llm_models_index < service_param_index, (
+            f"/llm/models route (index {llm_models_index}) must come before "
+            f"/{{service}} route (index {service_param_index})"
+        )
+
+    @pytest.mark.asyncio
+    async def test_test_llm_route_comes_before_test_service_routes(self):
+        """Verify that /test/llm route is defined before /test/{service} routes."""
+        from autoarr.api.routers.settings import router
+
+        routes = list(router.routes)
+        route_paths = [r.path for r in routes if hasattr(r, "path")]
+
+        test_llm_index = None
+        test_service_param_index = None
+
+        for i, path in enumerate(route_paths):
+            if path == "/test/llm" and test_llm_index is None:
+                test_llm_index = i
+            if path == "/test/{service}" and test_service_param_index is None:
+                test_service_param_index = i
+
+        assert test_llm_index is not None, "/test/llm route not found"
+        assert test_service_param_index is not None, "/test/{service} route not found"
+        assert test_llm_index < test_service_param_index, (
+            f"/test/llm route (index {test_llm_index}) must come before "
+            f"/test/{{service}} route (index {test_service_param_index})"
+        )

@@ -433,3 +433,70 @@ test.describe('Settings - Setup Wizard Button', () => {
     await expect(page.getByTestId('welcome-step')).toBeVisible();
   });
 });
+
+test.describe('Onboarding Redirect Behavior', () => {
+  test('should redirect to onboarding when not completed', async ({ page }) => {
+    // Reset onboarding to ensure it's not completed
+    await page.request.post('/api/v1/onboarding/reset');
+
+    // Visit home page
+    await page.goto('/');
+
+    // Should be redirected to onboarding
+    await expect(page).toHaveURL('/onboarding');
+    await expect(page.getByTestId('onboarding-container')).toBeVisible();
+  });
+
+  test('should allow re-running wizard when already complete', async ({ page }) => {
+    // Complete onboarding first
+    await page.request.post('/api/v1/onboarding/complete');
+
+    // Verify it's complete
+    const statusResponse = await page.request.get('/api/v1/onboarding/status');
+    const status = await statusResponse.json();
+    expect(status.completed).toBe(true);
+
+    // Navigate directly to onboarding
+    await page.goto('/onboarding');
+
+    // Should reset and show welcome step (not redirect away)
+    await expect(page.getByTestId('onboarding-container')).toBeVisible();
+    // Wait for reset to complete and welcome step to appear
+    await expect(page.getByTestId('welcome-step')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should not auto-redirect from home when onboarding complete', async ({ page }) => {
+    // Complete onboarding
+    await page.request.post('/api/v1/onboarding/complete');
+
+    // Visit home page
+    await page.goto('/');
+
+    // Should stay on home, not redirect to onboarding
+    await expect(page).toHaveURL('/');
+  });
+});
+
+test.describe('LLM Settings API - Route Ordering', () => {
+  test('should access /api/v1/settings/llm without 404', async ({ request }) => {
+    const response = await request.get('/api/v1/settings/llm');
+    // Should not return 404 (which would indicate route was matched by /{service})
+    expect(response.status()).not.toBe(404);
+    // Should return 200 or 503 (if DB not configured)
+    expect([200, 503]).toContain(response.status());
+  });
+
+  test('should access /api/v1/settings/llm/models without 404', async ({ request }) => {
+    const response = await request.get('/api/v1/settings/llm/models');
+    expect(response.status()).not.toBe(404);
+    expect([200, 503]).toContain(response.status());
+  });
+
+  test('should get proper error for invalid service', async ({ request }) => {
+    const response = await request.get('/api/v1/settings/invalid-service');
+    // Should return 404 with "Service not found" message
+    expect(response.status()).toBe(404);
+    const data = await response.json();
+    expect(data.detail).toContain('not found');
+  });
+});
