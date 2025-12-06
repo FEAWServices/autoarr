@@ -22,7 +22,7 @@ import { useOnboardingStore } from './stores/onboardingStore';
  */
 function OnboardingRedirect({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const { completed, needsOnboarding, fetchStatus, isLoading } = useOnboardingStore();
+  const { completed, needsOnboarding, fetchStatus, isInitializing } = useOnboardingStore();
   const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ function OnboardingRedirect({ children }: { children: React.ReactNode }) {
   }, [fetchStatus]);
 
   // Don't redirect while loading or if we haven't checked yet
-  if (!hasChecked || isLoading) {
+  if (!hasChecked || isInitializing) {
     return <>{children}</>;
   }
 
