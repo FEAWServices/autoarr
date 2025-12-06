@@ -702,17 +702,15 @@ jobs:
         frontend-build,
         frontend-lint,
       ]
-    # TEMPORARILY DISABLED: E2E tests need updates for new UI
-    # TODO: Re-enable after UI stabilizes
-    if: false
-    # if: |
-    #   needs.detect-changes.outputs.docs-only == 'false' &&
-    #   (github.event_name == 'pull_request' || needs.detect-changes.outputs.has-code-changes == 'true') &&
-    #   needs.quick-type-check.result == 'success' &&
-    #   needs.python-test.result == 'success' &&
-    #   needs.python-lint.result == 'success' &&
-    #   needs.frontend-build.result == 'success' &&
-    #   needs.frontend-lint.result == 'success'
+    # Run E2E tests using Docker container on self-hosted runner with DIND
+    if: |
+      needs.detect-changes.outputs.docs-only == 'false' &&
+      (github.event_name == 'pull_request' || needs.detect-changes.outputs.has-code-changes == 'true') &&
+      needs.quick-type-check.result == 'success' &&
+      needs.python-test.result == 'success' &&
+      needs.python-lint.result == 'success' &&
+      needs.frontend-build.result == 'success' &&
+      needs.frontend-lint.result == 'success'
 
     steps:
       - name: Checkout code
@@ -730,6 +728,60 @@ jobs:
           fi
         continue-on-error: true
 
+      # =======================================================================
+      # Build and start Docker container (DIND on self-hosted runner)
+      # =======================================================================
+      - name: Set up Docker Buildx
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker container
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.production
+          push: false
+          load: true
+          tags: autoarr:e2e-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start AutoArr container
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        run: |
+          # Remove any existing container
+          docker rm -f autoarr-e2e || true
+
+          # Start container with test configuration
+          docker run -d \
+            --name autoarr-e2e \
+            -p 8088:8088 \
+            -e APP_ENV=development \
+            -e LOG_LEVEL=INFO \
+            -e DATABASE_URL=sqlite:///./data/autoarr.db \
+            autoarr:e2e-test
+
+          # Wait for container to be healthy
+          echo "Waiting for container to be ready..."
+          for i in {1..60}; do
+            if curl -s http://localhost:8088/health > /dev/null 2>&1; then
+              echo "Container is healthy!"
+              curl -s http://localhost:8088/health | head -c 200
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "Container failed to become healthy"
+              docker logs autoarr-e2e
+              exit 1
+            fi
+            echo "Waiting... ($i/60)"
+            sleep 2
+          done
+
+      # =======================================================================
+      # Install Playwright and run tests
+      # =======================================================================
       - name: Install pnpm
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         uses: pnpm/action-setup@v4
@@ -742,33 +794,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "20"
-
-      - name: Setup Python
-        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-
-      - name: Install Poetry
-        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.7.1
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Cache Poetry dependencies
-        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-e2e-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            venv-${{ runner.os }}-
-
-      - name: Install backend dependencies
-        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        run: poetry install --no-interaction --no-root
 
       - name: Install frontend dependencies
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
@@ -785,44 +810,30 @@ jobs:
       - name: Install Playwright browsers
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         working-directory: autoarr/ui
-        run: pnpm exec playwright install --with-deps chromium firefox webkit
-
-      - name: Start backend API server
-        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        run: |
-          export APP_ENV=development
-          export LOG_LEVEL=INFO
-          export DATABASE_URL=sqlite:///./data/autoarr.db
-          export REDIS_URL=memory://
-          export HOST=0.0.0.0
-          export PORT=8088
-          mkdir -p ./data
-          poetry run uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &
-          echo $! > backend.pid
-          echo "Waiting for backend to be ready..."
-          for i in {1..30}; do
-            if curl -s http://localhost:8088/health > /dev/null 2>&1; then
-              echo "Backend is ready!"
-              break
-            fi
-            echo "Waiting... ($i/30)"
-            sleep 2
-          done
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright tests
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         working-directory: autoarr/ui
-        run: pnpm exec playwright test
+        run: pnpm exec playwright test --config=playwright-ci.config.ts
         env:
           CI: true
+          TEST_BASE_URL: http://localhost:8088
 
-      - name: Stop backend API server
+      # =======================================================================
+      # Cleanup and artifacts
+      # =======================================================================
+      - name: Show container logs on failure
+        if: failure()
+        run: |
+          echo "=== Container Logs ==="
+          docker logs autoarr-e2e 2>&1 | tail -200
+
+      - name: Stop and remove container
         if: always()
         run: |
-          if [ -f backend.pid ]; then
-            kill $(cat backend.pid) || true
-            rm backend.pid
-          fi
+          docker stop autoarr-e2e || true
+          docker rm autoarr-e2e || true
 
       - name: Upload Playwright report
         if: always() && (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request')
@@ -1053,7 +1064,7 @@ jobs:
           echo "### Frontend" >> $GITHUB_STEP_SUMMARY
           echo "- **Lint:** \`${{ needs.frontend-lint.result }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Build:** \`${{ needs.frontend-build.result }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **E2E Tests:** \`${{ needs.e2e-tests.result }}\` (temporarily disabled)" >> $GITHUB_STEP_SUMMARY
+          echo "- **E2E Tests:** \`${{ needs.e2e-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Accessibility:** \`${{ needs.accessibility-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Check required jobs for code changes
@@ -1081,6 +1092,13 @@ jobs:
           if [[ "${{ needs.frontend-build.result }}" == "failure" ]]; then
             echo "❌ Frontend build failed"
             FAILED=1
+          fi
+
+          # E2E tests: report failure but don't block (for now, while stabilizing)
+          if [[ "${{ needs.e2e-tests.result }}" == "failure" ]]; then
+            echo "⚠️ E2E tests failed (non-blocking during stabilization)"
+            echo ""
+            echo "📋 Check the playwright-report artifact for detailed test results"
           fi
 
           if [[ $FAILED -eq 1 ]]; then

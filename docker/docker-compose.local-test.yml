@@ -79,12 +79,14 @@ services:
 
     # Install deps if needed, then run both servers
     # Uses --prefer-offline to use cached packages when possible
+    # Includes Playwright browser installation for E2E testing
     command: >
       sh -c "
         cd /app &&
         poetry install --no-interaction --only main &&
         cd /app/autoarr/ui &&
         pnpm install --prefer-offline &&
+        pnpm exec playwright install chromium &&
         (cd /app && poetry run uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &) &&
         pnpm run dev --host 0.0.0.0 --port 5173
       "
