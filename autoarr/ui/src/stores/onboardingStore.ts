@@ -46,6 +46,7 @@ interface OnboardingState {
 
   // Local UI state (not persisted to API)
   isLoading: boolean;
+  isInitializing: boolean;
   error: string | null;
   selectedServices: string[];
   currentServiceIndex: number;
@@ -126,6 +127,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
       needsOnboarding: true,
 
       isLoading: false,
+      isInitializing: true,
       error: null,
       selectedServices: [],
       currentServiceIndex: 0,
@@ -137,7 +139,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
        * Fetch onboarding status from API
        */
       fetchStatus: async () => {
-        set({ isLoading: true, error: null });
+        set({ isInitializing: true, error: null });
         try {
           const response = await fetch(`${API_BASE}/status`);
           if (!response.ok) {
@@ -152,11 +154,11 @@ export const useOnboardingStore = create<OnboardingStore>()(
             servicesConfigured: data.services_configured,
             bannerDismissed: data.banner_dismissed,
             needsOnboarding: data.needs_onboarding,
-            isLoading: false,
+            isInitializing: false,
           });
         } catch (error) {
           set({
-            isLoading: false,
+            isInitializing: false,
             error: error instanceof Error ? error.message : 'Unknown error',
           });
         }

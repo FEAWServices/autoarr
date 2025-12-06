@@ -44,7 +44,7 @@ export const Onboarding = () => {
   const {
     completed,
     currentStep,
-    isLoading,
+    isInitializing,
     error,
     fetchStatus,
     clearError,
@@ -77,8 +77,8 @@ export const Onboarding = () => {
     }
   }, [completed, currentStep, navigate]);
 
-  // Loading state
-  if (isLoading && currentStep === 'welcome') {
+  // Loading state - only show during initial fetch, not during navigation
+  if (isInitializing) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
