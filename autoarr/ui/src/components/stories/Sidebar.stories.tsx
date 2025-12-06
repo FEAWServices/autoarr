@@ -88,8 +88,8 @@ export const ConfigAuditActive: Story = {
 };
 
 /**
- * Sidebar showing Chat as active
+ * Sidebar showing Search as active
  */
-export const ChatActive: Story = {
-  decorators: [createSidebarDecorator('/chat')],
+export const SearchActive: Story = {
+  decorators: [createSidebarDecorator('/search')],
 };

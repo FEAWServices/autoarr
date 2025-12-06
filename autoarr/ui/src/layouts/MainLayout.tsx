@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
+import { SetupBanner } from '../components/Onboarding/SetupBanner';
 
 export const MainLayout = () => {
   return (
@@ -22,9 +23,13 @@ export const MainLayout = () => {
       {/* Content */}
       <div className="relative z-10 flex w-full h-full">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto">
-          <div className="min-h-full">
-            <Outlet />
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Setup Banner - shows when onboarding incomplete */}
+          <SetupBanner />
+          <div className="flex-1 overflow-y-auto">
+            <div className="min-h-full">
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>

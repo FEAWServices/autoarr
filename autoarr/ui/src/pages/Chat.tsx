@@ -5,7 +5,7 @@ import { websocketService } from '../services/websocket';
 import { ChatMessage } from '../components/Chat/ChatMessage';
 import { TypingIndicator } from '../components/Chat/TypingIndicator';
 import { RequestStatus } from '../components/Chat/RequestStatus';
-import { Send, Trash2, Search as SearchIcon, Wifi, WifiOff, Sparkles } from 'lucide-react';
+import { Send, Trash2, Search as SearchIcon, Bot, Sparkles } from 'lucide-react';
 import { ChatSearch } from '../components/Chat/ChatSearch';
 
 export const Chat = () => {
@@ -295,22 +295,30 @@ export const Chat = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Connection Status */}
+            {/* AI Assistant Connection Status */}
             <div
               data-testid="connection-status"
-              className="flex items-center gap-1.5 px-2 py-1 glass-card"
-              aria-label={`Connection status: ${connectionStatus}`}
+              data-component="AIConnectionStatus"
+              className="flex items-center gap-1.5 px-2 py-1 glass-card cursor-help"
+              aria-label={`AI Assistant status: ${connectionStatus}`}
+              title={
+                connectionStatus === 'connected'
+                  ? 'AI Assistant is online and ready to help with real-time updates'
+                  : connectionStatus === 'connecting'
+                    ? 'Connecting to AI Assistant for real-time updates...'
+                    : 'AI Assistant offline - chat still works, but no live updates'
+              }
             >
               {connectionStatus === 'connected' ? (
                 <>
-                  <Wifi className="w-3.5 h-3.5 text-status-success" />
-                  <span className="text-xs text-status-success font-medium">Connected</span>
+                  <Bot className="w-3.5 h-3.5 text-status-success" />
+                  <span className="text-xs text-status-success font-medium">AI Online</span>
                 </>
               ) : (
                 <>
-                  <WifiOff className="w-3.5 h-3.5 text-status-warning" />
+                  <Bot className="w-3.5 h-3.5 text-status-warning" />
                   <span className="text-xs text-status-warning font-medium">
-                    {connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+                    {connectionStatus === 'connecting' ? 'Connecting...' : 'AI Offline'}
                   </span>
                 </>
               )}

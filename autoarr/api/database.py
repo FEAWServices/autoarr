@@ -60,6 +60,20 @@ class ServiceSettings(Base):
     timeout: Mapped[float] = mapped_column(Float, default=30.0)
 
 
+class LLMSettings(Base):
+    """Database model for LLM provider settings (OpenRouter)."""
+
+    __tablename__ = "llm_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    provider: Mapped[str] = mapped_column(String, default="openrouter")
+    api_key: Mapped[str] = mapped_column(String, default="")
+    selected_model: Mapped[str] = mapped_column(String, default="anthropic/claude-3.5-sonnet")
+    max_tokens: Mapped[int] = mapped_column(Integer, default=4096)
+    timeout: Mapped[float] = mapped_column(Float, default=60.0)
+
+
 # ============================================================================
 # Best Practices Model
 # ============================================================================
@@ -292,6 +306,83 @@ class RecoveryAttempt(Base):
 
     # Error information
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+# ============================================================================
+# Onboarding State Model
+# ============================================================================
+
+
+class OnboardingState(Base):
+    """
+    Database model for tracking user onboarding progress.
+
+    Stores the current state of the onboarding wizard, including which steps
+    have been completed, which were skipped, and whether the overall process
+    is finished. Uses a singleton pattern (id=1) for single-user installs.
+    """
+
+    __tablename__ = "onboarding_state"
+
+    # Primary key - singleton pattern (always id=1)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+
+    # Completion status
+    completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Current step in the wizard
+    # Values: welcome, ai_setup, service_selection, service_config, complete
+    current_step: Mapped[str] = mapped_column(String(50), default="welcome", nullable=False)
+
+    # Steps that were skipped (JSON array of step names)
+    skipped_steps: Mapped[Optional[dict]] = mapped_column(JSON, default=list, nullable=True)
+
+    # AI configuration status
+    ai_configured: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Services that have been configured (JSON array of service names)
+    services_configured: Mapped[Optional[dict]] = mapped_column(JSON, default=list, nullable=True)
+
+    # Banner dismissal tracking
+    banner_dismissed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    banner_dismissed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+
+# ============================================================================
+# Premium Waitlist Model
+# ============================================================================
+
+
+class PremiumWaitlist(Base):
+    """
+    Database model for premium waitlist signups.
+
+    Stores email addresses of users who want to be notified when
+    the premium service becomes available.
+    """
+
+    __tablename__ = "premium_waitlist"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Email address
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+
+    # Signup timestamp
+    signed_up_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+
+    # Optional: source of signup (onboarding, settings, etc.)
+    source: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
 
 # ============================================================================
@@ -783,6 +874,85 @@ class SettingsRepository:
                 return True
 
             return False
+
+
+# ============================================================================
+# LLM Settings Repository
+# ============================================================================
+
+
+class LLMSettingsRepository:
+    """Repository for LLM settings database operations."""
+
+    def __init__(self, db: "Database"):
+        """
+        Initialize repository.
+
+        Args:
+            db: Database instance
+        """
+        self.db = db
+
+    async def get_settings(self) -> Optional[LLMSettings]:
+        """
+        Get LLM provider settings.
+
+        Returns:
+            LLMSettings if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(LLMSettings).where(LLMSettings.id == 1))
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
+
+    async def save_settings(
+        self,
+        enabled: bool = True,
+        api_key: str = "",
+        selected_model: str = "anthropic/claude-3.5-sonnet",
+        max_tokens: int = 4096,
+        timeout: float = 60.0,
+    ) -> LLMSettings:
+        """
+        Save or update LLM settings.
+
+        Args:
+            enabled: Whether LLM is enabled
+            api_key: OpenRouter API key
+            selected_model: Selected model ID
+            max_tokens: Maximum tokens for responses
+            timeout: Request timeout in seconds
+
+        Returns:
+            Saved LLMSettings
+        """
+        async with self.db.session() as session:
+            # Try to get existing settings
+            result = await session.execute(select(LLMSettings).where(LLMSettings.id == 1))
+            settings = result.scalar_one_or_none()
+
+            if settings:
+                # Update existing
+                settings.enabled = enabled
+                settings.api_key = api_key
+                settings.selected_model = selected_model
+                settings.max_tokens = max_tokens
+                settings.timeout = timeout
+            else:
+                # Create new
+                settings = LLMSettings(
+                    id=1,
+                    enabled=enabled,
+                    provider="openrouter",
+                    api_key=api_key,
+                    selected_model=selected_model,
+                    max_tokens=max_tokens,
+                    timeout=timeout,
+                )
+                session.add(settings)
+
+            await session.commit()
+            await session.refresh(settings)
+            return settings  # type: ignore[no-any-return]
 
 
 # ============================================================================
@@ -1556,3 +1726,409 @@ class ActivityLogRepository:
             )
             await session.commit()
             return result.rowcount  # type: ignore[no-any-return]
+
+
+# ============================================================================
+# Onboarding State Repository
+# ============================================================================
+
+
+class OnboardingStateRepository:
+    """
+    Repository for onboarding state database operations.
+
+    Provides methods to manage the onboarding wizard state, including
+    tracking progress, skipped steps, and completion status.
+    """
+
+    def __init__(self, db: Database):
+        """
+        Initialize repository.
+
+        Args:
+            db: Database instance
+        """
+        self.db = db
+
+    async def get_state(self) -> Optional[OnboardingState]:
+        """
+        Get the current onboarding state.
+
+        Returns:
+            OnboardingState if exists, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(OnboardingState).where(OnboardingState.id == 1))
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
+
+    async def get_or_create_state(self) -> OnboardingState:
+        """
+        Get existing onboarding state or create a new one.
+
+        Returns:
+            OnboardingState instance
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(OnboardingState).where(OnboardingState.id == 1))
+            state = result.scalar_one_or_none()
+
+            if state:
+                return state  # type: ignore[no-any-return]
+
+            # Create new state
+            state = OnboardingState(
+                id=1,
+                completed=False,
+                current_step="welcome",
+                skipped_steps=[],
+                ai_configured=False,
+                services_configured=[],
+                banner_dismissed=False,
+            )
+            session.add(state)
+            await session.commit()
+            await session.refresh(state)
+            return state  # type: ignore[no-any-return]
+
+    async def update_step(self, step: str) -> OnboardingState:
+        """
+        Update the current step in the wizard.
+
+        Args:
+            step: Step name (welcome, ai_setup, service_selection, service_config, complete)
+
+        Returns:
+            Updated OnboardingState
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(OnboardingState).where(OnboardingState.id == 1))
+            state = result.scalar_one_or_none()
+
+            if not state:
+                state = OnboardingState(id=1, current_step=step)
+                session.add(state)
+            else:
+                state.current_step = step
+
+            await session.commit()
+            await session.refresh(state)
+            return state  # type: ignore[no-any-return]
+
+    async def skip_step(self, step: str) -> OnboardingState:
+        """
+        Mark a step as skipped.
+
+        Args:
+            step: Step name to skip
+
+        Returns:
+            Updated OnboardingState
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(OnboardingState).where(OnboardingState.id == 1))
+            state = result.scalar_one_or_none()
+
+            if not state:
+                state = OnboardingState(id=1, skipped_steps=[step])
+                session.add(state)
+            else:
+                skipped = list(state.skipped_steps or [])
+                if step not in skipped:
+                    skipped.append(step)
+                state.skipped_steps = skipped
+
+            await session.commit()
+            await session.refresh(state)
+            return state  # type: ignore[no-any-return]
+
+    async def set_ai_configured(self, configured: bool = True) -> OnboardingState:
+        """
+        Mark AI as configured or not.
+
+        Args:
+            configured: Whether AI is configured
+
+        Returns:
+            Updated OnboardingState
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(OnboardingState).where(OnboardingState.id == 1))
+            state = result.scalar_one_or_none()
+
+            if not state:
+                state = OnboardingState(id=1, ai_configured=configured)
+                session.add(state)
+            else:
+                state.ai_configured = configured
+
+            await session.commit()
+            await session.refresh(state)
+            return state  # type: ignore[no-any-return]
+
+    async def add_configured_service(self, service: str) -> OnboardingState:
+        """
+        Add a service to the list of configured services.
+
+        Args:
+            service: Service name (sabnzbd, sonarr, radarr, plex)
+
+        Returns:
+            Updated OnboardingState
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(OnboardingState).where(OnboardingState.id == 1))
+            state = result.scalar_one_or_none()
+
+            if not state:
+                state = OnboardingState(id=1, services_configured=[service])
+                session.add(state)
+            else:
+                services = list(state.services_configured or [])
+                if service not in services:
+                    services.append(service)
+                state.services_configured = services
+
+            await session.commit()
+            await session.refresh(state)
+            return state  # type: ignore[no-any-return]
+
+    async def complete_onboarding(self) -> OnboardingState:
+        """
+        Mark onboarding as complete.
+
+        Returns:
+            Updated OnboardingState
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(OnboardingState).where(OnboardingState.id == 1))
+            state = result.scalar_one_or_none()
+
+            if not state:
+                state = OnboardingState(
+                    id=1,
+                    completed=True,
+                    completed_at=datetime.utcnow(),
+                    current_step="complete",
+                )
+                session.add(state)
+            else:
+                state.completed = True
+                state.completed_at = datetime.utcnow()
+                state.current_step = "complete"
+
+            await session.commit()
+            await session.refresh(state)
+            return state  # type: ignore[no-any-return]
+
+    async def skip_onboarding(self) -> OnboardingState:
+        """
+        Skip the entire onboarding process.
+
+        Returns:
+            Updated OnboardingState with completed=True but all steps skipped
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(OnboardingState).where(OnboardingState.id == 1))
+            state = result.scalar_one_or_none()
+
+            all_steps = ["welcome", "ai_setup", "service_selection", "service_config"]
+
+            if not state:
+                state = OnboardingState(
+                    id=1,
+                    completed=True,
+                    completed_at=datetime.utcnow(),
+                    current_step="complete",
+                    skipped_steps=all_steps,
+                )
+                session.add(state)
+            else:
+                state.completed = True
+                state.completed_at = datetime.utcnow()
+                state.current_step = "complete"
+                state.skipped_steps = all_steps
+
+            await session.commit()
+            await session.refresh(state)
+            return state  # type: ignore[no-any-return]
+
+    async def dismiss_banner(self) -> OnboardingState:
+        """
+        Dismiss the setup reminder banner.
+
+        Returns:
+            Updated OnboardingState
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(OnboardingState).where(OnboardingState.id == 1))
+            state = result.scalar_one_or_none()
+
+            if not state:
+                state = OnboardingState(
+                    id=1,
+                    banner_dismissed=True,
+                    banner_dismissed_at=datetime.utcnow(),
+                )
+                session.add(state)
+            else:
+                state.banner_dismissed = True
+                state.banner_dismissed_at = datetime.utcnow()
+
+            await session.commit()
+            await session.refresh(state)
+            return state  # type: ignore[no-any-return]
+
+    async def reset_onboarding(self) -> OnboardingState:
+        """
+        Reset onboarding to initial state (for re-running wizard).
+
+        Returns:
+            Reset OnboardingState
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(OnboardingState).where(OnboardingState.id == 1))
+            state = result.scalar_one_or_none()
+
+            if state:
+                state.completed = False
+                state.completed_at = None
+                state.current_step = "welcome"
+                state.skipped_steps = []
+                state.ai_configured = False
+                state.services_configured = []
+                state.banner_dismissed = False
+                state.banner_dismissed_at = None
+            else:
+                state = OnboardingState(id=1)
+                session.add(state)
+
+            await session.commit()
+            await session.refresh(state)
+            return state  # type: ignore[no-any-return]
+
+
+# ============================================================================
+# Premium Waitlist Repository
+# ============================================================================
+
+
+class PremiumWaitlistRepository:
+    """
+    Repository for premium waitlist database operations.
+
+    Provides methods to manage waitlist signups for the premium service.
+    """
+
+    def __init__(self, db: Database):
+        """
+        Initialize repository.
+
+        Args:
+            db: Database instance
+        """
+        self.db = db
+
+    async def add_email(self, email: str, source: Optional[str] = None) -> PremiumWaitlist:
+        """
+        Add an email to the waitlist.
+
+        Args:
+            email: Email address
+            source: Optional source of signup (onboarding, settings, etc.)
+
+        Returns:
+            Created PremiumWaitlist entry
+
+        Raises:
+            ValueError: If email already exists
+        """
+        async with self.db.session() as session:
+            # Check if email already exists
+            result = await session.execute(
+                select(PremiumWaitlist).where(PremiumWaitlist.email == email.lower())
+            )
+            existing = result.scalar_one_or_none()
+
+            if existing:
+                raise ValueError(f"Email {email} is already on the waitlist")
+
+            entry = PremiumWaitlist(
+                email=email.lower(),
+                source=source,
+            )
+            session.add(entry)
+            await session.commit()
+            await session.refresh(entry)
+            return entry
+
+    async def is_on_waitlist(self, email: str) -> bool:
+        """
+        Check if an email is already on the waitlist.
+
+        Args:
+            email: Email address to check
+
+        Returns:
+            True if email is on waitlist, False otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(PremiumWaitlist).where(PremiumWaitlist.email == email.lower())
+            )
+            return result.scalar_one_or_none() is not None
+
+    async def get_all(self, limit: int = 100, offset: int = 0) -> list[PremiumWaitlist]:
+        """
+        Get all waitlist entries.
+
+        Args:
+            limit: Maximum number of results
+            offset: Offset for pagination
+
+        Returns:
+            List of PremiumWaitlist entries
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(PremiumWaitlist)
+                .order_by(PremiumWaitlist.signed_up_at.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+            return list(result.scalars().all())
+
+    async def count(self) -> int:
+        """
+        Count total waitlist signups.
+
+        Returns:
+            Total count
+        """
+        from sqlalchemy import func
+
+        async with self.db.session() as session:
+            result = await session.execute(select(func.count(PremiumWaitlist.id)))
+            return result.scalar_one()  # type: ignore[no-any-return]
+
+    async def remove_email(self, email: str) -> bool:
+        """
+        Remove an email from the waitlist.
+
+        Args:
+            email: Email address to remove
+
+        Returns:
+            True if removed, False if not found
+        """
+        async with self.db.session() as session:
+            result = await session.execute(
+                select(PremiumWaitlist).where(PremiumWaitlist.email == email.lower())
+            )
+            entry = result.scalar_one_or_none()
+
+            if entry:
+                await session.delete(entry)
+                await session.commit()
+                return True
+
+            return False

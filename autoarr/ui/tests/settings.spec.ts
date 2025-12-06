@@ -5,6 +5,48 @@ test.describe('Settings Page', () => {
     await page.goto('/settings');
   });
 
+  test('should load without console errors', async ({ page }) => {
+    const consoleErrors: string[] = [];
+
+    // Collect console errors BEFORE navigation
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        const text = msg.text();
+        // Ignore expected/acceptable errors:
+        // - React DevTools reminder (not an actual error)
+        // - WebSocket connection errors (expected when WS server is not running)
+        // - 404 errors for optional endpoints that may not exist yet
+        // - Network fetch errors (backend may not be fully configured)
+        // - Failed to load settings (expected when API endpoints aren't available)
+        const isExpectedError =
+          text.includes('React DevTools') ||
+          text.includes('WebSocket') ||
+          text.includes('ws://') ||
+          text.includes('404') ||
+          text.includes('Failed to fetch') ||
+          text.includes('Failed to load settings') ||
+          text.includes('NetworkError') ||
+          text.includes('net::ERR');
+
+        if (!isExpectedError) {
+          consoleErrors.push(text);
+        }
+      }
+    });
+
+    // Navigate to settings page (fresh navigation, not from beforeEach)
+    await page.goto('/settings', { waitUntil: 'networkidle' });
+
+    // Wait for page to fully load - use a longer timeout
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible({ timeout: 10000 });
+
+    // Wait a bit for any async operations to complete
+    await page.waitForTimeout(500);
+
+    // Assert no unexpected console errors (like uncaught exceptions, React errors, etc.)
+    expect(consoleErrors).toEqual([]);
+  });
+
   test('should verify database is configured before testing save', async ({ page }) => {
     // Check database health endpoint first
     const response = await page.request.get('/health/database');
@@ -373,5 +415,185 @@ test.describe('Settings Page', () => {
     await expect(
       page.getByText(/api key.*required|cannot enable.*without.*api key|validation/i)
     ).toBeVisible({ timeout: 3000 });
+  });
+});
+
+test.describe('OpenRouter Settings', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/settings');
+  });
+
+  test('should display OpenRouter section', async ({ page }) => {
+    await expect(page.getByText('OpenRouter')).toBeVisible();
+    // OpenRouter card should have API key and model inputs
+    await expect(page.getByTestId('openrouter-api-key')).toBeVisible();
+    await expect(page.getByTestId('openrouter-model')).toBeVisible();
+  });
+
+  test('should have OpenRouter API key input', async ({ page }) => {
+    const apiKeyInput = page.getByTestId('openrouter-api-key');
+    await expect(apiKeyInput).toBeVisible();
+    await expect(apiKeyInput).toHaveAttribute('placeholder', 'sk-or-...');
+  });
+
+  test('should have OpenRouter model input', async ({ page }) => {
+    const modelInput = page.getByTestId('openrouter-model');
+    await expect(modelInput).toBeVisible();
+    await expect(modelInput).toHaveAttribute('placeholder', 'anthropic/claude-3.5-sonnet');
+  });
+
+  test('should toggle OpenRouter enabled state', async ({ page }) => {
+    const checkbox = page.getByTestId('openrouter-enabled');
+    const initialState = await checkbox.isChecked();
+
+    await checkbox.click();
+    await expect(checkbox).toBeChecked({ checked: !initialState });
+  });
+
+  test('should have test connection button', async ({ page }) => {
+    const testButton = page.getByTestId('openrouter-test-button');
+    await expect(testButton).toBeVisible();
+    await expect(testButton).toHaveText('Test Connection');
+  });
+
+  test('should disable test button when OpenRouter is disabled', async ({ page }) => {
+    const checkbox = page.getByTestId('openrouter-enabled');
+    const testButton = page.getByTestId('openrouter-test-button');
+
+    // Make sure OpenRouter is disabled
+    if (await checkbox.isChecked()) {
+      await checkbox.click();
+    }
+
+    await expect(testButton).toBeDisabled();
+  });
+
+  test('should enable test button when OpenRouter is enabled', async ({ page }) => {
+    const checkbox = page.getByTestId('openrouter-enabled');
+    const testButton = page.getByTestId('openrouter-test-button');
+
+    // Enable OpenRouter
+    if (!(await checkbox.isChecked())) {
+      await checkbox.click();
+    }
+
+    await expect(testButton).toBeEnabled();
+  });
+
+  test('should show link to OpenRouter keys page', async ({ page }) => {
+    const link = page.getByRole('link', { name: /Get API key/i });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href', 'https://openrouter.ai/keys');
+  });
+
+  test('should show link to OpenRouter models page', async ({ page }) => {
+    const link = page.getByRole('link', { name: /Browse models/i });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href', 'https://openrouter.ai/models');
+  });
+
+  test('should save OpenRouter settings successfully (mocked)', async ({ page }) => {
+    // Mock the API endpoints
+    await page.route('**/api/v1/settings/llm', async (route) => {
+      if (route.request().method() === 'PUT') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            enabled: true,
+            default_model: 'anthropic/claude-3.5-sonnet',
+            api_key: '***',
+          }),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    // Also mock service settings (required by handleSave)
+    await page.route('**/api/v1/settings/**', async (route) => {
+      if (route.request().method() === 'PUT') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true }),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    // Enable OpenRouter and fill in settings
+    const checkbox = page.getByTestId('openrouter-enabled');
+    if (!(await checkbox.isChecked())) {
+      await checkbox.click();
+    }
+
+    const apiKeyInput = page.getByTestId('openrouter-api-key');
+    await apiKeyInput.fill('sk-or-test-key-12345');
+
+    const modelInput = page.getByTestId('openrouter-model');
+    await modelInput.fill('anthropic/claude-3.5-sonnet');
+
+    // Save settings
+    const saveButton = page.getByRole('button', { name: /save/i });
+    await saveButton.click();
+
+    // Should show success
+    await expect(page.getByText(/saved successfully|success/i)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should test OpenRouter connection (mocked)', async ({ page }) => {
+    // Mock the test endpoint
+    await page.route('**/api/v1/settings/test/llm', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          model: 'anthropic/claude-3.5-sonnet',
+        }),
+      });
+    });
+
+    // Enable OpenRouter
+    const checkbox = page.getByTestId('openrouter-enabled');
+    if (!(await checkbox.isChecked())) {
+      await checkbox.click();
+    }
+
+    // Click test button
+    const testButton = page.getByTestId('openrouter-test-button');
+    await testButton.click();
+
+    // Should show success
+    await expect(page.getByText(/Connected/)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('should show error on OpenRouter connection failure (mocked)', async ({ page }) => {
+    // Mock the test endpoint to return error
+    await page.route('**/api/v1/settings/test/llm', async (route) => {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          detail: 'Invalid API key',
+        }),
+      });
+    });
+
+    // Enable OpenRouter
+    const checkbox = page.getByTestId('openrouter-enabled');
+    if (!(await checkbox.isChecked())) {
+      await checkbox.click();
+    }
+
+    // Click test button
+    const testButton = page.getByTestId('openrouter-test-button');
+    await testButton.click();
+
+    // Should show error
+    await expect(page.getByText(/Failed/)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Invalid API key/)).toBeVisible();
   });
 });

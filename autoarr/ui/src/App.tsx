@@ -1,16 +1,52 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Download, Tv, Film, Server, Activity } from 'lucide-react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Activity } from 'lucide-react';
 import { SplashScreen } from './components/SplashScreen';
 import { MainLayout } from './layouts/MainLayout';
 import { Search } from './pages/Search';
 import { Settings } from './pages/Settings';
 import { Appearance } from './pages/Appearance';
 import { Placeholder } from './pages/Placeholder';
+import { Downloads } from './pages/Downloads';
+import { Shows } from './pages/Shows';
+import { Movies } from './pages/Movies';
+import { Media } from './pages/Media';
 import { Home } from './pages/Home';
+import { Onboarding } from './pages/Onboarding';
 import ConfigAuditPage from './pages/ConfigAudit';
-import { Chat } from './pages/Chat';
 import { useThemeStore } from './stores/themeStore';
+import { useOnboardingStore } from './stores/onboardingStore';
+
+/**
+ * Component that checks onboarding status and redirects if needed
+ */
+function OnboardingRedirect({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const { completed, needsOnboarding, fetchStatus, isLoading } = useOnboardingStore();
+  const [hasChecked, setHasChecked] = useState(false);
+
+  useEffect(() => {
+    // Fetch onboarding status on mount
+    fetchStatus().finally(() => setHasChecked(true));
+  }, [fetchStatus]);
+
+  // Don't redirect while loading or if we haven't checked yet
+  if (!hasChecked || isLoading) {
+    return <>{children}</>;
+  }
+
+  // If on onboarding page, allow it
+  if (location.pathname === '/onboarding') {
+    return <>{children}</>;
+  }
+
+  // Redirect to onboarding if not completed and needs onboarding
+  if (!completed && needsOnboarding) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -31,66 +67,35 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
-          <Route path="chat" element={<Chat />} />
-          <Route path="search" element={<Search />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="settings/appearance" element={<Appearance />} />
-          <Route path="settings/config-audit" element={<ConfigAuditPage />} />
-          <Route
-            path="downloads"
-            element={
-              <Placeholder
-                icon={Download}
-                title="Downloads"
-                description="Monitor and manage your active downloads from SABnzbd"
-              />
-            }
-          />
-          <Route
-            path="shows"
-            element={
-              <Placeholder
-                icon={Tv}
-                title="TV Shows"
-                description="Browse and manage your TV show collection with Sonarr"
-              />
-            }
-          />
-          <Route
-            path="movies"
-            element={
-              <Placeholder
-                icon={Film}
-                title="Movies"
-                description="Browse and manage your movie collection with Radarr"
-              />
-            }
-          />
-          <Route
-            path="media"
-            element={
-              <Placeholder
-                icon={Server}
-                title="Media Server"
-                description="View and manage your Plex media server"
-              />
-            }
-          />
-          <Route
-            path="activity"
-            element={
-              <Placeholder
-                icon={Activity}
-                title="Activity"
-                description="View recent activity and system logs"
-              />
-            }
-          />
-        </Route>
-      </Routes>
+      <OnboardingRedirect>
+        <Routes>
+          {/* Onboarding wizard - standalone, no sidebar */}
+          <Route path="/onboarding" element={<Onboarding />} />
+
+          {/* Main app with sidebar layout */}
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Home />} />
+            <Route path="search" element={<Search />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="settings/appearance" element={<Appearance />} />
+            <Route path="settings/config-audit" element={<ConfigAuditPage />} />
+            <Route path="downloads" element={<Downloads />} />
+            <Route path="shows" element={<Shows />} />
+            <Route path="movies" element={<Movies />} />
+            <Route path="media" element={<Media />} />
+            <Route
+              path="activity"
+              element={
+                <Placeholder
+                  icon={Activity}
+                  title="Activity"
+                  description="View recent activity and system logs"
+                />
+              }
+            />
+          </Route>
+        </Routes>
+      </OnboardingRedirect>
     </BrowserRouter>
   );
 }

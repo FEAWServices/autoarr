@@ -306,7 +306,7 @@ export const Welcome = () => {
           <Link
             data-component="FeatureCard"
             data-testid="feature-card-chat"
-            to="/chat"
+            to="/"
             className="rounded-2xl border border-primary/20 bg-card/50 backdrop-blur-sm p-10 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:border-primary/40 group"
           >
             <div data-component="FeatureIcon" className="p-5 rounded-xl bg-primary/20 w-fit mb-8">

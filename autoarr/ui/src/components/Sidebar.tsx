@@ -8,7 +8,6 @@ import {
   Settings,
   Activity,
   Search,
-  MessageCircle,
   Home,
   ClipboardCheck,
   Palette,
@@ -27,14 +26,22 @@ interface NavItem {
   children?: Omit<NavItem, 'children'>[];
 }
 
-const navItems: NavItem[] = [
+// Base nav items that are always visible
+const baseNavItems: NavItem[] = [
   { path: '/', icon: Home, label: 'Home' },
-  { path: '/chat', icon: MessageCircle, label: 'Chat' },
   { path: '/search', icon: Search, label: 'Search' },
-  { path: '/downloads', icon: Download, label: 'Downloads' },
-  { path: '/shows', icon: Tv, label: 'TV Shows' },
-  { path: '/movies', icon: Film, label: 'Movies' },
-  { path: '/media', icon: Server, label: 'Media Server' },
+];
+
+// Service-specific nav items - only shown when the service is connected
+const serviceNavItems: Record<string, NavItem> = {
+  sabnzbd: { path: '/downloads', icon: Download, label: 'Downloads' },
+  sonarr: { path: '/shows', icon: Tv, label: 'TV Shows' },
+  radarr: { path: '/movies', icon: Film, label: 'Movies' },
+  plex: { path: '/media', icon: Server, label: 'Media Server' },
+};
+
+// Always visible nav items at the end
+const footerNavItems: NavItem[] = [
   { path: '/activity', icon: Activity, label: 'Activity' },
   {
     path: '/settings',
@@ -114,7 +121,12 @@ export const Sidebar = () => {
         serviceKeys.map(async (key) => {
           try {
             const response = await fetch(`/health/${key}`);
-            return { key, connected: response.ok };
+            if (!response.ok) {
+              return { key, connected: false };
+            }
+            const data = await response.json();
+            // Check the actual healthy field, not just HTTP status
+            return { key, connected: data.healthy === true };
           } catch {
             return { key, connected: false };
           }
@@ -160,7 +172,21 @@ export const Sidebar = () => {
 
       {/* Navigation - *arr style */}
       <nav className="flex-1 overflow-y-auto py-2">
-        {navItems.map((item) => (
+        {/* Base navigation items */}
+        {baseNavItems.map((item) => (
+          <SidebarItem key={item.path} item={item} />
+        ))}
+
+        {/* Service-specific items - only shown when connected */}
+        {services
+          .filter((service) => service.connected)
+          .map((service) => {
+            const item = serviceNavItems[service.key];
+            return item ? <SidebarItem key={item.path} item={item} /> : null;
+          })}
+
+        {/* Footer navigation items */}
+        {footerNavItems.map((item) => (
           <SidebarItem key={item.path} item={item} />
         ))}
       </nav>

@@ -19,7 +19,7 @@
 LLM Agent Service for AutoArr.
 
 This service provides LLM-powered intelligent analysis and recommendations
-using pluggable LLM providers (Claude or custom). It includes:
+using pluggable LLM providers (OpenRouter). It includes:
 - LLM provider abstraction with automatic selection
 - Prompt template system
 - Structured output parsing
@@ -38,103 +38,6 @@ from autoarr.api.services.models import Priority
 from autoarr.shared.llm import BaseLLMProvider, LLMMessage, LLMProviderFactory
 
 logger = logging.getLogger(__name__)
-
-
-# DEPRECATED: ClaudeClient has been migrated to autoarr.shared.llm.ClaudeProvider
-# This class is kept for backward compatibility only.
-# New code should use LLMProviderFactory.create_provider() instead.
-
-
-class ClaudeClient:
-    """
-    DEPRECATED: Compatibility wrapper around ClaudeProvider.
-
-    This class is maintained for backward compatibility but is deprecated.
-    New code should use autoarr.shared.llm.ClaudeProvider directly.
-
-    Args:
-        api_key: Anthropic API key
-        model: Claude model to use (default: claude-3-5-sonnet-20241022)
-        max_tokens: Maximum tokens in response
-        max_retries: Maximum number of retries on rate limit (ignored)
-        retry_delay: Initial retry delay in seconds (ignored, provider handles retries)
-    """
-
-    def __init__(
-        self,
-        api_key: str,
-        model: str = "claude-3-5-sonnet-20241022",
-        max_tokens: int = 4096,
-        max_retries: int = 3,
-        retry_delay: float = 1.0,
-    ) -> None:
-        """Initialize Claude client (wraps ClaudeProvider)."""
-        logger.warning("ClaudeClient is deprecated. Use autoarr.shared.llm.ClaudeProvider instead.")
-
-        from autoarr.shared.llm.claude_provider import ClaudeProvider
-
-        self.api_key = api_key
-        self.model = model
-        self.max_tokens = max_tokens
-        self.max_retries = max_retries
-        self.retry_delay = retry_delay
-
-        # Create ClaudeProvider instance
-        self._provider = ClaudeProvider(
-            {
-                "api_key": api_key,
-                "default_model": model,
-                "max_tokens": max_tokens,
-                "max_retries": max_retries,
-                "retry_delay": retry_delay,
-            }
-        )
-
-    async def send_message(
-        self,
-        system_prompt: str,
-        user_message: str,
-        temperature: float = 0.7,
-    ) -> Dict[str, Any]:
-        """
-        Send a message to Claude API (via ClaudeProvider).
-
-        Args:
-            system_prompt: System prompt (role definition)
-            user_message: User message (query/request)
-            temperature: Sampling temperature (0.0-1.0)
-
-        Returns:
-            Dict with 'content' (response text) and 'usage' (token counts)
-        """
-        # Convert to LLMMessage format
-        messages = [
-            LLMMessage(role="system", content=system_prompt),
-            LLMMessage(role="user", content=user_message),
-        ]
-
-        # Call provider
-        response = await self._provider.complete(
-            messages=messages,
-            temperature=temperature,
-            max_tokens=self.max_tokens,
-        )
-
-        # Convert back to old format for compatibility
-        return {
-            "content": response.content,
-            "usage": {
-                "input_tokens": response.usage.get("prompt_tokens", 0) if response.usage else 0,
-                "output_tokens": (
-                    response.usage.get("completion_tokens", 0) if response.usage else 0
-                ),
-            },
-        }
-
-    async def close(self) -> None:
-        """Close the API client."""
-        if hasattr(self._provider, "__aexit__"):
-            await self._provider.__aexit__(None, None, None)
 
 
 class PromptTemplate:
@@ -325,7 +228,7 @@ class StructuredOutputParser:
             raise ValueError("Response contains no parseable JSON content")
 
         try:
-            data = json.loads(json_str)
+            data: Dict[str, Any] = json.loads(json_str)
         except json.JSONDecodeError as e:
             raise ValueError(f"Failed to parse JSON from response: {str(e)}")
 
@@ -390,23 +293,34 @@ class TokenUsageTracker:
         self,
         input_cost_per_million: float = 3.0,
         output_cost_per_million: float = 15.0,
+        model_pricing: Optional[Dict[str, float]] = None,
     ) -> float:
         """
         Estimate cost based on token usage.
 
-        Default pricing is for Claude 3.5 Sonnet:
-        - Input: $3 per million tokens
-        - Output: $15 per million tokens
+        Default pricing is for Claude 3.5 Sonnet via OpenRouter:
+        - Input (prompt): $3 per million tokens
+        - Output (completion): $15 per million tokens
 
         Args:
-            input_cost_per_million: Cost per million input tokens
-            output_cost_per_million: Cost per million output tokens
+            input_cost_per_million: Cost per million input tokens (legacy)
+            output_cost_per_million: Cost per million output tokens (legacy)
+            model_pricing: Optional dict with 'prompt' and 'completion' keys
+                          for model-specific pricing (from OpenRouter API)
 
         Returns:
             Estimated cost in dollars
         """
-        input_cost = (self.total_input_tokens / 1_000_000) * input_cost_per_million
-        output_cost = (self.total_output_tokens / 1_000_000) * output_cost_per_million
+        # Use model-specific pricing if provided
+        if model_pricing:
+            prompt_cost = model_pricing.get("prompt", input_cost_per_million)
+            completion_cost = model_pricing.get("completion", output_cost_per_million)
+        else:
+            prompt_cost = input_cost_per_million
+            completion_cost = output_cost_per_million
+
+        input_cost = (self.total_input_tokens / 1_000_000) * prompt_cost
+        output_cost = (self.total_output_tokens / 1_000_000) * completion_cost
         return input_cost + output_cost
 
     def reset(self) -> None:
@@ -429,13 +343,14 @@ class LLMAgent:
     """
     LLM Agent for intelligent configuration analysis.
 
-    This agent uses Claude to analyze configurations, generate
+    This agent uses OpenRouter to analyze configurations, generate
     recommendations, and provide detailed explanations with
     context-aware priority assessment.
 
     Args:
-        api_key: Anthropic API key
-        model: Claude model to use
+        provider: Optional pre-configured LLM provider
+        api_key: Optional OpenRouter API key
+        model: Model to use (default: anthropic/claude-3.5-sonnet)
         max_tokens: Maximum tokens in responses
     """
 
@@ -451,41 +366,20 @@ class LLMAgent:
 
         Args:
             provider: Optional pre-configured LLM provider
-            api_key: Optional API key for Claude (backward compatibility)
-            model: Optional model name
+            api_key: Optional OpenRouter API key
+            model: Optional model name (e.g., anthropic/claude-3.5-sonnet)
             max_tokens: Maximum tokens in responses
         """
         self.max_tokens = max_tokens
-        self.model = model
+        self.model = model or "anthropic/claude-3.5-sonnet"
         self._provider = provider
         self._api_key = api_key
         self._initialized = False
-        self._client_wrapper = None  # Lazy-initialized ClaudeClient for backward compat
 
         self.token_tracker = TokenUsageTracker()
         self.parser = StructuredOutputParser(
             required_fields=["explanation", "priority", "impact", "reasoning"]
         )
-
-    @property
-    def client(self) -> ClaudeClient:
-        """
-        Get ClaudeClient wrapper for backward compatibility.
-
-        This property provides backward compatibility for code that expects
-        a `client` attribute with `send_message()` and `close()` methods.
-
-        Returns:
-            ClaudeClient wrapper instance
-        """
-        if self._client_wrapper is None:
-            # Lazy initialize ClaudeClient wrapper
-            self._client_wrapper = ClaudeClient(
-                api_key=self._api_key or "test-key",  # Fallback for tests
-                model=self.model or "claude-3-5-sonnet-20241022",
-                max_tokens=self.max_tokens,
-            )
-        return self._client_wrapper
 
     async def _ensure_provider(self) -> BaseLLMProvider:
         """Lazy initialization of LLM provider."""
@@ -494,21 +388,21 @@ class LLMAgent:
 
         if self._provider is None:
             if self._api_key:
-                # Backward compatibility: if API key provided, use Claude
-                logger.info("Using Claude provider (API key provided)")
-                from autoarr.shared.llm.claude_provider import ClaudeProvider
+                # Create OpenRouter provider with provided API key
+                logger.info("Using OpenRouter provider (API key provided)")
+                from autoarr.shared.llm.openrouter_provider import OpenRouterProvider
 
                 config = {
                     "api_key": self._api_key,
-                    "default_model": self.model or "claude-3-5-sonnet-20241022",
+                    "default_model": self.model,
                     "max_tokens": self.max_tokens,
                 }
-                self._provider = ClaudeProvider(config)
+                self._provider = OpenRouterProvider(config)
             else:
-                # Use factory (Claude)
+                # Use factory (defaults to OpenRouter)
                 logger.info("Auto-selecting LLM provider via factory")
                 self._provider = await LLMProviderFactory.create_provider(
-                    provider_name=None,  # Auto-select
+                    provider_name="openrouter",
                     config={"default_model": self.model} if self.model else None,
                 )
 
@@ -520,7 +414,7 @@ class LLMAgent:
         """
         Analyze configuration and generate intelligent recommendation.
 
-        Uses Claude to compare current configuration against best practices,
+        Uses the LLM provider to compare current configuration against best practices,
         assess priority based on impact, and generate detailed explanations.
 
         Args:
@@ -533,7 +427,7 @@ class LLMAgent:
             LLMRecommendation with explanation, priority, impact, and reasoning
 
         Raises:
-            APIError: If Claude API call fails
+            Exception: If LLM API call fails
             ValueError: If response cannot be parsed
         """
         # Get prompt template
@@ -592,7 +486,7 @@ class LLMAgent:
         """
         Classify a content request and extract metadata.
 
-        Uses Claude to intelligently determine if the request is for a movie
+        Uses the LLM provider to intelligently determine if the request is for a movie
         or TV show, and extracts relevant metadata like title, year, quality, etc.
 
         Args:
@@ -602,7 +496,7 @@ class LLMAgent:
             ContentClassification with extracted metadata
 
         Raises:
-            APIError: If Claude API call fails
+            Exception: If LLM API call fails
             ValueError: If response cannot be parsed
         """
         # Import here to avoid circular dependency
@@ -615,25 +509,34 @@ class LLMAgent:
         system_prompt = template.render_system()
         user_message = template.render_user(query=query)
 
-        # Send to Claude
-        response = await self.client.send_message(
-            system_prompt=system_prompt,
-            user_message=user_message,
+        # Get provider
+        provider = await self._ensure_provider()
+
+        # Create messages
+        messages = [
+            LLMMessage(role="system", content=system_prompt),
+            LLMMessage(role="user", content=user_message),
+        ]
+
+        # Send to LLM provider
+        response = await provider.complete(
+            messages=messages,
             temperature=0.3,  # Lower temperature for more consistent classification
+            max_tokens=self.max_tokens,
         )
 
         # Track token usage
-        usage = response["usage"]
-        self.token_tracker.record_usage(
-            input_tokens=usage["input_tokens"],
-            output_tokens=usage["output_tokens"],
-        )
+        if response.usage:
+            self.token_tracker.record_usage(
+                input_tokens=response.usage.get("prompt_tokens", 0),
+                output_tokens=response.usage.get("completion_tokens", 0),
+            )
 
         # Parse structured output
         classification_parser = StructuredOutputParser(
             required_fields=["content_type", "title", "confidence"]
         )
-        parsed = classification_parser.parse(response["content"])
+        parsed = classification_parser.parse(response.content)
 
         # Validate content type
         content_type = parsed["content_type"].lower()
@@ -671,13 +574,16 @@ class LLMAgent:
         self,
         input_cost_per_million: float = 3.0,
         output_cost_per_million: float = 15.0,
+        model_pricing: Optional[Dict[str, float]] = None,
     ) -> float:
         """
         Estimate costs based on token usage.
 
         Args:
-            input_cost_per_million: Cost per million input tokens
-            output_cost_per_million: Cost per million output tokens
+            input_cost_per_million: Cost per million input tokens (legacy)
+            output_cost_per_million: Cost per million output tokens (legacy)
+            model_pricing: Optional dict with 'prompt' and 'completion' keys
+                          for model-specific pricing (from OpenRouter API)
 
         Returns:
             Estimated cost in dollars
@@ -685,8 +591,10 @@ class LLMAgent:
         return self.token_tracker.estimate_cost(
             input_cost_per_million=input_cost_per_million,
             output_cost_per_million=output_cost_per_million,
+            model_pricing=model_pricing,
         )
 
     async def close(self) -> None:
-        """Close LLM client and cleanup resources."""
-        await self.client.close()
+        """Close LLM provider and cleanup resources."""
+        if self._provider and hasattr(self._provider, "close"):
+            await self._provider.close()

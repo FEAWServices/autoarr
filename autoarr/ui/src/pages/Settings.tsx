@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Save,
   AlertCircle,
@@ -10,7 +10,9 @@ import {
   ChevronRight,
   ClipboardCheck,
   RefreshCw,
+  Sparkles,
 } from 'lucide-react';
+import { useOnboardingStore } from '../stores/onboardingStore';
 
 interface ServiceConfig {
   url: string;
@@ -18,15 +20,19 @@ interface ServiceConfig {
   enabled: boolean;
 }
 
+interface LLMConfig {
+  apiKey: string;
+  enabled: boolean;
+  model: string;
+  availableModels: Array<{ id: string; name: string; provider: string }>;
+}
+
 interface SettingsData {
   sabnzbd: ServiceConfig;
   sonarr: ServiceConfig;
   radarr: ServiceConfig;
   plex: ServiceConfig & { token: string };
-  anthropic: {
-    apiKey: string;
-    enabled: boolean;
-  };
+  openrouter: LLMConfig;
   brave: {
     apiKey: string;
     enabled: boolean;
@@ -37,8 +43,8 @@ interface SettingsData {
   };
 }
 
-// ServiceSection component - must be defined outside Settings to avoid re-creation on each render
-const ServiceSection = ({
+// ServiceCard component - compact card for service configuration
+const ServiceCard = ({
   title,
   service,
   config,
@@ -62,37 +68,37 @@ const ServiceSection = ({
   testConnection: (service: string) => void;
 }) => (
   <div
-    className="bg-gray-800 rounded-lg space-y-6 m-2.5 p-2.5"
+    className="bg-gray-800 rounded-lg p-4 space-y-3 h-full"
     data-testid={`service-card-${service}`}
     data-component="ServiceCard"
   >
-    <div className="flex items-center justify-between pb-2" data-component="ServiceCardHeader">
-      <h3 className="text-lg font-semibold text-white py-1">{title}</h3>
-      <label className="flex items-center gap-2">
+    <div className="flex items-center justify-between" data-component="ServiceCardHeader">
+      <h3 className="text-base font-semibold text-white">{title}</h3>
+      <label className="flex items-center gap-1.5">
         <input
           type="checkbox"
           checked={config.enabled}
           onChange={(e) => onChange({ enabled: e.target.checked })}
           className="w-4 h-4 rounded border-gray-600 text-indigo-600 focus:ring-indigo-500"
         />
-        <span className="text-sm text-gray-400">Enabled</span>
+        <span className="text-xs text-gray-400">Enabled</span>
       </label>
     </div>
 
     <div data-component="ServiceCardUrlField">
-      <label className="block text-sm font-medium text-gray-300 mb-3 py-1">URL</label>
+      <label className="block text-xs font-medium text-gray-300 mb-1">URL</label>
       <input
         type="text"
         value={config.url ?? ''}
         onChange={(e) => onChange({ url: e.target.value })}
         placeholder="http://localhost:8080"
-        className="w-full bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="w-full px-2.5 py-1.5 text-sm bg-gray-900 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         data-component="ServiceCardUrlInput"
       />
     </div>
 
     <div data-component="ServiceCardApiKeyField">
-      <label className="block text-sm font-medium text-gray-300 mb-3 py-1">
+      <label className="block text-xs font-medium text-gray-300 mb-1">
         {showToken ? 'Token' : 'API Key'}
       </label>
       <div className="relative">
@@ -103,36 +109,36 @@ const ServiceSection = ({
             onChange(showToken ? { token: e.target.value } : { apiKey: e.target.value })
           }
           placeholder={showToken ? 'your_plex_token' : 'your_api_key'}
-          className="w-full pr-20 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-2.5 py-1.5 pr-9 text-sm bg-gray-900 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           data-component="ServiceCardApiKeyInput"
         />
         <button
           type="button"
           onClick={() => toggleShowKey(service)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white"
           data-component="ServiceCardToggleVisibility"
         >
-          {showKeys[service] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          {showKeys[service] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
         </button>
       </div>
     </div>
 
-    <div className="space-y-2" data-component="ServiceCardActions">
+    <div className="space-y-2 pt-1" data-component="ServiceCardActions">
       <button
         onClick={() => testConnection(service)}
         disabled={!config.enabled || testResults[service] === 'testing'}
-        className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-2.5 py-2.5"
+        className="w-full bg-gray-700 hover:bg-gray-600 text-white rounded-md text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-3 py-2"
         data-component="ServiceCardTestButton"
       >
         {testResults[service] === 'testing' ? (
           'Testing...'
         ) : testResults[service] === 'success' ? (
-          <span className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" /> Connected
+          <span className="flex items-center justify-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5" /> Connected
           </span>
         ) : testResults[service] === 'error' ? (
-          <span className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" /> Failed
+          <span className="flex items-center justify-center gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5" /> Failed
           </span>
         ) : (
           'Test Connection'
@@ -140,11 +146,11 @@ const ServiceSection = ({
       </button>
 
       {testResults[service] === 'error' && testErrors[service] && (
-        <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-800 rounded-lg">
-          <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-red-400 mb-1">Connection Failed</p>
-            <p className="text-xs text-red-300 font-mono">{testErrors[service]}</p>
+        <div className="flex items-start gap-1.5 p-2 bg-red-900/20 border border-red-800 rounded-md">
+          <AlertCircle className="w-3.5 h-3.5 text-red-400 mt-0.5 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-red-400">Connection Failed</p>
+            <p className="text-xs text-red-300 font-mono truncate">{testErrors[service]}</p>
           </div>
         </div>
       )}
@@ -153,6 +159,8 @@ const ServiceSection = ({
 );
 
 export const Settings = () => {
+  const navigate = useNavigate();
+  const { resetOnboarding } = useOnboardingStore();
   const [settings, setSettings] = useState<SettingsData>({
     sabnzbd: { url: 'http://localhost:8080', apiKey: '', enabled: false },
     sonarr: { url: 'http://localhost:8989', apiKey: '', enabled: false },
@@ -163,7 +171,7 @@ export const Settings = () => {
       token: '',
       enabled: false,
     },
-    anthropic: { apiKey: '', enabled: false },
+    openrouter: { apiKey: '', enabled: false, model: '', availableModels: [] },
     brave: { apiKey: '', enabled: false },
     app: { logLevel: 'INFO', timezone: 'America/New_York' },
   });
@@ -181,6 +189,7 @@ export const Settings = () => {
     // Load settings from backend
     const loadSettings = async () => {
       try {
+        // Load service settings
         const response = await fetch('/api/v1/settings');
         if (response.ok) {
           const data = await response.json();
@@ -208,10 +217,7 @@ export const Settings = () => {
               token: data.plex?.token ?? prev.plex.token,
               enabled: data.plex?.enabled ?? prev.plex.enabled,
             },
-            anthropic: {
-              apiKey: data.anthropic?.apiKey ?? prev.anthropic.apiKey,
-              enabled: data.anthropic?.enabled ?? prev.anthropic.enabled,
-            },
+            openrouter: prev.openrouter, // Will be updated by LLM settings fetch
             brave: {
               apiKey: data.brave?.apiKey ?? prev.brave.apiKey,
               enabled: data.brave?.enabled ?? prev.brave.enabled,
@@ -219,6 +225,21 @@ export const Settings = () => {
             app: {
               logLevel: data.app?.logLevel ?? prev.app.logLevel,
               timezone: data.app?.timezone ?? prev.app.timezone,
+            },
+          }));
+        }
+
+        // Load LLM settings separately
+        const llmResponse = await fetch('/api/v1/settings/llm');
+        if (llmResponse.ok) {
+          const llmData = await llmResponse.json();
+          setSettings((prev) => ({
+            ...prev,
+            openrouter: {
+              apiKey: llmData.api_key ?? '',
+              enabled: llmData.enabled ?? false,
+              model: llmData.default_model ?? '',
+              availableModels: prev.openrouter.availableModels,
             },
           }));
         }
@@ -314,6 +335,35 @@ export const Settings = () => {
 
       await Promise.all(savePromises);
 
+      // Save LLM settings
+      if (settings.openrouter.apiKey || settings.openrouter.enabled) {
+        try {
+          const llmPayload = {
+            api_key: settings.openrouter.apiKey,
+            enabled: settings.openrouter.enabled,
+            default_model: settings.openrouter.model || 'anthropic/claude-3.5-sonnet',
+          };
+          const llmResponse = await fetch('/api/v1/settings/llm', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(llmPayload),
+          });
+
+          if (!llmResponse.ok) {
+            const errorData = await llmResponse.json().catch(() => ({}));
+            failedServices.push('openrouter');
+            errorMessages.push(`LLM: ${errorData.detail || `HTTP ${llmResponse.status}`}`);
+          }
+        } catch (networkError) {
+          failedServices.push('openrouter');
+          errorMessages.push(
+            `LLM: Network error - ${
+              networkError instanceof Error ? networkError.message : 'Cannot reach server'
+            }`
+          );
+        }
+      }
+
       if (failedServices.length > 0) {
         setSaveStatus('error');
         setSaveError(`Failed to save: ${failedServices.join(', ')}. ${errorMessages.join('; ')}`);
@@ -343,7 +393,21 @@ export const Settings = () => {
     setTestErrors({ ...testErrors, [service]: '' });
 
     try {
-      const response = await fetch(`/health/${service}`);
+      // Use different endpoint for LLM testing
+      const endpoint = service === 'llm' ? '/api/v1/settings/test/llm' : `/health/${service}`;
+      const options: RequestInit =
+        service === 'llm'
+          ? {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                api_key: settings.openrouter.apiKey,
+                model: settings.openrouter.model || 'anthropic/claude-3.5-sonnet',
+              }),
+            }
+          : {};
+
+      const response = await fetch(endpoint, options);
 
       if (response.ok) {
         await response.json();
@@ -370,6 +434,11 @@ export const Settings = () => {
     setShowKeys({ ...showKeys, [key]: !showKeys[key] });
   };
 
+  const handleRunSetupWizard = async () => {
+    await resetOnboarding();
+    navigate('/onboarding');
+  };
+
   return (
     <div
       className="max-w-4xl mx-auto"
@@ -384,51 +453,68 @@ export const Settings = () => {
 
       <div className="space-y-8">
         {/* Quick Settings Links */}
-        <div className="space-y-3" data-component="QuickSettingsLinks">
+        <div
+          className="grid grid-cols-1 md:grid-cols-3 gap-3"
+          data-component="QuickSettingsLinks"
+        >
           <Link
             to="/settings/appearance"
-            className="flex items-center justify-between p-4 m-2.5 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
+            className="flex items-center justify-between p-3 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
             data-component="QuickSettingsLink-Appearance"
           >
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-[var(--accent-color)]/10">
-                <Palette className="w-6 h-6 text-[var(--accent-color)]" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-[var(--accent-color)]/10">
+                <Palette className="w-5 h-5 text-[var(--accent-color)]" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-[var(--text)]">Appearance</h3>
-                <p className="text-sm text-[var(--text-muted)]">
-                  Customize themes, colors, and visual preferences
-                </p>
+                <h3 className="text-sm font-semibold text-[var(--text)]">Appearance</h3>
+                <p className="text-xs text-[var(--text-muted)]">Themes & colors</p>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
+            <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
           </Link>
 
           <Link
             to="/settings/config-audit"
-            className="flex items-center justify-between p-4 m-2.5 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
+            className="flex items-center justify-between p-3 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
             data-component="QuickSettingsLink-ConfigAudit"
           >
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-green-500/10">
-                <ClipboardCheck className="w-6 h-6 text-green-500" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <ClipboardCheck className="w-5 h-5 text-green-500" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-[var(--text)]">Configuration Audit</h3>
-                <p className="text-sm text-[var(--text-muted)]">
-                  Analyze and optimize your service configurations
-                </p>
+                <h3 className="text-sm font-semibold text-[var(--text)]">Config Audit</h3>
+                <p className="text-xs text-[var(--text-muted)]">Analyze & optimize</p>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
+            <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
           </Link>
+
+          <button
+            onClick={handleRunSetupWizard}
+            className="flex items-center justify-between p-3 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-primary transition-colors group text-left"
+            data-testid="run-setup-wizard-button"
+            data-component="QuickSettingsLink-SetupWizard"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--text)]">Setup Wizard</h3>
+                <p className="text-xs text-[var(--text-muted)]">Re-run guided setup</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-primary transition-colors" />
+          </button>
         </div>
 
         {/* Media Services */}
         <div data-component="MediaServicesSection">
           <h2 className="text-xl font-semibold text-white mb-4">Media Services</h2>
-          <div className="space-y-4">
-            <ServiceSection
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ServiceCard
               title="SABnzbd"
               service="sabnzbd"
               config={settings.sabnzbd}
@@ -444,7 +530,7 @@ export const Settings = () => {
               toggleShowKey={toggleShowKey}
               testConnection={testConnection}
             />
-            <ServiceSection
+            <ServiceCard
               title="Sonarr"
               service="sonarr"
               config={settings.sonarr}
@@ -460,7 +546,7 @@ export const Settings = () => {
               toggleShowKey={toggleShowKey}
               testConnection={testConnection}
             />
-            <ServiceSection
+            <ServiceCard
               title="Radarr"
               service="radarr"
               config={settings.radarr}
@@ -476,7 +562,7 @@ export const Settings = () => {
               toggleShowKey={toggleShowKey}
               testConnection={testConnection}
             />
-            <ServiceSection
+            <ServiceCard
               title="Plex"
               service="plex"
               config={settings.plex}
@@ -496,89 +582,188 @@ export const Settings = () => {
           </div>
         </div>
 
-        {/* AI & Search */}
-        <div data-component="AISearchSection">
-          <h2 className="text-xl font-semibold text-white mb-4">AI & Search</h2>
-          <div className="space-y-4">
-            <div className="bg-gray-800 rounded-lg p-8 space-y-6" data-component="AnthropicCard">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">Anthropic Claude</h3>
-                <label className="flex items-center gap-2">
+        {/* AI & Application Settings - Side by Side */}
+        <div data-component="AIAndAppSection">
+          <h2 className="text-xl font-semibold text-white mb-4">Configuration</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* OpenRouter Card */}
+            <div
+              className="bg-gray-800 rounded-lg p-4 space-y-3 h-full"
+              data-testid="openrouter-card"
+              data-component="OpenRouterCard"
+            >
+              <div className="flex items-center justify-between" data-component="OpenRouterCardHeader">
+                <h3 className="text-base font-semibold text-white">OpenRouter</h3>
+                <label className="flex items-center gap-1.5">
                   <input
                     type="checkbox"
-                    checked={settings.anthropic.enabled}
+                    checked={settings.openrouter.enabled}
                     onChange={(e) =>
                       setSettings({
                         ...settings,
-                        anthropic: {
-                          ...settings.anthropic,
+                        openrouter: {
+                          ...settings.openrouter,
                           enabled: e.target.checked,
                         },
                       })
                     }
                     className="w-4 h-4 rounded border-gray-600 text-indigo-600 focus:ring-indigo-500"
+                    data-testid="openrouter-enabled"
                   />
-                  <span className="text-sm text-gray-400">Enabled</span>
+                  <span className="text-xs text-gray-400">Enabled</span>
                 </label>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">API Key</label>
+                <label className="block text-xs font-medium text-gray-300 mb-1">API Key</label>
+                <div className="relative">
+                  <input
+                    type={showKeys['openrouter'] ? 'text' : 'password'}
+                    value={settings.openrouter.apiKey ?? ''}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        openrouter: {
+                          ...settings.openrouter,
+                          apiKey: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="sk-or-..."
+                    className="w-full px-2.5 py-1.5 pr-9 text-sm bg-gray-900 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    data-testid="openrouter-api-key"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => toggleShowKey('openrouter')}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white"
+                  >
+                    {showKeys['openrouter'] ? (
+                      <EyeOff className="w-3.5 h-3.5" />
+                    ) : (
+                      <Eye className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  <a
+                    href="https://openrouter.ai/keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-400 hover:text-indigo-300"
+                  >
+                    Get API key →
+                  </a>
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Model</label>
                 <input
-                  type={showKeys['anthropic'] ? 'text' : 'password'}
-                  value={settings.anthropic.apiKey ?? ''}
+                  type="text"
+                  value={settings.openrouter.model ?? ''}
                   onChange={(e) =>
                     setSettings({
                       ...settings,
-                      anthropic: {
-                        ...settings.anthropic,
-                        apiKey: e.target.value,
+                      openrouter: {
+                        ...settings.openrouter,
+                        model: e.target.value,
                       },
                     })
                   }
-                  placeholder="sk-ant-..."
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="anthropic/claude-3.5-sonnet"
+                  className="w-full px-2.5 py-1.5 text-sm bg-gray-900 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  data-testid="openrouter-model"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  <a
+                    href="https://openrouter.ai/models"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-400 hover:text-indigo-300"
+                  >
+                    Browse models →
+                  </a>
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                <button
+                  onClick={() => testConnection('llm')}
+                  disabled={!settings.openrouter.enabled || testResults['llm'] === 'testing'}
+                  className="w-full bg-gray-700 hover:bg-gray-600 text-white rounded-md text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-3 py-2"
+                  data-testid="openrouter-test-button"
+                >
+                  {testResults['llm'] === 'testing' ? (
+                    'Testing...'
+                  ) : testResults['llm'] === 'success' ? (
+                    <span className="flex items-center justify-center gap-1.5">
+                      <CheckCircle className="w-3.5 h-3.5" /> Connected
+                    </span>
+                  ) : testResults['llm'] === 'error' ? (
+                    <span className="flex items-center justify-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" /> Failed
+                    </span>
+                  ) : (
+                    'Test Connection'
+                  )}
+                </button>
+
+                {testResults['llm'] === 'error' && testErrors['llm'] && (
+                  <div className="flex items-start gap-1.5 p-2 bg-red-900/20 border border-red-800 rounded-md">
+                    <AlertCircle className="w-3.5 h-3.5 text-red-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-red-400">Connection Failed</p>
+                      <p className="text-xs text-red-300 font-mono truncate">{testErrors['llm']}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Application Settings */}
-        <div data-component="ApplicationSection">
-          <h2 className="text-xl font-semibold text-white mb-4">Application</h2>
-          <div className="bg-gray-800 rounded-lg p-8 space-y-6" data-component="ApplicationCard">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Log Level</label>
-              <select
-                value={settings.app.logLevel ?? 'INFO'}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    app: { ...settings.app, logLevel: e.target.value },
-                  })
-                }
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="DEBUG">Debug</option>
-                <option value="INFO">Info</option>
-                <option value="WARNING">Warning</option>
-                <option value="ERROR">Error</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Timezone</label>
-              <input
-                type="text"
-                value={settings.app.timezone ?? ''}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    app: { ...settings.app, timezone: e.target.value },
-                  })
-                }
-                placeholder="America/New_York"
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+            {/* Application Card */}
+            <div
+              className="bg-gray-800 rounded-lg p-4 space-y-3 h-full"
+              data-component="ApplicationCard"
+            >
+              <div className="flex items-center justify-between" data-component="ApplicationCardHeader">
+                <h3 className="text-base font-semibold text-white">Application</h3>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Log Level</label>
+                <select
+                  value={settings.app.logLevel ?? 'INFO'}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      app: { ...settings.app, logLevel: e.target.value },
+                    })
+                  }
+                  className="w-full px-2.5 py-1.5 text-sm bg-gray-900 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="DEBUG">Debug</option>
+                  <option value="INFO">Info</option>
+                  <option value="WARNING">Warning</option>
+                  <option value="ERROR">Error</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Timezone</label>
+                <input
+                  type="text"
+                  value={settings.app.timezone ?? ''}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      app: { ...settings.app, timezone: e.target.value },
+                    })
+                  }
+                  placeholder="America/New_York"
+                  className="w-full px-2.5 py-1.5 text-sm bg-gray-900 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
             </div>
           </div>
         </div>

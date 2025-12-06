@@ -2,6 +2,8 @@
  * Home Page E2E Tests with Playwright
  *
  * These tests verify the home page loads correctly and displays expected content.
+ * The home page now renders the Chat interface (AutoArr Assistant).
+ *
  * Useful for debugging white screen issues and verifying basic functionality.
  */
 
@@ -29,15 +31,57 @@ const mockSettings = {
 // ============================================================================
 
 test.describe("Home Page - Basic Loading", () => {
-  test("should load the page without errors", async ({ page }) => {
-    // Collect console errors
-    const errors: string[] = [];
+  test("should load without console errors", async ({ page }) => {
+    const consoleErrors: string[] = [];
+
+    // Collect console errors BEFORE navigation
     page.on("console", (msg) => {
       if (msg.type() === "error") {
-        errors.push(msg.text());
+        const text = msg.text();
+        // Ignore expected/acceptable errors:
+        // - React DevTools reminder (not an actual error)
+        // - WebSocket connection errors (expected when WS server is not running)
+        // - 404 errors for optional endpoints that may not exist yet
+        // - Network fetch errors (backend may not be fully configured)
+        // - Failed to load settings (expected when API endpoints aren't available)
+        const isExpectedError =
+          text.includes("React DevTools") ||
+          text.includes("WebSocket") ||
+          text.includes("ws://") ||
+          text.includes("404") ||
+          text.includes("Failed to fetch") ||
+          text.includes("Failed to load") ||
+          text.includes("NetworkError") ||
+          text.includes("net::ERR");
+
+        if (!isExpectedError) {
+          consoleErrors.push(text);
+        }
       }
     });
 
+    // Collect page errors (uncaught exceptions)
+    const pageErrors: string[] = [];
+    page.on("pageerror", (err) => {
+      pageErrors.push(err.message);
+    });
+
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    // Wait for chat container to be visible (home page is now the chat)
+    await expect(page.getByTestId("chat-container")).toBeVisible({ timeout: 10000 });
+
+    // Wait a bit for any async operations to complete
+    await page.waitForTimeout(500);
+
+    // Page should not have uncaught exceptions
+    expect(pageErrors).toEqual([]);
+
+    // Page should not have unexpected console errors
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test("should load the page without page errors", async ({ page }) => {
     // Collect page errors (uncaught exceptions)
     const pageErrors: string[] = [];
     page.on("pageerror", (err) => {
@@ -48,10 +92,6 @@ test.describe("Home Page - Basic Loading", () => {
 
     // Wait for page to stabilize
     await page.waitForTimeout(2000);
-
-    // Check for JavaScript errors
-    console.log("Console errors:", errors);
-    console.log("Page errors:", pageErrors);
 
     // Page should not have uncaught exceptions
     expect(pageErrors.length).toBe(0);

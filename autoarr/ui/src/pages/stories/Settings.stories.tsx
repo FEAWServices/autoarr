@@ -7,6 +7,7 @@ import { Settings } from '../Settings';
  * # SettingsPage
  *
  * The main settings hub page that provides access to all configuration options.
+ * Uses a responsive 2-column grid layout for service cards.
  *
  * ## Component Naming Reference
  *
@@ -16,11 +17,11 @@ import { Settings } from '../Settings';
  * |----------------|-------------|
  * | `SettingsPage` | Main page container |
  * | `SettingsPageHeader` | Title "Settings" + description |
- * | `QuickSettingsLinks` | Container for Appearance/Config Audit links |
+ * | `QuickSettingsLinks` | 2-column grid for Appearance/Config Audit links |
  * | `QuickSettingsLink-Appearance` | Link to Appearance settings |
  * | `QuickSettingsLink-ConfigAudit` | Link to Config Audit |
- * | `MediaServicesSection` | Section containing all media service cards |
- * | `ServiceCard` | Individual service config card (SABnzbd, Sonarr, etc.) |
+ * | `MediaServicesSection` | 2-column grid containing service cards |
+ * | `ServiceCard` | Compact service config card (SABnzbd, Sonarr, etc.) |
  * | `ServiceCardHeader` | Service name + enabled toggle |
  * | `ServiceCardUrlField` | URL input wrapper |
  * | `ServiceCardUrlInput` | URL text input |
@@ -29,10 +30,11 @@ import { Settings } from '../Settings';
  * | `ServiceCardToggleVisibility` | Show/hide password button |
  * | `ServiceCardActions` | Test connection button area |
  * | `ServiceCardTestButton` | Test Connection button |
- * | `AISearchSection` | Section for AI configuration |
- * | `AnthropicCard` | Anthropic Claude configuration card |
- * | `ApplicationSection` | Section for app settings |
+ * | `AIAndAppSection` | 2-column grid for AI and App settings |
+ * | `OpenRouterCard` | OpenRouter LLM configuration card |
+ * | `OpenRouterCardHeader` | OpenRouter name + enabled toggle |
  * | `ApplicationCard` | Log level and timezone card |
+ * | `ApplicationCardHeader` | Application card header |
  * | `SaveButtonSection` | Save button area |
  * | `SaveButton` | Main save button |
  *
@@ -45,47 +47,31 @@ import { Settings } from '../Settings';
  * | `service-card-sonarr` | Sonarr service card |
  * | `service-card-radarr` | Radarr service card |
  * | `service-card-plex` | Plex service card |
+ * | `openrouter-card` | OpenRouter configuration card |
+ * | `openrouter-enabled` | OpenRouter enabled checkbox |
+ * | `openrouter-api-key` | OpenRouter API key input |
+ * | `openrouter-model` | OpenRouter model input |
+ * | `openrouter-test-button` | OpenRouter test connection button |
  *
- * ## CSS Variables (Design Tokens)
+ * ## Responsive Layout
  *
- * ### Layout Tokens
- * | Token | Value | Description |
- * |-------|-------|-------------|
- * | `--page-padding` | 50px | Page container padding (all sides) |
- * | `--modal-bg-color` | varies by theme | Card background |
- * | `--aa-border` | varies by theme | Card border |
- * | `--accent-color` | varies by theme | Hover/active accent |
- * | `--text` | varies by theme | Primary text |
- * | `--text-muted` | varies by theme | Secondary text |
- *
- * ### Typography Spacing Tokens
- * | Token | Value | Description |
- * |-------|-------|-------------|
- * | `--h3-padding-y` | 8px | Vertical padding on H3 headings |
- * | `--h3-margin-bottom` | 16px | Bottom margin on H3 headings |
- * | `--label-padding-y` | 4px | Vertical padding on labels |
- * | `--label-margin-bottom` | 8px | Bottom margin on labels |
- * | `--section-heading-mb` | 24px | Bottom margin on H2 section titles |
+ * - **Desktop (md+)**: 2-column grid for all card sections
+ * - **Mobile (<md)**: Single column, cards stack vertically
  *
  * ## Layout Structure
  * ```
  * SettingsPage
  * ├── SettingsPageHeader
- * ├── QuickSettingsLinks
+ * ├── QuickSettingsLinks (grid cols-1 md:cols-2)
  * │   ├── QuickSettingsLink-Appearance
  * │   └── QuickSettingsLink-ConfigAudit
- * ├── MediaServicesSection
+ * ├── MediaServicesSection (grid cols-1 md:cols-2)
  * │   ├── ServiceCard (sabnzbd)
- * │   │   ├── ServiceCardHeader
- * │   │   ├── ServiceCardUrlField / ServiceCardUrlInput
- * │   │   ├── ServiceCardApiKeyField / ServiceCardApiKeyInput / ServiceCardToggleVisibility
- * │   │   └── ServiceCardActions / ServiceCardTestButton
  * │   ├── ServiceCard (sonarr)
  * │   ├── ServiceCard (radarr)
  * │   └── ServiceCard (plex)
- * ├── AISearchSection
- * │   └── AnthropicCard
- * ├── ApplicationSection
+ * ├── AIAndAppSection (grid cols-1 md:cols-2)
+ * │   ├── OpenRouterCard
  * │   └── ApplicationCard
  * └── SaveButtonSection
  *     └── SaveButton
@@ -153,20 +139,22 @@ export const Tablet: Story = {
 };
 
 /**
- * Test that service cards have the correct margin applied via CSS.
- * This verifies that the `--service-card-margin` CSS variable is working.
+ * Test that service cards are displayed in a 2-column grid on desktop.
+ * This verifies the responsive grid layout is working.
  */
-export const ServiceCardMarginTest: Story = {
+export const ServiceCardGridTest: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     // Find the SABnzbd service card
     const sabnzbdCard = canvas.getByTestId('service-card-sabnzbd');
 
-    // Get computed styles
-    const computedStyle = window.getComputedStyle(sabnzbdCard);
+    // Verify the card exists and has the compact styling
+    expect(sabnzbdCard).toBeInTheDocument();
 
-    // Assert margin is 10px (from --service-card-margin CSS variable)
-    expect(computedStyle.margin).toBe('10px');
+    // Check the parent grid container has proper grid styles
+    const gridContainer = sabnzbdCard.parentElement;
+    const computedStyle = window.getComputedStyle(gridContainer!);
+    expect(computedStyle.display).toBe('grid');
   },
 };
