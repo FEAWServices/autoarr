@@ -813,12 +813,70 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright tests
+        id: playwright
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
         working-directory: autoarr/ui
-        run: pnpm exec playwright test --config=playwright-ci.config.ts
+        run: pnpm exec playwright test --config=playwright-ci.config.ts 2>&1 | tee playwright-output.txt
         env:
           CI: true
           TEST_BASE_URL: http://localhost:8088
+        continue-on-error: true
+
+      - name: Set test outcome
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        id: test-outcome
+        run: |
+          if [ "${{ steps.playwright.outcome }}" == "success" ]; then
+            echo "status=passed" >> $GITHUB_OUTPUT
+            echo "emoji=✅" >> $GITHUB_OUTPUT
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "emoji=❌" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Write E2E test summary
+        if: always() && (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request')
+        working-directory: autoarr/ui
+        run: |
+          echo "## ${{ steps.test-outcome.outputs.emoji }} E2E Tests (Playwright)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Parse test results from JSON if available
+          if [ -f test-results/playwright-results.json ]; then
+            PASSED=$(jq '.stats.expected // 0' test-results/playwright-results.json 2>/dev/null || echo "0")
+            FAILED=$(jq '.stats.unexpected // 0' test-results/playwright-results.json 2>/dev/null || echo "0")
+            SKIPPED=$(jq '.stats.skipped // 0' test-results/playwright-results.json 2>/dev/null || echo "0")
+            DURATION=$(jq '.stats.duration // 0' test-results/playwright-results.json 2>/dev/null || echo "0")
+            DURATION_SEC=$((DURATION / 1000))
+
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+            echo "| ❌ Failed | $FAILED |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⏭️ Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⏱️ Duration | ${DURATION_SEC}s |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Show failed test names if any
+          if [ -f test-results/playwright-results.json ]; then
+            FAILED_TESTS=$(jq -r '.suites[]?.specs[]? | select(.ok == false) | .title' test-results/playwright-results.json 2>/dev/null | head -20)
+            if [ -n "$FAILED_TESTS" ]; then
+              echo "### Failed Tests" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "$FAILED_TESTS" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+          # Add link to artifacts
+          echo "📦 **Artifacts**: Download \`playwright-report\` for detailed HTML report with screenshots and traces." >> $GITHUB_STEP_SUMMARY
+
+          # Fail the step if tests failed (after writing summary)
+          if [ "${{ steps.playwright.outcome }}" != "success" ]; then
+            exit 1
+          fi
 
       # =======================================================================
       # Cleanup and artifacts
