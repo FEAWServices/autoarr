@@ -326,6 +326,171 @@ async def get_all_settings(
     )
 
 
+# ============================================================================
+# LLM SETTINGS ENDPOINTS
+# NOTE: These routes MUST be defined before the /{service} catch-all route
+# ============================================================================
+
+
+@router.get("/llm", response_model=LLMConfigResponse)
+async def get_llm_settings(
+    llm_repo: LLMSettingsRepository = Depends(get_llm_settings_repo),
+) -> LLMConfigResponse:
+    """
+    Get current LLM configuration.
+
+    Returns masked API key for security. Fetches available models from OpenRouter.
+    """
+    settings = await llm_repo.get_settings()
+
+    # Default values if no settings exist
+    enabled = settings.enabled if settings else True
+    api_key = settings.api_key if settings else ""
+    selected_model = settings.selected_model if settings else "anthropic/claude-3.5-sonnet"
+    max_tokens = settings.max_tokens if settings else 4096
+    timeout = settings.timeout if settings else 60.0
+
+    # Try to get available models and connection status
+    available_models: list[LLMModelInfo] = []
+    connection_status = "disconnected"
+
+    if api_key:
+        try:
+            provider = OpenRouterProvider({"api_key": api_key})
+            if await provider.is_available():
+                connection_status = "connected"
+                # Fetch available models
+                models = await provider.get_models()
+                available_models = [
+                    LLMModelInfo(
+                        id=m.id,
+                        name=m.name,
+                        context_length=m.context_length,
+                        prompt_price=m.pricing.get("prompt", 0.0),
+                        completion_price=m.pricing.get("completion", 0.0),
+                    )
+                    for m in models
+                ]
+            else:
+                connection_status = "error"
+        except Exception as e:
+            logger.error(f"Failed to connect to OpenRouter: {e}")
+            connection_status = "error"
+
+    return LLMConfigResponse(
+        enabled=enabled,
+        provider="openrouter",
+        api_key_masked=mask_api_key(api_key),
+        selected_model=selected_model,
+        available_models=available_models,
+        max_tokens=max_tokens,
+        timeout=timeout,
+        status=connection_status,
+    )
+
+
+@router.put("/llm", response_model=UpdateLLMResponse)
+async def update_llm_settings(
+    config: LLMConfig,
+    llm_repo: LLMSettingsRepository = Depends(get_llm_settings_repo),
+) -> UpdateLLMResponse:
+    """
+    Update LLM configuration.
+
+    Saves settings to database for persistence.
+    """
+    try:
+        await llm_repo.save_settings(
+            enabled=config.enabled,
+            api_key=config.api_key or "",
+            selected_model=config.selected_model,
+            max_tokens=config.max_tokens,
+            timeout=config.timeout,
+        )
+        logger.info("LLM settings saved to database")
+        return UpdateLLMResponse(success=True, message="LLM settings saved successfully")
+    except Exception as e:
+        logger.error(f"Failed to save LLM settings: {e}")
+        return UpdateLLMResponse(success=False, message=f"Failed to save settings: {str(e)}")
+
+
+@router.get("/llm/models", response_model=list[LLMModelInfo])
+async def get_llm_models(
+    llm_repo: LLMSettingsRepository = Depends(get_llm_settings_repo),
+) -> list[LLMModelInfo]:
+    """
+    Get available LLM models from OpenRouter.
+
+    Returns a list of models with pricing information.
+    """
+    import os
+
+    # Try to get API key from database first, then environment
+    settings = await llm_repo.get_settings()
+    api_key = settings.api_key if settings and settings.api_key else os.getenv("OPENROUTER_API_KEY")
+
+    if not api_key:
+        return []
+
+    try:
+        provider = OpenRouterProvider({"api_key": api_key})
+        models = await provider.get_models()
+
+        return [
+            LLMModelInfo(
+                id=m.id,
+                name=m.name,
+                context_length=m.context_length,
+                prompt_price=m.pricing.get("prompt", 0.0),
+                completion_price=m.pricing.get("completion", 0.0),
+            )
+            for m in models
+        ]
+    except Exception as e:
+        logger.error(f"Failed to fetch LLM models: {e}")
+        return []
+
+
+@router.post("/test/llm", response_model=TestConnectionResponse)
+async def test_llm_connection(
+    request: TestLLMConnectionRequest,
+) -> TestConnectionResponse:
+    """
+    Test connection to OpenRouter with provided API key.
+
+    Useful for validating credentials before saving.
+    """
+    try:
+        provider = OpenRouterProvider({"api_key": request.api_key})
+        is_available = await provider.is_available()
+
+        if is_available:
+            return TestConnectionResponse(
+                success=True,
+                message="Connected to OpenRouter successfully",
+                details={"provider": "openrouter"},
+            )
+        else:
+            return TestConnectionResponse(
+                success=False,
+                message="Failed to connect to OpenRouter",
+                details={"error": "API key validation failed"},
+            )
+    except Exception as e:
+        logger.error(f"LLM connection test failed: {e}")
+        return TestConnectionResponse(
+            success=False,
+            message=f"Connection failed: {str(e)}",
+            details={"error": str(e)},
+        )
+
+
+# ============================================================================
+# SERVICE-SPECIFIC ENDPOINTS (with path parameter)
+# NOTE: These catch-all routes MUST come AFTER all specific routes like /llm
+# ============================================================================
+
+
 @router.get("/{service}", response_model=ServiceConnectionConfigResponse)
 async def get_service_settings(
     service: str, orchestrator: "MCPOrchestrator" = Depends(get_orchestrator)
@@ -798,164 +963,6 @@ async def discover_services() -> list[DiscoveredService]:
     await asyncio.gather(*[check_service(stype, port) for stype, port in scan_targets])
 
     return discovered
-
-
-# ============================================================================
-# LLM SETTINGS ENDPOINTS
-# ============================================================================
-
-
-@router.get("/llm", response_model=LLMConfigResponse)
-async def get_llm_settings(
-    llm_repo: LLMSettingsRepository = Depends(get_llm_settings_repo),
-) -> LLMConfigResponse:
-    """
-    Get current LLM configuration.
-
-    Returns masked API key for security. Fetches available models from OpenRouter.
-    """
-    settings = await llm_repo.get_settings()
-
-    # Default values if no settings exist
-    enabled = settings.enabled if settings else True
-    api_key = settings.api_key if settings else ""
-    selected_model = settings.selected_model if settings else "anthropic/claude-3.5-sonnet"
-    max_tokens = settings.max_tokens if settings else 4096
-    timeout = settings.timeout if settings else 60.0
-
-    # Try to get available models and connection status
-    available_models: list[LLMModelInfo] = []
-    connection_status = "disconnected"
-
-    if api_key:
-        try:
-            provider = OpenRouterProvider({"api_key": api_key})
-            if await provider.is_available():
-                connection_status = "connected"
-                # Fetch available models
-                models = await provider.get_models()
-                available_models = [
-                    LLMModelInfo(
-                        id=m.id,
-                        name=m.name,
-                        context_length=m.context_length,
-                        prompt_price=m.pricing.get("prompt", 0.0),
-                        completion_price=m.pricing.get("completion", 0.0),
-                    )
-                    for m in models
-                ]
-            else:
-                connection_status = "error"
-        except Exception as e:
-            logger.error(f"Failed to connect to OpenRouter: {e}")
-            connection_status = "error"
-
-    return LLMConfigResponse(
-        enabled=enabled,
-        provider="openrouter",
-        api_key_masked=mask_api_key(api_key),
-        selected_model=selected_model,
-        available_models=available_models,
-        max_tokens=max_tokens,
-        timeout=timeout,
-        status=connection_status,
-    )
-
-
-@router.put("/llm", response_model=UpdateLLMResponse)
-async def update_llm_settings(
-    config: LLMConfig,
-    llm_repo: LLMSettingsRepository = Depends(get_llm_settings_repo),
-) -> UpdateLLMResponse:
-    """
-    Update LLM configuration.
-
-    Saves settings to database for persistence.
-    """
-    try:
-        await llm_repo.save_settings(
-            enabled=config.enabled,
-            api_key=config.api_key or "",
-            selected_model=config.selected_model,
-            max_tokens=config.max_tokens,
-            timeout=config.timeout,
-        )
-        logger.info("LLM settings saved to database")
-        return UpdateLLMResponse(success=True, message="LLM settings saved successfully")
-    except Exception as e:
-        logger.error(f"Failed to save LLM settings: {e}")
-        return UpdateLLMResponse(success=False, message=f"Failed to save settings: {str(e)}")
-
-
-@router.get("/llm/models", response_model=list[LLMModelInfo])
-async def get_llm_models(
-    llm_repo: LLMSettingsRepository = Depends(get_llm_settings_repo),
-) -> list[LLMModelInfo]:
-    """
-    Get available LLM models from OpenRouter.
-
-    Returns a list of models with pricing information.
-    """
-    import os
-
-    # Try to get API key from database first, then environment
-    settings = await llm_repo.get_settings()
-    api_key = settings.api_key if settings and settings.api_key else os.getenv("OPENROUTER_API_KEY")
-
-    if not api_key:
-        return []
-
-    try:
-        provider = OpenRouterProvider({"api_key": api_key})
-        models = await provider.get_models()
-
-        return [
-            LLMModelInfo(
-                id=m.id,
-                name=m.name,
-                context_length=m.context_length,
-                prompt_price=m.pricing.get("prompt", 0.0),
-                completion_price=m.pricing.get("completion", 0.0),
-            )
-            for m in models
-        ]
-    except Exception as e:
-        logger.error(f"Failed to fetch LLM models: {e}")
-        return []
-
-
-@router.post("/test/llm", response_model=TestConnectionResponse)
-async def test_llm_connection(
-    request: TestLLMConnectionRequest,
-) -> TestConnectionResponse:
-    """
-    Test connection to OpenRouter with provided API key.
-
-    Useful for validating credentials before saving.
-    """
-    try:
-        provider = OpenRouterProvider({"api_key": request.api_key})
-        is_available = await provider.is_available()
-
-        if is_available:
-            return TestConnectionResponse(
-                success=True,
-                message="Connected to OpenRouter successfully",
-                details={"provider": "openrouter"},
-            )
-        else:
-            return TestConnectionResponse(
-                success=False,
-                message="Failed to connect to OpenRouter",
-                details={"error": "API key validation failed"},
-            )
-    except Exception as e:
-        logger.error(f"LLM connection test failed: {e}")
-        return TestConnectionResponse(
-            success=False,
-            message=f"Connection failed: {str(e)}",
-            details={"error": str(e)},
-        )
 
 
 # ============================================================================
