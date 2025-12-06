@@ -62,20 +62,44 @@ export const Onboarding = () => {
     });
   }, []);
 
-  // Fetch status on mount
+  // Track if user completed onboarding during THIS session (not loaded from API)
+  const [completedThisSession, setCompletedThisSession] = useState(false);
+
+  // Fetch status on mount, and reset if already complete (to allow re-running wizard)
   useEffect(() => {
-    fetchStatus();
+    const initOnboarding = async () => {
+      await fetchStatus();
+      // Check if onboarding is already complete - if so, reset to allow re-running
+      const state = useOnboardingStore.getState();
+      if (state.completed && state.currentStep === 'complete') {
+        // Reset so user can re-run the wizard
+        await useOnboardingStore.getState().resetOnboarding();
+      }
+    };
+    initOnboarding();
   }, [fetchStatus]);
 
-  // Redirect to home if onboarding is already complete
+  // Redirect to home after user completes the wizard during this session
   useEffect(() => {
-    if (completed && currentStep === 'complete') {
+    if (completedThisSession && completed && currentStep === 'complete') {
       const timer = setTimeout(() => {
         navigate('/');
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [completed, currentStep, navigate]);
+  }, [completedThisSession, completed, currentStep, navigate]);
+
+  // Listen for completion during this session
+  useEffect(() => {
+    const unsubscribe = useOnboardingStore.subscribe((state, prevState) => {
+      // Detect when user completes onboarding (transition to complete)
+      if (state.completed && state.currentStep === 'complete' &&
+          (!prevState.completed || prevState.currentStep !== 'complete')) {
+        setCompletedThisSession(true);
+      }
+    });
+    return unsubscribe;
+  }, []);
 
   // Loading state - only show during initial fetch, not during navigation
   if (isInitializing) {
