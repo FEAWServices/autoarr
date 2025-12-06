@@ -92,7 +92,12 @@ services:
       "
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      # Check both frontend (Vite) and backend (API readiness with warmup)
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf http://localhost:5173 && curl -sf http://localhost:8088/api/v1/health/ready",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

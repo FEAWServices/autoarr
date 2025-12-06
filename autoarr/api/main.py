@@ -91,6 +91,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.error(f"Warning: WebSocket bridge initialization failed: {e}")
         # Don't fail startup if WebSocket bridge fails - it's not critical
 
+    # Perform application warmup to preload caches and reduce first-request latency
+    try:
+        logger.info("Performing application warmup...")
+        from .routers.health import perform_warmup
+
+        warmup_result = await perform_warmup()
+        logger.info(
+            f"Warmup completed in {warmup_result['total_duration_ms']}ms "
+            f"({len(warmup_result['tasks'])} tasks)"
+        )
+    except Exception as e:
+        logger.warning(f"Warmup failed (non-critical): {e}")
+        # Don't fail startup if warmup fails - app can still serve requests
+
     yield
 
     # Shutdown

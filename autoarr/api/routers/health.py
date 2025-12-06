@@ -22,6 +22,8 @@ This module provides health check endpoints for monitoring the overall
 system health and individual service health.
 """
 
+import asyncio
+import logging
 import time
 from datetime import datetime
 from typing import Any, Dict
@@ -34,6 +36,11 @@ from ..dependencies import get_orchestrator
 from ..models import HealthCheckResponse, ServiceHealth
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+# Global warmup state
+_warmup_complete = False
+_warmup_timestamp: str | None = None
 
 
 @router.get("/health", response_model=HealthCheckResponse, tags=["health"])
@@ -294,3 +301,221 @@ async def circuit_breaker_status(
 
     result: Dict[str, Any] = orchestrator.get_circuit_breaker_state(service)
     return result
+
+
+# ============================================================================
+# Warmup Endpoints
+# ============================================================================
+
+
+async def perform_warmup() -> Dict[str, Any]:
+    """
+    Perform application warmup to preload caches and initialize resources.
+
+    This is called automatically on startup and can be triggered manually.
+
+    Returns:
+        dict: Warmup results with timing information
+    """
+    global _warmup_complete, _warmup_timestamp
+
+    start_time = time.time()
+    results: Dict[str, Any] = {
+        "tasks": {},
+        "errors": [],
+    }
+
+    # Task 1: Warm up database connection pool
+    try:
+        task_start = time.time()
+        from ..database import get_database
+
+        db = get_database()
+        async with db.session() as session:
+            from sqlalchemy import text
+
+            await session.execute(text("SELECT 1"))
+        results["tasks"]["database"] = {
+            "status": "ok",
+            "duration_ms": round((time.time() - task_start) * 1000, 2),
+        }
+        logger.info("Warmup: Database connection pool initialized")
+    except Exception as e:
+        results["tasks"]["database"] = {"status": "error", "error": str(e)}
+        results["errors"].append(f"database: {e}")
+        logger.warning(f"Warmup: Database warmup failed: {e}")
+
+    # Task 2: Preload onboarding state (frequently accessed on startup)
+    try:
+        task_start = time.time()
+        from ..database import OnboardingStateRepository, get_database
+
+        db = get_database()
+        repo = OnboardingStateRepository(db)
+        await repo.get_or_create_state()
+        results["tasks"]["onboarding_state"] = {
+            "status": "ok",
+            "duration_ms": round((time.time() - task_start) * 1000, 2),
+        }
+        logger.info("Warmup: Onboarding state loaded")
+    except Exception as e:
+        results["tasks"]["onboarding_state"] = {"status": "skipped", "error": str(e)}
+        logger.debug(f"Warmup: Onboarding state skipped: {e}")
+
+    # Task 3: Preload LLM settings (if configured)
+    try:
+        task_start = time.time()
+        from ..database import LLMSettingsRepository, get_database
+
+        db = get_database()
+        llm_repo = LLMSettingsRepository(db)
+        await llm_repo.get_settings()
+        results["tasks"]["llm_settings"] = {
+            "status": "ok",
+            "duration_ms": round((time.time() - task_start) * 1000, 2),
+        }
+        logger.info("Warmup: LLM settings loaded")
+    except Exception as e:
+        results["tasks"]["llm_settings"] = {"status": "skipped", "error": str(e)}
+        logger.debug(f"Warmup: LLM settings skipped: {e}")
+
+    # Task 4: Initialize Python module imports (reduces first-request latency)
+    try:
+        task_start = time.time()
+        # Import heavy modules that are commonly used
+        import json  # noqa: F401
+
+        from pydantic import BaseModel  # noqa: F401
+
+        from autoarr.shared.llm.openrouter_provider import OpenRouterProvider  # noqa: F401
+        from autoarr.shared.llm.provider_factory import LLMProviderFactory  # noqa: F401
+
+        # Initialize provider factory
+        LLMProviderFactory.initialize()
+
+        results["tasks"]["module_imports"] = {
+            "status": "ok",
+            "duration_ms": round((time.time() - task_start) * 1000, 2),
+        }
+        logger.info("Warmup: Module imports completed")
+    except Exception as e:
+        results["tasks"]["module_imports"] = {"status": "error", "error": str(e)}
+        results["errors"].append(f"module_imports: {e}")
+
+    # Task 5: Preload service settings
+    try:
+        task_start = time.time()
+        from ..database import SettingsRepository, get_database
+
+        db = get_database()
+        settings_repo = SettingsRepository(db)
+        await settings_repo.get_all_service_settings()
+        results["tasks"]["service_settings"] = {
+            "status": "ok",
+            "duration_ms": round((time.time() - task_start) * 1000, 2),
+        }
+        logger.info("Warmup: Service settings loaded")
+    except Exception as e:
+        results["tasks"]["service_settings"] = {"status": "skipped", "error": str(e)}
+        logger.debug(f"Warmup: Service settings skipped: {e}")
+
+    # Calculate totals
+    total_duration = time.time() - start_time
+    results["total_duration_ms"] = round(total_duration * 1000, 2)
+    results["success"] = len(results["errors"]) == 0
+    results["timestamp"] = datetime.utcnow().isoformat() + "Z"
+
+    # Mark warmup as complete
+    _warmup_complete = True
+    _warmup_timestamp = results["timestamp"]
+
+    logger.info(f"Warmup completed in {results['total_duration_ms']}ms")
+
+    return results
+
+
+@router.get("/health/ready", tags=["health"])
+async def readiness_check() -> Dict[str, Any]:
+    """
+    Kubernetes-style readiness probe.
+
+    Returns 200 only when the application is fully warmed up and ready
+    to serve requests. Use this for load balancer health checks.
+
+    Returns:
+        dict: Readiness status
+
+    Example:
+        ```
+        GET /health/ready
+        {
+            "ready": true,
+            "warmup_complete": true,
+            "warmup_timestamp": "2025-01-15T10:30:00Z"
+        }
+        ```
+    """
+    if not _warmup_complete:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Application is still warming up",
+        )
+
+    return {
+        "ready": True,
+        "warmup_complete": _warmup_complete,
+        "warmup_timestamp": _warmup_timestamp,
+    }
+
+
+@router.get("/health/live", tags=["health"])
+async def liveness_check() -> Dict[str, Any]:
+    """
+    Kubernetes-style liveness probe.
+
+    Returns 200 if the application is running (even if not fully ready).
+    Use this to detect if the application is stuck and needs restart.
+
+    Returns:
+        dict: Liveness status
+
+    Example:
+        ```
+        GET /health/live
+        {
+            "alive": true,
+            "timestamp": "2025-01-15T10:30:00Z"
+        }
+        ```
+    """
+    return {
+        "alive": True,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+    }
+
+
+@router.post("/health/warmup", tags=["health"])
+async def trigger_warmup() -> Dict[str, Any]:
+    """
+    Manually trigger application warmup.
+
+    This can be called to refresh caches or after configuration changes.
+
+    Returns:
+        dict: Warmup results
+
+    Example:
+        ```
+        POST /health/warmup
+        {
+            "success": true,
+            "total_duration_ms": 45.2,
+            "tasks": {
+                "database": {"status": "ok", "duration_ms": 12.3},
+                "onboarding_state": {"status": "ok", "duration_ms": 8.1},
+                ...
+            }
+        }
+        ```
+    """
+    return await perform_warmup()
