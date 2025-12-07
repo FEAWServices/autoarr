@@ -22,11 +22,39 @@ if [ -f ".env" ]; then
     echo "🔧 Loading environment from .env..."
     source .env
 
-    # Configure Git user
-    if [ -n "$GIT_EMAIL" ] && [ -n "$GIT_NAME" ]; then
-        git config --global user.email "$GIT_EMAIL"
-        git config --global user.name "$GIT_NAME"
-        echo "✅ Git configured: $GIT_NAME <$GIT_EMAIL>"
+    # Configure Git user (supports both GIT_AUTHOR_* and GIT_* formats)
+    GIT_USER_NAME="${GIT_AUTHOR_NAME:-$GIT_NAME}"
+    GIT_USER_EMAIL="${GIT_AUTHOR_EMAIL:-$GIT_EMAIL}"
+
+    if [ -n "$GIT_USER_EMAIL" ] && [ -n "$GIT_USER_NAME" ]; then
+        git config --global user.email "$GIT_USER_EMAIL"
+        git config --global user.name "$GIT_USER_NAME"
+        echo "✅ Git configured: $GIT_USER_NAME <$GIT_USER_EMAIL>"
+
+        # Export for use in commits
+        export GIT_AUTHOR_NAME="$GIT_USER_NAME"
+        export GIT_AUTHOR_EMAIL="$GIT_USER_EMAIL"
+        export GIT_COMMITTER_NAME="$GIT_USER_NAME"
+        export GIT_COMMITTER_EMAIL="$GIT_USER_EMAIL"
+
+        # Add to bashrc for persistent auth
+        if ! grep -q "GIT_AUTHOR_NAME" ~/.bashrc 2>/dev/null; then
+            cat >> ~/.bashrc << EOF
+
+# Git identity (auto-configured by devcontainer from .env)
+export GIT_AUTHOR_NAME="$GIT_USER_NAME"
+export GIT_AUTHOR_EMAIL="$GIT_USER_EMAIL"
+export GIT_COMMITTER_NAME="$GIT_USER_NAME"
+export GIT_COMMITTER_EMAIL="$GIT_USER_EMAIL"
+EOF
+        fi
+
+        # Install git hook to enforce identity on every commit
+        if [ -f "/app/.devcontainer/git-hooks/prepare-commit-msg" ]; then
+            cp /app/.devcontainer/git-hooks/prepare-commit-msg /app/.git/hooks/
+            chmod +x /app/.git/hooks/prepare-commit-msg
+            echo "✅ Git identity enforcement hook installed"
+        fi
     fi
 
     # Configure GitHub CLI authentication

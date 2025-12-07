@@ -1,0 +1,76 @@
+# Temporary compose file using direct ports (no remapping)
+# This tests if WSL2 port forwarding works better with standard ports
+
+name: autoarr_app
+
+services:
+  autoarr:
+    image: autoarr:dev
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: autoarr-local
+    restart: unless-stopped
+
+    ports:
+      - "18080:5173" # Vite dev server
+      - "18088:8088" # Backend API
+
+    environment:
+      APP_ENV: development
+      LOG_LEVEL: DEBUG
+      PORT: 8088
+      PYTHONPATH: /app
+      DATABASE_URL: sqlite:////data/autoarr.db
+      REDIS_URL: memory://
+      VITE_DEV_MODE: "true"
+      PNPM_HOME: "/root/.local/share/pnpm"
+
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "1.5"
+        reservations:
+          memory: 512M
+
+    volumes:
+      # Use Windows path format for Docker Desktop
+      - C:/Git/autoarr:/app:cached
+      - autoarr-pnpm-store:/root/.local/share/pnpm/store
+      - autoarr-data:/data
+      - autoarr-logs:/app/logs
+
+    command: >
+      sh -c "
+        cd /app &&
+        poetry install --no-interaction --only main &&
+        cd /app/autoarr/ui &&
+        pnpm install --prefer-offline &&
+        (cd /app && poetry run uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &) &&
+        pnpm run dev --host 0.0.0.0 --port 5173
+      "
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf http://localhost:5173 && curl -sf http://localhost:8088/api/v1/health/ready",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+    networks:
+      - autoarr-net
+
+networks:
+  autoarr-net:
+    driver: bridge
+
+volumes:
+  autoarr-data:
+  autoarr-logs:
+  autoarr-pnpm-store:
+    external: true

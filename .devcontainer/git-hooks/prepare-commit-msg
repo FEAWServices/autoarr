@@ -1,0 +1,32 @@
+#!/bin/bash
+# =============================================================================
+# Git Prepare-Commit-Msg Hook: Enforce Rob Duncan authorship
+# =============================================================================
+# This hook ensures all commits are made as Rob Duncan, preventing Claude
+# or any other identity from appearing in git history.
+#
+# Reads credentials from .env and forces them for the commit.
+# =============================================================================
+
+# Load .env if it exists
+if [ -f "/app/.env" ]; then
+    set -a
+    source /app/.env
+    set +a
+fi
+
+# Get the configured identity (defaults to Rob Duncan)
+REQUIRED_NAME="${GIT_AUTHOR_NAME:-Rob Duncan}"
+REQUIRED_EMAIL="${GIT_AUTHOR_EMAIL:-rob.duncan@feaw.co.uk}"
+
+# Set git config
+git config user.name "$REQUIRED_NAME"
+git config user.email "$REQUIRED_EMAIL"
+
+# Force the author/committer environment variables for this commit
+export GIT_AUTHOR_NAME="$REQUIRED_NAME"
+export GIT_AUTHOR_EMAIL="$REQUIRED_EMAIL"
+export GIT_COMMITTER_NAME="$REQUIRED_NAME"
+export GIT_COMMITTER_EMAIL="$REQUIRED_EMAIL"
+
+exit 0
