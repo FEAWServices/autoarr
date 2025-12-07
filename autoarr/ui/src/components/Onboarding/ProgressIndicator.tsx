@@ -2,6 +2,7 @@
  * Progress Indicator Component
  *
  * Displays a visual progress bar showing the current step in the onboarding flow.
+ * Completed and current steps are clickable to allow navigation back.
  */
 
 import { Check } from 'lucide-react';
@@ -14,9 +15,14 @@ interface Step {
 interface ProgressIndicatorProps {
   steps: Step[];
   currentStep: string;
+  onStepClick?: (stepId: string) => void;
 }
 
-export const ProgressIndicator = ({ steps, currentStep }: ProgressIndicatorProps) => {
+export const ProgressIndicator = ({
+  steps,
+  currentStep,
+  onStepClick,
+}: ProgressIndicatorProps) => {
   const currentIndex = steps.findIndex((s) => s.id === currentStep);
 
   return (
@@ -24,12 +30,16 @@ export const ProgressIndicator = ({ steps, currentStep }: ProgressIndicatorProps
       {steps.map((step, index) => {
         const isCompleted = index < currentIndex;
         const isCurrent = index === currentIndex;
+        const isClickable = onStepClick && (isCompleted || isCurrent);
 
         return (
           <div key={step.id} className="flex items-center">
             {/* Step indicator */}
             <div className="flex flex-col items-center">
-              <div
+              <button
+                type="button"
+                onClick={() => isClickable && onStepClick(step.id)}
+                disabled={!isClickable}
                 className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
                   transition-all duration-300
@@ -40,20 +50,24 @@ export const ProgressIndicator = ({ steps, currentStep }: ProgressIndicatorProps
                         ? 'bg-primary/20 text-primary border-2 border-primary'
                         : 'bg-muted text-muted-foreground'
                   }
+                  ${isClickable ? 'cursor-pointer hover:ring-2 hover:ring-primary/50 hover:scale-105' : 'cursor-default'}
                 `}
                 data-testid={`step-indicator-${step.id}`}
+                aria-label={`Go to ${step.label} step`}
               >
                 {isCompleted ? (
                   <Check className="w-4 h-4" />
                 ) : (
                   <span>{index + 1}</span>
                 )}
-              </div>
+              </button>
               <span
                 className={`
                   text-xs mt-1 hidden sm:block
                   ${isCurrent ? 'text-primary font-medium' : 'text-muted-foreground'}
+                  ${isClickable ? 'cursor-pointer' : ''}
                 `}
+                onClick={() => isClickable && onStepClick(step.id)}
               >
                 {step.label}
               </span>

@@ -18,14 +18,23 @@
 """LLM Provider Plugin System for AutoArr."""
 
 from .base_provider import BaseLLMProvider, LLMMessage, LLMResponse
-from .openrouter_provider import OpenRouterModel, OpenRouterProvider
+from .openrouter_provider import (
+    LLMResponseWithTools,
+    OpenRouterModel,
+    OpenRouterProvider,
+    ToolCall,
+    ToolResult,
+)
 from .provider_factory import LLMProviderFactory
 
 __all__ = [
     "BaseLLMProvider",
     "LLMMessage",
     "LLMResponse",
+    "LLMResponseWithTools",
     "LLMProviderFactory",
     "OpenRouterProvider",
     "OpenRouterModel",
+    "ToolCall",
+    "ToolResult",
 ]

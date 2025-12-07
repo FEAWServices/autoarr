@@ -5,7 +5,7 @@
  * Includes step-by-step instructions and a premium waitlist teaser.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Bot,
   ExternalLink,
@@ -68,6 +68,40 @@ export const AISetupStep = () => {
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
   const [waitlistSuccess, setWaitlistSuccess] = useState(false);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+
+  // Fetch existing LLM settings on mount
+  useEffect(() => {
+    const fetchExistingSettings = async () => {
+      try {
+        const response = await fetch('/api/v1/settings/llm');
+        if (response.ok) {
+          const data = await response.json();
+          // If already configured, pre-fill and mark as success
+          if (data.status === 'connected' && data.selected_model) {
+            setSelectedModel(data.selected_model);
+            setTestStatus('success');
+            // Mark as configured in onboarding store
+            await markAIConfigured();
+          } else if (data.selected_model) {
+            // Has model but not connected
+            setSelectedModel(data.selected_model);
+          }
+          // Note: API key is masked, so we can't pre-fill it
+          // But we show a placeholder if configured
+          if (data.api_key_masked && data.api_key_masked !== '(not set)') {
+            setApiKey(''); // Keep empty but show success state
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch LLM settings:', error);
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
+
+    fetchExistingSettings();
+  }, [markAIConfigured]);
 
   const handleTestConnection = async () => {
     if (!apiKey.trim()) {
@@ -134,6 +168,17 @@ export const AISetupStep = () => {
     }
   };
 
+  // Show loading state while fetching settings
+  if (isLoadingSettings) {
+    return (
+      <div className="max-w-2xl mx-auto" data-testid="ai-setup-step">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto" data-testid="ai-setup-step">
       {/* Header */}
@@ -148,6 +193,19 @@ export const AISetupStep = () => {
           AutoArr uses AI to power intelligent features. Choose from 200+ models via OpenRouter.
         </p>
       </div>
+
+      {/* Already Connected Notice */}
+      {testStatus === 'success' && (
+        <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/30 text-green-500 flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 flex-shrink-0" />
+          <div>
+            <p className="font-medium">AI is already connected!</p>
+            <p className="text-sm opacity-80">
+              Using {selectedModel.split('/').pop()}. You can continue or reconfigure below.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* OpenRouter Setup Instructions */}
       <div className="bg-card rounded-xl border border-border p-6 mb-6">

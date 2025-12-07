@@ -11,6 +11,8 @@ import {
   Home,
   ClipboardCheck,
   Palette,
+  Menu,
+  X,
 } from 'lucide-react';
 
 interface ServiceStatus {
@@ -55,7 +57,15 @@ const footerNavItems: NavItem[] = [
 ];
 
 // Sidebar Item Component - follows *arr pattern
-const SidebarItem = ({ item, isChild = false }: { item: NavItem; isChild?: boolean }) => {
+const SidebarItem = ({
+  item,
+  isChild = false,
+  onNavigate,
+}: {
+  item: NavItem;
+  isChild?: boolean;
+  onNavigate?: () => void;
+}) => {
   const location = useLocation();
 
   const isActive = location.pathname === item.path;
@@ -69,6 +79,7 @@ const SidebarItem = ({ item, isChild = false }: { item: NavItem; isChild?: boole
     <div>
       <NavLink
         to={item.path}
+        onClick={onNavigate}
         className={`
           flex items-center
           border-l-[3px] transition-colors duration-200
@@ -97,7 +108,7 @@ const SidebarItem = ({ item, isChild = false }: { item: NavItem; isChild?: boole
       {item.children && showChildren && (
         <div>
           {item.children.map((child) => (
-            <SidebarItem key={child.path} item={child} isChild={true} />
+            <SidebarItem key={child.path} item={child} isChild={true} onNavigate={onNavigate} />
           ))}
         </div>
       )}
@@ -105,18 +116,25 @@ const SidebarItem = ({ item, isChild = false }: { item: NavItem; isChild?: boole
   );
 };
 
-export const Sidebar = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  isMobile?: boolean;
+}
+
+export const Sidebar = ({ isOpen = true, onClose, isMobile = false }: SidebarProps) => {
   const [services, setServices] = useState<ServiceStatus[]>([
     { key: 'sabnzbd', name: 'SABnzbd', connected: false },
     { key: 'sonarr', name: 'Sonarr', connected: false },
     { key: 'radarr', name: 'Radarr', connected: false },
     { key: 'plex', name: 'Plex', connected: false },
+    { key: 'llm', name: 'AI', connected: false },
   ]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkServices = async () => {
-      const serviceKeys = ['sabnzbd', 'sonarr', 'radarr', 'plex'];
+      const serviceKeys = ['sabnzbd', 'sonarr', 'radarr', 'plex', 'llm'];
       const results = await Promise.all(
         serviceKeys.map(async (key) => {
           try {
@@ -150,9 +168,119 @@ export const Sidebar = () => {
 
   const connectedCount = services.filter((s) => s.connected).length;
 
+  const handleNavigate = () => {
+    if (isMobile && onClose) {
+      onClose();
+    }
+  };
+
+  // Mobile overlay
+  if (isMobile) {
+    return (
+      <>
+        {/* Backdrop */}
+        {isOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={onClose}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Sidebar */}
+        <aside
+          className={`
+            fixed top-0 left-0 h-full z-50 flex flex-col
+            transform transition-transform duration-300 ease-in-out
+            ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+            lg:relative lg:translate-x-0
+          `}
+          style={{
+            width: 'var(--sidebar-width, 240px)',
+            minWidth: 'var(--sidebar-width, 240px)',
+            maxHeight: '100vh',
+            height: '100vh',
+            backgroundColor: 'var(--sidebar-background, hsl(222 47% 11%))',
+          }}
+        >
+          {/* Close button for mobile - top right */}
+          <div className="flex items-center justify-end px-4 py-3 border-b border-[var(--sidebar-border)]">
+            <button
+              onClick={onClose}
+              className="p-2 text-muted-foreground hover:text-white"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto py-2">
+            {baseNavItems.map((item) => (
+              <SidebarItem key={item.path} item={item} onNavigate={handleNavigate} />
+            ))}
+            {services
+              .filter((service) => service.connected)
+              .map((service) => {
+                const item = serviceNavItems[service.key];
+                return item ? (
+                  <SidebarItem key={item.path} item={item} onNavigate={handleNavigate} />
+                ) : null;
+              })}
+            {footerNavItems.map((item) => (
+              <SidebarItem key={item.path} item={item} onNavigate={handleNavigate} />
+            ))}
+          </nav>
+
+          {/* Footer - Service Status */}
+          <div
+            data-component="SidebarServiceStatus"
+            className="border-t border-[var(--sidebar-border)] py-3 px-4"
+          >
+            <div className="text-xs text-muted-foreground mb-2 px-1">
+              Services ({connectedCount}/{services.length})
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              {services.map((service) => (
+                <div
+                  key={service.key}
+                  data-testid={`sidebar-status-${service.key}`}
+                  className="flex items-center gap-1.5 px-1 py-0.5"
+                  title={service.connected ? `${service.name} connected` : `${service.name} offline`}
+                >
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      loading
+                        ? 'bg-muted-foreground animate-pulse'
+                        : service.connected
+                          ? 'bg-green-500'
+                          : 'bg-red-500'
+                    }`}
+                  />
+                  <span
+                    className={`text-xs truncate ${
+                      loading
+                        ? 'text-muted-foreground'
+                        : service.connected
+                          ? 'text-green-500'
+                          : 'text-red-500'
+                    }`}
+                  >
+                    {service.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+      </>
+    );
+  }
+
+  // Desktop sidebar (original behavior)
   return (
     <aside
-      className="sticky top-0 h-screen flex flex-col"
+      className="sticky top-0 h-screen flex-col hidden lg:flex"
       style={{
         width: 'var(--sidebar-width, 192px)',
         minWidth: 'var(--sidebar-width, 192px)',
@@ -164,11 +292,7 @@ export const Sidebar = () => {
         to="/"
         className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--sidebar-accent)]/50 transition-colors duration-200"
       >
-        <img
-          src="/logo-192.png"
-          alt="AutoArr Logo"
-          className="w-10 h-10 object-contain"
-        />
+        <img src="/logo-192.png" alt="AutoArr Logo" className="w-10 h-10 object-contain" />
         <div>
           <h1 className="text-lg font-bold text-white leading-tight">AutoArr</h1>
           <p className="text-xs text-muted-foreground">v1.0.0</p>
@@ -239,3 +363,14 @@ export const Sidebar = () => {
     </aside>
   );
 };
+
+// Mobile menu button component for use in headers
+export const MobileMenuButton = ({ onClick }: { onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className="p-2 text-muted-foreground hover:text-white lg:hidden"
+    aria-label="Open menu"
+  >
+    <Menu className="w-6 h-6" />
+  </button>
+);

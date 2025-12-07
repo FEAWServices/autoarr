@@ -5,11 +5,12 @@
  * the appropriate step component and handling navigation.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useOnboardingStore, ONBOARDING_STEPS, type OnboardingStep } from '../../stores/onboardingStore';
 import { ProgressIndicator } from '../../components/Onboarding/ProgressIndicator';
+import { PullToRefresh } from '../../components/PullToRefresh';
 import { WelcomeStep } from './steps/WelcomeStep';
 import { AISetupStep } from './steps/AISetupStep';
 import { ServiceSelectionStep } from './steps/ServiceSelectionStep';
@@ -48,6 +49,7 @@ export const Onboarding = () => {
     error,
     fetchStatus,
     clearError,
+    goToStep,
   } = useOnboardingStore();
 
   // Initialize service config statuses when component mounts
@@ -65,6 +67,9 @@ export const Onboarding = () => {
   // Track if user completed onboarding during THIS session (not loaded from API)
   const [completedThisSession, setCompletedThisSession] = useState(false);
 
+  // Track if we've already checked for AI auto-skip (to prevent loops)
+  const [aiAutoSkipChecked, setAiAutoSkipChecked] = useState(false);
+
   // Fetch status on mount, and reset if already complete (to allow re-running wizard)
   useEffect(() => {
     const initOnboarding = async () => {
@@ -78,6 +83,46 @@ export const Onboarding = () => {
     };
     initOnboarding();
   }, [fetchStatus]);
+
+  // Auto-skip AI step if already configured
+  useEffect(() => {
+    const checkAIAndAutoSkip = async () => {
+      // Only check once when reaching ai_setup step
+      if (currentStep !== 'ai_setup' || aiAutoSkipChecked) {
+        return;
+      }
+
+      setAiAutoSkipChecked(true);
+
+      try {
+        const response = await fetch('/api/v1/settings/llm');
+        if (response.ok) {
+          const data = await response.json();
+          // If AI is already connected, auto-skip to service selection
+          if (data.status === 'connected' && data.selected_model) {
+            // Mark AI as configured in store
+            await useOnboardingStore.getState().markAIConfigured();
+            // Skip to next step
+            await goToStep('service_selection');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check LLM status for auto-skip:', error);
+      }
+    };
+
+    checkAIAndAutoSkip();
+  }, [currentStep, aiAutoSkipChecked, goToStep]);
+
+  // Handle step click from progress indicator
+  const handleStepClick = useCallback((stepId: string) => {
+    goToStep(stepId as OnboardingStep);
+    // Reset the AI auto-skip check if navigating back to ai_setup
+    // This allows the user to stay on the page if they manually navigate there
+    if (stepId === 'ai_setup') {
+      setAiAutoSkipChecked(true); // Keep it true so we don't auto-skip when user manually goes back
+    }
+  }, [goToStep]);
 
   // Redirect to home after user completes the wizard during this session
   useEffect(() => {
@@ -99,6 +144,12 @@ export const Onboarding = () => {
       }
     });
     return unsubscribe;
+  }, []);
+
+  // Handle pull-to-refresh - reload the page to refresh all state
+  const handleRefresh = useCallback(async () => {
+    // Reload the window to get fresh state
+    window.location.reload();
   }, []);
 
   // Loading state - only show during initial fetch, not during navigation
@@ -151,13 +202,17 @@ export const Onboarding = () => {
               label: stepLabels[step],
             }))}
             currentStep={currentStep}
+            onStepClick={handleStepClick}
           />
         </div>
       </header>
 
-      {/* Main content area - scrollable */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-6 py-8 pb-16">
+      {/* Main content area - scrollable with pull-to-refresh on mobile */}
+      <PullToRefresh
+        onRefresh={handleRefresh}
+        className="flex-1 min-h-0 pb-safe"
+      >
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24">
           {/* Error display */}
           {error && (
             <div
@@ -178,8 +233,8 @@ export const Onboarding = () => {
 
           {/* Current step component */}
           <StepComponent />
-        </div>
-      </main>
+        </main>
+      </PullToRefresh>
     </div>
   );
 };

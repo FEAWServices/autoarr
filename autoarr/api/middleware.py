@@ -23,6 +23,7 @@ This module provides middleware for error handling, logging, and request process
 
 import logging
 import time
+import uuid
 from datetime import datetime
 from typing import Callable
 
@@ -164,8 +165,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         Returns:
             Response: The response from the handler
         """
-        # Log request
-        request_id = request.headers.get("X-Request-ID", "N/A")
+        # Log request - generate ID if not provided
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())[:8]
         logger.info(f"Request started: {request.method} {request.url.path} [ID: {request_id}]")
 
         # Track timing

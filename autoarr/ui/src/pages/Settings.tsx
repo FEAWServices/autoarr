@@ -11,8 +11,10 @@ import {
   ClipboardCheck,
   RefreshCw,
   Sparkles,
+  ScrollText,
 } from 'lucide-react';
 import { useOnboardingStore } from '../stores/onboardingStore';
+import { apiV1Url, healthUrl } from '../services/api';
 
 interface ServiceConfig {
   url: string;
@@ -68,7 +70,7 @@ const ServiceCard = ({
   testConnection: (service: string) => void;
 }) => (
   <div
-    className="bg-gray-800 rounded-lg p-4 space-y-3 h-full"
+    className="bg-gray-800 rounded-lg p-4 space-y-3 h-full overflow-hidden min-w-0"
     data-testid={`service-card-${service}`}
     data-component="ServiceCard"
   >
@@ -184,71 +186,91 @@ export const Settings = () => {
     Record<string, 'idle' | 'testing' | 'success' | 'error'>
   >({});
   const [testErrors, setTestErrors] = useState<Record<string, string>>({});
+  // Track original settings to detect changes (only save what changed)
+  const [originalSettings, setOriginalSettings] = useState<SettingsData | null>(null);
 
   useEffect(() => {
     // Load settings from backend
     const loadSettings = async () => {
       try {
-        // Load service settings
-        const response = await fetch('/api/v1/settings');
+        // Load service settings, LLM settings, and app settings in parallel
+        const [response, llmResponse, appResponse] = await Promise.all([
+          fetch(apiV1Url('/settings')),
+          fetch(apiV1Url('/settings/llm')),
+          fetch(apiV1Url('/settings/app')),
+        ]);
+
+        let newSettings: SettingsData = { ...settings };
+
         if (response.ok) {
           const data = await response.json();
           // Deep merge API data with existing state to preserve fields not in API response
           // and ensure all input values are defined (never undefined)
-          setSettings((prev) => ({
+          newSettings = {
+            ...newSettings,
             sabnzbd: {
-              url: data.sabnzbd?.url ?? prev.sabnzbd.url,
-              apiKey: data.sabnzbd?.apiKey ?? prev.sabnzbd.apiKey,
-              enabled: data.sabnzbd?.enabled ?? prev.sabnzbd.enabled,
+              url: data.sabnzbd?.url ?? settings.sabnzbd.url,
+              apiKey: data.sabnzbd?.apiKey ?? settings.sabnzbd.apiKey,
+              enabled: data.sabnzbd?.enabled ?? settings.sabnzbd.enabled,
             },
             sonarr: {
-              url: data.sonarr?.url ?? prev.sonarr.url,
-              apiKey: data.sonarr?.apiKey ?? prev.sonarr.apiKey,
-              enabled: data.sonarr?.enabled ?? prev.sonarr.enabled,
+              url: data.sonarr?.url ?? settings.sonarr.url,
+              apiKey: data.sonarr?.apiKey ?? settings.sonarr.apiKey,
+              enabled: data.sonarr?.enabled ?? settings.sonarr.enabled,
             },
             radarr: {
-              url: data.radarr?.url ?? prev.radarr.url,
-              apiKey: data.radarr?.apiKey ?? prev.radarr.apiKey,
-              enabled: data.radarr?.enabled ?? prev.radarr.enabled,
+              url: data.radarr?.url ?? settings.radarr.url,
+              apiKey: data.radarr?.apiKey ?? settings.radarr.apiKey,
+              enabled: data.radarr?.enabled ?? settings.radarr.enabled,
             },
             plex: {
-              url: data.plex?.url ?? prev.plex.url,
-              apiKey: data.plex?.apiKey ?? prev.plex.apiKey,
-              token: data.plex?.token ?? prev.plex.token,
-              enabled: data.plex?.enabled ?? prev.plex.enabled,
+              url: data.plex?.url ?? settings.plex.url,
+              apiKey: data.plex?.apiKey ?? settings.plex.apiKey,
+              token: data.plex?.token ?? settings.plex.token,
+              enabled: data.plex?.enabled ?? settings.plex.enabled,
             },
-            openrouter: prev.openrouter, // Will be updated by LLM settings fetch
             brave: {
-              apiKey: data.brave?.apiKey ?? prev.brave.apiKey,
-              enabled: data.brave?.enabled ?? prev.brave.enabled,
+              apiKey: data.brave?.apiKey ?? settings.brave.apiKey,
+              enabled: data.brave?.enabled ?? settings.brave.enabled,
             },
-            app: {
-              logLevel: data.app?.logLevel ?? prev.app.logLevel,
-              timezone: data.app?.timezone ?? prev.app.timezone,
-            },
-          }));
+          };
         }
 
-        // Load LLM settings separately
-        const llmResponse = await fetch('/api/v1/settings/llm');
         if (llmResponse.ok) {
           const llmData = await llmResponse.json();
-          setSettings((prev) => ({
-            ...prev,
+          newSettings = {
+            ...newSettings,
             openrouter: {
-              apiKey: llmData.api_key ?? '',
+              // API returns masked key for display, not the actual key
+              apiKey: llmData.api_key_masked ?? '',
               enabled: llmData.enabled ?? false,
-              model: llmData.default_model ?? '',
-              availableModels: prev.openrouter.availableModels,
+              model: llmData.selected_model ?? '',
+              availableModels: llmData.available_models ?? [],
             },
-          }));
+          };
         }
+
+        if (appResponse.ok) {
+          const appData = await appResponse.json();
+          newSettings = {
+            ...newSettings,
+            app: {
+              logLevel: appData.log_level ?? settings.app.logLevel,
+              timezone: appData.timezone ?? settings.app.timezone,
+            },
+          };
+        }
+
+        setSettings(newSettings);
+        // Store original settings for dirty checking
+        setOriginalSettings(JSON.parse(JSON.stringify(newSettings)));
       } catch (error) {
         console.error('Failed to load settings:', error);
       }
     };
 
     loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSave = async () => {
@@ -286,10 +308,17 @@ export const Settings = () => {
     const errorMessages: string[] = [];
     const servicesReconnecting: string[] = [];
 
-    try {
-      // Save each service individually
+    // Helper to check if a section has changed
+    const hasChanged = (key: keyof SettingsData): boolean => {
+      if (!originalSettings) return true; // No original = always save
+      return JSON.stringify(settings[key]) !== JSON.stringify(originalSettings[key]);
+    };
 
-      const savePromises = services.map(async (service) => {
+    try {
+      // Only save services that have changed
+      const changedServices = services.filter((service) => hasChanged(service));
+
+      const savePromises = changedServices.map(async (service) => {
         const serviceConfig = settings[service];
 
         // Transform the data to match backend expectations
@@ -305,7 +334,7 @@ export const Settings = () => {
         };
 
         try {
-          const response = await fetch(`/api/v1/settings/${service}`, {
+          const response = await fetch(apiV1Url(`/settings/${service}`), {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -335,15 +364,21 @@ export const Settings = () => {
 
       await Promise.all(savePromises);
 
-      // Save LLM settings
-      if (settings.openrouter.apiKey || settings.openrouter.enabled) {
+      // Save LLM settings (only if changed)
+      if (hasChanged('openrouter') && (settings.openrouter.apiKey || settings.openrouter.enabled)) {
         try {
+          // Only send api_key if it's a new key (not masked)
+          // Masked keys contain "..." - don't send those back
+          const apiKeyToSend = settings.openrouter.apiKey?.includes('...')
+            ? undefined
+            : settings.openrouter.apiKey;
+
           const llmPayload = {
-            api_key: settings.openrouter.apiKey,
+            api_key: apiKeyToSend,
             enabled: settings.openrouter.enabled,
-            default_model: settings.openrouter.model || 'anthropic/claude-3.5-sonnet',
+            selected_model: settings.openrouter.model || 'anthropic/claude-3.5-sonnet',
           };
-          const llmResponse = await fetch('/api/v1/settings/llm', {
+          const llmResponse = await fetch(apiV1Url('/settings/llm'), {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(llmPayload),
@@ -362,6 +397,39 @@ export const Settings = () => {
             }`
           );
         }
+      }
+
+      // Save app settings (only if changed)
+      if (hasChanged('app')) {
+        try {
+          const appPayload = {
+            log_level: settings.app.logLevel,
+            timezone: settings.app.timezone,
+          };
+          const appResponse = await fetch(apiV1Url('/settings/app'), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(appPayload),
+          });
+
+          if (!appResponse.ok) {
+            const errorData = await appResponse.json().catch(() => ({}));
+            failedServices.push('app');
+            errorMessages.push(`App: ${errorData.detail || `HTTP ${appResponse.status}`}`);
+          }
+        } catch (networkError) {
+          failedServices.push('app');
+          errorMessages.push(
+            `App: Network error - ${
+              networkError instanceof Error ? networkError.message : 'Cannot reach server'
+            }`
+          );
+        }
+      }
+
+      // Update original settings after successful save
+      if (failedServices.length === 0) {
+        setOriginalSettings(JSON.parse(JSON.stringify(settings)));
       }
 
       if (failedServices.length > 0) {
@@ -394,7 +462,8 @@ export const Settings = () => {
 
     try {
       // Use different endpoint for LLM testing
-      const endpoint = service === 'llm' ? '/api/v1/settings/test/llm' : `/health/${service}`;
+      const endpoint =
+        service === 'llm' ? apiV1Url('/settings/test/llm') : healthUrl(`/${service}`);
       const options: RequestInit =
         service === 'llm'
           ? {
@@ -441,79 +510,96 @@ export const Settings = () => {
 
   return (
     <div
-      className="max-w-4xl mx-auto"
-      style={{ padding: 'var(--page-padding)' }}
+      className="max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8 w-full overflow-x-hidden box-border"
+      style={{ maxWidth: 'min(56rem, 100%)' }}
       data-testid="settings-page"
       data-component="SettingsPage"
     >
-      <div className="mb-8" data-component="SettingsPageHeader">
-        <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
-        <p className="text-gray-400">Configure your media automation services</p>
+      <div className="mb-6 sm:mb-8" data-component="SettingsPageHeader">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>
+        <p className="text-sm sm:text-base text-gray-400">Configure your media automation services</p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {/* Quick Settings Links */}
         <div
-          className="grid grid-cols-1 md:grid-cols-3 gap-3"
+          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3"
           data-component="QuickSettingsLinks"
         >
           <Link
             to="/settings/appearance"
-            className="flex items-center justify-between p-3 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
+            className="flex items-center justify-between p-2 sm:p-3 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
             data-component="QuickSettingsLink-Appearance"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-[var(--accent-color)]/10">
-                <Palette className="w-5 h-5 text-[var(--accent-color)]" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-[var(--accent-color)]/10">
+                <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--accent-color)]" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-[var(--text)]">Appearance</h3>
-                <p className="text-xs text-[var(--text-muted)]">Themes & colors</p>
+                <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)]">Appearance</h3>
+                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">Themes & colors</p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
           </Link>
 
           <Link
             to="/settings/config-audit"
-            className="flex items-center justify-between p-3 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
+            className="flex items-center justify-between p-2 sm:p-3 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-[var(--accent-color)] transition-colors group"
             data-component="QuickSettingsLink-ConfigAudit"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <ClipboardCheck className="w-5 h-5 text-green-500" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/10">
+                <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-[var(--text)]">Config Audit</h3>
-                <p className="text-xs text-[var(--text-muted)]">Analyze & optimize</p>
+                <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)]">Config Audit</h3>
+                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">Analyze & optimize</p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
+          </Link>
+
+          <Link
+            to="/settings/logs"
+            className="flex items-center justify-between p-2 sm:p-3 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-blue-500 transition-colors group"
+            data-component="QuickSettingsLink-Logs"
+          >
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10">
+                <ScrollText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)]">Logs</h3>
+                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">View app logs</p>
+              </div>
+            </div>
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--text-muted)] group-hover:text-blue-500 transition-colors" />
           </Link>
 
           <button
             onClick={handleRunSetupWizard}
-            className="flex items-center justify-between p-3 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-primary transition-colors group text-left"
+            className="flex items-center justify-between p-2 sm:p-3 bg-[var(--modal-bg-color)] rounded-lg border border-[var(--aa-border)] hover:border-primary transition-colors group text-left"
             data-testid="run-setup-wizard-button"
             data-component="QuickSettingsLink-SetupWizard"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Sparkles className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-[var(--text)]">Setup Wizard</h3>
-                <p className="text-xs text-[var(--text-muted)]">Re-run guided setup</p>
+                <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)]">Setup Wizard</h3>
+                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">Re-run guided setup</p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-primary transition-colors" />
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--text-muted)] group-hover:text-primary transition-colors" />
           </button>
         </div>
 
         {/* Media Services */}
         <div data-component="MediaServicesSection">
-          <h2 className="text-xl font-semibold text-white mb-4">Media Services</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Media Services</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <ServiceCard
               title="SABnzbd"
               service="sabnzbd"
@@ -584,11 +670,11 @@ export const Settings = () => {
 
         {/* AI & Application Settings - Side by Side */}
         <div data-component="AIAndAppSection">
-          <h2 className="text-xl font-semibold text-white mb-4">Configuration</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Configuration</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {/* OpenRouter Card */}
             <div
-              className="bg-gray-800 rounded-lg p-4 space-y-3 h-full"
+              className="bg-gray-800 rounded-lg p-4 space-y-3 h-full overflow-hidden min-w-0"
               data-testid="openrouter-card"
               data-component="OpenRouterCard"
             >
@@ -723,7 +809,7 @@ export const Settings = () => {
 
             {/* Application Card */}
             <div
-              className="bg-gray-800 rounded-lg p-4 space-y-3 h-full"
+              className="bg-gray-800 rounded-lg p-4 space-y-3 h-full overflow-hidden min-w-0"
               data-component="ApplicationCard"
             >
               <div className="flex items-center justify-between" data-component="ApplicationCardHeader">
@@ -751,29 +837,69 @@ export const Settings = () => {
 
               <div>
                 <label className="block text-xs font-medium text-gray-300 mb-1">Timezone</label>
-                <input
-                  type="text"
-                  value={settings.app.timezone ?? ''}
+                <select
+                  value={settings.app.timezone ?? 'UTC'}
                   onChange={(e) =>
                     setSettings({
                       ...settings,
                       app: { ...settings.app, timezone: e.target.value },
                     })
                   }
-                  placeholder="America/New_York"
-                  className="w-full px-2.5 py-1.5 text-sm bg-gray-900 border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                  className="w-full px-2.5 py-1.5 text-sm bg-gray-900 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <optgroup label="Common">
+                    <option value="UTC">UTC</option>
+                    <option value="America/New_York">Eastern Time (US)</option>
+                    <option value="America/Chicago">Central Time (US)</option>
+                    <option value="America/Denver">Mountain Time (US)</option>
+                    <option value="America/Los_Angeles">Pacific Time (US)</option>
+                    <option value="Europe/London">London (UK)</option>
+                    <option value="Europe/Paris">Paris (Central Europe)</option>
+                    <option value="Europe/Berlin">Berlin (Central Europe)</option>
+                    <option value="Asia/Tokyo">Tokyo (Japan)</option>
+                    <option value="Asia/Shanghai">Shanghai (China)</option>
+                    <option value="Australia/Sydney">Sydney (Australia)</option>
+                  </optgroup>
+                  <optgroup label="Americas">
+                    <option value="America/Anchorage">Anchorage (Alaska)</option>
+                    <option value="America/Halifax">Halifax (Atlantic)</option>
+                    <option value="America/Phoenix">Phoenix (Arizona)</option>
+                    <option value="America/Toronto">Toronto (Canada)</option>
+                    <option value="America/Vancouver">Vancouver (Canada)</option>
+                    <option value="America/Mexico_City">Mexico City</option>
+                    <option value="America/Sao_Paulo">São Paulo (Brazil)</option>
+                    <option value="America/Buenos_Aires">Buenos Aires (Argentina)</option>
+                  </optgroup>
+                  <optgroup label="Europe">
+                    <option value="Europe/Amsterdam">Amsterdam</option>
+                    <option value="Europe/Dublin">Dublin (Ireland)</option>
+                    <option value="Europe/Madrid">Madrid (Spain)</option>
+                    <option value="Europe/Rome">Rome (Italy)</option>
+                    <option value="Europe/Stockholm">Stockholm (Sweden)</option>
+                    <option value="Europe/Moscow">Moscow (Russia)</option>
+                  </optgroup>
+                  <optgroup label="Asia/Pacific">
+                    <option value="Asia/Dubai">Dubai (UAE)</option>
+                    <option value="Asia/Kolkata">Mumbai/Kolkata (India)</option>
+                    <option value="Asia/Singapore">Singapore</option>
+                    <option value="Asia/Hong_Kong">Hong Kong</option>
+                    <option value="Asia/Seoul">Seoul (South Korea)</option>
+                    <option value="Australia/Melbourne">Melbourne (Australia)</option>
+                    <option value="Australia/Perth">Perth (Australia)</option>
+                    <option value="Pacific/Auckland">Auckland (New Zealand)</option>
+                  </optgroup>
+                </select>
               </div>
             </div>
           </div>
         </div>
 
         {/* Save Button */}
-        <div className="flex items-center gap-4" data-component="SaveButtonSection">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4" data-component="SaveButtonSection">
           <button
             onClick={handleSave}
             disabled={saveStatus === 'saving'}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full sm:w-auto"
             data-component="SaveButton"
           >
             <Save className="w-5 h-5" />
@@ -782,14 +908,14 @@ export const Settings = () => {
 
           {saveStatus === 'success' && (
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-green-400">
-                <CheckCircle className="w-5 h-5" />
+              <div className="flex items-center gap-2 text-green-400 text-sm sm:text-base">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>Settings saved successfully!</span>
               </div>
               {reconnectingServices.length > 0 && (
                 <div className="flex items-center gap-2 text-blue-400">
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">
+                  <span className="text-xs sm:text-sm">
                     Reconnecting to {reconnectingServices.join(', ')} in background...
                   </span>
                 </div>
@@ -800,16 +926,16 @@ export const Settings = () => {
           {saveStatus === 'idle' && reconnectingServices.length > 0 && (
             <div className="flex items-center gap-2 text-blue-400">
               <RefreshCw className="w-4 h-4 animate-spin" />
-              <span className="text-sm">Reconnecting to {reconnectingServices.join(', ')}...</span>
+              <span className="text-xs sm:text-sm">Reconnecting to {reconnectingServices.join(', ')}...</span>
             </div>
           )}
 
           {saveStatus === 'error' && (
-            <div className="flex items-start gap-2 text-red-400 max-w-xl">
-              <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-2 text-red-400">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />
               <div className="flex flex-col">
-                <span className="font-medium">Failed to save settings</span>
-                {saveError && <span className="text-sm text-red-300 mt-1">{saveError}</span>}
+                <span className="text-sm sm:text-base font-medium">Failed to save settings</span>
+                {saveError && <span className="text-xs sm:text-sm text-red-300 mt-1">{saveError}</span>}
               </div>
             </div>
           )}

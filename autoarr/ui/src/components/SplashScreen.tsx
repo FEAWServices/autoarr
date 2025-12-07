@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Logo } from './Logo';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -34,20 +33,23 @@ export const SplashScreen = ({ onComplete, minDisplayTime = 2000 }: SplashScreen
 
   return (
     <div className="fixed inset-0 bg-gradient-hero flex items-center justify-center z-50">
-      <div className="text-center">
-        {/* Logo */}
-        <div className="mb-8 animate-pulse">
-          <div className="mx-auto">
-            <Logo size="xl" />
+      <div className="flex flex-col items-center text-center">
+        {/* Logo with text */}
+        <div className="mb-6 animate-pulse">
+          <div className="bg-white rounded-full p-8 shadow-lg">
+            <img
+              src="/logo.png"
+              alt="AutoArr"
+              className="w-48 h-auto"
+            />
           </div>
         </div>
 
-        {/* App Name */}
-        <h1 className="text-6xl font-bold text-white mb-2 tracking-tight">AutoArr</h1>
+        {/* Tagline */}
         <p className="text-xl text-text-secondary mb-8">Intelligent Media, Automated.</p>
 
         {/* Loading Bar */}
-        <div className="w-64 mx-auto">
+        <div className="w-64">
           <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-primary transition-all duration-300 ease-out progress-bar"

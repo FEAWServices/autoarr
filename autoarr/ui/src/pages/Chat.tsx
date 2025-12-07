@@ -50,16 +50,21 @@ export const Chat = () => {
     // Handle WebSocket events
     const handleWebSocketEvent = (event: {
       type: string;
-      requestId: string;
-      data: {
+      requestId?: string;
+      data?: {
         status?: string;
         progress?: number;
         eta?: string;
         title?: string;
         error?: string;
       };
-      timestamp: string;
+      timestamp?: string;
     }) => {
+      // Ignore connection events and events without data
+      if (event.type === 'connection' || !event.data || !event.requestId) {
+        return;
+      }
+
       const { requestId, data } = event;
 
       // Update request status
@@ -72,7 +77,7 @@ export const Chat = () => {
             progress: data.progress,
             eta: data.eta,
             error: data.error,
-            updatedAt: event.timestamp,
+            updatedAt: event.timestamp || new Date().toISOString(),
           });
         }
       }
@@ -83,14 +88,14 @@ export const Chat = () => {
           id: `system-${Date.now()}`,
           type: 'system',
           content: `✓ Download completed: ${data.title}`,
-          timestamp: new Date(event.timestamp),
+          timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
         });
       } else if (event.type === 'request-failed' && data.title) {
         addMessage({
           id: `system-${Date.now()}`,
           type: 'system',
           content: `✗ Download failed: ${data.title}`,
-          timestamp: new Date(event.timestamp),
+          timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
         });
       }
     };
@@ -102,7 +107,7 @@ export const Chat = () => {
     };
   }, [currentRequests, updateRequestStatus, addMessage]);
 
-  // Handle message sending
+  // Handle message sending - uses intelligent chat endpoint
   const handleSend = async () => {
     const trimmedInput = input.trim();
     if (!trimmedInput || isProcessing) return;
@@ -125,36 +130,60 @@ export const Chat = () => {
     setTyping(true);
 
     try {
-      // Send to API
-      const response = await chatService.sendMessage(trimmedInput);
+      // Use intelligent chat endpoint
+      const response = await chatService.sendChatMessage(trimmedInput);
 
       setTyping(false);
 
-      // Set current request ID
-      setCurrentRequestId(response.requestId);
+      // Check if this is a content request that needs the legacy flow
+      if (response.is_content_request) {
+        // Use legacy content request endpoint for downloads
+        const contentResponse = await chatService.sendMessage(trimmedInput);
+        setCurrentRequestId(contentResponse.correlation_id);
 
-      // Add assistant response
-      addMessage({
-        id: `assistant-${Date.now()}`,
-        type: 'assistant',
-        content: response.message,
-        timestamp: new Date(),
-        metadata: {
-          classification: response.classification,
-          searchResults: response.searchResults,
-          requestId: response.requestId,
-        },
-      });
+        const classification = contentResponse.classification;
+        const contentTypeLabel = classification.content_type === 'movie' ? 'movie' : 'TV show';
+        const yearStr = classification.year ? ` (${classification.year})` : '';
+        const qualityStr = classification.quality ? ` in ${classification.quality}` : '';
+        const responseMessage = `I found "${classification.title}"${yearStr} as a ${contentTypeLabel}${qualityStr}. Would you like me to add it to your library?`;
 
-      // If requires confirmation, initialize request tracking
-      if (response.requiresConfirmation && response.classification) {
-        updateRequestStatus(response.requestId, {
-          requestId: response.requestId,
-          status: 'pending_confirmation',
-          title: response.classification.title,
-          type: response.classification.type,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+        addMessage({
+          id: `assistant-${Date.now()}`,
+          type: 'assistant',
+          content: responseMessage,
+          timestamp: new Date(),
+          metadata: {
+            classification: classification,
+            searchResults: contentResponse.search_results,
+            requestId: contentResponse.correlation_id,
+          },
+        });
+
+        if (classification) {
+          updateRequestStatus(contentResponse.correlation_id, {
+            requestId: contentResponse.correlation_id,
+            status: 'pending_confirmation',
+            title: classification.title,
+            type: classification.content_type,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      } else {
+        // Add assistant response with sources and suggestions
+        addMessage({
+          id: `assistant-${Date.now()}`,
+          type: 'assistant',
+          content: response.message,
+          timestamp: new Date(),
+          metadata: {
+            topic: response.topic,
+            intent: response.intent,
+            sources: response.sources,
+            suggestions: response.suggestions,
+            serviceRequired: response.service_required,
+            setupLink: response.setup_link,
+          },
         });
       }
     } catch (err) {
@@ -269,37 +298,34 @@ export const Chat = () => {
     (req) => req.status === 'downloading' || req.status === 'searching'
   );
 
-  // Quick action suggestions
+  // Quick action suggestions - focused on supported topics
   const suggestions = [
-    'Download the latest episode of...',
-    'What movies are coming out this week?',
-    'Show me my download queue',
-    'Check the status of my servers',
+    'How do I configure SABnzbd?',
+    'What are quality profiles in Sonarr?',
+    'How to set up Radarr indexers?',
+    'Download Dune Part Two in 4K',
   ];
 
   return (
     <div
       data-testid="chat-container"
-      className="flex flex-col h-full min-h-0 bg-gradient-to-b from-background to-[hsl(280,50%,15%)]"
+      className="flex flex-col h-full min-h-0 w-full max-w-full overflow-x-hidden bg-gradient-to-b from-background to-[hsl(280,50%,15%)]"
     >
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-primary/20 bg-card/50 backdrop-blur-md px-4 py-2">
+      <div className="flex-shrink-0 border-b border-primary/20 bg-card/50 backdrop-blur-md px-3 sm:px-4 py-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/20 border border-primary/30 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
-              <Sparkles className="w-5 h-5 text-primary drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
-            </div>
-            <h1 className="text-lg font-bold bg-gradient-to-r from-primary via-accent to-[hsl(290,90%,70%)] bg-clip-text text-transparent">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <h1 className="text-base sm:text-lg font-bold text-primary">
               AutoArr Assistant
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* AI Assistant Connection Status */}
             <div
               data-testid="connection-status"
               data-component="AIConnectionStatus"
-              className="flex items-center gap-1.5 px-2 py-1 glass-card cursor-help"
+              className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 glass-card cursor-help"
               aria-label={`AI Assistant status: ${connectionStatus}`}
               title={
                 connectionStatus === 'connected'
@@ -311,13 +337,15 @@ export const Chat = () => {
             >
               {connectionStatus === 'connected' ? (
                 <>
-                  <Bot className="w-3.5 h-3.5 text-status-success" />
-                  <span className="text-xs text-status-success font-medium">AI Online</span>
+                  <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-status-success" />
+                  <span className="text-[10px] sm:text-xs text-status-success font-medium hidden sm:inline">
+                    AI Online
+                  </span>
                 </>
               ) : (
                 <>
-                  <Bot className="w-3.5 h-3.5 text-status-warning" />
-                  <span className="text-xs text-status-warning font-medium">
+                  <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-status-warning" />
+                  <span className="text-[10px] sm:text-xs text-status-warning font-medium hidden sm:inline">
                     {connectionStatus === 'connecting' ? 'Connecting...' : 'AI Offline'}
                   </span>
                 </>
@@ -327,7 +355,7 @@ export const Chat = () => {
             {/* Search Button */}
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className="p-1.5 hover:bg-muted rounded-lg transition-all duration-300 hover:shadow-glow-hover"
+              className="p-1 sm:p-1.5 hover:bg-muted rounded-lg transition-all duration-300 hover:shadow-glow-hover"
               aria-label="Search messages"
             >
               <SearchIcon className="w-4 h-4 text-muted-foreground hover:text-foreground" />
@@ -336,7 +364,7 @@ export const Chat = () => {
             {/* Clear History Button */}
             <button
               onClick={handleClearHistory}
-              className="p-1.5 hover:bg-muted rounded-lg transition-all duration-300 hover:shadow-glow-hover"
+              className="p-1 sm:p-1.5 hover:bg-muted rounded-lg transition-all duration-300 hover:shadow-glow-hover"
               aria-label="Clear history"
             >
               <Trash2 className="w-4 h-4 text-muted-foreground hover:text-foreground" />
@@ -393,7 +421,7 @@ export const Chat = () => {
             </p>
 
             {/* Quick Suggestions */}
-            <div className="grid grid-cols-2 gap-3 max-w-2xl w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-2xl w-full px-2 sm:px-0">
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
@@ -401,7 +429,7 @@ export const Chat = () => {
                     setInput(suggestion);
                     inputRef.current?.focus();
                   }}
-                  className="rounded-lg border border-primary/20 bg-card/50 px-4 py-2.5 backdrop-blur-sm text-left text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:border-primary/40"
+                  className="rounded-lg border border-primary/20 bg-card/50 px-3 sm:px-4 py-2 sm:py-2.5 backdrop-blur-sm text-left text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:border-primary/40"
                 >
                   {suggestion}
                 </button>
@@ -425,7 +453,7 @@ export const Chat = () => {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-md px-4 py-3">
+      <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-md px-3 sm:px-4 py-2 sm:py-3">
         <div className="flex gap-2 items-end">
           <div className="flex-1 glass-card p-0.5">
             <textarea
@@ -435,7 +463,7 @@ export const Chat = () => {
               onKeyDown={handleKeyDown}
               disabled={isProcessing}
               placeholder="Ask AutoArr to help..."
-              className="w-full bg-transparent text-foreground placeholder-muted-foreground px-3 py-2 rounded-lg resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed textarea-auto-size text-sm"
+              className="w-full bg-transparent text-foreground placeholder-muted-foreground px-2 sm:px-3 py-2 rounded-lg resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed textarea-auto-size text-sm"
               rows={1}
               aria-label="Message input"
               role="textbox"
@@ -445,7 +473,7 @@ export const Chat = () => {
           <button
             onClick={handleSend}
             disabled={!input.trim() || isProcessing}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 justify-center shadow-glow hover:shadow-glow-lg"
+            className="px-3 sm:px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 sm:gap-1.5 justify-center shadow-glow hover:shadow-glow-lg"
             aria-label="Send message"
           >
             {isProcessing ? (
@@ -453,7 +481,7 @@ export const Chat = () => {
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                <span className="font-medium text-sm">Send</span>
+                <span className="font-medium text-sm hidden sm:inline">Send</span>
               </>
             )}
           </button>

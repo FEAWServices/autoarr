@@ -74,9 +74,9 @@ export const ServiceConfigStep = () => {
     setTestError(null);
 
     try {
-      const success = await plugin.testConnection(url, apiKey);
+      const result = await plugin.testConnection(url, apiKey);
 
-      if (success) {
+      if (result.success) {
         // Save the settings
         await fetch(`/api/v1/settings/${plugin.id}`, {
           method: 'PUT',
@@ -93,7 +93,9 @@ export const ServiceConfigStep = () => {
         await addConfiguredService(plugin.id);
       } else {
         setTestStatus('error');
-        setTestError('Connection test failed. Please check your URL and API key.');
+        // Show the detailed error message from the API
+        const errorDetails = result.details?.error ? ` (${result.details.error})` : '';
+        setTestError(result.message || `Connection test failed.${errorDetails}`);
       }
     } catch (error) {
       setTestStatus('error');
@@ -280,23 +282,23 @@ export const ServiceConfigStep = () => {
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex justify-between">
+      {/* Navigation - sticky on mobile */}
+      <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4 mt-4 border-t border-border/50">
         <button
           onClick={handleBack}
           disabled={isLoading}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-50 order-2 sm:order-1"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 order-1 sm:order-2">
           {!isAlreadyConfigured && testStatus !== 'success' && (
             <button
               onClick={handleSkipService}
               disabled={isLoading}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-50"
               data-testid="skip-service-button"
             >
               <SkipForward className="w-4 h-4" />
@@ -306,7 +308,7 @@ export const ServiceConfigStep = () => {
           <button
             onClick={handleContinue}
             disabled={isLoading || (testStatus !== 'success' && !isAlreadyConfigured)}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="continue-button"
           >
             {isLastService ? 'Finish Setup' : 'Next Service'}

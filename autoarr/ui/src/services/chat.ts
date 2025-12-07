@@ -2,6 +2,7 @@
  * Chat Service for API Integration
  *
  * Handles communication with the AutoArr backend API for:
+ * - Intelligent chat assistant (help with SABnzbd, Sonarr, Radarr, Plex, AutoArr)
  * - Content requests
  * - Confirmation of selections
  * - Request status tracking
@@ -15,14 +16,179 @@ import {
   ConfirmationResponse,
   RequestInfo,
 } from '../types/chat';
+import { apiV1Url } from './api';
 
-// Use environment variable with fallback to correct port (8088, not 8000)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088/api/v1';
 const REQUEST_TIMEOUT = 30000; // 30 seconds
+const CHAT_TIMEOUT = 60000; // 60 seconds for chat (may need to fetch docs)
+
+/**
+ * Response from the intelligent chat endpoint
+ */
+export interface ChatMessageResponse {
+  message: string;
+  topic: string;
+  intent: string;
+  sources: Array<{ title: string; url: string }>;
+  suggestions: string[];
+  confidence: number;
+  is_content_request: boolean;
+  service_required?: string;
+  setup_link?: string;
+}
+
+/**
+ * Topic classification response
+ */
+export interface TopicClassification {
+  topic: string;
+  intent: string;
+  confidence: number;
+  entities: Record<string, unknown>;
+  needs_docs: boolean;
+}
+
+/**
+ * Supported chat topics
+ */
+export interface ChatTopicsResponse {
+  topics: Array<{
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+  }>;
+  suggestions: string[];
+}
 
 class ChatService {
+  private conversationHistory: Array<{ role: string; content: string }> = [];
+
   /**
-   * Send a content request query to the backend
+   * Send a message to the intelligent chat assistant
+   * @param message - User's message
+   * @returns Response with message, topic, sources, and suggestions
+   */
+  async sendChatMessage(message: string): Promise<ChatMessageResponse> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CHAT_TIMEOUT);
+
+    try {
+      const response = await fetch(apiV1Url('/chat/message'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          history: this.conversationHistory.slice(-6), // Last 6 messages for context
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({
+          detail: 'An error occurred while processing your message',
+        }));
+        throw new Error(error.detail || `HTTP ${response.status}`);
+      }
+
+      const data: ChatMessageResponse = await response.json();
+
+      // Update conversation history
+      this.conversationHistory.push({ role: 'user', content: message });
+      this.conversationHistory.push({ role: 'assistant', content: data.message });
+
+      // Keep history manageable
+      if (this.conversationHistory.length > 20) {
+        this.conversationHistory = this.conversationHistory.slice(-20);
+      }
+
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Request timed out. The server is taking too long to respond.');
+        }
+        throw error;
+      }
+
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Classify a query without generating full response
+   * @param message - User's message to classify
+   * @returns Topic classification result
+   */
+  async classifyQuery(message: string): Promise<TopicClassification> {
+    try {
+      const response = await fetch(apiV1Url('/chat/classify'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      // Default classification on error
+      return {
+        topic: 'general_media',
+        intent: 'help',
+        confidence: 0.5,
+        entities: {},
+        needs_docs: false,
+      };
+    }
+  }
+
+  /**
+   * Get supported chat topics
+   * @returns List of topics and suggestions
+   */
+  async getTopics(): Promise<ChatTopicsResponse> {
+    try {
+      const response = await fetch(apiV1Url('/chat/topics'));
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    } catch {
+      // Return default topics on error
+      return {
+        topics: [
+          { id: 'sabnzbd', name: 'SABnzbd', description: 'Download client', icon: 'download' },
+          { id: 'sonarr', name: 'Sonarr', description: 'TV automation', icon: 'tv' },
+          { id: 'radarr', name: 'Radarr', description: 'Movie automation', icon: 'film' },
+          { id: 'plex', name: 'Plex', description: 'Media server', icon: 'server' },
+          { id: 'autoarr', name: 'AutoArr', description: 'This app', icon: 'sparkles' },
+        ],
+        suggestions: [],
+      };
+    }
+  }
+
+  /**
+   * Clear conversation history
+   */
+  clearHistory(): void {
+    this.conversationHistory = [];
+  }
+
+  /**
+   * Send a content request query to the backend (legacy endpoint for downloads)
    * @param query - User's natural language query
    * @returns Response with classification and search results
    */
@@ -33,7 +199,7 @@ class ChatService {
     try {
       const payload: ContentRequestPayload = { query };
 
-      const response = await fetch(`${API_BASE_URL}/request/content`, {
+      const response = await fetch(apiV1Url('/requests/content'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +255,7 @@ class ChatService {
         quality,
       };
 
-      const response = await fetch(`${API_BASE_URL}/request/confirm`, {
+      const response = await fetch(apiV1Url(`/requests/${requestId}/confirm`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -130,7 +296,7 @@ class ChatService {
    */
   async getRequestStatus(requestId: string): Promise<RequestInfo> {
     try {
-      const response = await fetch(`${API_BASE_URL}/request/status/${requestId}`, {
+      const response = await fetch(apiV1Url(`/requests/${requestId}/status`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -160,8 +326,8 @@ class ChatService {
    */
   async cancelRequest(requestId: string): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/request/cancel/${requestId}`, {
-        method: 'POST',
+      const response = await fetch(apiV1Url(`/requests/${requestId}`), {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -178,37 +344,6 @@ class ChatService {
         throw error;
       }
       throw new Error('Failed to cancel request');
-    }
-  }
-
-  /**
-   * Retry a failed content request
-   * @param requestId - ID of the failed request
-   * @returns New request response
-   */
-  async retryRequest(requestId: string): Promise<ContentRequestResponse> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/request/retry/${requestId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({
-          detail: 'Failed to retry request',
-        }));
-        throw new Error(error.detail || `HTTP ${response.status}`);
-      }
-
-      const data: ContentRequestResponse = await response.json();
-      return data;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Failed to retry request');
     }
   }
 }

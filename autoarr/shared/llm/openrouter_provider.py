@@ -35,6 +35,32 @@ from .base_provider import BaseLLMProvider, LLMMessage, LLMResponse
 logger = logging.getLogger(__name__)
 
 
+class ToolCall(BaseModel):
+    """Represents a tool call from the model."""
+
+    id: str
+    name: str
+    arguments: Dict[str, Any]
+
+
+class ToolResult(BaseModel):
+    """Represents a tool result to send back to the model."""
+
+    tool_call_id: str
+    result: Any
+
+
+class LLMResponseWithTools(LLMResponse):
+    """Extended LLM response that may include tool calls."""
+
+    tool_calls: Optional[List[ToolCall]] = None
+
+    class Config:
+        """Pydantic config."""
+
+        extra = "allow"
+
+
 class OpenRouterModel(BaseModel):
     """Model information from OpenRouter."""
 
@@ -186,6 +212,128 @@ class OpenRouterProvider(BaseLLMProvider):
                 raise
 
         # If we get here, we've exhausted retries
+        raise last_error or Exception("Request failed after retries")
+
+    async def complete_with_tools(
+        self,
+        messages: List[LLMMessage],
+        tools: List[Dict[str, Any]],
+        model: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        tool_choice: str = "auto",
+        **kwargs: Any,
+    ) -> LLMResponseWithTools:
+        """
+        Generate a completion with tool/function calling support.
+
+        Args:
+            messages: List of messages in the conversation
+            tools: List of tool definitions in OpenAI format
+            model: Model to use (uses default if None)
+            temperature: Sampling temperature (0-1)
+            max_tokens: Maximum tokens to generate
+            tool_choice: "auto", "none", or {"type": "function", "function": {"name": "..."}}
+            **kwargs: Additional parameters
+
+        Returns:
+            LLMResponseWithTools with content and/or tool_calls
+        """
+        client = self._get_client()
+        use_model = model or self.default_model
+        use_max_tokens = max_tokens or self.max_tokens
+
+        # Convert messages to OpenAI format, handling tool results
+        formatted_messages = []
+        for msg in messages:
+            formatted_msg: Dict[str, Any] = {"role": msg.role, "content": msg.content}
+            # Handle tool call results
+            if hasattr(msg, "tool_call_id") and msg.tool_call_id:
+                formatted_msg["tool_call_id"] = msg.tool_call_id
+            if hasattr(msg, "name") and msg.name:
+                formatted_msg["name"] = msg.name
+            # Handle assistant messages with tool calls
+            if hasattr(msg, "tool_calls") and msg.tool_calls:
+                formatted_msg["tool_calls"] = msg.tool_calls
+            formatted_messages.append(formatted_msg)
+
+        request_body: Dict[str, Any] = {
+            "model": use_model,
+            "messages": formatted_messages,
+            "temperature": temperature,
+            "max_tokens": use_max_tokens,
+            "tools": tools,
+            "tool_choice": tool_choice,
+            **kwargs,
+        }
+
+        # Retry logic with exponential backoff
+        last_error = None
+        for attempt in range(self.max_retries):
+            try:
+                response = await client.post("/chat/completions", json=request_body)
+                response.raise_for_status()
+                data = response.json()
+
+                # Extract response
+                choice = data["choices"][0]
+                message = choice["message"]
+                content = message.get("content", "")
+                finish_reason = choice.get("finish_reason", "stop")
+                usage = data.get("usage", {})
+
+                # Parse tool calls if present
+                tool_calls_list: Optional[List[ToolCall]] = None
+                if "tool_calls" in message and message["tool_calls"]:
+                    tool_calls_list = []
+                    for tc in message["tool_calls"]:
+                        # Parse arguments from JSON string
+                        args_str = tc["function"].get("arguments", "{}")
+                        try:
+                            args = json.loads(args_str)
+                        except json.JSONDecodeError:
+                            args = {}
+
+                        tool_calls_list.append(
+                            ToolCall(
+                                id=tc["id"],
+                                name=tc["function"]["name"],
+                                arguments=args,
+                            )
+                        )
+
+                return LLMResponseWithTools(
+                    content=content or "",
+                    model=data.get("model", use_model),
+                    provider=self.provider_name,
+                    usage={
+                        "prompt_tokens": usage.get("prompt_tokens", 0),
+                        "completion_tokens": usage.get("completion_tokens", 0),
+                        "total_tokens": usage.get("total_tokens", 0),
+                    },
+                    finish_reason=finish_reason,
+                    tool_calls=tool_calls_list,
+                )
+
+            except httpx.HTTPStatusError as e:
+                last_error = e
+                if e.response.status_code == 429:
+                    wait_time = self.retry_delay * (2**attempt)
+                    logger.warning(
+                        f"Rate limited by OpenRouter, retrying in {wait_time}s "
+                        f"(attempt {attempt + 1}/{self.max_retries})"
+                    )
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    logger.error(f"OpenRouter API error: {e.response.status_code}")
+                    raise
+
+            except Exception as e:
+                last_error = e
+                logger.error(f"OpenRouter request failed: {e}")
+                raise
+
         raise last_error or Exception("Request failed after retries")
 
     async def stream_complete(  # type: ignore[override]

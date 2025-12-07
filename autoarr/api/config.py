@@ -57,7 +57,7 @@ class Settings(BaseSettings):
 
     secret_key: str = "dev_secret_key_change_in_production"
     # Note: These accept comma-separated strings from .env (e.g., "http://a,http://b")
-    cors_origins: str = "http://localhost:3000,http://localhost:5173"
+    cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:9080"
     cors_allow_credentials: bool = True
     cors_allow_methods: str = "*"
     cors_allow_headers: str = "*"

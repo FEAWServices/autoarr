@@ -136,6 +136,24 @@ fi
 echo ""
 
 # -----------------------------------------------------------------------------
+# Docker MCP Gateway Plugin (for MCP server management)
+# -----------------------------------------------------------------------------
+
+echo "🐳 Installing Docker MCP Gateway plugin..."
+MCP_VERSION="v0.31.0"
+mkdir -p ~/.docker/cli-plugins
+if [ ! -f ~/.docker/cli-plugins/docker-mcp ]; then
+    curl -sL "https://github.com/docker/mcp-gateway/releases/download/${MCP_VERSION}/docker-mcp-linux-amd64.tar.gz" \
+        | tar -xz -C ~/.docker/cli-plugins/
+    chmod +x ~/.docker/cli-plugins/docker-mcp
+    echo "✅ Docker MCP Gateway plugin installed"
+else
+    echo "✅ Docker MCP Gateway plugin already installed"
+fi
+
+echo ""
+
+# -----------------------------------------------------------------------------
 # Summary
 # -----------------------------------------------------------------------------
 

@@ -6,6 +6,8 @@ import { MainLayout } from './layouts/MainLayout';
 import { Search } from './pages/Search';
 import { Settings } from './pages/Settings';
 import { Appearance } from './pages/Appearance';
+import { Logs } from './pages/Logs';
+import { ConnectionStatus } from './components/ConnectionStatus';
 import { Placeholder } from './pages/Placeholder';
 import { Downloads } from './pages/Downloads';
 import { Shows } from './pages/Shows';
@@ -67,6 +69,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ConnectionStatus />
       <OnboardingRedirect>
         <Routes>
           {/* Onboarding wizard - standalone, no sidebar */}
@@ -79,6 +82,7 @@ function App() {
             <Route path="settings" element={<Settings />} />
             <Route path="settings/appearance" element={<Appearance />} />
             <Route path="settings/config-audit" element={<ConfigAuditPage />} />
+            <Route path="settings/logs" element={<Logs />} />
             <Route path="downloads" element={<Downloads />} />
             <Route path="shows" element={<Shows />} />
             <Route path="movies" element={<Movies />} />

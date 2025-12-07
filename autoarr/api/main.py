@@ -39,9 +39,21 @@ from .database import get_database, init_database
 from .dependencies import shutdown_orchestrator
 from .middleware import ErrorHandlerMiddleware, RequestLoggingMiddleware, add_security_headers
 from .rate_limiter import limiter
-from .routers import configuration, downloads, health, mcp, media, movies, onboarding, requests
+from .routers import (
+    chat,
+    configuration,
+    downloads,
+    health,
+    logs,
+    mcp,
+    media,
+    movies,
+    onboarding,
+    requests,
+)
 from .routers import settings as settings_router
 from .routers import shows
+from .routers.logs import setup_log_buffer_handler
 from .services.event_bus import get_event_bus
 from .services.websocket_bridge import initialize_websocket_bridge, shutdown_websocket_bridge
 
@@ -67,6 +79,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Starting AutoArr FastAPI Gateway...")
     logger.info(f"Environment: {settings.app_env}")
     logger.info(f"Log level: {settings.log_level}")
+
+    # Set up log buffer handler for UI log viewer
+    setup_log_buffer_handler()
 
     # Initialize database
     if settings.database_url:
@@ -242,6 +257,19 @@ app.include_router(
 app.include_router(
     requests.router,
     tags=["requests"],
+)
+
+# Chat endpoints (intelligent assistant)
+app.include_router(
+    chat.router,
+    tags=["chat"],
+)
+
+# Logs endpoints
+app.include_router(
+    logs.router,
+    prefix=f"{_settings.api_v1_prefix}/logs",
+    tags=["logs"],
 )
 
 

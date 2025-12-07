@@ -59,9 +59,9 @@ export interface ServicePlugin {
    * Test connection to the service
    * @param url - Service URL
    * @param apiKey - API key or token
-   * @returns Promise resolving to true if connected
+   * @returns Promise resolving to result with success flag and optional error message
    */
-  testConnection: (url: string, apiKey: string) => Promise<boolean>;
+  testConnection: (url: string, apiKey: string) => Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }>;
 }
 
 /**
@@ -86,10 +86,10 @@ export const sabnzbdPlugin: ServicePlugin = {
   ],
   docsUrl: 'https://sabnzbd.org/wiki/configuration/general',
   optional: false,
-  testConnection: async (url: string, apiKey: string): Promise<boolean> => {
+  testConnection: async (url: string, apiKey: string): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
     try {
       const response = await fetch(
-        `/api/v1/settings/sabnzbd/test`,
+        `/api/v1/settings/test/sabnzbd`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -97,9 +97,16 @@ export const sabnzbdPlugin: ServicePlugin = {
         }
       );
       const data = await response.json();
-      return data.success === true;
-    } catch {
-      return false;
+      return {
+        success: data.success === true,
+        message: data.message,
+        details: data.details,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Network error',
+      };
     }
   },
 };
@@ -125,10 +132,10 @@ export const sonarrPlugin: ServicePlugin = {
   ],
   docsUrl: 'https://wiki.servarr.com/sonarr',
   optional: false,
-  testConnection: async (url: string, apiKey: string): Promise<boolean> => {
+  testConnection: async (url: string, apiKey: string): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
     try {
       const response = await fetch(
-        `/api/v1/settings/sonarr/test`,
+        `/api/v1/settings/test/sonarr`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -136,9 +143,16 @@ export const sonarrPlugin: ServicePlugin = {
         }
       );
       const data = await response.json();
-      return data.success === true;
-    } catch {
-      return false;
+      return {
+        success: data.success === true,
+        message: data.message,
+        details: data.details,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Network error',
+      };
     }
   },
 };
@@ -164,10 +178,10 @@ export const radarrPlugin: ServicePlugin = {
   ],
   docsUrl: 'https://wiki.servarr.com/radarr',
   optional: false,
-  testConnection: async (url: string, apiKey: string): Promise<boolean> => {
+  testConnection: async (url: string, apiKey: string): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
     try {
       const response = await fetch(
-        `/api/v1/settings/radarr/test`,
+        `/api/v1/settings/test/radarr`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -175,9 +189,16 @@ export const radarrPlugin: ServicePlugin = {
         }
       );
       const data = await response.json();
-      return data.success === true;
-    } catch {
-      return false;
+      return {
+        success: data.success === true,
+        message: data.message,
+        details: data.details,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Network error',
+      };
     }
   },
 };
@@ -206,10 +227,10 @@ export const plexPlugin: ServicePlugin = {
   ],
   docsUrl: 'https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/',
   optional: true,
-  testConnection: async (url: string, apiKey: string): Promise<boolean> => {
+  testConnection: async (url: string, apiKey: string): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
     try {
       const response = await fetch(
-        `/api/v1/settings/plex/test`,
+        `/api/v1/settings/test/plex`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -217,9 +238,16 @@ export const plexPlugin: ServicePlugin = {
         }
       );
       const data = await response.json();
-      return data.success === true;
-    } catch {
-      return false;
+      return {
+        success: data.success === true,
+        message: data.message,
+        details: data.details,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Network error',
+      };
     }
   },
 };

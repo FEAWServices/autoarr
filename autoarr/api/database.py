@@ -74,6 +74,17 @@ class LLMSettings(Base):
     timeout: Mapped[float] = mapped_column(Float, default=60.0)
 
 
+class AppSettings(Base):
+    """Database model for application-wide settings."""
+
+    __tablename__ = "app_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    log_level: Mapped[str] = mapped_column(String, default="INFO")
+    timezone: Mapped[str] = mapped_column(String, default="UTC")
+    debug_mode: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
 # ============================================================================
 # Best Practices Model
 # ============================================================================
@@ -947,6 +958,76 @@ class LLMSettingsRepository:
                     selected_model=selected_model,
                     max_tokens=max_tokens,
                     timeout=timeout,
+                )
+                session.add(settings)
+
+            await session.commit()
+            await session.refresh(settings)
+            return settings  # type: ignore[no-any-return]
+
+
+# ============================================================================
+# App Settings Repository
+# ============================================================================
+
+
+class AppSettingsRepository:
+    """Repository for application settings database operations."""
+
+    def __init__(self, db: "Database"):
+        """
+        Initialize repository.
+
+        Args:
+            db: Database instance
+        """
+        self.db = db
+
+    async def get_settings(self) -> Optional[AppSettings]:
+        """
+        Get application settings.
+
+        Returns:
+            AppSettings if found, None otherwise
+        """
+        async with self.db.session() as session:
+            result = await session.execute(select(AppSettings).where(AppSettings.id == 1))
+            return result.scalar_one_or_none()  # type: ignore[no-any-return]
+
+    async def save_settings(
+        self,
+        log_level: str = "INFO",
+        timezone: str = "UTC",
+        debug_mode: bool = False,
+    ) -> AppSettings:
+        """
+        Save or update application settings.
+
+        Args:
+            log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+            timezone: Application timezone
+            debug_mode: Whether debug mode is enabled
+
+        Returns:
+            Saved AppSettings
+        """
+        async with self.db.session() as session:
+            # Try to get existing settings
+            result = await session.execute(select(AppSettings).where(AppSettings.id == 1))
+            settings = result.scalar_one_or_none()
+
+            if settings:
+                # Update existing
+                settings.log_level = log_level
+                settings.timezone = timezone
+                settings.debug_mode = debug_mode
+            else:
+                # Create new
+                settings = AppSettings(
+                    id=1,
+                    log_level=log_level,
+                    timezone=timezone,
+                    debug_mode=debug_mode,
                 )
                 session.add(settings)
 

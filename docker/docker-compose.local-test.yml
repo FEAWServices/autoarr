@@ -56,6 +56,8 @@ services:
       VITE_DEV_MODE: "true"
       # HMR client port - tells Vite to use the mapped port for WebSocket
       VITE_HMR_CLIENT_PORT: "9080"
+      # Use Vite proxy for API calls (empty = relative URLs)
+      VITE_API_BASE_URL: ""
       # pnpm configuration
       PNPM_HOME: "/root/.local/share/pnpm"
 
@@ -73,21 +75,63 @@ services:
       - c:/Git/autoarr:/app:cached
       # Shared pnpm store (same volume as devcontainer)
       - autoarr-pnpm-store:/root/.local/share/pnpm/store
+      # Playwright browser cache - persists between restarts
+      - autoarr-playwright-cache:/root/.cache/ms-playwright
       # Persistent data
       - autoarr-data:/data
       - autoarr-logs:/app/logs
 
-    # Install deps if needed, then run both servers
-    # Uses --prefer-offline to use cached packages when possible
-    # Includes Playwright browser installation for E2E testing
+    # Fast startup - only install if needed, skip playwright if cached
     command: >
       sh -c "
+        echo '========================================' &&
+        echo 'AutoArr Local Test Container Starting...' &&
+        echo '========================================' &&
+
         cd /app &&
-        poetry install --no-interaction --only main &&
+
+        # Only run poetry install if .venv is missing or outdated
+        if [ ! -d .venv ] || [ poetry.lock -nt .venv ]; then
+          echo 'Installing Python dependencies...' &&
+          poetry install --no-interaction --only main
+        else
+          echo 'Python deps up to date, skipping...'
+        fi &&
+
         cd /app/autoarr/ui &&
-        pnpm install --prefer-offline &&
-        pnpm exec playwright install chromium &&
+
+        # Only run pnpm install if node_modules is missing
+        if [ ! -d node_modules ]; then
+          echo 'Installing Node dependencies...' &&
+          pnpm install --prefer-offline
+        else
+          echo 'Node deps exist, skipping install...'
+        fi &&
+
+        # Only install Playwright if not cached
+        if [ ! -d /root/.cache/ms-playwright/chromium-* ]; then
+          echo 'Installing Playwright browser (first run only)...' &&
+          pnpm exec playwright install chromium
+        else
+          echo 'Playwright browser cached, skipping...'
+        fi &&
+
+        echo '' &&
+        echo '========================================' &&
+        echo 'Starting API server on port 8088...' &&
+        echo '========================================' &&
         (cd /app && poetry run uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &) &&
+        sleep 2 &&
+        echo '' &&
+        echo '========================================' &&
+        echo 'Starting Vite dev server on port 5173...' &&
+        echo '========================================' &&
+        echo '' &&
+        echo '**************************************' &&
+        echo '* AutoArr will be ready at:         *' &&
+        echo '*   http://localhost:9080           *' &&
+        echo '**************************************' &&
+        echo '' &&
         pnpm run dev --host 0.0.0.0 --port 5173
       "
 
@@ -96,7 +140,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -sf http://localhost:5173 && curl -sf http://localhost:8088/api/v1/health/ready",
+          "curl -sf http://localhost:5173 && curl -sf http://localhost:8088/health/ready",
         ]
       interval: 30s
       timeout: 10s
@@ -164,3 +208,5 @@ volumes:
   # Shared pnpm store - same name as in devcontainer.json
   autoarr-pnpm-store:
     external: true
+  # Playwright browser cache - persists between restarts
+  autoarr-playwright-cache:

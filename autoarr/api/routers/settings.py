@@ -33,7 +33,12 @@ from pydantic import BaseModel, Field
 from autoarr.shared.llm.openrouter_provider import OpenRouterProvider
 
 from ..config import get_settings
-from ..database import LLMSettingsRepository, SettingsRepository, get_database
+from ..database import (
+    AppSettingsRepository,
+    LLMSettingsRepository,
+    SettingsRepository,
+    get_database,
+)
 from ..dependencies import get_orchestrator
 
 if TYPE_CHECKING:
@@ -70,6 +75,18 @@ async def get_llm_settings_repo() -> LLMSettingsRepository:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Database not configured. LLM settings persistence disabled.",
+        )
+
+
+async def get_app_settings_repo() -> AppSettingsRepository:
+    """Get app settings repository dependency."""
+    try:
+        db = get_database()
+        return AppSettingsRepository(db)
+    except RuntimeError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database not configured. App settings persistence disabled.",
         )
 
 
@@ -398,11 +415,18 @@ async def update_llm_settings(
     Update LLM configuration.
 
     Saves settings to database for persistence.
+    If api_key is None or empty, keeps the existing key.
     """
     try:
+        # Get existing settings to preserve API key if not provided
+        existing = await llm_repo.get_settings()
+        api_key_to_save = (
+            config.api_key if config.api_key else (existing.api_key if existing else "")
+        )
+
         await llm_repo.save_settings(
             enabled=config.enabled,
-            api_key=config.api_key or "",
+            api_key=api_key_to_save,
             selected_model=config.selected_model,
             max_tokens=config.max_tokens,
             timeout=config.timeout,
@@ -483,6 +507,113 @@ async def test_llm_connection(
             message=f"Connection failed: {str(e)}",
             details={"error": str(e)},
         )
+
+
+# ============================================================================
+# APPLICATION SETTINGS ENDPOINTS
+# ============================================================================
+
+
+class AppSettingsRequest(BaseModel):
+    """Request model for updating app settings."""
+
+    log_level: Optional[str] = Field(
+        default=None, description="Log level (DEBUG, INFO, WARNING, ERROR)"
+    )
+    timezone: Optional[str] = Field(default=None, description="Application timezone")
+    debug_mode: Optional[bool] = Field(default=None, description="Enable debug mode")
+
+
+class AppSettingsResponse(BaseModel):
+    """Response model for app settings."""
+
+    log_level: str
+    timezone: str
+    debug_mode: bool
+
+
+@router.get("/app", response_model=AppSettingsResponse)
+async def get_app_settings(
+    app_repo: AppSettingsRepository = Depends(get_app_settings_repo),
+) -> AppSettingsResponse:
+    """
+    Get current application settings.
+
+    Returns log level, timezone, and debug mode configuration.
+    Settings are persisted to database.
+    """
+    config = get_settings()
+    db_settings = await app_repo.get_settings()
+
+    if db_settings:
+        return AppSettingsResponse(
+            log_level=db_settings.log_level,
+            timezone=db_settings.timezone,
+            debug_mode=db_settings.debug_mode,
+        )
+
+    # Return defaults if no settings in database
+    return AppSettingsResponse(
+        log_level=config.log_level,
+        timezone="UTC",
+        debug_mode=False,
+    )
+
+
+@router.put("/app", response_model=AppSettingsResponse)
+async def update_app_settings(
+    request: AppSettingsRequest,
+    app_repo: AppSettingsRepository = Depends(get_app_settings_repo),
+) -> AppSettingsResponse:
+    """
+    Update application settings.
+
+    Settings are persisted to database for permanent storage.
+    """
+    # Get existing settings
+    existing = await app_repo.get_settings()
+    current_log_level = existing.log_level if existing else "INFO"
+    current_timezone = existing.timezone if existing else "UTC"
+    current_debug_mode = existing.debug_mode if existing else False
+
+    # Apply updates
+    new_log_level = current_log_level
+    new_timezone = current_timezone
+    new_debug_mode = current_debug_mode
+
+    if request.log_level is not None:
+        # Validate log level
+        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        if request.log_level.upper() not in valid_levels:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid log level. Must be one of: {', '.join(valid_levels)}",
+            )
+        new_log_level = request.log_level.upper()
+        # Update the actual logging level
+        logging.getLogger().setLevel(new_log_level)
+        logger.info(f"Log level changed to {new_log_level}")
+
+    if request.timezone is not None:
+        new_timezone = request.timezone
+
+    if request.debug_mode is not None:
+        new_debug_mode = request.debug_mode
+        logger.info(f"Debug mode {'enabled' if new_debug_mode else 'disabled'}")
+
+    # Save to database
+    saved = await app_repo.save_settings(
+        log_level=new_log_level,
+        timezone=new_timezone,
+        debug_mode=new_debug_mode,
+    )
+    logger.info("App settings saved to database")
+
+    return AppSettingsResponse(
+        log_level=saved.log_level,
+        timezone=saved.timezone,
+        debug_mode=saved.debug_mode,
+    )
 
 
 # ============================================================================
@@ -661,7 +792,7 @@ async def test_service_connection(
     try:
         # Import the appropriate client
         if service == "sabnzbd":
-            from sabnzbd.client import SABnzbdClient
+            from autoarr.mcp_servers.sabnzbd.client import SABnzbdClient
 
             async with await SABnzbdClient.create(
                 url=request.url,
@@ -677,7 +808,7 @@ async def test_service_connection(
                 )
 
         elif service == "sonarr":
-            from sonarr.client import SonarrClient
+            from autoarr.mcp_servers.sonarr.client import SonarrClient
 
             async with await SonarrClient.create(
                 url=request.url,
@@ -693,7 +824,7 @@ async def test_service_connection(
                 )
 
         elif service == "radarr":
-            from radarr.client import RadarrClient
+            from autoarr.mcp_servers.radarr.client import RadarrClient
 
             async with await RadarrClient.create(
                 url=request.url,
@@ -709,7 +840,7 @@ async def test_service_connection(
                 )
 
         elif service == "plex":
-            from plex.client import PlexClient
+            from autoarr.mcp_servers.plex.client import PlexClient
 
             async with await PlexClient.create(
                 url=request.url,

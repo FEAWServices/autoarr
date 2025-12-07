@@ -30,13 +30,15 @@ export type RequestStatus =
 
 /**
  * Content classification result from LLM
+ * Matches backend ContentClassification model
  */
 export interface ContentClassification {
+  content_type: ContentType;
   title: string;
-  type: ContentType;
-  year?: number;
-  season?: number;
-  quality?: string;
+  year?: number | null;
+  quality?: string | null;
+  season?: number | null;
+  episode?: number | null;
   confidence: number;
 }
 
@@ -75,14 +77,31 @@ export interface RequestInfo {
 }
 
 /**
+ * Source reference for documentation
+ */
+export interface SourceReference {
+  title: string;
+  url: string;
+}
+
+/**
  * Chat message metadata
  */
 export interface MessageMetadata {
+  // Content request flow
   classification?: ContentClassification;
   searchResults?: ContentSearchResult[];
   requestId?: string;
   requestStatus?: RequestStatus;
   error?: string;
+
+  // Intelligent chat flow
+  topic?: string;
+  intent?: string;
+  sources?: SourceReference[];
+  suggestions?: string[];
+  serviceRequired?: string;
+  setupLink?: string;
 }
 
 /**
@@ -144,13 +163,16 @@ export interface ContentRequestPayload {
 
 /**
  * API response for content request
+ * Matches backend ContentRequestResponse model
  */
 export interface ContentRequestResponse {
-  requestId: string;
-  message: string;
-  classification?: ContentClassification;
-  searchResults?: ContentSearchResult[];
-  requiresConfirmation: boolean;
+  id: number;
+  correlation_id: string;
+  query: string;
+  classification: ContentClassification;
+  status: string;
+  search_results?: ContentSearchResult[];
+  created_at: string;
 }
 
 /**

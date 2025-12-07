@@ -42,6 +42,11 @@ logger = logging.getLogger(__name__)
 _warmup_complete = False
 _warmup_timestamp: str | None = None
 
+# LLM health cache (avoid hitting OpenRouter API on every request)
+_llm_health_cache: Dict[str, Any] | None = None
+_llm_health_cache_time: float = 0
+_LLM_HEALTH_CACHE_TTL = 60  # Cache for 60 seconds
+
 
 @router.get("/health", response_model=HealthCheckResponse, tags=["health"])
 async def health_check(
@@ -196,73 +201,6 @@ async def database_health() -> Dict[str, Any]:
             "type": None,
             "message": f"Database connection failed: {str(e)}",
         }
-
-
-@router.get("/health/{service}", response_model=ServiceHealth, tags=["health"])
-async def service_health(
-    service: str,
-    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
-) -> ServiceHealth:
-    """
-    Individual service health check.
-
-    Check the health of a specific MCP service.
-
-    Args:
-        service: Service name (sabnzbd, sonarr, radarr, or plex)
-
-    Returns:
-        ServiceHealth: Service health status
-
-    Raises:
-        HTTPException: If service name is invalid or service is not connected
-
-    Example:
-        ```
-        GET /health/sabnzbd
-        {
-            "healthy": true,
-            "latency_ms": 45.2,
-            "error": null,
-            "last_check": "2025-01-15T10:30:00Z",
-            "circuit_breaker_state": "closed"
-        }
-        ```
-    """
-    # Validate service name
-    valid_services = ["sabnzbd", "sonarr", "radarr", "plex"]
-    if service not in valid_services:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid service name. Must be one of: {', '.join(valid_services)}",
-        )
-
-    # Check if service is connected by checking if it's in _clients
-    if service not in orchestrator._clients:
-        # Return unconfigured status instead of error - this is expected for optional services
-        return ServiceHealth(
-            healthy=False,
-            latency_ms=None,
-            error="Service not configured",
-            last_check=datetime.utcnow().isoformat() + "Z",
-            circuit_breaker_state="unconfigured",
-        )
-
-    # Perform health check
-    start_time = time.time()
-    is_healthy = await orchestrator.health_check(service)
-    latency = (time.time() - start_time) * 1000  # Convert to milliseconds
-
-    # Get circuit breaker state
-    cb_state = orchestrator.get_circuit_breaker_state(service)
-
-    return ServiceHealth(
-        healthy=is_healthy,
-        latency_ms=round(latency, 2) if is_healthy else None,
-        error=None if is_healthy else "Service health check failed",
-        last_check=datetime.utcnow().isoformat() + "Z",
-        circuit_breaker_state=cb_state.get("state", "unknown"),
-    )
 
 
 @router.get("/health/circuit-breaker/{service}", tags=["health"])
@@ -519,3 +457,164 @@ async def trigger_warmup() -> Dict[str, Any]:
         ```
     """
     return await perform_warmup()
+
+
+@router.get("/health/llm", tags=["health"])
+async def llm_health() -> Dict[str, Any]:
+    """
+    LLM/AI service health check.
+
+    Check if the LLM provider (OpenRouter) is configured and accessible.
+    Results are cached for 60 seconds to avoid excessive API calls.
+
+    Returns:
+        dict: LLM health status
+
+    Example:
+        ```
+        GET /health/llm
+        {
+            "healthy": true,
+            "provider": "openrouter",
+            "model": "anthropic/claude-3.5-sonnet",
+            "latency_ms": 234.5,
+            "error": null,
+            "cached": false
+        }
+        ```
+    """
+    global _llm_health_cache, _llm_health_cache_time
+
+    # Return cached result if still valid
+    if _llm_health_cache and (time.time() - _llm_health_cache_time) < _LLM_HEALTH_CACHE_TTL:
+        return {**_llm_health_cache, "cached": True}
+
+    from ..database import LLMSettingsRepository, get_database
+
+    try:
+        db = get_database()
+        llm_repo = LLMSettingsRepository(db)
+        settings = await llm_repo.get_settings()
+
+        if not settings or not settings.api_key:
+            result = {
+                "healthy": False,
+                "provider": None,
+                "model": None,
+                "latency_ms": None,
+                "error": "LLM not configured",
+            }
+            _llm_health_cache = result
+            _llm_health_cache_time = time.time()
+            return {**result, "cached": False}
+
+        # Test connection to OpenRouter
+        from autoarr.shared.llm.openrouter_provider import OpenRouterProvider
+
+        start_time = time.time()
+        provider = OpenRouterProvider({"api_key": settings.api_key})
+        is_available = await provider.is_available()
+        latency = (time.time() - start_time) * 1000
+
+        if is_available:
+            result = {
+                "healthy": True,
+                "provider": settings.provider or "openrouter",
+                "model": settings.selected_model,
+                "latency_ms": round(latency, 2),
+                "error": None,
+            }
+        else:
+            result = {
+                "healthy": False,
+                "provider": settings.provider or "openrouter",
+                "model": settings.selected_model,
+                "latency_ms": round(latency, 2),
+                "error": "Failed to connect to OpenRouter",
+            }
+
+        _llm_health_cache = result
+        _llm_health_cache_time = time.time()
+        return {**result, "cached": False}
+
+    except Exception as e:
+        logger.warning(f"LLM health check failed: {e}")
+        result = {
+            "healthy": False,
+            "provider": None,
+            "model": None,
+            "latency_ms": None,
+            "error": str(e),
+        }
+        _llm_health_cache = result
+        _llm_health_cache_time = time.time()
+        return {**result, "cached": False}
+
+
+# NOTE: This dynamic route MUST come AFTER all specific /health/* routes
+# to prevent FastAPI from matching "ready", "live", "database", etc. as service names
+@router.get("/health/{service}", response_model=ServiceHealth, tags=["health"])
+async def service_health(
+    service: str,
+    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
+) -> ServiceHealth:
+    """
+    Individual service health check.
+
+    Check the health of a specific MCP service.
+
+    Args:
+        service: Service name (sabnzbd, sonarr, radarr, or plex)
+
+    Returns:
+        ServiceHealth: Service health status
+
+    Raises:
+        HTTPException: If service name is invalid or service is not connected
+
+    Example:
+        ```
+        GET /health/sabnzbd
+        {
+            "healthy": true,
+            "latency_ms": 45.2,
+            "error": null,
+            "last_check": "2025-01-15T10:30:00Z",
+            "circuit_breaker_state": "closed"
+        }
+        ```
+    """
+    # Validate service name
+    valid_services = ["sabnzbd", "sonarr", "radarr", "plex"]
+    if service not in valid_services:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid service name. Must be one of: {', '.join(valid_services)}",
+        )
+
+    # Check if service is connected by checking if it's in _clients
+    if service not in orchestrator._clients:
+        # Return unconfigured status instead of error - this is expected for optional services
+        return ServiceHealth(
+            healthy=False,
+            latency_ms=None,
+            error="Service not configured",
+            last_check=datetime.utcnow().isoformat() + "Z",
+            circuit_breaker_state="unconfigured",
+        )
+
+    # Perform health check
+    start_time = time.time()
+    is_healthy = await orchestrator.health_check(service)
+    latency = (time.time() - start_time) * 1000  # Convert to milliseconds
+
+    # Get circuit breaker state
+    cb_state = orchestrator.get_circuit_breaker_state(service)
+
+    return ServiceHealth(
+        healthy=is_healthy,
+        latency_ms=round(latency, 2) if is_healthy else None,
+        error=None if is_healthy else "Service health check failed",
+        last_check=datetime.utcnow().isoformat() + "Z",
+        circuit_breaker_state=cb_state.get("state", "unknown"),
+    )

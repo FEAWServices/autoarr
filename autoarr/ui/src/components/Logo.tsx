@@ -1,5 +1,3 @@
-import logoImage from '../assets/autoarr-logo.png';
-
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
@@ -15,7 +13,7 @@ export const Logo = ({ size = 'md', className = '' }: LogoProps) => {
 
   return (
     <div className={`${sizeClasses[size]} ${className}`}>
-      <img src={logoImage} alt="AutoArr Logo" className="w-full h-full object-contain" />
+      <img src="/logo.png" alt="AutoArr Logo" className="w-full h-full object-contain" />
     </div>
   );
 };
