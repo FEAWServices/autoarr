@@ -224,6 +224,25 @@ def mask_api_key(api_key: str) -> str:
     return f"{api_key[:4]}...{api_key[-4:]}"
 
 
+def is_masked_key(key: str) -> bool:
+    """
+    Check if a key is a masked placeholder (e.g., "abc1...xyz9" or "****").
+
+    This prevents the UI from accidentally overwriting a real API key
+    with a masked display value.
+
+    Args:
+        key: The key to check
+
+    Returns:
+        True if the key appears to be a masked placeholder
+    """
+    if not key:
+        return False
+    # Check for our masking patterns
+    return "..." in key or key == "****"
+
+
 async def get_service_status(service_name: str, orchestrator: "MCPOrchestrator") -> str:
     """
     Get the current status of a service.
@@ -694,6 +713,7 @@ async def update_service_settings(
     Update configuration for a specific service.
 
     This endpoint updates the service configuration in the database and attempts to reconnect.
+    If a masked API key is submitted, the existing key is preserved.
 
     Args:
         service: Service name (sabnzbd, sonarr, radarr, plex)
@@ -708,13 +728,34 @@ async def update_service_settings(
             detail=f"Service '{service}' not found. Valid services: sabnzbd, sonarr, radarr, plex",
         )
 
+    # Determine the API key to save - preserve existing if masked key is submitted
+    api_key_to_save = config.api_key_or_token or ""
+    if is_masked_key(api_key_to_save):
+        # Get existing key from database or env
+        existing = await repo.get_service_settings(service)
+        if existing and existing.api_key_or_token:
+            api_key_to_save = existing.api_key_or_token
+            logger.info(f"Preserving existing API key for {service} (masked key submitted)")
+        else:
+            # Fall back to environment variable
+            settings = get_settings()
+            if service == "sabnzbd":
+                api_key_to_save = settings.sabnzbd_api_key
+            elif service == "sonarr":
+                api_key_to_save = settings.sonarr_api_key
+            elif service == "radarr":
+                api_key_to_save = settings.radarr_api_key
+            elif service == "plex":
+                api_key_to_save = settings.plex_token
+            logger.info(f"Using env API key for {service} (masked key submitted, no DB key)")
+
     # Save settings to database
     try:
         await repo.save_service_settings(
             service_name=service,
             enabled=config.enabled,
             url=config.url or "",
-            api_key_or_token=config.api_key_or_token or "",
+            api_key_or_token=api_key_to_save,
             timeout=config.timeout,
         )
         logger.info(f"Saved {service} settings to database")
@@ -730,22 +771,22 @@ async def update_service_settings(
     if service == "sabnzbd":
         settings.sabnzbd_enabled = config.enabled
         settings.sabnzbd_url = config.url or ""
-        settings.sabnzbd_api_key = config.api_key_or_token or ""
+        settings.sabnzbd_api_key = api_key_to_save
         settings.sabnzbd_timeout = config.timeout
     elif service == "sonarr":
         settings.sonarr_enabled = config.enabled
         settings.sonarr_url = config.url or ""
-        settings.sonarr_api_key = config.api_key_or_token or ""
+        settings.sonarr_api_key = api_key_to_save
         settings.sonarr_timeout = config.timeout
     elif service == "radarr":
         settings.radarr_enabled = config.enabled
         settings.radarr_url = config.url or ""
-        settings.radarr_api_key = config.api_key_or_token or ""
+        settings.radarr_api_key = api_key_to_save
         settings.radarr_timeout = config.timeout
     elif service == "plex":
         settings.plex_enabled = config.enabled
         settings.plex_url = config.url or ""
-        settings.plex_token = config.api_key_or_token or ""
+        settings.plex_token = api_key_to_save
         settings.plex_timeout = config.timeout
 
     # Schedule reconnection as background task (non-blocking)
@@ -883,12 +924,39 @@ async def save_all_settings(
     Save configuration for all services at once.
 
     This endpoint updates all service configurations in the database and in memory.
+    If a masked API key is submitted, the existing key is preserved.
 
     Args:
         config: Configuration for all services
     """
     settings = get_settings()
     save_errors = []
+
+    # Helper to resolve API key (preserve existing if masked)
+    async def resolve_api_key(service_name: str, submitted_key: str) -> str:
+        """Get the actual API key to save, preserving existing if masked."""
+        if not is_masked_key(submitted_key):
+            return submitted_key or ""
+
+        # Masked key submitted - get existing
+        existing = await repo.get_service_settings(service_name)
+        if existing and existing.api_key_or_token:
+            logger.info(f"Preserving existing API key for {service_name}")
+            return str(existing.api_key_or_token)
+
+        # Fall back to env
+        if service_name == "sabnzbd":
+            return settings.sabnzbd_api_key
+        elif service_name == "sonarr":
+            return settings.sonarr_api_key
+        elif service_name == "radarr":
+            return settings.radarr_api_key
+        elif service_name == "plex":
+            return settings.plex_token
+        return ""
+
+    # Track resolved API keys for in-memory update
+    resolved_keys: Dict[str, str] = {}
 
     # Save each service configuration to database
     for service_name, service_config in [
@@ -899,11 +967,13 @@ async def save_all_settings(
     ]:
         if service_config:
             try:
+                api_key = await resolve_api_key(service_name, service_config.api_key_or_token or "")
+                resolved_keys[service_name] = api_key
                 await repo.save_service_settings(
                     service_name=service_name,
                     enabled=service_config.enabled,
                     url=service_config.url or "",
-                    api_key_or_token=service_config.api_key_or_token or "",
+                    api_key_or_token=api_key,
                     timeout=service_config.timeout,
                 )
                 logger.info(f"Saved {service_name} settings to database")
@@ -915,25 +985,25 @@ async def save_all_settings(
     if config.sabnzbd:
         settings.sabnzbd_enabled = config.sabnzbd.enabled
         settings.sabnzbd_url = config.sabnzbd.url or ""
-        settings.sabnzbd_api_key = config.sabnzbd.api_key_or_token or ""
+        settings.sabnzbd_api_key = resolved_keys.get("sabnzbd", settings.sabnzbd_api_key)
         settings.sabnzbd_timeout = config.sabnzbd.timeout
 
     if config.sonarr:
         settings.sonarr_enabled = config.sonarr.enabled
         settings.sonarr_url = config.sonarr.url or ""
-        settings.sonarr_api_key = config.sonarr.api_key_or_token or ""
+        settings.sonarr_api_key = resolved_keys.get("sonarr", settings.sonarr_api_key)
         settings.sonarr_timeout = config.sonarr.timeout
 
     if config.radarr:
         settings.radarr_enabled = config.radarr.enabled
         settings.radarr_url = config.radarr.url or ""
-        settings.radarr_api_key = config.radarr.api_key_or_token or ""
+        settings.radarr_api_key = resolved_keys.get("radarr", settings.radarr_api_key)
         settings.radarr_timeout = config.radarr.timeout
 
     if config.plex:
         settings.plex_enabled = config.plex.enabled
         settings.plex_url = config.plex.url or ""
-        settings.plex_token = config.plex.api_key_or_token or ""
+        settings.plex_token = resolved_keys.get("plex", settings.plex_token)
         settings.plex_timeout = config.plex.timeout
 
     # Reconnect to enabled services

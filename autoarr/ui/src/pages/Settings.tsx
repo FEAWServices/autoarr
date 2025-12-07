@@ -206,31 +206,32 @@ export const Settings = () => {
           const data = await response.json();
           // Deep merge API data with existing state to preserve fields not in API response
           // and ensure all input values are defined (never undefined)
+          // API returns api_key_masked, map it to apiKey for display
           newSettings = {
             ...newSettings,
             sabnzbd: {
               url: data.sabnzbd?.url ?? settings.sabnzbd.url,
-              apiKey: data.sabnzbd?.apiKey ?? settings.sabnzbd.apiKey,
+              apiKey: data.sabnzbd?.api_key_masked ?? settings.sabnzbd.apiKey,
               enabled: data.sabnzbd?.enabled ?? settings.sabnzbd.enabled,
             },
             sonarr: {
               url: data.sonarr?.url ?? settings.sonarr.url,
-              apiKey: data.sonarr?.apiKey ?? settings.sonarr.apiKey,
+              apiKey: data.sonarr?.api_key_masked ?? settings.sonarr.apiKey,
               enabled: data.sonarr?.enabled ?? settings.sonarr.enabled,
             },
             radarr: {
               url: data.radarr?.url ?? settings.radarr.url,
-              apiKey: data.radarr?.apiKey ?? settings.radarr.apiKey,
+              apiKey: data.radarr?.api_key_masked ?? settings.radarr.apiKey,
               enabled: data.radarr?.enabled ?? settings.radarr.enabled,
             },
             plex: {
               url: data.plex?.url ?? settings.plex.url,
-              apiKey: data.plex?.apiKey ?? settings.plex.apiKey,
-              token: data.plex?.token ?? settings.plex.token,
+              apiKey: data.plex?.api_key_masked ?? settings.plex.apiKey,
+              token: data.plex?.api_key_masked ?? settings.plex.token,
               enabled: data.plex?.enabled ?? settings.plex.enabled,
             },
             brave: {
-              apiKey: data.brave?.apiKey ?? settings.brave.apiKey,
+              apiKey: data.brave?.api_key_masked ?? settings.brave.apiKey,
               enabled: data.brave?.enabled ?? settings.brave.enabled,
             },
           };

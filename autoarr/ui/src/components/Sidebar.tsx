@@ -190,7 +190,7 @@ export const Sidebar = ({ isOpen = true, onClose, isMobile = false }: SidebarPro
         {/* Sidebar */}
         <aside
           className={`
-            fixed top-0 left-0 h-full z-50 flex flex-col
+            fixed top-0 left-0 z-50 flex flex-col
             transform transition-transform duration-300 ease-in-out
             ${isOpen ? 'translate-x-0' : '-translate-x-full'}
             lg:relative lg:translate-x-0
@@ -198,13 +198,12 @@ export const Sidebar = ({ isOpen = true, onClose, isMobile = false }: SidebarPro
           style={{
             width: 'var(--sidebar-width, 240px)',
             minWidth: 'var(--sidebar-width, 240px)',
-            maxHeight: '100vh',
-            height: '100vh',
+            height: '100dvh', /* Use dvh for better mobile support */
             backgroundColor: 'hsl(222 47% 11%)',
           }}
         >
           {/* Close button for mobile - top right */}
-          <div className="flex items-center justify-end px-4 py-3 border-b border-[var(--sidebar-border)]">
+          <div className="flex-shrink-0 flex items-center justify-end px-4 py-3 border-b border-[var(--sidebar-border)]">
             <button
               onClick={onClose}
               className="p-2 text-muted-foreground hover:text-white"
@@ -232,10 +231,10 @@ export const Sidebar = ({ isOpen = true, onClose, isMobile = false }: SidebarPro
             ))}
           </nav>
 
-          {/* Footer - Service Status */}
+          {/* Footer - Service Status - flex-shrink-0 ensures it stays visible at bottom */}
           <div
             data-component="SidebarServiceStatus"
-            className="border-t border-[var(--sidebar-border)] py-3 px-4"
+            className="flex-shrink-0 border-t border-[var(--sidebar-border)] py-3 px-4"
           >
             <div className="text-xs text-muted-foreground mb-2 px-1">
               Services ({connectedCount}/{services.length})
