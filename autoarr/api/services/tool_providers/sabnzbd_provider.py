@@ -75,21 +75,19 @@ class SABnzbdToolProvider(BaseToolProvider):
             return self._client
 
         if not self._url or not self._api_key:
-            # Try to get from settings
+            # Try to get from database directly (API masks the key for security)
             try:
-                import httpx
+                from autoarr.api.database import SettingsRepository, get_database
 
-                async with httpx.AsyncClient() as client:
-                    response = await client.get(
-                        "http://localhost:8088/api/v1/settings/sabnzbd", timeout=5.0
-                    )
-                    if response.status_code == 200:
-                        data = response.json()
-                        if data.get("enabled") and data.get("url") and data.get("api_key"):
-                            self._url = data["url"]
-                            self._api_key = data["api_key"]
+                db = get_database()
+                repo = SettingsRepository(db)
+                settings = await repo.get_service_settings("sabnzbd")
+                if settings and settings.enabled and settings.url:
+                    self._url = settings.url
+                    self._api_key = settings.api_key_or_token
+                    logger.debug(f"Got SABnzbd settings from database: url={self._url}")
             except Exception as e:
-                logger.debug(f"Failed to get SABnzbd settings: {e}")
+                logger.warning(f"Failed to get SABnzbd settings from database: {e}")
                 return None
 
         if self._url and self._api_key:
