@@ -115,7 +115,10 @@ class SABnzbdToolProvider(BaseToolProvider):
             # Core tools - available in all versions
             ToolDefinition(
                 name="sabnzbd_get_queue",
-                description="Get the current SABnzbd download queue with status and progress for each item. Shows download name, size, progress %, ETA, and status.",
+                description=(
+                    "Get the current SABnzbd download queue with status and progress "
+                    "for each item. Shows download name, size, progress %, ETA, and status."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {
@@ -135,7 +138,10 @@ class SABnzbdToolProvider(BaseToolProvider):
             ),
             ToolDefinition(
                 name="sabnzbd_get_history",
-                description="Get SABnzbd download history including completed and failed downloads. Shows completion time, status, and failure reasons.",
+                description=(
+                    "Get SABnzbd download history including completed and failed downloads. "
+                    "Shows completion time, status, and failure reasons."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {
@@ -163,7 +169,10 @@ class SABnzbdToolProvider(BaseToolProvider):
             ),
             ToolDefinition(
                 name="sabnzbd_get_status",
-                description="Get current SABnzbd status: download speed (MB/s), disk space, queue size, paused state, and active server connections.",
+                description=(
+                    "Get current SABnzbd status: download speed (MB/s), disk space, "
+                    "queue size, paused state, and active server connections."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {},
@@ -174,7 +183,10 @@ class SABnzbdToolProvider(BaseToolProvider):
             ),
             ToolDefinition(
                 name="sabnzbd_pause_queue",
-                description="Pause the entire download queue. All active downloads will be paused until resumed.",
+                description=(
+                    "Pause the entire download queue. "
+                    "All active downloads will be paused until resumed."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {},
@@ -185,7 +197,10 @@ class SABnzbdToolProvider(BaseToolProvider):
             ),
             ToolDefinition(
                 name="sabnzbd_resume_queue",
-                description="Resume the download queue if paused. Downloads will continue from where they left off.",
+                description=(
+                    "Resume the download queue if paused. "
+                    "Downloads will continue from where they left off."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {},
@@ -196,13 +211,19 @@ class SABnzbdToolProvider(BaseToolProvider):
             ),
             ToolDefinition(
                 name="sabnzbd_pause_download",
-                description="Pause a specific download in the queue by its NZO ID. The download will remain in queue but not actively download.",
+                description=(
+                    "Pause a specific download in the queue by its NZO ID. "
+                    "The download will remain in queue but not actively download."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {
                         "nzo_id": {
                             "type": "string",
-                            "description": "The NZO ID of the download to pause (get from sabnzbd_get_queue)",
+                            "description": (
+                                "The NZO ID of the download to pause "
+                                "(get from sabnzbd_get_queue)"
+                            ),
                         },
                     },
                     "required": ["nzo_id"],
@@ -228,13 +249,19 @@ class SABnzbdToolProvider(BaseToolProvider):
             ),
             ToolDefinition(
                 name="sabnzbd_retry_download",
-                description="Retry a failed download. SABnzbd will re-fetch the NZB and attempt to download again.",
+                description=(
+                    "Retry a failed download. "
+                    "SABnzbd will re-fetch the NZB and attempt to download again."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {
                         "nzo_id": {
                             "type": "string",
-                            "description": "The NZO ID of the failed download to retry (get from sabnzbd_get_history with failed_only=true)",
+                            "description": (
+                                "The NZO ID of the failed download to retry "
+                                "(get from sabnzbd_get_history with failed_only=true)"
+                            ),
                         },
                     },
                     "required": ["nzo_id"],
@@ -244,7 +271,10 @@ class SABnzbdToolProvider(BaseToolProvider):
             ),
             ToolDefinition(
                 name="sabnzbd_delete_download",
-                description="Delete a download from the queue. Optionally delete the partially downloaded files.",
+                description=(
+                    "Delete a download from the queue. "
+                    "Optionally delete the partially downloaded files."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {
@@ -254,7 +284,9 @@ class SABnzbdToolProvider(BaseToolProvider):
                         },
                         "delete_files": {
                             "type": "boolean",
-                            "description": "Also delete downloaded/incomplete files (default: false)",
+                            "description": (
+                                "Also delete downloaded/incomplete files (default: false)"
+                            ),
                         },
                     },
                     "required": ["nzo_id"],
@@ -264,13 +296,19 @@ class SABnzbdToolProvider(BaseToolProvider):
             ),
             ToolDefinition(
                 name="sabnzbd_get_config",
-                description="Get SABnzbd configuration settings. Returns all settings or a specific section.",
+                description=(
+                    "Get SABnzbd configuration settings. "
+                    "Returns all settings or a specific section."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {
                         "section": {
                             "type": "string",
-                            "description": "Config section: 'misc' (general), 'servers' (news servers), 'categories', 'rss', 'scheduling'",
+                            "description": (
+                                "Config section: 'misc' (general), 'servers' (news servers), "
+                                "'categories', 'rss', 'scheduling'"
+                            ),
                             "enum": ["misc", "servers", "categories", "rss", "scheduling"],
                         },
                     },
@@ -281,7 +319,9 @@ class SABnzbdToolProvider(BaseToolProvider):
             ),
             ToolDefinition(
                 name="sabnzbd_set_config",
-                description="Set a SABnzbd configuration value. Useful for tuning performance settings.",
+                description=(
+                    "Set a SABnzbd configuration value. " "Useful for tuning performance settings."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {
@@ -291,7 +331,9 @@ class SABnzbdToolProvider(BaseToolProvider):
                         },
                         "keyword": {
                             "type": "string",
-                            "description": "Configuration key (e.g., 'bandwidth_max', 'cache_limit')",
+                            "description": (
+                                "Configuration key (e.g., 'bandwidth_max', 'cache_limit')"
+                            ),
                         },
                         "value": {
                             "type": "string",
@@ -306,7 +348,10 @@ class SABnzbdToolProvider(BaseToolProvider):
             # SABnzbd 3.x+ features - Direct Unpack
             ToolDefinition(
                 name="sabnzbd_set_direct_unpack",
-                description="Enable/disable Direct Unpack (SABnzbd 3.0+). When enabled, SABnzbd unpacks files during download for faster completion.",
+                description=(
+                    "Enable/disable Direct Unpack (SABnzbd 3.0+). "
+                    "When enabled, SABnzbd unpacks files during download for faster completion."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {
@@ -323,7 +368,10 @@ class SABnzbdToolProvider(BaseToolProvider):
             # SABnzbd 3.x+ - Propagation delay
             ToolDefinition(
                 name="sabnzbd_set_propagation_delay",
-                description="Set propagation delay in minutes (SABnzbd 3.0+). Useful when posts aren't fully propagated across servers yet.",
+                description=(
+                    "Set propagation delay in minutes (SABnzbd 3.0+). "
+                    "Useful when posts aren't fully propagated across servers yet."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {
@@ -342,7 +390,10 @@ class SABnzbdToolProvider(BaseToolProvider):
             # SABnzbd 4.x+ features - Deobfuscation
             ToolDefinition(
                 name="sabnzbd_set_deobfuscate",
-                description="Configure filename deobfuscation (SABnzbd 4.0+). Renames obfuscated filenames to readable ones.",
+                description=(
+                    "Configure filename deobfuscation (SABnzbd 4.0+). "
+                    "Renames obfuscated filenames to readable ones."
+                ),
                 parameters={
                     "type": "object",
                     "properties": {
@@ -360,7 +411,7 @@ class SABnzbdToolProvider(BaseToolProvider):
 
         # Filter by version if provided
         use_version = version or self._version
-        return self.filter_tools_by_version(tools, use_version)
+        return list(self.filter_tools_by_version(tools, use_version))
 
     async def execute(self, tool_name: str, arguments: Dict[str, Any]) -> ToolResult:
         """
@@ -422,7 +473,8 @@ class SABnzbdToolProvider(BaseToolProvider):
             return False
 
         try:
-            return await client.health_check()
+            result = await client.health_check()
+            return bool(result)
         except Exception:
             return False
 
@@ -465,39 +517,44 @@ class SABnzbdToolProvider(BaseToolProvider):
         self, client: SABnzbdClient, args: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle get_queue tool."""
-        return await client.get_queue(
+        result = await client.get_queue(
             start=args.get("start", 0),
             limit=args.get("limit"),
         )
+        return dict(result) if result else {}
 
     async def _handle_get_history(
         self, client: SABnzbdClient, args: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle get_history tool."""
-        return await client.get_history(
+        result = await client.get_history(
             start=args.get("start", 0),
             limit=args.get("limit"),
             failed_only=args.get("failed_only", False),
             category=args.get("category"),
         )
+        return dict(result) if result else {}
 
     async def _handle_get_status(
         self, client: SABnzbdClient, args: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle get_status tool."""
-        return await client.get_status()
+        result = await client.get_status()
+        return dict(result) if result else {}
 
     async def _handle_pause_queue(
         self, client: SABnzbdClient, args: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle pause_queue tool."""
-        return await client.pause_queue()
+        result = await client.pause_queue()
+        return dict(result) if result else {}
 
     async def _handle_resume_queue(
         self, client: SABnzbdClient, args: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle resume_queue tool."""
-        return await client.resume_queue()
+        result = await client.resume_queue()
+        return dict(result) if result else {}
 
     async def _handle_pause_download(
         self, client: SABnzbdClient, args: Dict[str, Any]
@@ -506,7 +563,8 @@ class SABnzbdToolProvider(BaseToolProvider):
         nzo_id = args.get("nzo_id")
         if not nzo_id:
             raise ValueError("nzo_id is required")
-        return await client.pause_download(nzo_id)
+        result = await client.pause_download(nzo_id)
+        return dict(result) if result else {}
 
     async def _handle_resume_download(
         self, client: SABnzbdClient, args: Dict[str, Any]
@@ -515,7 +573,8 @@ class SABnzbdToolProvider(BaseToolProvider):
         nzo_id = args.get("nzo_id")
         if not nzo_id:
             raise ValueError("nzo_id is required")
-        return await client.resume_download(nzo_id)
+        result = await client.resume_download(nzo_id)
+        return dict(result) if result else {}
 
     async def _handle_retry_download(
         self, client: SABnzbdClient, args: Dict[str, Any]
@@ -524,7 +583,8 @@ class SABnzbdToolProvider(BaseToolProvider):
         nzo_id = args.get("nzo_id")
         if not nzo_id:
             raise ValueError("nzo_id is required")
-        return await client.retry_download(nzo_id)
+        result = await client.retry_download(nzo_id)
+        return dict(result) if result else {}
 
     async def _handle_delete_download(
         self, client: SABnzbdClient, args: Dict[str, Any]
@@ -533,16 +593,18 @@ class SABnzbdToolProvider(BaseToolProvider):
         nzo_id = args.get("nzo_id")
         if not nzo_id:
             raise ValueError("nzo_id is required")
-        return await client.delete_download(
+        result = await client.delete_download(
             nzo_id,
             delete_files=args.get("delete_files", False),
         )
+        return dict(result) if result else {}
 
     async def _handle_get_config(
         self, client: SABnzbdClient, args: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle get_config tool."""
-        return await client.get_config(section=args.get("section"))
+        result = await client.get_config(section=args.get("section"))
+        return dict(result) if result else {}
 
     async def _handle_set_config(
         self, client: SABnzbdClient, args: Dict[str, Any]
@@ -555,7 +617,8 @@ class SABnzbdToolProvider(BaseToolProvider):
         if not section or not keyword:
             raise ValueError("section and keyword are required")
 
-        return await client.set_config(section, keyword, value)
+        result = await client.set_config(section, keyword, value)
+        return dict(result) if result else {}
 
     # Version-specific handlers (SABnzbd 3.x+)
     async def _handle_set_direct_unpack(
@@ -564,7 +627,8 @@ class SABnzbdToolProvider(BaseToolProvider):
         """Handle set_direct_unpack tool (SABnzbd 3.0+)."""
         enabled = args.get("enabled", False)
         value = "1" if enabled else "0"
-        return await client.set_config("misc", "direct_unpack", value)
+        result = await client.set_config("misc", "direct_unpack", value)
+        return dict(result) if result else {}
 
     async def _handle_set_propagation_delay(
         self, client: SABnzbdClient, args: Dict[str, Any]
@@ -573,7 +637,8 @@ class SABnzbdToolProvider(BaseToolProvider):
         minutes = args.get("minutes", 0)
         if minutes < 0 or minutes > 1440:
             raise ValueError("minutes must be between 0 and 1440")
-        return await client.set_config("misc", "propagation_delay", str(minutes))
+        result = await client.set_config("misc", "propagation_delay", str(minutes))
+        return dict(result) if result else {}
 
     # Version-specific handlers (SABnzbd 4.x+)
     async def _handle_set_deobfuscate(
@@ -582,4 +647,5 @@ class SABnzbdToolProvider(BaseToolProvider):
         """Handle set_deobfuscate tool (SABnzbd 4.0+)."""
         enabled = args.get("enabled", False)
         value = "1" if enabled else "0"
-        return await client.set_config("misc", "deobfuscate_final_filenames", value)
+        result = await client.set_config("misc", "deobfuscate_final_filenames", value)
+        return dict(result) if result else {}
