@@ -85,7 +85,7 @@
   .glass-card:hover {
     @apply scale-[1.02];
 
-    box-shadow: 0 0 30px rgb(168 85 247 / 30%);
+    box-shadow: 0 0 30px hsl(var(--primary) / 30%);
     border-color: hsl(var(--primary) / 40%);
   }
 
@@ -99,7 +99,7 @@
 
   .solid-card:hover {
     border-color: hsl(var(--primary) / 30%);
-    box-shadow: 0 0 20px rgb(168 85 247 / 20%);
+    box-shadow: 0 0 20px hsl(var(--primary) / 20%);
   }
 
   /* Button variants */
@@ -114,8 +114,8 @@
   .btn-primary:hover {
     @apply -translate-y-px;
 
-    background: hsl(280deg 85% 50%);
-    box-shadow: 0 0 30px rgb(168 85 247 / 40%);
+    background: hsl(206deg 60% 35%);
+    box-shadow: 0 0 30px hsl(var(--primary) / 40%);
   }
 
   .btn-secondary {
@@ -127,8 +127,8 @@
   }
 
   .btn-secondary:hover {
-    background: hsl(260deg 70% 45%);
-    box-shadow: 0 0 25px rgb(124 58 237 / 30%);
+    background: hsl(210deg 55% 30%);
+    box-shadow: 0 0 25px hsl(var(--secondary) / 30%);
   }
 
   .btn-ghost {
@@ -216,7 +216,7 @@
   }
 
   .glow-hover:hover {
-    box-shadow: 0 0 30px rgb(168 85 247 / 30%);
+    box-shadow: 0 0 30px hsl(var(--primary) / 30%);
   }
 
   /* Shadow utilities */
@@ -237,7 +237,7 @@
   }
 
   .shadow-glow-hover:hover {
-    box-shadow: 0 0 30px rgb(168 85 247 / 30%);
+    box-shadow: 0 0 30px hsl(var(--primary) / 30%);
   }
 
   /* Animation delay utilities */

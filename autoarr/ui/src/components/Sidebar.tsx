@@ -159,13 +159,18 @@ export const Sidebar = () => {
         backgroundColor: 'var(--sidebar-background, hsl(222 47% 11%))',
       }}
     >
-      {/* Brand Header - *arr style */}
+      {/* Brand Header - *arr style with logo */}
       <Link
         to="/"
-        className="flex items-center px-5 py-4 hover:bg-[var(--sidebar-accent)]/50 transition-colors duration-200"
+        className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--sidebar-accent)]/50 transition-colors duration-200"
       >
+        <img
+          src="/logo-192.png"
+          alt="AutoArr Logo"
+          className="w-10 h-10 object-contain"
+        />
         <div>
-          <h1 className="text-xl font-bold text-white">AutoArr</h1>
+          <h1 className="text-lg font-bold text-white leading-tight">AutoArr</h1>
           <p className="text-xs text-muted-foreground">v1.0.0</p>
         </div>
       </Link>

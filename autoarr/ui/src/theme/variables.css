@@ -1,7 +1,7 @@
 /**
  * AutoArr Theme Variables
  *
- * Visual Spark inspired design system with engaging purple/pink palette.
+ * Brand color scheme based on AutoArr logo - teal/steel blue (#205080)
  * HSL-based colors for better theme customization.
  */
 
@@ -9,34 +9,34 @@
   :root {
     /* ============================================
        Core Design System (HSL Values)
-       Matching temp-branding for engaging look
+       Based on AutoArr logo: #205080 (teal/steel blue)
        ============================================ */
 
-    /* Background colors - deep navy with purple undertones */
-    --background: 222 47% 11%;
-    --foreground: 280 10% 95%;
+    /* Background colors - deep navy with blue undertones */
+    --background: 210 45% 11%;
+    --foreground: 200 15% 95%;
 
     /* Card/surface colors */
-    --card: 222 47% 15%;
-    --card-foreground: 280 10% 95%;
-    --popover: 222 47% 15%;
-    --popover-foreground: 280 10% 95%;
+    --card: 210 45% 15%;
+    --card-foreground: 200 15% 95%;
+    --popover: 210 45% 15%;
+    --popover-foreground: 200 15% 95%;
 
-    /* Primary - vibrant purple */
-    --primary: 280 85% 60%;
+    /* Primary - teal/steel blue from logo (#205080 = hsl(206, 60%, 31%)) */
+    --primary: 206 60% 40%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 290 90% 70%;
+    --primary-glow: 200 70% 50%;
 
-    /* Secondary - deeper purple */
-    --secondary: 260 70% 50%;
+    /* Secondary - darker teal */
+    --secondary: 210 55% 35%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted colors */
-    --muted: 222 47% 20%;
-    --muted-foreground: 280 10% 65%;
+    --muted: 210 45% 20%;
+    --muted-foreground: 200 15% 65%;
 
-    /* Accent - magenta/pink */
-    --accent: 300 80% 65%;
+    /* Accent - lighter teal for highlights */
+    --accent: 195 65% 50%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -44,9 +44,9 @@
     --destructive-foreground: 0 0% 100%;
 
     /* Border/Input/Ring */
-    --border: 222 47% 25%;
-    --input: 222 47% 25%;
-    --ring: 280 85% 60%;
+    --border: 210 45% 25%;
+    --input: 210 45% 25%;
+    --ring: 206 60% 40%;
 
     /* Radius - more curved for modern look */
     --radius: 0.75rem;
@@ -58,11 +58,11 @@
     /* Background colors */
     --main-bg-color: hsl(var(--background));
     --modal-bg-color: hsl(var(--card));
-    --modal-header-color: hsl(222deg 47% 18%);
+    --modal-header-color: hsl(210deg 45% 18%);
 
     /* Button colors */
     --button-color: hsl(var(--primary));
-    --button-color-hover: hsl(280deg 85% 50%);
+    --button-color-hover: hsl(206deg 60% 35%);
     --button-text: hsl(var(--primary-foreground));
     --button-text-hover: #fff;
 
@@ -76,7 +76,7 @@
 
     /* Link colors */
     --link-color: hsl(var(--accent));
-    --link-color-hover: hsl(300deg 80% 75%);
+    --link-color-hover: hsl(195deg 65% 60%);
 
     /* ============================================
        AutoArr Extended Variables
@@ -95,7 +95,7 @@
 
     /* Text aliases */
     --aa-text-primary: var(--text);
-    --aa-text-secondary: hsl(280deg 10% 75%);
+    --aa-text-secondary: hsl(200deg 15% 75%);
     --aa-text-muted: var(--text-muted);
 
     /* Status colors */
@@ -106,11 +106,11 @@
     --aa-error: #ef4444;
     --aa-error-light: #f87171;
     --aa-info: hsl(var(--accent));
-    --aa-info-light: hsl(300deg 80% 75%);
+    --aa-info-light: hsl(195deg 65% 60%);
 
     /* Border colors - using primary for accent borders */
     --aa-border: hsl(var(--border));
-    --aa-border-strong: hsl(222deg 47% 30%);
+    --aa-border-strong: hsl(210deg 45% 30%);
     --aa-border-focus: hsl(var(--primary));
     --aa-border-primary: hsl(var(--primary) / 20%);
 
@@ -118,10 +118,10 @@
        Accent Customization (Hue-based)
        ============================================ */
 
-    /* Base accent hue - purple by default */
-    --accent-hue: 280;
-    --accent-saturation: 85%;
-    --accent-lightness: 60%;
+    /* Base accent hue - teal/steel blue from logo */
+    --accent-hue: 206;
+    --accent-saturation: 60%;
+    --accent-lightness: 40%;
 
     /* Computed accent colors from hue */
     --accent-custom: hsl(var(--accent-hue) var(--accent-saturation) var(--accent-lightness));
@@ -160,11 +160,11 @@
        Gradients
        ============================================ */
 
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(320deg 85% 65%));
-    --gradient-hero: linear-gradient(180deg, hsl(var(--background)), hsl(280deg 50% 15%));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(195deg 65% 50%));
+    --gradient-hero: linear-gradient(180deg, hsl(var(--background)), hsl(210deg 50% 15%));
     --aa-gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     --aa-gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--primary)));
-    --aa-gradient-hero: linear-gradient(180deg, hsl(var(--background)), hsl(280deg 50% 15%));
+    --aa-gradient-hero: linear-gradient(180deg, hsl(var(--background)), hsl(210deg 50% 15%));
     --aa-gradient-mesh:
       radial-gradient(at 40% 20%, hsl(var(--primary) / 30%) 0px, transparent 50%),
       radial-gradient(at 80% 0%, hsl(var(--primary-glow) / 30%) 0px, transparent 50%),
@@ -193,13 +193,13 @@
        Sidebar Colors - *arr family style
        (Layout dimensions in layout-tokens.css)
        ============================================ */
-    --sidebar-background: hsl(222deg 47% 11%);
-    --sidebar-foreground: 280 10% 95%;
+    --sidebar-background: hsl(210deg 45% 11%);
+    --sidebar-foreground: 200 15% 95%;
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: hsl(222deg 47% 18%);
-    --sidebar-accent-foreground: 280 10% 95%;
-    --sidebar-border: hsl(222deg 47% 18%);
+    --sidebar-accent: hsl(210deg 45% 18%);
+    --sidebar-accent-foreground: 200 15% 95%;
+    --sidebar-border: hsl(210deg 45% 18%);
     --sidebar-ring: var(--primary);
   }
 
@@ -208,11 +208,11 @@
      ============================================ */
 
   .dark {
-    --background: 222 47% 8%;
-    --foreground: 280 10% 98%;
-    --sidebar-background: 222 47% 10%;
-    --sidebar-accent: 222 47% 15%;
-    --sidebar-border: 222 47% 15%;
+    --background: 210 45% 8%;
+    --foreground: 200 15% 98%;
+    --sidebar-background: 210 45% 10%;
+    --sidebar-accent: 210 45% 15%;
+    --sidebar-border: 210 45% 15%;
   }
 
   /* ============================================
