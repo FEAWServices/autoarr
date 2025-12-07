@@ -200,7 +200,7 @@ export const Sidebar = ({ isOpen = true, onClose, isMobile = false }: SidebarPro
             minWidth: 'var(--sidebar-width, 240px)',
             maxHeight: '100vh',
             height: '100vh',
-            backgroundColor: 'var(--sidebar-background, hsl(222 47% 11%))',
+            backgroundColor: 'hsl(222 47% 11%)',
           }}
         >
           {/* Close button for mobile - top right */}

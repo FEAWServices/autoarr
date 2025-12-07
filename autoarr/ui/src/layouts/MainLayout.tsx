@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { SetupBanner } from '../components/Onboarding/SetupBanner';
+import { PullToRefresh } from '../components/PullToRefresh';
 
 export const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Handle pull-to-refresh - reload the page
+  const handleRefresh = useCallback(async () => {
+    window.location.reload();
+  }, []);
 
   return (
     <div
@@ -62,14 +68,14 @@ export const MainLayout = () => {
           {/* Setup Banner - shows when onboarding incomplete */}
           <SetupBanner />
 
-          <div
-            className="flex-1 overflow-y-auto overflow-x-hidden"
-            style={{ overscrollBehavior: 'contain' }}
+          <PullToRefresh
+            onRefresh={handleRefresh}
+            className="flex-1 overflow-x-hidden"
           >
             <div className="min-h-full w-full max-w-full overflow-x-hidden">
               <Outlet />
             </div>
-          </div>
+          </PullToRefresh>
         </main>
       </div>
     </div>
