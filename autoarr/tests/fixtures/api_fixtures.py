@@ -1672,6 +1672,32 @@ def mock_database_init():
     mock_db.init_db = AsyncMock()
     mock_db.close = AsyncMock()
 
+    # Mock AppSettings object
+    mock_app_settings = MagicMock()
+    mock_app_settings.log_level = "INFO"
+    mock_app_settings.timezone = "UTC"
+    mock_app_settings.debug_mode = False
+
+    # Mock application settings repository
+    mock_app_settings_repo = MagicMock()
+    mock_app_settings_repo.get_settings = AsyncMock(return_value=mock_app_settings)
+    mock_app_settings_repo.save_settings = AsyncMock(return_value=mock_app_settings)
+    mock_db.application_settings_repo = mock_app_settings_repo
+
+    # Mock LLM settings repository
+    mock_llm_settings_repo = MagicMock()
+    mock_llm_settings_repo.get_llm_settings = AsyncMock(return_value=None)
+    mock_llm_settings_repo.save_llm_settings = AsyncMock(return_value=True)
+    mock_db.llm_settings_repo = mock_llm_settings_repo
+
+    # Mock service settings repository
+    mock_settings_repo = MagicMock()
+    mock_settings_repo.get_service_settings = AsyncMock(return_value=None)
+    mock_settings_repo.get_all_service_settings = AsyncMock(return_value={})
+    mock_settings_repo.save_service_settings = AsyncMock(return_value=True)
+    mock_settings_repo.delete_service_settings = AsyncMock(return_value=False)
+    mock_db.settings_repo = mock_settings_repo
+
     # Mock session
     mock_session = AsyncMock()
     mock_session.execute = AsyncMock()
@@ -1690,6 +1716,9 @@ def mock_database_init():
     with (
         patch("autoarr.api.database.init_database", return_value=mock_db),
         patch("autoarr.api.database.get_database", return_value=mock_db),
+        patch("autoarr.api.main.init_database", return_value=mock_db),
+        patch("autoarr.api.main.get_database", return_value=mock_db),
+        patch("autoarr.api.routers.settings.get_database", return_value=mock_db),
     ):
         yield mock_db
 

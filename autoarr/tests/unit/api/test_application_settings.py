@@ -35,6 +35,27 @@ from autoarr.api.main import app
 @pytest.fixture
 def client(mock_database_init):
     """Create a test client with database mocking."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    from autoarr.api.routers.settings import get_app_settings_repo
+
+    # Create mock AppSettings object
+    mock_settings = MagicMock()
+    mock_settings.log_level = "INFO"
+    mock_settings.timezone = "UTC"
+    mock_settings.debug_mode = False
+
+    # Create mock repository
+    mock_repo = MagicMock()
+    mock_repo.get_settings = AsyncMock(return_value=mock_settings)
+    mock_repo.save_settings = AsyncMock(return_value=mock_settings)
+
+    # Override the dependency
+    async def override_get_app_settings_repo():
+        return mock_repo
+
+    app.dependency_overrides[get_app_settings_repo] = override_get_app_settings_repo
+
     return TestClient(app)
 
 
