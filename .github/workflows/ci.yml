@@ -542,8 +542,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=autoarr_autoarr
-            -Dsonar.organization=autoarr
+            -Dsonar.projectKey=FEAWServices_autoarr
+            -Dsonar.organization=feawservices
 
       - name: Skip notice
         if: steps.sonar-check.outputs.configured != 'true'
