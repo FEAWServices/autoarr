@@ -13,7 +13,7 @@ export const ConnectionStatus = ({
   const [isConnected, setIsConnected] = useState(true);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
-  const [/* failureCount */, setFailureCount] = useState(0);
+  const [, /* failureCount */ setFailureCount] = useState(0);
 
   // Returns true if connection succeeded
   const checkConnection = useCallback(async (): Promise<boolean> => {
