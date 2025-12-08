@@ -441,6 +441,7 @@ See `.env.example` for complete list.
    ```
 
 4. **Use existing patterns**:
+
    - Follow existing service structure
    - Use async/await consistently
    - Mock external services in tests
@@ -474,6 +475,134 @@ All 10 sprints from BUILD-PLAN.md are **complete**:
 
 **Project Status**: v1.0 feature-complete, ready for production deployment.
 
+## 🔧 Container Development Workflow
+
+### Applying Code Changes to Running Container
+
+When developing locally, changes need to be copied to the running container:
+
+```bash
+# 1. Build frontend
+cd /app/autoarr/ui && pnpm run build
+
+# 2. Copy frontend build to container
+DOCKER_HOST=unix:///var/run/docker.sock docker cp /app/autoarr/ui/dist/. autoarr-local:/app/autoarr/ui/dist/
+
+# 3. Copy backend Python files if changed
+DOCKER_HOST=unix:///var/run/docker.sock docker cp /app/autoarr/api/routers/settings.py autoarr-local:/app/autoarr/api/routers/settings.py
+
+# 4. Restart container to apply changes
+DOCKER_HOST=unix:///var/run/docker.sock docker restart autoarr-local
+
+# 5. Re-install httpx after restart (required for MCP clients)
+DOCKER_HOST=unix:///var/run/docker.sock docker exec autoarr-local pip install httpx --quiet
+```
+
+### Container Access
+
+Always use `DOCKER_HOST=unix:///var/run/docker.sock` prefix for docker commands from devcontainer:
+
+```bash
+# Check container status
+DOCKER_HOST=unix:///var/run/docker.sock docker ps --filter "name=autoarr"
+
+# View container logs
+DOCKER_HOST=unix:///var/run/docker.sock docker logs autoarr-local --tail 50
+
+# Execute commands in container
+DOCKER_HOST=unix:///var/run/docker.sock docker exec autoarr-local curl -s "http://localhost:8088/health"
+
+# Test API endpoint
+DOCKER_HOST=unix:///var/run/docker.sock docker exec autoarr-local curl -s "http://localhost:8088/api/v1/settings/test/sabnzbd" \
+  -X POST -H "Content-Type: application/json" \
+  -d '{"url": "http://192.168.0.80:8090/sabnzbd/", "api_key_or_token": "your-key", "timeout": 10}'
+```
+
+## 🔌 Service Plugin Architecture
+
+### Frontend Service Plugins (`autoarr/ui/src/plugins/services/`)
+
+Each service (SABnzbd, Sonarr, Radarr, Plex) has a plugin that defines:
+
+- Connection test logic
+- Default URLs and ports
+- API key instructions
+- Color theming
+
+**Critical: API endpoint paths must match backend routes exactly!**
+
+```typescript
+// Frontend calls: /api/v1/settings/test/{service}
+// Backend route:  /api/v1/settings/test/{service}
+testConnection: async (url: string, apiKey: string) => {
+  const response = await fetch(
+    `/api/v1/settings/test/sabnzbd`, // NOT: /api/v1/settings/sabnzbd/test
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, api_key_or_token: apiKey, timeout: 10 }),
+    },
+  );
+  // ...
+};
+```
+
+### Backend MCP Client Imports
+
+MCP server clients must use full import paths:
+
+```python
+# Correct:
+from autoarr.mcp_servers.sabnzbd.client import SABnzbdClient
+from autoarr.mcp_servers.sonarr.client import SonarrClient
+from autoarr.mcp_servers.radarr.client import RadarrClient
+from autoarr.mcp_servers.plex.client import PlexClient
+
+# WRONG (will cause ModuleNotFoundError):
+from sabnzbd.client import SABnzbdClient
+```
+
+### API Path Contract Tests
+
+The test file `autoarr/tests/unit/api/test_api_path_contract.py` verifies frontend API calls match backend routes. Run these tests when adding/modifying endpoints:
+
+```bash
+poetry run pytest autoarr/tests/unit/api/test_api_path_contract.py -v
+```
+
+## 🐛 Common Issues & Solutions
+
+### "ModuleNotFoundError: No module named 'httpx'"
+
+The MCP server clients use httpx for async HTTP requests. After container restart:
+
+```bash
+DOCKER_HOST=unix:///var/run/docker.sock docker exec autoarr-local pip install httpx --quiet
+```
+
+### "405 Method Not Allowed" on Connection Test
+
+Frontend endpoint URL doesn't match backend route. Check:
+
+1. Frontend: `autoarr/ui/src/plugins/services/index.ts` - `testConnection` function
+2. Backend: `autoarr/api/routers/settings.py` - route decorators
+
+### "Connection validation failed" in Onboarding
+
+Debug steps:
+
+1. Check container can reach external service: `docker exec autoarr-local curl -s "http://192.168.0.80:8090/sabnzbd/api?mode=version"`
+2. Check backend test endpoint directly: `docker exec autoarr-local curl -s "http://localhost:8088/api/v1/settings/test/sabnzbd" -X POST ...`
+3. Check container logs for Python errors: `docker logs autoarr-local --tail 100`
+
+### UI Buttons Not Visible (Mobile Layout)
+
+Check for overflow issues in parent containers. Mobile-first design tips:
+
+- Use `flex-col sm:flex-row` for responsive button groups
+- Add `pb-24` padding to scrollable content for button visibility
+- Use `overflow-y-auto min-h-0` for scrollable areas
+
 ## 📞 Getting Help
 
 - **Documentation**: See `/app/docs/` folder
@@ -484,5 +613,11 @@ All 10 sprints from BUILD-PLAN.md are **complete**:
 
 ---
 
-_Last Updated: 2025-01-08 (Sprint 10 Complete)_
+_Last Updated: 2025-12-07_
 _Version: 1.0.0_
+
+## Notes
+
+- When you kill all containers, it kills Claude as well - kill services selectively
+- Always verify API paths match between frontend plugins and backend routes
+- The httpx dependency needs reinstalling after container restart until Dockerfile is updated

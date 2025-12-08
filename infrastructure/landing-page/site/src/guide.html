@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Guide - AutoArr</title>
+    <meta
+      name="description"
+      content="Complete guide to using AutoArr for intelligent media automation. Learn how to connect services, use the chat interface, and optimize your media stack."
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/guide.css" />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <header class="guide-header">
+      <nav class="nav">
+        <a href="/" class="logo">
+          <svg
+            class="logo-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
+          </svg>
+          <span class="logo-text">AutoArr</span>
+        </a>
+        <div class="nav-links">
+          <a href="/#features">Features</a>
+          <a href="/#how-it-works">How It Works</a>
+          <a href="/#interest" class="btn btn-primary btn-sm">Get Notified</a>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Guide Hero -->
+    <section class="guide-hero">
+      <div class="container">
+        <h1 class="guide-title">
+          <span class="gradient-text">User Guide</span>
+        </h1>
+        <p class="guide-subtitle">
+          Everything you need to know to get the most out of AutoArr
+        </p>
+      </div>
+    </section>
+
+    <!-- Quick Navigation -->
+    <nav class="guide-nav">
+      <div class="container">
+        <div class="guide-nav-inner">
+          <a href="#getting-started" class="guide-nav-link">Getting Started</a>
+          <a href="#connecting-services" class="guide-nav-link">Connecting Services</a>
+          <a href="#chat-interface" class="guide-nav-link">Chat Interface</a>
+          <a href="#service-health" class="guide-nav-link">Service Health</a>
+          <a href="#activity-feed" class="guide-nav-link">Activity Feed</a>
+          <a href="#examples" class="guide-nav-link">Examples</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Guide Content -->
+    <main class="guide-content">
+      <div class="container">
+
+        <!-- Getting Started -->
+        <section id="getting-started" class="guide-section">
+          <h2>Getting Started</h2>
+
+          <div class="guide-card">
+            <h3>What is AutoArr?</h3>
+            <p>
+              AutoArr is an intelligent orchestration layer that sits between you and your media automation stack.
+              It uses AI to understand your natural language requests, optimize your service configurations,
+              and automatically recover from download failures.
+            </p>
+            <div class="highlight-box">
+              <strong>Key Benefits:</strong>
+              <ul>
+                <li>Natural language content requests ("Download The Bear Season 3")</li>
+                <li>AI-powered configuration auditing and optimization</li>
+                <li>Automatic download failure recovery</li>
+                <li>Real-time monitoring across all services</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <h3>System Requirements</h3>
+            <ul class="requirements-list">
+              <li>
+                <span class="req-icon">&#128187;</span>
+                <div>
+                  <strong>Docker Host</strong>
+                  <p>Any system running Docker (Linux, Windows, macOS, Synology NAS)</p>
+                </div>
+              </li>
+              <li>
+                <span class="req-icon">&#128274;</span>
+                <div>
+                  <strong>API Keys</strong>
+                  <p>API keys for SABnzbd, Sonarr, Radarr (Plex optional)</p>
+                </div>
+              </li>
+              <li>
+                <span class="req-icon">&#129302;</span>
+                <div>
+                  <strong>LLM API Key</strong>
+                  <p>Claude API key or compatible LLM for AI features</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="guide-card">
+            <h3>Quick Start</h3>
+            <div class="code-block">
+              <pre><code># Pull and run AutoArr
+docker run -d \
+  --name autoarr \
+  -p 8088:8088 \
+  -e SABNZBD_URL=http://your-sabnzbd:8080 \
+  -e SABNZBD_API_KEY=your-api-key \
+  -e SONARR_URL=http://your-sonarr:8989 \
+  -e SONARR_API_KEY=your-api-key \
+  -e RADARR_URL=http://your-radarr:7878 \
+  -e RADARR_API_KEY=your-api-key \
+  -e CLAUDE_API_KEY=your-claude-key \
+  autoarr/autoarr:latest</code></pre>
+            </div>
+            <p>Then open <code>http://localhost:8088</code> in your browser.</p>
+          </div>
+        </section>
+
+        <!-- Connecting Services -->
+        <section id="connecting-services" class="guide-section">
+          <h2>Connecting Services</h2>
+
+          <div class="guide-card">
+            <h3>Supported Services</h3>
+            <div class="services-grid">
+              <div class="service-item sabnzbd">
+                <div class="service-icon">
+                  <img src="/logos/sabnzbd.png" alt="SABnzbd" />
+                </div>
+                <div class="service-info">
+                  <strong>SABnzbd</strong>
+                  <p>Usenet download client for managing NZB downloads</p>
+                </div>
+              </div>
+              <div class="service-item sonarr">
+                <div class="service-icon">
+                  <img src="/logos/sonarr.png" alt="Sonarr" />
+                </div>
+                <div class="service-info">
+                  <strong>Sonarr</strong>
+                  <p>TV show automation and management</p>
+                </div>
+              </div>
+              <div class="service-item radarr">
+                <div class="service-icon">
+                  <img src="/logos/radarr.png" alt="Radarr" />
+                </div>
+                <div class="service-info">
+                  <strong>Radarr</strong>
+                  <p>Movie automation and management</p>
+                </div>
+              </div>
+              <div class="service-item plex">
+                <div class="service-icon">
+                  <img src="/logos/plex.png" alt="Plex" />
+                </div>
+                <div class="service-info">
+                  <strong>Plex</strong>
+                  <p>Media server for streaming (optional)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <h3>Finding Your API Keys</h3>
+
+            <div class="accordion">
+              <div class="accordion-item">
+                <button class="accordion-header">
+                  <span>SABnzbd API Key</span>
+                  <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <ol>
+                    <li>Open SABnzbd web interface</li>
+                    <li>Go to <strong>Config</strong> > <strong>General</strong></li>
+                    <li>Look for "API Key" under Security section</li>
+                    <li>Click "Show" to reveal and copy the key</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div class="accordion-item">
+                <button class="accordion-header">
+                  <span>Sonarr API Key</span>
+                  <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <ol>
+                    <li>Open Sonarr web interface</li>
+                    <li>Go to <strong>Settings</strong> > <strong>General</strong></li>
+                    <li>Under "Security", find the API Key</li>
+                    <li>Copy the key</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div class="accordion-item">
+                <button class="accordion-header">
+                  <span>Radarr API Key</span>
+                  <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <ol>
+                    <li>Open Radarr web interface</li>
+                    <li>Go to <strong>Settings</strong> > <strong>General</strong></li>
+                    <li>Under "Security", find the API Key</li>
+                    <li>Copy the key</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div class="accordion-item">
+                <button class="accordion-header">
+                  <span>Plex Token</span>
+                  <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <ol>
+                    <li>Sign in to Plex Web App</li>
+                    <li>Browse to any library item</li>
+                    <li>Click "Get Info" or view XML</li>
+                    <li>Look for <code>X-Plex-Token</code> in the URL</li>
+                  </ol>
+                  <p class="note">Or use: <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank">Plex's official guide</a></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <h3>Settings Page</h3>
+            <p>
+              After first launch, navigate to the <strong>Settings</strong> page to configure your services.
+              Each service needs:
+            </p>
+            <ul>
+              <li><strong>URL</strong> - The address of your service (e.g., <code>http://192.168.1.100:8989</code>)</li>
+              <li><strong>API Key</strong> - Your service's API key</li>
+            </ul>
+            <div class="tip-box">
+              <strong>Tip:</strong> AutoArr will test the connection when you save settings
+              and show you the status of each service.
+            </div>
+          </div>
+        </section>
+
+        <!-- Chat Interface -->
+        <section id="chat-interface" class="guide-section">
+          <h2>Chat Interface</h2>
+
+          <div class="guide-card">
+            <h3>Natural Language Requests</h3>
+            <p>
+              The Chat interface lets you interact with your media stack using natural language.
+              AutoArr's AI understands what you want and routes requests to the appropriate service.
+            </p>
+
+            <div class="chat-examples">
+              <div class="chat-example">
+                <div class="chat-bubble user">
+                  Download The Bear season 3
+                </div>
+                <div class="chat-response">
+                  <span class="service-badge sonarr">Sonarr</span>
+                  AutoArr will search Sonarr for "The Bear", add it if not present,
+                  and ensure Season 3 is monitored.
+                </div>
+              </div>
+
+              <div class="chat-example">
+                <div class="chat-bubble user">
+                  Get Dune Part Two in 4K
+                </div>
+                <div class="chat-response">
+                  <span class="service-badge radarr">Radarr</span>
+                  AutoArr will search Radarr for "Dune Part Two" and configure
+                  it to download in your best quality profile.
+                </div>
+              </div>
+
+              <div class="chat-example">
+                <div class="chat-bubble user">
+                  What's downloading right now?
+                </div>
+                <div class="chat-response">
+                  <span class="service-badge sabnzbd">SABnzbd</span>
+                  AutoArr will check the SABnzbd queue and report current
+                  downloads with progress and ETA.
+                </div>
+              </div>
+
+              <div class="chat-example">
+                <div class="chat-bubble user">
+                  Why did my last download fail?
+                </div>
+                <div class="chat-response">
+                  <span class="service-badge sabnzbd">SABnzbd</span>
+                  AutoArr will check SABnzbd history, find the failed item,
+                  and explain the failure reason.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <h3>Available Commands</h3>
+            <p>You can ask AutoArr about:</p>
+            <div class="commands-grid">
+              <div class="command-category">
+                <h4>Downloads</h4>
+                <ul>
+                  <li>Queue status and progress</li>
+                  <li>History and failed downloads</li>
+                  <li>Speed limits and settings</li>
+                  <li>Server configuration</li>
+                </ul>
+              </div>
+              <div class="command-category">
+                <h4>TV Shows</h4>
+                <ul>
+                  <li>Add new series</li>
+                  <li>Check upcoming episodes</li>
+                  <li>Search for missing episodes</li>
+                  <li>View quality profiles</li>
+                </ul>
+              </div>
+              <div class="command-category">
+                <h4>Movies</h4>
+                <ul>
+                  <li>Add new movies</li>
+                  <li>Check collection status</li>
+                  <li>Search for releases</li>
+                  <li>View quality profiles</li>
+                </ul>
+              </div>
+              <div class="command-category">
+                <h4>System</h4>
+                <ul>
+                  <li>Service health status</li>
+                  <li>Configuration audit</li>
+                  <li>Optimization suggestions</li>
+                  <li>Troubleshooting help</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Service Health -->
+        <section id="service-health" class="guide-section">
+          <h2>Service Health</h2>
+
+          <div class="guide-card">
+            <h3>Understanding Health Scores</h3>
+            <p>
+              The Service Health page provides a comprehensive assessment of your media stack's configuration.
+              Each service receives a health score from 0-100 based on various checks.
+            </p>
+
+            <div class="score-legend">
+              <div class="score-item excellent">
+                <span class="score-badge">90-100</span>
+                <span>Excellent - Optimal configuration</span>
+              </div>
+              <div class="score-item good">
+                <span class="score-badge">70-89</span>
+                <span>Good - Minor improvements possible</span>
+              </div>
+              <div class="score-item warning">
+                <span class="score-badge">50-69</span>
+                <span>Warning - Some issues need attention</span>
+              </div>
+              <div class="score-item critical">
+                <span class="score-badge">0-49</span>
+                <span>Critical - Significant problems detected</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <h3>What Gets Checked</h3>
+
+            <div class="checks-list">
+              <div class="check-category">
+                <h4>SABnzbd Checks</h4>
+                <ul>
+                  <li>Server connections and SSL</li>
+                  <li>Article cache size</li>
+                  <li>Connection count</li>
+                  <li>Disk space availability</li>
+                  <li>Warning/error logs</li>
+                  <li>Direct unpack settings</li>
+                </ul>
+              </div>
+
+              <div class="check-category">
+                <h4>Sonarr Checks</h4>
+                <ul>
+                  <li>Indexer configuration</li>
+                  <li>Download client setup</li>
+                  <li>Root folder disk space</li>
+                  <li>Built-in health checks</li>
+                  <li>Quality profile setup</li>
+                  <li>Unmonitored series ratio</li>
+                </ul>
+              </div>
+
+              <div class="check-category">
+                <h4>Radarr Checks</h4>
+                <ul>
+                  <li>Indexer configuration</li>
+                  <li>Download client setup</li>
+                  <li>Root folder disk space</li>
+                  <li>Built-in health checks</li>
+                  <li>Quality profile setup</li>
+                  <li>Movies without files</li>
+                </ul>
+              </div>
+
+              <div class="check-category">
+                <h4>Plex Checks</h4>
+                <ul>
+                  <li>Library configuration</li>
+                  <li>Movie/TV library presence</li>
+                  <li>Active streaming sessions</li>
+                  <li>Transcoding detection</li>
+                  <li>Library item counts</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <h3>Auto-Fix Features</h3>
+            <p>
+              Some issues can be automatically fixed by AutoArr. Look for the
+              <span class="auto-fix-badge">Auto-Fix</span> button next to fixable issues.
+            </p>
+            <div class="tip-box">
+              <strong>Example:</strong> If SABnzbd has too many warnings logged,
+              AutoArr can clear them for you with one click.
+            </div>
+          </div>
+        </section>
+
+        <!-- Activity Feed -->
+        <section id="activity-feed" class="guide-section">
+          <h2>Activity Feed</h2>
+
+          <div class="guide-card">
+            <h3>Real-Time Updates</h3>
+            <p>
+              The Activity page shows you everything happening across your media stack in real-time.
+              Updates are pushed via WebSocket, so you see changes instantly without refreshing.
+            </p>
+
+            <div class="activity-types">
+              <div class="activity-type">
+                <span class="activity-icon download">&#8595;</span>
+                <div>
+                  <strong>Downloads</strong>
+                  <p>Queue additions, progress updates, completions</p>
+                </div>
+              </div>
+              <div class="activity-type">
+                <span class="activity-icon recovery">&#8635;</span>
+                <div>
+                  <strong>Auto-Recovery</strong>
+                  <p>Failed download retries and alternative searches</p>
+                </div>
+              </div>
+              <div class="activity-type">
+                <span class="activity-icon library">&#128218;</span>
+                <div>
+                  <strong>Library Updates</strong>
+                  <p>New content added to Sonarr/Radarr</p>
+                </div>
+              </div>
+              <div class="activity-type">
+                <span class="activity-icon system">&#9881;</span>
+                <div>
+                  <strong>System Events</strong>
+                  <p>Service status changes, configuration updates</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Examples -->
+        <section id="examples" class="guide-section">
+          <h2>Example Workflows</h2>
+
+          <div class="guide-card">
+            <h3>Adding a New TV Show</h3>
+            <div class="workflow">
+              <div class="workflow-step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                  <strong>Open Chat</strong>
+                  <p>Navigate to the Chat page in AutoArr</p>
+                </div>
+              </div>
+              <div class="workflow-step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                  <strong>Make Your Request</strong>
+                  <p>Type: "Add Severance to my watchlist"</p>
+                </div>
+              </div>
+              <div class="workflow-step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                  <strong>Review Details</strong>
+                  <p>AutoArr shows the show details and asks for confirmation</p>
+                </div>
+              </div>
+              <div class="workflow-step">
+                <span class="step-number">4</span>
+                <div class="step-content">
+                  <strong>Confirm</strong>
+                  <p>Confirm and AutoArr adds it to Sonarr with your default settings</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <h3>Troubleshooting a Failed Download</h3>
+            <div class="workflow">
+              <div class="workflow-step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                  <strong>Notice the Failure</strong>
+                  <p>Activity feed shows a download failed</p>
+                </div>
+              </div>
+              <div class="workflow-step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                  <strong>Ask for Help</strong>
+                  <p>In Chat: "Why did my last download fail?"</p>
+                </div>
+              </div>
+              <div class="workflow-step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                  <strong>Get Explanation</strong>
+                  <p>AutoArr explains: "The NZB was incomplete (missing articles)"</p>
+                </div>
+              </div>
+              <div class="workflow-step">
+                <span class="step-number">4</span>
+                <div class="step-content">
+                  <strong>Auto-Recovery</strong>
+                  <p>Ask: "Try another release" and AutoArr searches alternatives</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <h3>Optimizing Your Configuration</h3>
+            <div class="workflow">
+              <div class="workflow-step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                  <strong>Check Service Health</strong>
+                  <p>Go to Service Health page to see overall scores</p>
+                </div>
+              </div>
+              <div class="workflow-step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                  <strong>Review Issues</strong>
+                  <p>Expand each service to see specific checks and recommendations</p>
+                </div>
+              </div>
+              <div class="workflow-step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                  <strong>Apply Fixes</strong>
+                  <p>Use Auto-Fix buttons or follow manual recommendations</p>
+                </div>
+              </div>
+              <div class="workflow-step">
+                <span class="step-number">4</span>
+                <div class="step-content">
+                  <strong>Re-Check</strong>
+                  <p>Refresh the assessment to verify improvements</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Need Help -->
+        <section class="guide-section guide-help">
+          <div class="help-card">
+            <h2>Need More Help?</h2>
+            <p>
+              Check out our documentation, report issues, or join the community.
+            </p>
+            <div class="help-links">
+              <a href="https://github.com/yourusername/autoarr" target="_blank" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                GitHub
+              </a>
+              <a href="https://github.com/yourusername/autoarr/blob/main/docs/TROUBLESHOOTING.md" target="_blank" class="btn btn-secondary">
+                Troubleshooting
+              </a>
+              <a href="https://github.com/yourusername/autoarr/discussions" target="_blank" class="btn btn-secondary">
+                Discussions
+              </a>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <div class="logo">
+              <svg
+                class="logo-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+              <span class="logo-text">AutoArr</span>
+            </div>
+            <p>Intelligent media automation for everyone.</p>
+          </div>
+          <div class="footer-links">
+            <h4>Project</h4>
+            <a href="https://github.com/yourusername/autoarr" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/yourusername/autoarr/blob/main/docs/QUICK-START.md" target="_blank" rel="noopener">Documentation</a>
+            <a href="https://github.com/yourusername/autoarr/blob/main/LICENSE" target="_blank" rel="noopener">License (GPL-3.0)</a>
+          </div>
+          <div class="footer-links">
+            <h4>Legal</h4>
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2024 AutoArr. Open source software.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/guide.js"></script>
+  </body>
+</html>

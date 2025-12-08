@@ -188,7 +188,7 @@ test.describe("Configuration Audit UI", () => {
     test("should display all recommendations with correct information", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       // Wait for recommendations to load
       await page.waitForSelector('[data-testid="recommendation-card"]');
@@ -215,7 +215,7 @@ test.describe("Configuration Audit UI", () => {
     test("should display priority badges with correct colors", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -243,7 +243,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should display service icons", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -266,7 +266,7 @@ test.describe("Configuration Audit UI", () => {
         });
       });
 
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       // Should show loading indicator
       await expect(
@@ -294,7 +294,7 @@ test.describe("Configuration Audit UI", () => {
         });
       });
 
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       // Wait for loading to complete
       await expect(
@@ -314,7 +314,7 @@ test.describe("Configuration Audit UI", () => {
         });
       });
 
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       // Should show error message - wait longer for React Query retries to complete
       await expect(
@@ -325,7 +325,7 @@ test.describe("Configuration Audit UI", () => {
 
   test.describe("Filtering", () => {
     test("should filter by service", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -344,7 +344,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should filter by priority", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -367,7 +367,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should filter by category", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -383,7 +383,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should combine multiple filters", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -403,7 +403,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should allow clearing filters", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -425,7 +425,7 @@ test.describe("Configuration Audit UI", () => {
 
   test.describe("Sorting", () => {
     test("should sort by priority by default", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -435,7 +435,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should sort by service name", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -450,7 +450,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should sort by category", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -469,7 +469,7 @@ test.describe("Configuration Audit UI", () => {
     test("should show confirmation dialog when clicking Apply", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -489,7 +489,7 @@ test.describe("Configuration Audit UI", () => {
     test("should display change details in confirmation dialog", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -511,7 +511,7 @@ test.describe("Configuration Audit UI", () => {
     test("should show impact warning for HIGH priority changes", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -530,7 +530,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should offer dry-run option", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -547,7 +547,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should close dialog when clicking Cancel", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -568,7 +568,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test.skip("should show loading state while applying", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -588,7 +588,7 @@ test.describe("Configuration Audit UI", () => {
     test.skip("should show success toast on successful apply", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -607,7 +607,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test.skip("should show error toast on failed apply", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -629,7 +629,7 @@ test.describe("Configuration Audit UI", () => {
     test.skip("should disable Apply button after successful application", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -654,7 +654,7 @@ test.describe("Configuration Audit UI", () => {
   test.describe("Mobile Responsive Design", () => {
     test("should display properly on mobile viewport", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -674,7 +674,7 @@ test.describe("Configuration Audit UI", () => {
       page,
     }) => {
       await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -692,7 +692,7 @@ test.describe("Configuration Audit UI", () => {
 
     test("should display dialog full-screen on mobile", async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -714,7 +714,7 @@ test.describe("Configuration Audit UI", () => {
       page,
     }) => {
       await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
 
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
@@ -731,7 +731,7 @@ test.describe("Configuration Audit UI", () => {
     test("should have no accessibility violations on main page", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       await injectAxe(page);
@@ -742,7 +742,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test.skip("should have proper heading hierarchy", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Should have h1 for page title
@@ -752,7 +752,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should have accessible filter controls", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Filter controls should have labels
@@ -764,7 +764,7 @@ test.describe("Configuration Audit UI", () => {
     test("should announce recommendations to screen readers", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Recommendations container should have aria-live region
@@ -776,7 +776,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test.skip("should support keyboard navigation", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Tab through interactive elements
@@ -791,7 +791,7 @@ test.describe("Configuration Audit UI", () => {
     });
 
     test("should have accessible Apply buttons", async ({ page }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       const applyButton = page.locator('[data-testid="apply-button"]').first();
@@ -804,7 +804,7 @@ test.describe("Configuration Audit UI", () => {
     test("should have sufficient color contrast for priority badges", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       await injectAxe(page);
@@ -824,7 +824,7 @@ test.describe("Configuration Audit UI", () => {
     test.skip("should announce toast messages to screen readers", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       await page
@@ -848,7 +848,7 @@ test.describe("Configuration Audit UI", () => {
     test.skip("should have accessible confirmation dialog", async ({
       page,
     }) => {
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       await page
@@ -891,7 +891,7 @@ test.describe("Configuration Audit UI", () => {
         });
       });
 
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Pagination controls should be visible
@@ -915,7 +915,7 @@ test.describe("Configuration Audit UI", () => {
         });
       });
 
-      await page.goto("/config-audit");
+      await page.goto("/settings/config-audit");
       await page.waitForSelector('[data-testid="recommendation-card"]');
 
       // Click next page

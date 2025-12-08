@@ -30,33 +30,33 @@ class LLMProviderFactory:
     """
     Factory for creating LLM provider instances with fallback support.
 
-    Supports multiple providers:
-    - Claude (optional, free with API key)
-    - Custom (premium only)
+    Supports:
+    - OpenRouter (default, supports 200+ models including Claude, GPT-4, Llama, etc.)
+    - Custom (premium only, via register_provider)
     """
 
     _providers: Dict[str, Type[BaseLLMProvider]] = {}
     _initialized = False
 
     @classmethod
-    def initialize(cls):
+    def initialize(cls) -> None:
         """Initialize the factory with available providers."""
         if cls._initialized:
             return
 
         # Import providers lazily to avoid circular imports
         try:
-            from .claude_provider import ClaudeProvider
+            from .openrouter_provider import OpenRouterProvider
 
-            cls._providers["claude"] = ClaudeProvider
-            logger.info("Registered ClaudeProvider")
+            cls._providers["openrouter"] = OpenRouterProvider
+            logger.info("Registered OpenRouterProvider")
         except ImportError as e:
-            logger.debug(f"ClaudeProvider not available: {e}")
+            logger.debug(f"OpenRouterProvider not available: {e}")
 
         cls._initialized = True
 
     @classmethod
-    def register_provider(cls, name: str, provider_class: Type[BaseLLMProvider]):
+    def register_provider(cls, name: str, provider_class: Type[BaseLLMProvider]) -> None:
         """
         Register a new provider (primarily for premium version or plugins).
 
@@ -92,7 +92,7 @@ class LLMProviderFactory:
 
         # Get provider preference from environment or parameter
         if provider_name is None:
-            provider_name = os.getenv("LLM_PROVIDER", "claude")
+            provider_name = os.getenv("LLM_PROVIDER", "openrouter")
 
         # Determine fallback order
         fallback_order = cls._get_fallback_order(provider_name, fallback)
@@ -126,7 +126,7 @@ class LLMProviderFactory:
         # No providers available
         raise ValueError(
             f"No LLM providers available. Tried: {fallback_order}. "
-            f"Please configure at least one provider (Claude)."
+            f"Please configure OPENROUTER_API_KEY environment variable."
         )
 
     @classmethod
@@ -152,9 +152,9 @@ class LLMProviderFactory:
         # Default fallback logic
         fallback_order = [primary_provider]
 
-        # Add other providers as fallback
-        if primary_provider != "claude" and os.getenv("CLAUDE_API_KEY"):
-            fallback_order.append("claude")
+        # Add openrouter as fallback if not primary and key is set
+        if primary_provider != "openrouter" and os.getenv("OPENROUTER_API_KEY"):
+            fallback_order.append("openrouter")
 
         return fallback_order
 
@@ -169,12 +169,12 @@ class LLMProviderFactory:
         Returns:
             Configuration dictionary
         """
-        if provider_name == "claude":
+        if provider_name == "openrouter":
             return {
-                "api_key": os.getenv("CLAUDE_API_KEY", ""),
-                "default_model": os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022"),
-                "max_tokens": int(os.getenv("CLAUDE_MAX_TOKENS", "4096")),
-                "timeout": int(os.getenv("CLAUDE_TIMEOUT", "60")),
+                "api_key": os.getenv("OPENROUTER_API_KEY", ""),
+                "default_model": os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet"),
+                "max_tokens": int(os.getenv("OPENROUTER_MAX_TOKENS", "4096")),
+                "timeout": int(os.getenv("OPENROUTER_TIMEOUT", "60")),
             }
 
         return {}

@@ -148,6 +148,80 @@ class SABnzbdMCPServer:
                 },
             ),
             Tool(
+                name="sabnzbd_pause_queue",
+                description="Pause the entire SABnzbd download queue",
+                inputSchema={
+                    "type": "object",
+                    "properties": {},
+                    "required": [],
+                },
+            ),
+            Tool(
+                name="sabnzbd_resume_queue",
+                description="Resume the SABnzbd download queue if paused",
+                inputSchema={
+                    "type": "object",
+                    "properties": {},
+                    "required": [],
+                },
+            ),
+            Tool(
+                name="sabnzbd_pause_download",
+                description="Pause a specific download in the queue by NZO ID",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "nzo_id": {
+                            "type": "string",
+                            "description": "The NZO ID of the download to pause",
+                        },
+                    },
+                    "required": ["nzo_id"],
+                },
+            ),
+            Tool(
+                name="sabnzbd_resume_download",
+                description="Resume a specific paused download by NZO ID",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "nzo_id": {
+                            "type": "string",
+                            "description": "The NZO ID of the download to resume",
+                        },
+                    },
+                    "required": ["nzo_id"],
+                },
+            ),
+            Tool(
+                name="sabnzbd_delete_download",
+                description="Delete a download from the queue",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "nzo_id": {
+                            "type": "string",
+                            "description": "The NZO ID of the download to delete",
+                        },
+                        "delete_files": {
+                            "type": "boolean",
+                            "description": "Also delete downloaded files (default: false)",
+                            "default": False,
+                        },
+                    },
+                    "required": ["nzo_id"],
+                },
+            ),
+            Tool(
+                name="sabnzbd_get_status",
+                description="Get current SABnzbd status including version, speed, and resource usage",
+                inputSchema={
+                    "type": "object",
+                    "properties": {},
+                    "required": [],
+                },
+            ),
+            Tool(
                 name="sabnzbd_get_config",
                 description="Get SABnzbd configuration settings",
                 inputSchema={
@@ -204,6 +278,18 @@ class SABnzbdMCPServer:
                 result = await self._handle_get_history(arguments)  # noqa: F841
             elif name == "sabnzbd_retry_download":
                 result = await self._handle_retry_download(arguments)  # noqa: F841
+            elif name == "sabnzbd_pause_queue":
+                result = await self._handle_pause_queue(arguments)  # noqa: F841
+            elif name == "sabnzbd_resume_queue":
+                result = await self._handle_resume_queue(arguments)  # noqa: F841
+            elif name == "sabnzbd_pause_download":
+                result = await self._handle_pause_download(arguments)  # noqa: F841
+            elif name == "sabnzbd_resume_download":
+                result = await self._handle_resume_download(arguments)  # noqa: F841
+            elif name == "sabnzbd_delete_download":
+                result = await self._handle_delete_download(arguments)  # noqa: F841
+            elif name == "sabnzbd_get_status":
+                result = await self._handle_get_status(arguments)  # noqa: F841
             elif name == "sabnzbd_get_config":
                 result = await self._handle_get_config(arguments)  # noqa: F841
             elif name == "sabnzbd_set_config":
@@ -326,6 +412,49 @@ class SABnzbdMCPServer:
             keyword=keyword,
             value=value,
         )
+
+    async def _handle_pause_queue(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle pause_queue tool execution."""
+        return await self.client.pause_queue()
+
+    async def _handle_resume_queue(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle resume_queue tool execution."""
+        return await self.client.resume_queue()
+
+    async def _handle_pause_download(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle pause_download tool execution."""
+        nzo_id = arguments.get("nzo_id")
+
+        # Validate required argument
+        if not nzo_id or not isinstance(nzo_id, str) or not nzo_id.strip():
+            raise ValueError("nzo_id is required and must be a non-empty string")
+
+        return await self.client.pause_download(nzo_id=nzo_id)
+
+    async def _handle_resume_download(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle resume_download tool execution."""
+        nzo_id = arguments.get("nzo_id")
+
+        # Validate required argument
+        if not nzo_id or not isinstance(nzo_id, str) or not nzo_id.strip():
+            raise ValueError("nzo_id is required and must be a non-empty string")
+
+        return await self.client.resume_download(nzo_id=nzo_id)
+
+    async def _handle_delete_download(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle delete_download tool execution."""
+        nzo_id = arguments.get("nzo_id")
+        delete_files = arguments.get("delete_files", False)
+
+        # Validate required argument
+        if not nzo_id or not isinstance(nzo_id, str) or not nzo_id.strip():
+            raise ValueError("nzo_id is required and must be a non-empty string")
+
+        return await self.client.delete_download(nzo_id=nzo_id, delete_files=delete_files)
+
+    async def _handle_get_status(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle get_status tool execution."""
+        return await self.client.get_status()
 
     async def start(self) -> None:
         """

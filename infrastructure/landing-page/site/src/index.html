@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoArr - Intelligent Media Automation</title>
+    <meta
+      name="description"
+      content="AutoArr brings AI-powered intelligence to your media automation stack. Smart configuration auditing, automatic download recovery, and natural language content requests."
+    />
+
+    <!-- Google Analytics (production only - injected at build time) -->
+    <!-- GTAG_PLACEHOLDER -->
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Cloudflare Turnstile -->
+    <script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      async
+      defer
+    ></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <!-- Hero Section -->
+    <header class="hero">
+      <nav class="nav">
+        <div class="logo">
+          <svg
+            class="logo-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
+          </svg>
+          <span class="logo-text">AutoArr</span>
+        </div>
+        <div class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="/guide">User Guide</a>
+          <a href="#interest" class="btn btn-primary btn-sm">Get Notified</a>
+        </div>
+      </nav>
+
+      <div class="hero-content">
+        <h1 class="hero-title">
+          <span class="gradient-text">Intelligent</span> Media Automation
+        </h1>
+        <p class="hero-subtitle">
+          Stop babysitting your downloads. AutoArr brings AI-powered
+          intelligence to SABnzbd, Sonarr, Radarr, and Plex - automatically
+          fixing failures, optimizing settings, and handling content requests in
+          plain English.
+        </p>
+        <div class="hero-cta">
+          <a href="#interest" class="btn btn-primary btn-lg">Express Interest</a>
+          <a href="#features" class="btn btn-secondary btn-lg">Learn More</a>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="dashboard-preview">
+          <div class="preview-header">
+            <div class="preview-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="preview-title">AutoArr Dashboard</span>
+          </div>
+          <div class="preview-content">
+            <div class="preview-card success">
+              <span class="status-icon">&#10003;</span>
+              <div>
+                <strong>Configuration Audit</strong>
+                <p>All services optimized</p>
+              </div>
+            </div>
+            <div class="preview-card info">
+              <span class="status-icon">&#9889;</span>
+              <div>
+                <strong>Auto-Recovery</strong>
+                <p>3 downloads rescued today</p>
+              </div>
+            </div>
+            <div class="preview-card chat">
+              <span class="status-icon">&#128172;</span>
+              <div>
+                <strong>"Download The Bear S3"</strong>
+                <p>Added to Sonarr, monitoring...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+      <div class="container">
+        <h2 class="section-title">Why AutoArr?</h2>
+        <p class="section-subtitle">
+          Your media stack works hard. AutoArr makes it work smarter.
+        </p>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 12l2 2 4-4" />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+            </div>
+            <h3>Configuration Intelligence</h3>
+            <p>
+              AI-powered auditing identifies misconfigurations, suggests
+              optimizations, and explains the "why" behind every recommendation.
+              No more guessing at settings.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <h3>Automatic Recovery</h3>
+            <p>
+              Failed downloads? AutoArr detects failures, tries alternative
+              indexers, adjusts quality settings, and keeps your queue moving -
+              all without intervention.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <h3>Natural Language Requests</h3>
+            <p>
+              "Download the latest season of Shogun" or "Get Dune Part Two in
+              4K". AutoArr understands what you want and routes it to the right
+              service automatically.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3>Real-Time Monitoring</h3>
+            <p>
+              Live WebSocket updates show exactly what's happening across your
+              entire stack. Activity logs, health scores, and instant
+              notifications.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3>Privacy First</h3>
+            <p>
+              100% self-hosted. Your data never leaves your network. Open source
+              (GPL-3.0) with optional premium cloud features that connect
+              outbound - no firewall holes needed.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+              </svg>
+            </div>
+            <h3>Docker Native</h3>
+            <p>
+              One container. All your services connected via MCP (Model Context
+              Protocol). Deploy on any Docker host, Synology NAS, or
+              Kubernetes cluster.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+      <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">
+          AutoArr acts as an intelligent orchestration layer for your existing stack.
+        </p>
+
+        <div class="architecture-diagram">
+          <div class="arch-layer arch-user">
+            <span class="arch-label">You</span>
+            <div class="arch-box">Chat Interface / Dashboard</div>
+          </div>
+          <div class="arch-arrow">&#8595;</div>
+          <div class="arch-layer arch-autoarr">
+            <span class="arch-label">AutoArr</span>
+            <div class="arch-box">
+              <div class="arch-features">
+                <span>LLM Intelligence</span>
+                <span>Config Auditing</span>
+                <span>Auto-Recovery</span>
+              </div>
+            </div>
+          </div>
+          <div class="arch-arrow">&#8595;</div>
+          <div class="arch-layer arch-services">
+            <span class="arch-label">Your Services</span>
+            <div class="arch-services-grid">
+              <div class="arch-service sabnzbd">SABnzbd</div>
+              <div class="arch-service sonarr">Sonarr</div>
+              <div class="arch-service radarr">Radarr</div>
+              <div class="arch-service plex">Plex</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interest Form Section -->
+    <section id="interest" class="interest-section">
+      <div class="container">
+        <h2 class="section-title">Stay in the Loop</h2>
+        <p class="section-subtitle">
+          AutoArr is in active development. Let us know your interest level and
+          we'll keep you updated on progress.
+        </p>
+
+        <form id="interest-form" class="interest-form">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              placeholder="you@example.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="radio-group-label">How interested are you?</label>
+            <div class="radio-group">
+              <label class="radio-option excited">
+                <input type="radio" name="interest" value="excited" required />
+                <span class="radio-card">
+                  <span class="radio-icon">&#128293;</span>
+                  <span class="radio-title">Really Interested!</span>
+                  <span class="radio-desc">This is what I've been missing</span>
+                </span>
+              </label>
+
+              <label class="radio-option curious">
+                <input type="radio" name="interest" value="curious" />
+                <span class="radio-card">
+                  <span class="radio-icon">&#129300;</span>
+                  <span class="radio-title">Curious</span>
+                  <span class="radio-desc">Not sure how this can help yet</span>
+                </span>
+              </label>
+
+              <label class="radio-option informed">
+                <input type="radio" name="interest" value="informed" />
+                <span class="radio-card">
+                  <span class="radio-icon">&#128236;</span>
+                  <span class="radio-title">Keep Me Informed</span>
+                  <span class="radio-desc">Not sure, but sounds interesting</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="services">Which services do you use? (optional)</label>
+            <div class="checkbox-group">
+              <label class="checkbox-option">
+                <input type="checkbox" name="services" value="sabnzbd" />
+                <span>SABnzbd</span>
+              </label>
+              <label class="checkbox-option">
+                <input type="checkbox" name="services" value="nzbget" />
+                <span>NZBGet</span>
+              </label>
+              <label class="checkbox-option">
+                <input type="checkbox" name="services" value="sonarr" />
+                <span>Sonarr</span>
+              </label>
+              <label class="checkbox-option">
+                <input type="checkbox" name="services" value="radarr" />
+                <span>Radarr</span>
+              </label>
+              <label class="checkbox-option">
+                <input type="checkbox" name="services" value="plex" />
+                <span>Plex</span>
+              </label>
+              <label class="checkbox-option">
+                <input type="checkbox" name="services" value="jellyfin" />
+                <span>Jellyfin</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Cloudflare Turnstile Widget -->
+          <div
+            class="cf-turnstile"
+            data-sitekey="TURNSTILE_SITE_KEY_PLACEHOLDER"
+            data-callback="onTurnstileSuccess"
+            data-theme="dark"
+          ></div>
+
+          <button type="submit" class="btn btn-primary btn-lg btn-full" disabled>
+            <span class="btn-text">Submit</span>
+            <span class="btn-loading">Submitting...</span>
+          </button>
+
+          <div class="form-message" id="form-message"></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <div class="logo">
+              <svg
+                class="logo-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+              <span class="logo-text">AutoArr</span>
+            </div>
+            <p>Intelligent media automation for everyone.</p>
+          </div>
+          <div class="footer-links">
+            <h4>Project</h4>
+            <a href="https://github.com/yourusername/autoarr" target="_blank" rel="noopener"
+              >GitHub</a
+            >
+            <a href="/guide">User Guide</a>
+            <a href="https://github.com/yourusername/autoarr/blob/main/docs/QUICK-START.md" target="_blank" rel="noopener"
+              >Documentation</a
+            >
+            <a href="https://github.com/yourusername/autoarr/blob/main/LICENSE" target="_blank" rel="noopener"
+              >License (GPL-3.0)</a
+            >
+          </div>
+          <div class="footer-links">
+            <h4>Legal</h4>
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2024 AutoArr. Open source software.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/main.js"></script>
+  </body>
+</html>

@@ -10,7 +10,6 @@
  */
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { Message, RequestInfo, RequestStatus } from '../types/chat';
 
 interface ChatStore {
@@ -96,10 +95,11 @@ const saveToStorage = (messages: Message[]): void => {
 };
 
 export const useChatStore = create<ChatStore>()(
-  persist(
-    (set, get) => ({
-      // Initial State
-      messages: loadFromStorage(),
+  // Persistence disabled - chat starts fresh on each page load
+  // To re-enable, wrap with persist() middleware
+  (set, get) => ({
+    // Initial State - start with empty messages
+    messages: [],
       isTyping: false,
       currentRequestId: null,
       currentRequests: new Map(),
@@ -182,7 +182,7 @@ export const useChatStore = create<ChatStore>()(
 
           // Filter by content type
           if (filter.type && msg.metadata?.classification) {
-            if (msg.metadata.classification.type !== filter.type) {
+            if (msg.metadata.classification.content_type !== filter.type) {
               return false;
             }
           }
@@ -197,14 +197,7 @@ export const useChatStore = create<ChatStore>()(
           return true;
         });
       },
-    }),
-    {
-      name: 'chat-storage',
-      partialize: (state) => ({
-        messages: state.messages,
-      }),
-    }
-  )
+    })
 );
 
 // Helper hook to add system message

@@ -26,8 +26,11 @@ from pydantic import BaseModel
 class LLMMessage(BaseModel):
     """Standard message format for all LLM providers."""
 
-    role: str  # "system", "user", "assistant"
+    role: str  # "system", "user", "assistant", "tool"
     content: str
+    tool_calls: Optional[List[Dict[str, Any]]] = None  # For assistant messages with tool calls
+    tool_call_id: Optional[str] = None  # For tool result messages
+    name: Optional[str] = None  # Tool name for tool result messages
 
 
 class LLMResponse(BaseModel):

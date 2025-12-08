@@ -2,28 +2,69 @@
 
 ## Overview
 
-AutoArr takes security seriously. This document outlines our security practices, known issues, and how to report vulnerabilities.
+AutoArr takes security seriously. This document outlines our security practices, supply chain security, and how to report vulnerabilities.
 
 ## Supported Versions
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| 0.8.x   | :white_check_mark: |
+| < 0.8   | :x:                |
+
+## Container Security
+
+AutoArr implements enterprise-grade container security practices.
+
+### Supply Chain Security
+
+All official container images include:
+
+- **SBOM (Software Bill of Materials)**: CycloneDX format attached to images
+- **Cosign Signatures**: Keyless Sigstore signing for image verification
+- **SLSA Provenance**: Build provenance attestations (Level 2)
+- **Trivy Scanning**: Blocking scans for HIGH/CRITICAL vulnerabilities
+
+### Verifying Container Images
+
+```bash
+# Verify image signature (requires cosign installed)
+cosign verify ghcr.io/feawservices/autoarr:latest \
+  --certificate-identity-regexp="https://github.com/FEAWServices/autoarr" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com"
+
+# Download and view SBOM
+cosign download sbom ghcr.io/feawservices/autoarr:latest > sbom.json
+
+# Verify SLSA provenance
+cosign verify-attestation ghcr.io/feawservices/autoarr:latest \
+  --type slsaprovenance \
+  --certificate-identity-regexp="https://github.com/FEAWServices/autoarr" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com"
+```
+
+### Official Image Registries
+
+All releases are published to both registries with identical security attestations:
+
+| Registry                  | Image                                   |
+| ------------------------- | --------------------------------------- |
+| GitHub Container Registry | `ghcr.io/feawservices/autoarr:latest`   |
+| Docker Hub                | `docker.io/feawservices/autoarr:latest` |
 
 ## Security Features
 
 ### Authentication & Authorization
 
-- [ ] **API Key Authentication**: Not yet implemented
-- [ ] **JWT Token Support**: Planned for future release
 - [x] **CORS Configuration**: Properly configured for local development
-- [ ] **Rate Limiting**: Planned for future release
+- [x] **Rate Limiting**: Implemented with configurable limits per endpoint
+- [ ] **API Key Authentication**: Planned for v1.0
+- [ ] **JWT Token Support**: Planned for v1.1
 
 ### Data Protection
 
 - [x] **Environment Variables**: All secrets loaded from environment
 - [x] **Secure Configuration**: No hardcoded credentials in code
+- [x] **API Key Masking**: Sensitive keys masked in UI and logs
 - [ ] **Encryption at Rest**: Database encryption (planned)
 - [ ] **Encryption in Transit**: HTTPS enforced in production (deployment-dependent)
 
@@ -32,7 +73,7 @@ AutoArr takes security seriously. This document outlines our security practices,
 - [x] **Pydantic Validation**: All API inputs validated
 - [x] **SQL Injection Protection**: Parameterized queries via SQLAlchemy ORM
 - [x] **XSS Protection**: Input sanitization
-- [ ] **CSRF Protection**: Token-based API (not applicable for cookie-less auth)
+- [x] **CSRF Protection**: Token-based API (stateless)
 
 ### Secure Headers
 
@@ -44,8 +85,9 @@ AutoArr takes security seriously. This document outlines our security practices,
 ### Dependencies
 
 - [x] **Dependency Management**: Poetry for lockfile-based dependencies
-- [ ] **Automated Security Scans**: Dependabot configured
-- [ ] **Regular Updates**: Quarterly dependency reviews
+- [x] **Automated Security Scans**: Dependabot configured
+- [x] **Vulnerability Scanning**: Trivy scans in CI/CD
+- [x] **Static Analysis**: Bandit for Python security linting
 
 ## Security Checklist
 
@@ -54,13 +96,13 @@ AutoArr takes security seriously. This document outlines our security practices,
 - [x] No hardcoded secrets (use environment variables)
 - [x] All database queries parameterized
 - [x] Input validation on all endpoints
-- [ ] Rate limiting implemented
+- [x] Rate limiting implemented
 - [x] CORS configured properly
-- [ ] HTTPS enforced in production
 - [x] Secrets stored securely in environment
 - [x] Dependencies managed via Poetry
+- [x] Pre-commit hooks for security checks
+- [ ] HTTPS enforced in production (deployment-dependent)
 - [ ] CSP headers configured
-- [ ] Authentication tokens secure
 
 ### Production Deployment
 
@@ -68,7 +110,6 @@ AutoArr takes security seriously. This document outlines our security practices,
 - [ ] Use HTTPS/TLS for all connections
 - [ ] Set `app_env=production` in environment
 - [ ] Restrict CORS origins to production domains
-- [ ] Enable rate limiting
 - [ ] Configure firewall rules
 - [ ] Use secure database credentials
 - [ ] Enable database connection encryption
@@ -82,6 +123,7 @@ AutoArr takes security seriously. This document outlines our security practices,
 - [x] `SONARR_API_KEY`: Load from environment
 - [x] `RADARR_API_KEY`: Load from environment
 - [x] `PLEX_TOKEN`: Load from environment
+- [x] `CLAUDE_API_KEY`: Load from environment
 - [x] `DATABASE_URL`: Load from environment (if used)
 - [x] `REDIS_URL`: Load from environment (if used)
 
@@ -94,9 +136,10 @@ SABNZBD_API_KEY=your-sabnzbd-api-key
 SONARR_API_KEY=your-sonarr-api-key
 RADARR_API_KEY=your-radarr-api-key
 PLEX_TOKEN=your-plex-token
-DATABASE_URL=postgresql://user:password@localhost/autoarr
+CLAUDE_API_KEY=your-claude-api-key
+DATABASE_URL=sqlite:///./autoarr.db
 APP_ENV=production
-CORS_ORIGINS=["https://your-domain.com"]
+CORS_ORIGINS=https://your-domain.com
 ```
 
 ## Known Security Issues
@@ -111,12 +154,11 @@ None currently identified.
 
 ### Medium
 
-- **Rate Limiting**: Not yet implemented. May be vulnerable to DoS attacks.
-- **Authentication**: No authentication system implemented yet. All endpoints are publicly accessible.
+- **Authentication**: No authentication system implemented yet. Intended for trusted home network deployment behind reverse proxy.
 
 ### Low
 
-- **WebSocket Security**: WebSocket implementation pending, security to be implemented.
+None currently identified.
 
 ## Security Best Practices
 
@@ -138,7 +180,7 @@ None currently identified.
 4. **Monitor logs**: Set up log aggregation and alerting
 5. **Regular backups**: Backup database and configuration regularly
 6. **Update regularly**: Apply security patches promptly
-7. **Use container security**: Scan Docker images for vulnerabilities
+7. **Verify container images**: Use cosign to verify image signatures
 
 ## Reporting a Vulnerability
 
@@ -147,7 +189,7 @@ None currently identified.
 If you discover a security vulnerability, please:
 
 1. **DO NOT** create a public GitHub issue
-2. Email security concerns to: [your-security-email@example.com]
+2. Email security concerns to: **security@autoarr.io**
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
@@ -174,6 +216,10 @@ We follow responsible disclosure:
 4. Fix is released
 5. Public disclosure after 90 days or after fix is released
 
+### Credit
+
+We appreciate security researchers who help improve AutoArr. With your permission, we will credit you in our release notes and security advisories.
+
 ## Security Testing
 
 ### Automated Tests
@@ -181,19 +227,24 @@ We follow responsible disclosure:
 We maintain comprehensive security tests:
 
 - **Static Analysis**: Bandit for Python code scanning
-- **Dependency Scanning**: Dependabot for known vulnerabilities
+- **Dependency Scanning**: Dependabot + Trivy for known vulnerabilities
+- **Container Scanning**: Trivy HIGH/CRITICAL blocking in CI and releases
 - **Unit Tests**: Security-focused test suite (`tests/security/`)
 - **Integration Tests**: API security tests
-- **E2E Tests**: Complete workflow security testing
+- **CodeQL Analysis**: Continuous code scanning for vulnerabilities
 
-### Manual Testing
+### CI/CD Security
 
-Regular manual security audits include:
+Every build includes:
 
-- Penetration testing
-- Code review for security issues
-- Dependency vulnerability assessment
-- Configuration review
+- Bandit static analysis
+- Safety dependency checks
+- Trivy container vulnerability scanning (blocks on HIGH/CRITICAL)
+- SBOM generation (SPDX format)
+- SLSA provenance attestations
+- Security scan reports attached to releases
+
+**Detailed documentation**: See [docs/SECURITY_SCANNING.md](docs/SECURITY_SCANNING.md)
 
 ## Security Resources
 
@@ -201,15 +252,18 @@ Regular manual security audits include:
 
 - **Bandit**: Python security linter
 - **Safety**: Dependency vulnerability scanner
-- **OWASP ZAP**: Web application security scanner (recommended)
+- **Trivy**: Container vulnerability scanner
+- **Cosign**: Container image signing
+- **Syft**: SBOM generation
 - **Dependabot**: Automated dependency updates
 
 ### References
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [FastAPI Security](https://fastapi.tiangolo.com/tutorial/security/)
-- [SQLAlchemy Security](https://docs.sqlalchemy.org/en/20/faq/security.html)
 - [Docker Security](https://docs.docker.com/engine/security/)
+- [Sigstore](https://sigstore.dev/)
+- [SLSA](https://slsa.dev/)
 
 ## Compliance
 
@@ -217,44 +271,22 @@ Regular manual security audits include:
 
 - **OWASP Top 10**: Mitigation strategies implemented
 - **CWE Top 25**: Common weakness coverage
-- **NIST Cybersecurity Framework**: Aligned security practices
+- **Supply Chain Security**: SBOM + provenance attestations
 
 ### Privacy
 
 - **No PII Collection**: AutoArr does not collect personal information
 - **Local Deployment**: All data stays in your infrastructure
 - **No Telemetry**: No usage data sent to external services
-
-## Security Roadmap
-
-### Q1 2025
-
-- [ ] Implement API key authentication
-- [ ] Add rate limiting
-- [ ] Implement audit logging
-- [ ] Add security headers middleware
-
-### Q2 2025
-
-- [ ] Implement JWT authentication
-- [ ] Add role-based access control (RBAC)
-- [ ] Implement encryption at rest
-- [ ] Add security monitoring/alerting
-
-### Q3 2025
-
-- [ ] Third-party security audit
-- [ ] Penetration testing
-- [ ] Security certification (if applicable)
+- **Open Source**: Full code transparency (GPL-3.0)
 
 ## Contact
 
 For security-related questions or concerns:
 
-- **Email**: security@autoarr.example.com
-- **GitHub Security Advisories**: [Link to security advisories]
-- **Discord**: [Link to security channel] (for non-sensitive discussions)
+- **Email**: security@autoarr.io
+- **GitHub Security Advisories**: [Security Advisories](https://github.com/FEAWServices/autoarr/security/advisories)
 
 ---
 
-Last updated: 2025-10-08
+Last updated: 2025-12-08

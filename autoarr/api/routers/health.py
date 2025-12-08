@@ -22,6 +22,8 @@ This module provides health check endpoints for monitoring the overall
 system health and individual service health.
 """
 
+import asyncio
+import logging
 import time
 from datetime import datetime
 from typing import Any, Dict
@@ -34,6 +36,16 @@ from ..dependencies import get_orchestrator
 from ..models import HealthCheckResponse, ServiceHealth
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+# Global warmup state
+_warmup_complete = False
+_warmup_timestamp: str | None = None
+
+# LLM health cache (avoid hitting OpenRouter API on every request)
+_llm_health_cache: Dict[str, Any] | None = None
+_llm_health_cache_time: float = 0
+_LLM_HEALTH_CACHE_TTL = 60  # Cache for 60 seconds
 
 
 @router.get("/health", response_model=HealthCheckResponse, tags=["health"])
@@ -191,69 +203,6 @@ async def database_health() -> Dict[str, Any]:
         }
 
 
-@router.get("/health/{service}", response_model=ServiceHealth, tags=["health"])
-async def service_health(
-    service: str,
-    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
-) -> ServiceHealth:
-    """
-    Individual service health check.
-
-    Check the health of a specific MCP service.
-
-    Args:
-        service: Service name (sabnzbd, sonarr, radarr, or plex)
-
-    Returns:
-        ServiceHealth: Service health status
-
-    Raises:
-        HTTPException: If service name is invalid or service is not connected
-
-    Example:
-        ```
-        GET /health/sabnzbd
-        {
-            "healthy": true,
-            "latency_ms": 45.2,
-            "error": null,
-            "last_check": "2025-01-15T10:30:00Z",
-            "circuit_breaker_state": "closed"
-        }
-        ```
-    """
-    # Validate service name
-    valid_services = ["sabnzbd", "sonarr", "radarr", "plex"]
-    if service not in valid_services:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid service name. Must be one of: {', '.join(valid_services)}",
-        )
-
-    # Check if service is connected by checking if it's in _clients
-    if service not in orchestrator._clients:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Service '{service}' is not connected",
-        )
-
-    # Perform health check
-    start_time = time.time()
-    is_healthy = await orchestrator.health_check(service)
-    latency = (time.time() - start_time) * 1000  # Convert to milliseconds
-
-    # Get circuit breaker state
-    cb_state = orchestrator.get_circuit_breaker_state(service)
-
-    return ServiceHealth(
-        healthy=is_healthy,
-        latency_ms=round(latency, 2) if is_healthy else None,
-        error=None if is_healthy else "Service health check failed",
-        last_check=datetime.utcnow().isoformat() + "Z",
-        circuit_breaker_state=cb_state.get("state", "unknown"),
-    )
-
-
 @router.get("/health/circuit-breaker/{service}", tags=["health"])
 async def circuit_breaker_status(
     service: str,
@@ -290,3 +239,448 @@ async def circuit_breaker_status(
 
     result: Dict[str, Any] = orchestrator.get_circuit_breaker_state(service)
     return result
+
+
+# ============================================================================
+# Warmup Endpoints
+# ============================================================================
+
+
+async def perform_warmup() -> Dict[str, Any]:
+    """
+    Perform application warmup to preload caches and initialize resources.
+
+    This is called automatically on startup and can be triggered manually.
+
+    Returns:
+        dict: Warmup results with timing information
+    """
+    global _warmup_complete, _warmup_timestamp
+
+    start_time = time.time()
+    results: Dict[str, Any] = {
+        "tasks": {},
+        "errors": [],
+    }
+
+    # Task 1: Warm up database connection pool
+    try:
+        task_start = time.time()
+        from ..database import get_database
+
+        db = get_database()
+        async with db.session() as session:
+            from sqlalchemy import text
+
+            await session.execute(text("SELECT 1"))
+        results["tasks"]["database"] = {
+            "status": "ok",
+            "duration_ms": round((time.time() - task_start) * 1000, 2),
+        }
+        logger.info("Warmup: Database connection pool initialized")
+    except Exception as e:
+        results["tasks"]["database"] = {"status": "error", "error": str(e)}
+        results["errors"].append(f"database: {e}")
+        logger.warning(f"Warmup: Database warmup failed: {e}")
+
+    # Task 2: Preload onboarding state (frequently accessed on startup)
+    try:
+        task_start = time.time()
+        from ..database import OnboardingStateRepository, get_database
+
+        db = get_database()
+        repo = OnboardingStateRepository(db)
+        await repo.get_or_create_state()
+        results["tasks"]["onboarding_state"] = {
+            "status": "ok",
+            "duration_ms": round((time.time() - task_start) * 1000, 2),
+        }
+        logger.info("Warmup: Onboarding state loaded")
+    except Exception as e:
+        results["tasks"]["onboarding_state"] = {"status": "skipped", "error": str(e)}
+        logger.debug(f"Warmup: Onboarding state skipped: {e}")
+
+    # Task 3: Preload LLM settings (if configured)
+    try:
+        task_start = time.time()
+        from ..database import LLMSettingsRepository, get_database
+
+        db = get_database()
+        llm_repo = LLMSettingsRepository(db)
+        await llm_repo.get_settings()
+        results["tasks"]["llm_settings"] = {
+            "status": "ok",
+            "duration_ms": round((time.time() - task_start) * 1000, 2),
+        }
+        logger.info("Warmup: LLM settings loaded")
+    except Exception as e:
+        results["tasks"]["llm_settings"] = {"status": "skipped", "error": str(e)}
+        logger.debug(f"Warmup: LLM settings skipped: {e}")
+
+    # Task 4: Initialize Python module imports (reduces first-request latency)
+    try:
+        task_start = time.time()
+        # Import heavy modules that are commonly used
+        import json  # noqa: F401
+
+        from pydantic import BaseModel  # noqa: F401
+
+        from autoarr.shared.llm.openrouter_provider import OpenRouterProvider  # noqa: F401
+        from autoarr.shared.llm.provider_factory import LLMProviderFactory  # noqa: F401
+
+        # Initialize provider factory
+        LLMProviderFactory.initialize()
+
+        results["tasks"]["module_imports"] = {
+            "status": "ok",
+            "duration_ms": round((time.time() - task_start) * 1000, 2),
+        }
+        logger.info("Warmup: Module imports completed")
+    except Exception as e:
+        results["tasks"]["module_imports"] = {"status": "error", "error": str(e)}
+        results["errors"].append(f"module_imports: {e}")
+
+    # Task 5: Preload service settings
+    try:
+        task_start = time.time()
+        from ..database import SettingsRepository, get_database
+
+        db = get_database()
+        settings_repo = SettingsRepository(db)
+        await settings_repo.get_all_service_settings()
+        results["tasks"]["service_settings"] = {
+            "status": "ok",
+            "duration_ms": round((time.time() - task_start) * 1000, 2),
+        }
+        logger.info("Warmup: Service settings loaded")
+    except Exception as e:
+        results["tasks"]["service_settings"] = {"status": "skipped", "error": str(e)}
+        logger.debug(f"Warmup: Service settings skipped: {e}")
+
+    # Calculate totals
+    total_duration = time.time() - start_time
+    results["total_duration_ms"] = round(total_duration * 1000, 2)
+    results["success"] = len(results["errors"]) == 0
+    results["timestamp"] = datetime.utcnow().isoformat() + "Z"
+
+    # Mark warmup as complete
+    _warmup_complete = True
+    _warmup_timestamp = results["timestamp"]
+
+    logger.info(f"Warmup completed in {results['total_duration_ms']}ms")
+
+    return results
+
+
+@router.get("/health/ready", tags=["health"])
+async def readiness_check() -> Dict[str, Any]:
+    """
+    Kubernetes-style readiness probe.
+
+    Returns 200 only when the application is fully warmed up and ready
+    to serve requests. Use this for load balancer health checks.
+
+    Returns:
+        dict: Readiness status
+
+    Example:
+        ```
+        GET /health/ready
+        {
+            "ready": true,
+            "warmup_complete": true,
+            "warmup_timestamp": "2025-01-15T10:30:00Z"
+        }
+        ```
+    """
+    if not _warmup_complete:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Application is still warming up",
+        )
+
+    return {
+        "ready": True,
+        "warmup_complete": _warmup_complete,
+        "warmup_timestamp": _warmup_timestamp,
+    }
+
+
+@router.get("/health/live", tags=["health"])
+async def liveness_check() -> Dict[str, Any]:
+    """
+    Kubernetes-style liveness probe.
+
+    Returns 200 if the application is running (even if not fully ready).
+    Use this to detect if the application is stuck and needs restart.
+
+    Returns:
+        dict: Liveness status
+
+    Example:
+        ```
+        GET /health/live
+        {
+            "alive": true,
+            "timestamp": "2025-01-15T10:30:00Z"
+        }
+        ```
+    """
+    return {
+        "alive": True,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+    }
+
+
+@router.post("/health/warmup", tags=["health"])
+async def trigger_warmup() -> Dict[str, Any]:
+    """
+    Manually trigger application warmup.
+
+    This can be called to refresh caches or after configuration changes.
+
+    Returns:
+        dict: Warmup results
+
+    Example:
+        ```
+        POST /health/warmup
+        {
+            "success": true,
+            "total_duration_ms": 45.2,
+            "tasks": {
+                "database": {"status": "ok", "duration_ms": 12.3},
+                "onboarding_state": {"status": "ok", "duration_ms": 8.1},
+                ...
+            }
+        }
+        ```
+    """
+    return await perform_warmup()
+
+
+@router.get("/health/llm", tags=["health"])
+async def llm_health() -> Dict[str, Any]:
+    """
+    LLM/AI service health check.
+
+    Check if the LLM provider (OpenRouter) is configured and accessible.
+    Results are cached for 60 seconds to avoid excessive API calls.
+
+    Returns:
+        dict: LLM health status
+
+    Example:
+        ```
+        GET /health/llm
+        {
+            "healthy": true,
+            "provider": "openrouter",
+            "model": "anthropic/claude-3.5-sonnet",
+            "latency_ms": 234.5,
+            "error": null,
+            "cached": false
+        }
+        ```
+    """
+    global _llm_health_cache, _llm_health_cache_time
+
+    # Return cached result if still valid
+    if _llm_health_cache and (time.time() - _llm_health_cache_time) < _LLM_HEALTH_CACHE_TTL:
+        return {**_llm_health_cache, "cached": True}
+
+    from ..database import LLMSettingsRepository, get_database
+
+    try:
+        db = get_database()
+        llm_repo = LLMSettingsRepository(db)
+        settings = await llm_repo.get_settings()
+
+        if not settings or not settings.api_key:
+            result = {
+                "healthy": False,
+                "provider": None,
+                "model": None,
+                "latency_ms": None,
+                "error": "LLM not configured",
+            }
+            _llm_health_cache = result
+            _llm_health_cache_time = time.time()
+            return {**result, "cached": False}
+
+        # Test connection to OpenRouter
+        from autoarr.shared.llm.openrouter_provider import OpenRouterProvider
+
+        start_time = time.time()
+        provider = OpenRouterProvider({"api_key": settings.api_key})
+        is_available = await provider.is_available()
+        latency = (time.time() - start_time) * 1000
+
+        if is_available:
+            result = {
+                "healthy": True,
+                "provider": settings.provider or "openrouter",
+                "model": settings.selected_model,
+                "latency_ms": round(latency, 2),
+                "error": None,
+            }
+        else:
+            result = {
+                "healthy": False,
+                "provider": settings.provider or "openrouter",
+                "model": settings.selected_model,
+                "latency_ms": round(latency, 2),
+                "error": "Failed to connect to OpenRouter",
+            }
+
+        _llm_health_cache = result
+        _llm_health_cache_time = time.time()
+        return {**result, "cached": False}
+
+    except Exception as e:
+        logger.warning(f"LLM health check failed: {e}")
+        result = {
+            "healthy": False,
+            "provider": None,
+            "model": None,
+            "latency_ms": None,
+            "error": str(e),
+        }
+        _llm_health_cache = result
+        _llm_health_cache_time = time.time()
+        return {**result, "cached": False}
+
+
+# NOTE: This dynamic route MUST come AFTER all specific /health/* routes
+# to prevent FastAPI from matching "ready", "live", "database", etc. as service names
+@router.get("/health/{service}", response_model=ServiceHealth, tags=["health"])
+async def service_health(
+    service: str,
+) -> ServiceHealth:
+    """
+    Individual service health check.
+
+    Check the health of a specific MCP service using direct HTTP calls.
+
+    Args:
+        service: Service name (sabnzbd, sonarr, radarr, or plex)
+
+    Returns:
+        ServiceHealth: Service health status
+
+    Raises:
+        HTTPException: If service name is invalid or service is not connected
+
+    Example:
+        ```
+        GET /health/sabnzbd
+        {
+            "healthy": true,
+            "latency_ms": 45.2,
+            "error": null,
+            "last_check": "2025-01-15T10:30:00Z",
+            "circuit_breaker_state": "closed"
+        }
+        ```
+    """
+    import httpx
+
+    from ..config import get_settings
+    from ..database import SettingsRepository, get_database
+
+    # Validate service name
+    valid_services = ["sabnzbd", "sonarr", "radarr", "plex"]
+    if service not in valid_services:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid service name. Must be one of: {', '.join(valid_services)}",
+        )
+
+    # Get service configuration from database (priority) or environment
+    settings = get_settings()
+    service_url = None
+    service_api_key = None
+    service_enabled = False
+
+    try:
+        db = get_database()
+        repo = SettingsRepository(db)
+        db_settings = await repo.get_service_settings(service)
+        if db_settings and db_settings.enabled and db_settings.api_key_or_token:
+            service_url = db_settings.url
+            service_api_key = db_settings.api_key_or_token
+            service_enabled = True
+    except Exception:
+        pass  # Fall through to env vars
+
+    # Fall back to environment variables
+    if not service_enabled:
+        if service == "sabnzbd":
+            service_url = settings.sabnzbd_url
+            service_api_key = settings.sabnzbd_api_key
+            service_enabled = settings.sabnzbd_enabled and bool(settings.sabnzbd_api_key)
+        elif service == "sonarr":
+            service_url = settings.sonarr_url
+            service_api_key = settings.sonarr_api_key
+            service_enabled = settings.sonarr_enabled and bool(settings.sonarr_api_key)
+        elif service == "radarr":
+            service_url = settings.radarr_url
+            service_api_key = settings.radarr_api_key
+            service_enabled = settings.radarr_enabled and bool(settings.radarr_api_key)
+        elif service == "plex":
+            service_url = settings.plex_url
+            service_api_key = settings.plex_token
+            service_enabled = settings.plex_enabled and bool(settings.plex_token)
+
+    # Return unconfigured status if service is not enabled
+    if not service_enabled or not service_api_key:
+        return ServiceHealth(
+            healthy=False,
+            latency_ms=None,
+            error="Service not configured",
+            last_check=datetime.utcnow().isoformat() + "Z",
+            circuit_breaker_state="unconfigured",
+        )
+
+    # Perform direct HTTP health check
+    start_time = time.time()
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            if service == "sabnzbd":
+                # SABnzbd health check - get version
+                url = f"{service_url.rstrip('/')}/api?mode=version&apikey={service_api_key}&output=json"
+                response = await client.get(url)
+                is_healthy = response.status_code == 200
+            elif service in ["sonarr", "radarr"]:
+                # *arr services - use system/status endpoint
+                url = f"{service_url.rstrip('/')}/api/v3/system/status"
+                headers = {"X-Api-Key": service_api_key}
+                response = await client.get(url, headers=headers)
+                is_healthy = response.status_code == 200
+            elif service == "plex":
+                # Plex - identity endpoint
+                url = f"{service_url.rstrip('/')}/identity"
+                headers = {"X-Plex-Token": service_api_key}
+                response = await client.get(url, headers=headers)
+                is_healthy = response.status_code == 200
+            else:
+                is_healthy = False
+
+        latency = (time.time() - start_time) * 1000
+
+        return ServiceHealth(
+            healthy=is_healthy,
+            latency_ms=round(latency, 2) if is_healthy else None,
+            error=None if is_healthy else "Service health check failed",
+            last_check=datetime.utcnow().isoformat() + "Z",
+            circuit_breaker_state="closed" if is_healthy else "open",
+        )
+    except Exception as e:
+        latency = (time.time() - start_time) * 1000
+        return ServiceHealth(
+            healthy=False,
+            latency_ms=round(latency, 2),
+            error=str(e),
+            last_check=datetime.utcnow().isoformat() + "Z",
+            circuit_breaker_state="open",
+        )

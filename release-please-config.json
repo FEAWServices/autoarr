@@ -27,9 +27,11 @@
       "extra-files": [
         "pyproject.toml",
         "autoarr/ui/package.json",
-        "sonar-project.properties"
+        "sonar-project.properties",
+        ".github/release-notes-template.md"
       ],
-      "versioning": "default"
+      "versioning": "default",
+      "release-notes-header": ".github/release-notes-header.md"
     }
   },
   "release-type": "python",

@@ -23,7 +23,7 @@ managing the MCP Orchestrator lifecycle and providing it to endpoints.
 """
 
 import logging
-from typing import AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Dict, Optional
 
 from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
@@ -33,15 +33,47 @@ from .config import Settings, get_settings
 logger = logging.getLogger(__name__)
 
 
-def get_orchestrator_config(settings: Optional[Settings] = None) -> MCPOrchestratorConfig:
+async def get_db_service_settings() -> Dict[str, Dict[str, Any]]:
+    """
+    Fetch service settings from the database.
+
+    Returns a dict keyed by service name with url, api_key, enabled, timeout.
+    Returns empty dict if database not available.
+    """
+    try:
+        from .database import SettingsRepository, get_database
+
+        db = get_database()
+        repo = SettingsRepository(db)
+        # Returns dict[str, ServiceSettings] - already keyed by service name
+        all_settings = await repo.get_all_service_settings()
+
+        result: Dict[str, Dict[str, Any]] = {}
+        for service_name, service_setting in all_settings.items():
+            result[service_name] = {
+                "url": service_setting.url,
+                "api_key": service_setting.api_key_or_token,
+                "enabled": service_setting.enabled,
+                "timeout": service_setting.timeout or 30.0,
+            }
+        return result
+    except Exception as e:
+        logger.debug(f"Could not load database service settings: {e}")
+        return {}
+
+
+def get_orchestrator_config(
+    settings: Optional[Settings] = None,
+    db_settings: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> MCPOrchestratorConfig:
     """
     Create MCP Orchestrator configuration from application settings.
 
-    Note: No caching here since Settings objects are not hashable.
-    The get_settings() function already implements caching.
+    Settings priority: Database settings > Environment variables > Defaults.
 
     Args:
         settings: Application settings (will use get_settings() if not provided)
+        db_settings: Database service settings (optional, from get_db_service_settings())
 
     Returns:
         MCPOrchestratorConfig: Orchestrator configuration
@@ -49,46 +81,74 @@ def get_orchestrator_config(settings: Optional[Settings] = None) -> MCPOrchestra
     if settings is None:
         settings = get_settings()
 
-    # Create server configurations
-    sabnzbd_config = None
-    if settings.sabnzbd_enabled and settings.sabnzbd_api_key:
-        sabnzbd_config = ServerConfig(
-            name="sabnzbd",
-            url=settings.sabnzbd_url,
-            api_key=settings.sabnzbd_api_key,
-            enabled=settings.sabnzbd_enabled,
-            timeout=settings.sabnzbd_timeout,
-        )
+    if db_settings is None:
+        db_settings = {}
 
-    sonarr_config = None
-    if settings.sonarr_enabled and settings.sonarr_api_key:
-        sonarr_config = ServerConfig(
-            name="sonarr",
-            url=settings.sonarr_url,
-            api_key=settings.sonarr_api_key,
-            enabled=settings.sonarr_enabled,
-            timeout=settings.sonarr_timeout,
-        )
+    # Helper to get service config with database settings taking priority
+    def get_service_config(
+        service_name: str,
+        env_url: str,
+        env_api_key: str,
+        env_enabled: bool,
+        env_timeout: float,
+    ) -> Optional[ServerConfig]:
+        """Get service config, preferring database settings over env vars."""
+        db_svc = db_settings.get(service_name, {})
 
-    radarr_config = None
-    if settings.radarr_enabled and settings.radarr_api_key:
-        radarr_config = ServerConfig(
-            name="radarr",
-            url=settings.radarr_url,
-            api_key=settings.radarr_api_key,
-            enabled=settings.radarr_enabled,
-            timeout=settings.radarr_timeout,
-        )
+        # Database settings take priority if enabled and has API key
+        if db_svc.get("enabled") and db_svc.get("api_key"):
+            return ServerConfig(
+                name=service_name,
+                url=db_svc.get("url", env_url),
+                api_key=db_svc.get("api_key", ""),
+                enabled=True,
+                timeout=db_svc.get("timeout", env_timeout),
+            )
 
-    plex_config = None
-    if settings.plex_enabled and settings.plex_token:
-        plex_config = ServerConfig(
-            name="plex",
-            url=settings.plex_url,
-            api_key=settings.plex_token,
-            enabled=settings.plex_enabled,
-            timeout=settings.plex_timeout,
-        )
+        # Fall back to env vars if configured
+        if env_enabled and env_api_key:
+            return ServerConfig(
+                name=service_name,
+                url=env_url,
+                api_key=env_api_key,
+                enabled=env_enabled,
+                timeout=env_timeout,
+            )
+
+        return None
+
+    # Create server configurations with database priority
+    sabnzbd_config = get_service_config(
+        "sabnzbd",
+        settings.sabnzbd_url,
+        settings.sabnzbd_api_key,
+        settings.sabnzbd_enabled,
+        settings.sabnzbd_timeout,
+    )
+
+    sonarr_config = get_service_config(
+        "sonarr",
+        settings.sonarr_url,
+        settings.sonarr_api_key,
+        settings.sonarr_enabled,
+        settings.sonarr_timeout,
+    )
+
+    radarr_config = get_service_config(
+        "radarr",
+        settings.radarr_url,
+        settings.radarr_api_key,
+        settings.radarr_enabled,
+        settings.radarr_timeout,
+    )
+
+    plex_config = get_service_config(
+        "plex",
+        settings.plex_url,
+        settings.plex_token,
+        settings.plex_enabled,
+        settings.plex_timeout,
+    )
 
     # Create orchestrator configuration
     return MCPOrchestratorConfig(
@@ -129,8 +189,24 @@ async def get_orchestrator() -> AsyncGenerator[MCPOrchestrator, None]:
 
     # Create orchestrator if it doesn't exist
     if _orchestrator is None:
-        config = get_orchestrator_config()
+        # Fetch database settings (priority over env vars)
+        db_settings = await get_db_service_settings()
+        config = get_orchestrator_config(db_settings=db_settings)
         _orchestrator = MCPOrchestrator(config)
+
+        # Log which services are being configured
+        services_to_connect = []
+        if config.sabnzbd:
+            services_to_connect.append("sabnzbd")
+        if config.sonarr:
+            services_to_connect.append("sonarr")
+        if config.radarr:
+            services_to_connect.append("radarr")
+        if config.plex:
+            services_to_connect.append("plex")
+
+        if services_to_connect:
+            logger.info(f"Configuring MCP servers: {', '.join(services_to_connect)}")
 
         # Connect to all enabled servers
         try:

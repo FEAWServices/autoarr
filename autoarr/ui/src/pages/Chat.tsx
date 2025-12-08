@@ -5,7 +5,7 @@ import { websocketService } from '../services/websocket';
 import { ChatMessage } from '../components/Chat/ChatMessage';
 import { TypingIndicator } from '../components/Chat/TypingIndicator';
 import { RequestStatus } from '../components/Chat/RequestStatus';
-import { Send, Trash2, Search as SearchIcon, Wifi, WifiOff, Sparkles } from 'lucide-react';
+import { Send, Trash2, Search as SearchIcon, Bot, Sparkles } from 'lucide-react';
 import { ChatSearch } from '../components/Chat/ChatSearch';
 
 export const Chat = () => {
@@ -50,16 +50,21 @@ export const Chat = () => {
     // Handle WebSocket events
     const handleWebSocketEvent = (event: {
       type: string;
-      requestId: string;
-      data: {
+      requestId?: string;
+      data?: {
         status?: string;
         progress?: number;
         eta?: string;
         title?: string;
         error?: string;
       };
-      timestamp: string;
+      timestamp?: string;
     }) => {
+      // Ignore connection events and events without data
+      if (event.type === 'connection' || !event.data || !event.requestId) {
+        return;
+      }
+
       const { requestId, data } = event;
 
       // Update request status
@@ -72,7 +77,7 @@ export const Chat = () => {
             progress: data.progress,
             eta: data.eta,
             error: data.error,
-            updatedAt: event.timestamp,
+            updatedAt: event.timestamp || new Date().toISOString(),
           });
         }
       }
@@ -83,14 +88,14 @@ export const Chat = () => {
           id: `system-${Date.now()}`,
           type: 'system',
           content: `✓ Download completed: ${data.title}`,
-          timestamp: new Date(event.timestamp),
+          timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
         });
       } else if (event.type === 'request-failed' && data.title) {
         addMessage({
           id: `system-${Date.now()}`,
           type: 'system',
           content: `✗ Download failed: ${data.title}`,
-          timestamp: new Date(event.timestamp),
+          timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
         });
       }
     };
@@ -102,7 +107,7 @@ export const Chat = () => {
     };
   }, [currentRequests, updateRequestStatus, addMessage]);
 
-  // Handle message sending
+  // Handle message sending - uses intelligent chat endpoint
   const handleSend = async () => {
     const trimmedInput = input.trim();
     if (!trimmedInput || isProcessing) return;
@@ -125,36 +130,60 @@ export const Chat = () => {
     setTyping(true);
 
     try {
-      // Send to API
-      const response = await chatService.sendMessage(trimmedInput);
+      // Use intelligent chat endpoint
+      const response = await chatService.sendChatMessage(trimmedInput);
 
       setTyping(false);
 
-      // Set current request ID
-      setCurrentRequestId(response.requestId);
+      // Check if this is a content request that needs the legacy flow
+      if (response.is_content_request) {
+        // Use legacy content request endpoint for downloads
+        const contentResponse = await chatService.sendMessage(trimmedInput);
+        setCurrentRequestId(contentResponse.correlation_id);
 
-      // Add assistant response
-      addMessage({
-        id: `assistant-${Date.now()}`,
-        type: 'assistant',
-        content: response.message,
-        timestamp: new Date(),
-        metadata: {
-          classification: response.classification,
-          searchResults: response.searchResults,
-          requestId: response.requestId,
-        },
-      });
+        const classification = contentResponse.classification;
+        const contentTypeLabel = classification.content_type === 'movie' ? 'movie' : 'TV show';
+        const yearStr = classification.year ? ` (${classification.year})` : '';
+        const qualityStr = classification.quality ? ` in ${classification.quality}` : '';
+        const responseMessage = `I found "${classification.title}"${yearStr} as a ${contentTypeLabel}${qualityStr}. Would you like me to add it to your library?`;
 
-      // If requires confirmation, initialize request tracking
-      if (response.requiresConfirmation && response.classification) {
-        updateRequestStatus(response.requestId, {
-          requestId: response.requestId,
-          status: 'pending_confirmation',
-          title: response.classification.title,
-          type: response.classification.type,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+        addMessage({
+          id: `assistant-${Date.now()}`,
+          type: 'assistant',
+          content: responseMessage,
+          timestamp: new Date(),
+          metadata: {
+            classification: classification,
+            searchResults: contentResponse.search_results,
+            requestId: contentResponse.correlation_id,
+          },
+        });
+
+        if (classification) {
+          updateRequestStatus(contentResponse.correlation_id, {
+            requestId: contentResponse.correlation_id,
+            status: 'pending_confirmation',
+            title: classification.title,
+            type: classification.content_type,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      } else {
+        // Add assistant response with sources and suggestions
+        addMessage({
+          id: `assistant-${Date.now()}`,
+          type: 'assistant',
+          content: response.message,
+          timestamp: new Date(),
+          metadata: {
+            topic: response.topic,
+            intent: response.intent,
+            sources: response.sources,
+            suggestions: response.suggestions,
+            serviceRequired: response.service_required,
+            setupLink: response.setup_link,
+          },
         });
       }
     } catch (err) {
@@ -269,54 +298,55 @@ export const Chat = () => {
     (req) => req.status === 'downloading' || req.status === 'searching'
   );
 
-  // Quick action suggestions
+  // Quick action suggestions - focused on supported topics
   const suggestions = [
-    'Download the latest episode of...',
-    'What movies are coming out this week?',
-    'Show me my download queue',
-    'Check the status of my servers',
+    'How do I configure SABnzbd?',
+    'What are quality profiles in Sonarr?',
+    'How to set up Radarr indexers?',
+    'Download Dune Part Two in 4K',
   ];
 
   return (
     <div
       data-testid="chat-container"
-      className="flex flex-col h-full min-h-0 bg-gradient-to-b from-background to-[hsl(280,50%,15%)]"
+      className="flex flex-col h-full min-h-0 w-full max-w-full overflow-x-hidden bg-gradient-to-b from-background to-[hsl(280,50%,15%)]"
     >
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-primary/20 bg-card/50 backdrop-blur-md px-6 py-5">
+      <div className="flex-shrink-0 border-b border-primary/20 bg-card/50 backdrop-blur-md px-3 sm:px-4 py-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-primary/20 border border-primary/30 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
-              <Sparkles className="w-7 h-7 text-primary drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-[hsl(290,90%,70%)] bg-clip-text text-transparent">
-                AutoArr Assistant
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Your intelligent media automation companion. Ask me to download content, check
-                status, or manage your library.
-              </p>
-            </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <h1 className="text-base sm:text-lg font-bold text-primary">
+              AutoArr Assistant
+            </h1>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Connection Status */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* AI Assistant Connection Status */}
             <div
               data-testid="connection-status"
-              className="flex items-center gap-2 px-4 py-2 glass-card"
-              aria-label={`Connection status: ${connectionStatus}`}
+              data-component="AIConnectionStatus"
+              className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 glass-card cursor-help"
+              aria-label={`AI Assistant status: ${connectionStatus}`}
+              title={
+                connectionStatus === 'connected'
+                  ? 'AI Assistant is online and ready to help with real-time updates'
+                  : connectionStatus === 'connecting'
+                    ? 'Connecting to AI Assistant for real-time updates...'
+                    : 'AI Assistant offline - chat still works, but no live updates'
+              }
             >
               {connectionStatus === 'connected' ? (
                 <>
-                  <Wifi className="w-4 h-4 text-status-success" />
-                  <span className="text-xs text-status-success font-medium">Connected</span>
+                  <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-status-success" />
+                  <span className="text-[10px] sm:text-xs text-status-success font-medium hidden sm:inline">
+                    AI Online
+                  </span>
                 </>
               ) : (
                 <>
-                  <WifiOff className="w-4 h-4 text-status-warning" />
-                  <span className="text-xs text-status-warning font-medium">
-                    {connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+                  <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-status-warning" />
+                  <span className="text-[10px] sm:text-xs text-status-warning font-medium hidden sm:inline">
+                    {connectionStatus === 'connecting' ? 'Connecting...' : 'AI Offline'}
                   </span>
                 </>
               )}
@@ -325,26 +355,26 @@ export const Chat = () => {
             {/* Search Button */}
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className="p-2.5 hover:bg-muted rounded-lg transition-all duration-300 hover:shadow-glow-hover"
+              className="p-1 sm:p-1.5 hover:bg-muted rounded-lg transition-all duration-300 hover:shadow-glow-hover"
               aria-label="Search messages"
             >
-              <SearchIcon className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+              <SearchIcon className="w-4 h-4 text-muted-foreground hover:text-foreground" />
             </button>
 
             {/* Clear History Button */}
             <button
               onClick={handleClearHistory}
-              className="p-2.5 hover:bg-muted rounded-lg transition-all duration-300 hover:shadow-glow-hover"
+              className="p-1 sm:p-1.5 hover:bg-muted rounded-lg transition-all duration-300 hover:shadow-glow-hover"
               aria-label="Clear history"
             >
-              <Trash2 className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+              <Trash2 className="w-4 h-4 text-muted-foreground hover:text-foreground" />
             </button>
           </div>
         </div>
 
         {/* Search Component */}
         {showSearch && (
-          <div className="mt-4">
+          <div className="mt-2">
             <ChatSearch onClose={() => setShowSearch(false)} />
           </div>
         )}
@@ -368,7 +398,7 @@ export const Chat = () => {
       {/* Messages Area */}
       <div
         data-testid="messages-list"
-        className="flex-1 overflow-y-auto px-6 py-8 min-h-0"
+        className="flex-1 overflow-y-auto px-4 py-4 min-h-0"
         role="log"
         aria-live="polite"
         aria-label="Chat messages"
@@ -376,23 +406,22 @@ export const Chat = () => {
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
             {/* Welcome Icon with Pulsing Glow */}
-            <div className="relative mb-12">
-              <div className="absolute inset-[-50%] animate-pulse rounded-full bg-primary/30 blur-3xl" />
-              <div className="relative p-8 rounded-2xl bg-card/50 border border-primary/30 backdrop-blur-sm shadow-[0_0_60px_rgba(168,85,247,0.4)]">
-                <Sparkles className="w-16 h-16 text-primary drop-shadow-[0_0_30px_rgba(168,85,247,0.6)]" />
+            <div className="relative mb-6">
+              <div className="absolute inset-[-50%] animate-pulse rounded-full bg-primary/30 blur-2xl" />
+              <div className="relative p-5 rounded-xl bg-card/50 border border-primary/30 backdrop-blur-sm shadow-[0_0_40px_rgba(168,85,247,0.4)]">
+                <Sparkles className="w-10 h-10 text-primary drop-shadow-[0_0_20px_rgba(168,85,247,0.6)]" />
               </div>
             </div>
 
-            <h2 className="mb-4 bg-gradient-to-r from-primary via-accent to-[hsl(290,90%,70%)] bg-clip-text text-4xl font-bold text-transparent">
+            <h2 className="mb-2 bg-gradient-to-r from-primary via-accent to-[hsl(290,90%,70%)] bg-clip-text text-2xl font-bold text-transparent">
               Welcome to AutoArr
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mb-10">
-              I can help you automate your media downloads, manage your library, and keep track of
-              your favorite shows and movies. What would you like to do today?
+            <p className="text-sm text-muted-foreground max-w-xl mb-6">
+              Ask me to download content, check status, or manage your library.
             </p>
 
             {/* Quick Suggestions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-2xl w-full px-2 sm:px-0">
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
@@ -400,7 +429,7 @@ export const Chat = () => {
                     setInput(suggestion);
                     inputRef.current?.focus();
                   }}
-                  className="rounded-lg border border-primary/20 bg-card/50 px-6 py-4 backdrop-blur-sm text-left text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:border-primary/40"
+                  className="rounded-lg border border-primary/20 bg-card/50 px-3 sm:px-4 py-2 sm:py-2.5 backdrop-blur-sm text-left text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:border-primary/40"
                 >
                   {suggestion}
                 </button>
@@ -424,17 +453,17 @@ export const Chat = () => {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-md px-6 py-5">
-        <div className="flex gap-4 items-end">
-          <div className="flex-1 glass-card p-1">
+      <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-md px-3 sm:px-4 py-2 sm:py-3">
+        <div className="flex gap-2 items-end">
+          <div className="flex-1 glass-card p-0.5">
             <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isProcessing}
-              placeholder="Ask AutoArr to help with your media automation..."
-              className="w-full bg-transparent text-foreground placeholder-muted-foreground px-4 py-3 rounded-lg resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed textarea-auto-size"
+              placeholder="Ask AutoArr to help..."
+              className="w-full bg-transparent text-foreground placeholder-muted-foreground px-2 sm:px-3 py-2 rounded-lg resize-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed textarea-auto-size text-sm"
               rows={1}
               aria-label="Message input"
               role="textbox"
@@ -444,27 +473,23 @@ export const Chat = () => {
           <button
             onClick={handleSend}
             disabled={!input.trim() || isProcessing}
-            className="px-6 py-3.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[110px] justify-center shadow-glow hover:shadow-glow-lg"
+            className="px-3 sm:px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 sm:gap-1.5 justify-center shadow-glow hover:shadow-glow-lg"
             aria-label="Send message"
           >
             {isProcessing ? (
-              <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <Send className="w-5 h-5" />
-                <span className="font-medium">Send</span>
+                <Send className="w-4 h-4" />
+                <span className="font-medium text-sm hidden sm:inline">Send</span>
               </>
             )}
           </button>
         </div>
 
-        <p className="text-xs text-muted-foreground mt-3 text-center">
-          Press Enter to send. Shift+Enter for new line.
-        </p>
-
         {error && (
           <div
-            className="mt-4 text-sm text-destructive bg-destructive/10 border border-destructive/20 px-4 py-3 rounded-lg"
+            className="mt-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 px-3 py-2 rounded-lg"
             role="alert"
             aria-live="assertive"
           >

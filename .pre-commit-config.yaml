@@ -3,6 +3,17 @@
 # Run manually: poetry run pre-commit run --all-files
 
 repos:
+  # Enforce git identity from .env
+  - repo: local
+    hooks:
+      - id: enforce-git-identity
+        name: Enforce Git Identity
+        entry: bash -c 'if [ -f .env ]; then source .env; fi; git config user.name "${GIT_AUTHOR_NAME:-Rob Duncan}"; git config user.email "${GIT_AUTHOR_EMAIL:-rob.duncan@feaw.co.uk}"'
+        language: system
+        always_run: true
+        pass_filenames: false
+        stages: [pre-commit]
+
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -16,7 +27,7 @@ repos:
       - id: check-added-large-files
         args: ["--maxkb=1024"]
       - id: check-json
-        exclude: tsconfig.*\.json$
+        exclude: (tsconfig.*\.json$|devcontainer\.json$)
       - id: check-toml
       - id: check-merge-conflict
       - id: debug-statements
@@ -73,12 +84,14 @@ repos:
         args: [-ll, -i] # Low severity, ignore info
         exclude: ^(autoarr/tests/|autoarr/ui/|node_modules/|\.venv/)
 
-  # Frontend: Prettier (must match version in autoarr/ui/package.json)
+  # Frontend: Prettier
+  # Note: mirrors-prettier only supports up to v3.1.0, but package.json uses v3.7.1
+  # TypeScript/CSS files are excluded here - CI handles them with the correct version
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.1.0
     hooks:
       - id: prettier
-        files: \.(js|jsx|ts|tsx|css|json|md|yml|yaml)$
+        files: \.(js|jsx|json|md|yml|yaml)$
         exclude: ^(poetry\.lock|package-lock\.json|pnpm-lock\.yaml|\.venv/|dist/|build/|playwright-report/)
         args: [--write, --ignore-unknown]
 

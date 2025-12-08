@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     # Server Settings
     # ============================================================================
 
-    host: str = "0.0.0.0"
+    host: str = "0.0.0.0"  # nosec B104 - Intentional for container networking
     port: int = 8088
     reload: bool = False
     workers: int = 1
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     # ============================================================================
 
     app_name: str = "AutoArr API"
-    app_version: str = "1.0.0"
+    app_version: str = "0.8.0"
     app_description: str = "Intelligent media automation orchestrator"
     app_env: str = "development"
     log_level: str = "INFO"
@@ -56,10 +56,23 @@ class Settings(BaseSettings):
     # ============================================================================
 
     secret_key: str = "dev_secret_key_change_in_production"
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    # Note: These accept comma-separated strings from .env (e.g., "http://a,http://b")
+    cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:9080"
     cors_allow_credentials: bool = True
-    cors_allow_methods: List[str] = ["*"]
-    cors_allow_headers: List[str] = ["*"]
+    cors_allow_methods: str = "*"
+    cors_allow_headers: str = "*"
+
+    def get_cors_origins(self) -> List[str]:
+        """Get CORS origins as a list."""
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    def get_cors_methods(self) -> List[str]:
+        """Get CORS methods as a list."""
+        return [m.strip() for m in self.cors_allow_methods.split(",") if m.strip()]
+
+    def get_cors_headers(self) -> List[str]:
+        """Get CORS headers as a list."""
+        return [h.strip() for h in self.cors_allow_headers.split(",") if h.strip()]
 
     # ============================================================================
     # Rate Limiting Settings

@@ -27,22 +27,30 @@ import { Sidebar } from '../Sidebar';
  * | Left border indicator | border-l-[3px] | 3px |
  * | Icon size | w-[18px] h-[18px] | 18px |
  * | Icon margin | mr-2 | 8px |
+ *
+ * ## Typography Spacing Tokens (Global)
+ * | Token | Value | Description |
+ * |-------|-------|-------------|
+ * | `--h3-padding-y` | 8px | Vertical padding on H3 headings |
+ * | `--label-padding-y` | 4px | Vertical padding on labels |
+ * | `--section-heading-mb` | 24px | Bottom margin on H2 section titles |
  */
+// Helper to create the sidebar wrapper with router
+const createSidebarDecorator = (initialPath: string) => (Story: React.ComponentType) => (
+  <MemoryRouter initialEntries={[initialPath]}>
+    <div style={{ height: '100vh', display: 'flex' }}>
+      <Story />
+      <div style={{ flex: 1, padding: '20px', background: 'hsl(222 47% 8%)' }}>
+        <p style={{ color: '#888' }}>Main content area</p>
+      </div>
+    </div>
+  </MemoryRouter>
+);
+
 const meta = {
   title: 'Layout/Sidebar',
   component: Sidebar,
-  decorators: [
-    (Story) => (
-      <MemoryRouter initialEntries={['/']}>
-        <div style={{ height: '100vh', display: 'flex' }}>
-          <Story />
-          <div style={{ flex: 1, padding: '20px', background: 'hsl(222 47% 8%)' }}>
-            <p style={{ color: '#888' }}>Main content area</p>
-          </div>
-        </div>
-      </MemoryRouter>
-    ),
-  ],
+  // No decorators at meta level - each story defines its own to avoid nested routers
   parameters: {
     layout: 'fullscreen',
     docs: {
@@ -61,58 +69,27 @@ type Story = StoryObj<typeof meta>;
 /**
  * Default sidebar state with Home active
  */
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [createSidebarDecorator('/')],
+};
 
 /**
  * Sidebar with Settings expanded (showing child items)
  */
 export const SettingsExpanded: Story = {
-  decorators: [
-    (Story) => (
-      <MemoryRouter initialEntries={['/settings']}>
-        <div style={{ height: '100vh', display: 'flex' }}>
-          <Story />
-          <div style={{ flex: 1, padding: '20px', background: 'hsl(222 47% 8%)' }}>
-            <p style={{ color: '#888' }}>Settings page content</p>
-          </div>
-        </div>
-      </MemoryRouter>
-    ),
-  ],
+  decorators: [createSidebarDecorator('/settings')],
 };
 
 /**
  * Sidebar with Config Audit active (nested route)
  */
 export const ConfigAuditActive: Story = {
-  decorators: [
-    (Story) => (
-      <MemoryRouter initialEntries={['/settings/config-audit']}>
-        <div style={{ height: '100vh', display: 'flex' }}>
-          <Story />
-          <div style={{ flex: 1, padding: '20px', background: 'hsl(222 47% 8%)' }}>
-            <p style={{ color: '#888' }}>Config Audit page</p>
-          </div>
-        </div>
-      </MemoryRouter>
-    ),
-  ],
+  decorators: [createSidebarDecorator('/settings/config-audit')],
 };
 
 /**
- * Sidebar showing Chat as active
+ * Sidebar showing Search as active
  */
-export const ChatActive: Story = {
-  decorators: [
-    (Story) => (
-      <MemoryRouter initialEntries={['/chat']}>
-        <div style={{ height: '100vh', display: 'flex' }}>
-          <Story />
-          <div style={{ flex: 1, padding: '20px', background: 'hsl(222 47% 8%)' }}>
-            <p style={{ color: '#888' }}>Chat interface</p>
-          </div>
-        </div>
-      </MemoryRouter>
-    ),
-  ],
+export const SearchActive: Story = {
+  decorators: [createSidebarDecorator('/search')],
 };

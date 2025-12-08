@@ -36,12 +36,26 @@ from slowapi.errors import RateLimitExceeded
 
 from .config import get_settings
 from .database import get_database, init_database
-from .dependencies import shutdown_orchestrator
+from .dependencies import get_orchestrator, shutdown_orchestrator
 from .middleware import ErrorHandlerMiddleware, RequestLoggingMiddleware, add_security_headers
 from .rate_limiter import limiter
-from .routers import configuration, downloads, health, mcp, media, movies, requests
+from .routers import (
+    activity,
+    chat,
+    configuration,
+    downloads,
+    health,
+    logs,
+    mcp,
+    media,
+    movies,
+    onboarding,
+    optimize,
+    requests,
+)
 from .routers import settings as settings_router
 from .routers import shows
+from .routers.logs import setup_log_buffer_handler
 from .services.event_bus import get_event_bus
 from .services.websocket_bridge import initialize_websocket_bridge, shutdown_websocket_bridge
 
@@ -68,6 +82,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info(f"Environment: {settings.app_env}")
     logger.info(f"Log level: {settings.log_level}")
 
+    # Set up log buffer handler for UI log viewer
+    setup_log_buffer_handler()
+
     # Initialize database
     if settings.database_url:
         try:
@@ -90,6 +107,35 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.error(f"Warning: WebSocket bridge initialization failed: {e}")
         # Don't fail startup if WebSocket bridge fails - it's not critical
+
+    # Perform application warmup to preload caches and reduce first-request latency
+    try:
+        logger.info("Performing application warmup...")
+        from .routers.health import perform_warmup
+
+        warmup_result = await perform_warmup()
+        logger.info(
+            f"Warmup completed in {warmup_result['total_duration_ms']}ms "
+            f"({len(warmup_result['tasks'])} tasks)"
+        )
+    except Exception as e:
+        logger.warning(f"Warmup failed (non-critical): {e}")
+        # Don't fail startup if warmup fails - app can still serve requests
+
+    # Initialize MCP orchestrator and connect to services configured via env vars
+    try:
+        logger.info("Initializing MCP orchestrator...")
+        # get_orchestrator is an async generator, so we need to iterate it
+        async for orchestrator in get_orchestrator():
+            connected = orchestrator.get_connected_servers()
+            if connected:
+                logger.info(f"MCP orchestrator connected to: {', '.join(connected)}")
+            else:
+                logger.info("MCP orchestrator initialized (no services configured)")
+            break  # Only need first yield
+    except Exception as e:
+        logger.warning(f"MCP orchestrator initialization failed (non-critical): {e}")
+        # Don't fail startup - services can still be configured later
 
     yield
 
@@ -142,10 +188,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # CORS middleware (must be added before other middleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_settings.cors_origins,
+    allow_origins=_settings.get_cors_origins(),
     allow_credentials=_settings.cors_allow_credentials,
-    allow_methods=_settings.cors_allow_methods,
-    allow_headers=_settings.cors_allow_headers,
+    allow_methods=_settings.get_cors_methods(),
+    allow_headers=_settings.get_cors_headers(),
 )
 
 # Error handling middleware
@@ -210,6 +256,13 @@ app.include_router(
     tags=["settings"],
 )
 
+# Onboarding endpoints
+app.include_router(
+    onboarding.router,
+    prefix=f"{_settings.api_v1_prefix}/onboarding",
+    tags=["onboarding"],
+)
+
 # Configuration audit endpoints
 app.include_router(
     configuration.router,
@@ -221,6 +274,33 @@ app.include_router(
 app.include_router(
     requests.router,
     tags=["requests"],
+)
+
+# Chat endpoints (intelligent assistant)
+app.include_router(
+    chat.router,
+    tags=["chat"],
+)
+
+# Logs endpoints
+app.include_router(
+    logs.router,
+    prefix=f"{_settings.api_v1_prefix}/logs",
+    tags=["logs"],
+)
+
+# Optimization assessment endpoints
+app.include_router(
+    optimize.router,
+    prefix=f"{_settings.api_v1_prefix}/optimize",
+    tags=["optimize"],
+)
+
+# Activity log endpoints
+app.include_router(
+    activity.router,
+    prefix=f"{_settings.api_v1_prefix}/activity",
+    tags=["activity"],
 )
 
 

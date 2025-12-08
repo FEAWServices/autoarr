@@ -177,18 +177,11 @@ class TestGetServiceSettings:
         assert "timeout" in data
         assert "status" in data
 
-    @pytest.mark.xfail(
-        reason="Bug in settings.py: variable name collision with 'status' module - issue #TBD"
-    )
     @pytest.mark.asyncio
     async def test_get_service_settings_invalid_service(
         self, client, mock_orchestrator, override_deps
     ):
-        """Test getting settings for invalid service.
-
-        NOTE: This test correctly identifies a bug in /app/autoarr/api/routers/settings.py
-        where the variable 'status' collides with the imported 'status' module from fastapi.
-        """
+        """Test getting settings for invalid service returns 404."""
         override_deps(orchestrator=mock_orchestrator)
 
         response = client.get("/api/v1/settings/invalid_service")

@@ -1,7 +1,9 @@
 import { Message } from '../../types/chat';
 import { formatDistanceToNow } from '../../utils/date';
-import { User, Bot, Info } from 'lucide-react';
+import { User, Bot, Info, Settings } from 'lucide-react';
 import { ContentCard } from './ContentCard';
+import { useNavigate } from 'react-router-dom';
+import { Markdown } from './Markdown';
 
 interface ChatMessageProps {
   message: Message;
@@ -10,9 +12,14 @@ interface ChatMessageProps {
 }
 
 export const ChatMessage = ({ message, onConfirm, onNoneOfThese }: ChatMessageProps) => {
+  const navigate = useNavigate();
   const isUser = message.type === 'user';
   const isAssistant = message.type === 'assistant';
   const isSystem = message.type === 'system';
+
+  // Check if this response indicates a service needs to be set up
+  const serviceRequired = message.metadata?.serviceRequired as string | undefined;
+  const setupLink = message.metadata?.setupLink as string | undefined;
 
   if (isSystem) {
     return (
@@ -53,12 +60,20 @@ export const ChatMessage = ({ message, onConfirm, onNoneOfThese }: ChatMessagePr
                 : 'bg-background-secondary text-text-primary'
             }`}
           >
-            <p className="whitespace-pre-wrap break-words">{message.content}</p>
+            {isUser ? (
+              <p className="whitespace-pre-wrap break-words">{message.content}</p>
+            ) : (
+              <Markdown content={message.content} />
+            )}
           </div>
 
           {/* Timestamp */}
           <span data-testid="message-timestamp" className="text-xs text-text-muted mt-1 px-1">
-            {formatDistanceToNow(message.timestamp.toISOString())}
+            {formatDistanceToNow(
+              message.timestamp instanceof Date
+                ? message.timestamp.toISOString()
+                : String(message.timestamp)
+            )}
           </span>
 
           {/* Content Cards for search results */}
@@ -82,6 +97,20 @@ export const ChatMessage = ({ message, onConfirm, onNoneOfThese }: ChatMessagePr
                 )}
               </div>
             )}
+
+          {/* Service setup button when a service needs to be connected */}
+          {isAssistant && serviceRequired && setupLink && (
+            <div className="mt-4 w-full">
+              <button
+                onClick={() => navigate(setupLink)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-300 shadow-glow hover:shadow-glow-lg font-medium"
+                aria-label={`Go to Settings to configure ${serviceRequired}`}
+              >
+                <Settings className="w-4 h-4" />
+                Go to Settings
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

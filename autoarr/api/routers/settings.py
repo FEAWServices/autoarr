@@ -22,6 +22,7 @@ This module provides endpoints for users to view and update configuration
 settings through the API/UI without needing to edit .env files.
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, Optional
@@ -29,8 +30,15 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from autoarr.shared.llm.openrouter_provider import OpenRouterProvider
+
 from ..config import get_settings
-from ..database import SettingsRepository, get_database
+from ..database import (
+    AppSettingsRepository,
+    LLMSettingsRepository,
+    SettingsRepository,
+    get_database,
+)
 from ..dependencies import get_orchestrator
 
 if TYPE_CHECKING:
@@ -58,6 +66,30 @@ async def get_settings_repo() -> SettingsRepository:
         )
 
 
+async def get_llm_settings_repo() -> LLMSettingsRepository:
+    """Get LLM settings repository dependency."""
+    try:
+        db = get_database()
+        return LLMSettingsRepository(db)
+    except RuntimeError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database not configured. LLM settings persistence disabled.",
+        )
+
+
+async def get_app_settings_repo() -> AppSettingsRepository:
+    """Get app settings repository dependency."""
+    try:
+        db = get_database()
+        return AppSettingsRepository(db)
+    except RuntimeError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database not configured. App settings persistence disabled.",
+        )
+
+
 # ============================================================================
 # Request/Response Models
 # ============================================================================
@@ -67,8 +99,10 @@ class ServiceConnectionConfig(BaseModel):
     """Configuration for a single service connection."""
 
     enabled: bool = Field(default=True, description="Whether this service is enabled")
-    url: str = Field(..., description="Service URL (e.g., http://localhost:8080)")
-    api_key_or_token: str = Field(..., description="API key or authentication token", min_length=1)
+    url: Optional[str] = Field(default="", description="Service URL (e.g., http://localhost:8080)")
+    api_key_or_token: Optional[str] = Field(
+        default="", description="API key or authentication token"
+    )
     timeout: float = Field(default=30.0, ge=1.0, le=300.0, description="Request timeout in seconds")
 
 
@@ -118,6 +152,59 @@ class TestConnectionResponse(BaseModel):
 
 
 # ============================================================================
+# LLM Settings Models
+# ============================================================================
+
+
+class LLMModelInfo(BaseModel):
+    """Information about an available LLM model."""
+
+    id: str = Field(..., description="Model identifier (e.g., anthropic/claude-3.5-sonnet)")
+    name: str = Field(..., description="Human-readable model name")
+    context_length: int = Field(..., description="Maximum context length in tokens")
+    prompt_price: float = Field(..., description="Price per 1M input tokens")
+    completion_price: float = Field(..., description="Price per 1M output tokens")
+
+
+class LLMConfig(BaseModel):
+    """Configuration for LLM settings."""
+
+    enabled: bool = Field(default=True, description="Whether LLM features are enabled")
+    api_key: Optional[str] = Field(default="", description="OpenRouter API key")
+    selected_model: str = Field(
+        default="anthropic/claude-3.5-sonnet", description="Selected model ID"
+    )
+    max_tokens: int = Field(default=4096, ge=1, le=100000, description="Max tokens for responses")
+    timeout: float = Field(default=60.0, ge=1.0, le=600.0, description="Request timeout in seconds")
+
+
+class LLMConfigResponse(BaseModel):
+    """Response with LLM configuration."""
+
+    enabled: bool
+    provider: str = "openrouter"
+    api_key_masked: str = Field(..., description="Masked API key for security")
+    selected_model: str
+    available_models: list[LLMModelInfo] = []
+    max_tokens: int
+    timeout: float
+    status: str = Field(..., description="Connection status: connected, disconnected, error")
+
+
+class TestLLMConnectionRequest(BaseModel):
+    """Request to test LLM connection."""
+
+    api_key: str = Field(..., description="OpenRouter API key to test")
+
+
+class UpdateLLMResponse(BaseModel):
+    """Response from updating LLM settings."""
+
+    success: bool
+    message: str = ""
+
+
+# ============================================================================
 # Helper Functions
 # ============================================================================
 
@@ -135,6 +222,25 @@ def mask_api_key(api_key: str) -> str:
     if not api_key or len(api_key) < 8:
         return "****"
     return f"{api_key[:4]}...{api_key[-4:]}"
+
+
+def is_masked_key(key: str) -> bool:
+    """
+    Check if a key is a masked placeholder (e.g., "abc1...xyz9" or "****").
+
+    This prevents the UI from accidentally overwriting a real API key
+    with a masked display value.
+
+    Args:
+        key: The key to check
+
+    Returns:
+        True if the key appears to be a masked placeholder
+    """
+    if not key:
+        return False
+    # Check for our masking patterns
+    return "..." in key or key == "****"
 
 
 async def get_service_status(service_name: str, orchestrator: "MCPOrchestrator") -> str:
@@ -256,6 +362,285 @@ async def get_all_settings(
     )
 
 
+# ============================================================================
+# LLM SETTINGS ENDPOINTS
+# NOTE: These routes MUST be defined before the /{service} catch-all route
+# ============================================================================
+
+
+@router.get("/llm", response_model=LLMConfigResponse)
+async def get_llm_settings(
+    llm_repo: LLMSettingsRepository = Depends(get_llm_settings_repo),
+) -> LLMConfigResponse:
+    """
+    Get current LLM configuration.
+
+    Returns masked API key for security. Fetches available models from OpenRouter.
+    """
+    settings = await llm_repo.get_settings()
+
+    # Default values if no settings exist
+    enabled = settings.enabled if settings else True
+    api_key = settings.api_key if settings else ""
+    selected_model = settings.selected_model if settings else "anthropic/claude-3.5-sonnet"
+    max_tokens = settings.max_tokens if settings else 4096
+    timeout = settings.timeout if settings else 60.0
+
+    # Try to get available models and connection status
+    available_models: list[LLMModelInfo] = []
+    connection_status = "disconnected"
+
+    if api_key:
+        try:
+            provider = OpenRouterProvider({"api_key": api_key})
+            if await provider.is_available():
+                connection_status = "connected"
+                # Fetch available models
+                models = await provider.get_models()
+                available_models = [
+                    LLMModelInfo(
+                        id=m.id,
+                        name=m.name,
+                        context_length=m.context_length,
+                        prompt_price=m.pricing.get("prompt", 0.0),
+                        completion_price=m.pricing.get("completion", 0.0),
+                    )
+                    for m in models
+                ]
+            else:
+                connection_status = "error"
+        except Exception as e:
+            logger.error(f"Failed to connect to OpenRouter: {e}")
+            connection_status = "error"
+
+    return LLMConfigResponse(
+        enabled=enabled,
+        provider="openrouter",
+        api_key_masked=mask_api_key(api_key),
+        selected_model=selected_model,
+        available_models=available_models,
+        max_tokens=max_tokens,
+        timeout=timeout,
+        status=connection_status,
+    )
+
+
+@router.put("/llm", response_model=UpdateLLMResponse)
+async def update_llm_settings(
+    config: LLMConfig,
+    llm_repo: LLMSettingsRepository = Depends(get_llm_settings_repo),
+) -> UpdateLLMResponse:
+    """
+    Update LLM configuration.
+
+    Saves settings to database for persistence.
+    If api_key is None or empty, keeps the existing key.
+    """
+    try:
+        # Get existing settings to preserve API key if not provided
+        existing = await llm_repo.get_settings()
+        api_key_to_save = (
+            config.api_key if config.api_key else (existing.api_key if existing else "")
+        )
+
+        await llm_repo.save_settings(
+            enabled=config.enabled,
+            api_key=api_key_to_save,
+            selected_model=config.selected_model,
+            max_tokens=config.max_tokens,
+            timeout=config.timeout,
+        )
+        logger.info("LLM settings saved to database")
+        return UpdateLLMResponse(success=True, message="LLM settings saved successfully")
+    except Exception as e:
+        logger.error(f"Failed to save LLM settings: {e}")
+        return UpdateLLMResponse(success=False, message=f"Failed to save settings: {str(e)}")
+
+
+@router.get("/llm/models", response_model=list[LLMModelInfo])
+async def get_llm_models(
+    llm_repo: LLMSettingsRepository = Depends(get_llm_settings_repo),
+) -> list[LLMModelInfo]:
+    """
+    Get available LLM models from OpenRouter.
+
+    Returns a list of models with pricing information.
+    """
+    import os
+
+    # Try to get API key from database first, then environment
+    settings = await llm_repo.get_settings()
+    api_key = settings.api_key if settings and settings.api_key else os.getenv("OPENROUTER_API_KEY")
+
+    if not api_key:
+        return []
+
+    try:
+        provider = OpenRouterProvider({"api_key": api_key})
+        models = await provider.get_models()
+
+        return [
+            LLMModelInfo(
+                id=m.id,
+                name=m.name,
+                context_length=m.context_length,
+                prompt_price=m.pricing.get("prompt", 0.0),
+                completion_price=m.pricing.get("completion", 0.0),
+            )
+            for m in models
+        ]
+    except Exception as e:
+        logger.error(f"Failed to fetch LLM models: {e}")
+        return []
+
+
+@router.post("/test/llm", response_model=TestConnectionResponse)
+async def test_llm_connection(
+    request: TestLLMConnectionRequest,
+) -> TestConnectionResponse:
+    """
+    Test connection to OpenRouter with provided API key.
+
+    Useful for validating credentials before saving.
+    """
+    try:
+        provider = OpenRouterProvider({"api_key": request.api_key})
+        is_available = await provider.is_available()
+
+        if is_available:
+            return TestConnectionResponse(
+                success=True,
+                message="Connected to OpenRouter successfully",
+                details={"provider": "openrouter"},
+            )
+        else:
+            return TestConnectionResponse(
+                success=False,
+                message="Failed to connect to OpenRouter",
+                details={"error": "API key validation failed"},
+            )
+    except Exception as e:
+        logger.error(f"LLM connection test failed: {e}")
+        return TestConnectionResponse(
+            success=False,
+            message=f"Connection failed: {str(e)}",
+            details={"error": str(e)},
+        )
+
+
+# ============================================================================
+# APPLICATION SETTINGS ENDPOINTS
+# ============================================================================
+
+
+class AppSettingsRequest(BaseModel):
+    """Request model for updating app settings."""
+
+    log_level: Optional[str] = Field(
+        default=None, description="Log level (DEBUG, INFO, WARNING, ERROR)"
+    )
+    timezone: Optional[str] = Field(default=None, description="Application timezone")
+    debug_mode: Optional[bool] = Field(default=None, description="Enable debug mode")
+
+
+class AppSettingsResponse(BaseModel):
+    """Response model for app settings."""
+
+    log_level: str
+    timezone: str
+    debug_mode: bool
+
+
+@router.get("/app", response_model=AppSettingsResponse)
+async def get_app_settings(
+    app_repo: AppSettingsRepository = Depends(get_app_settings_repo),
+) -> AppSettingsResponse:
+    """
+    Get current application settings.
+
+    Returns log level, timezone, and debug mode configuration.
+    Settings are persisted to database.
+    """
+    config = get_settings()
+    db_settings = await app_repo.get_settings()
+
+    if db_settings:
+        return AppSettingsResponse(
+            log_level=db_settings.log_level,
+            timezone=db_settings.timezone,
+            debug_mode=db_settings.debug_mode,
+        )
+
+    # Return defaults if no settings in database
+    return AppSettingsResponse(
+        log_level=config.log_level,
+        timezone="UTC",
+        debug_mode=False,
+    )
+
+
+@router.put("/app", response_model=AppSettingsResponse)
+async def update_app_settings(
+    request: AppSettingsRequest,
+    app_repo: AppSettingsRepository = Depends(get_app_settings_repo),
+) -> AppSettingsResponse:
+    """
+    Update application settings.
+
+    Settings are persisted to database for permanent storage.
+    """
+    # Get existing settings
+    existing = await app_repo.get_settings()
+    current_log_level = existing.log_level if existing else "INFO"
+    current_timezone = existing.timezone if existing else "UTC"
+    current_debug_mode = existing.debug_mode if existing else False
+
+    # Apply updates
+    new_log_level = current_log_level
+    new_timezone = current_timezone
+    new_debug_mode = current_debug_mode
+
+    if request.log_level is not None:
+        # Validate log level
+        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        if request.log_level.upper() not in valid_levels:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid log level. Must be one of: {', '.join(valid_levels)}",
+            )
+        new_log_level = request.log_level.upper()
+        # Update the actual logging level
+        logging.getLogger().setLevel(new_log_level)
+        logger.info(f"Log level changed to {new_log_level}")
+
+    if request.timezone is not None:
+        new_timezone = request.timezone
+
+    if request.debug_mode is not None:
+        new_debug_mode = request.debug_mode
+        logger.info(f"Debug mode {'enabled' if new_debug_mode else 'disabled'}")
+
+    # Save to database
+    saved = await app_repo.save_settings(
+        log_level=new_log_level,
+        timezone=new_timezone,
+        debug_mode=new_debug_mode,
+    )
+    logger.info("App settings saved to database")
+
+    return AppSettingsResponse(
+        log_level=saved.log_level,
+        timezone=saved.timezone,
+        debug_mode=saved.debug_mode,
+    )
+
+
+# ============================================================================
+# SERVICE-SPECIFIC ENDPOINTS (with path parameter)
+# NOTE: These catch-all routes MUST come AFTER all specific routes like /llm
+# ============================================================================
+
+
 @router.get("/{service}", response_model=ServiceConnectionConfigResponse)
 async def get_service_settings(
     service: str, orchestrator: "MCPOrchestrator" = Depends(get_orchestrator)
@@ -328,6 +713,7 @@ async def update_service_settings(
     Update configuration for a specific service.
 
     This endpoint updates the service configuration in the database and attempts to reconnect.
+    If a masked API key is submitted, the existing key is preserved.
 
     Args:
         service: Service name (sabnzbd, sonarr, radarr, plex)
@@ -342,13 +728,34 @@ async def update_service_settings(
             detail=f"Service '{service}' not found. Valid services: sabnzbd, sonarr, radarr, plex",
         )
 
+    # Determine the API key to save - preserve existing if masked key is submitted
+    api_key_to_save = config.api_key_or_token or ""
+    if is_masked_key(api_key_to_save):
+        # Get existing key from database or env
+        existing = await repo.get_service_settings(service)
+        if existing and existing.api_key_or_token:
+            api_key_to_save = existing.api_key_or_token
+            logger.info(f"Preserving existing API key for {service} (masked key submitted)")
+        else:
+            # Fall back to environment variable
+            settings = get_settings()
+            if service == "sabnzbd":
+                api_key_to_save = settings.sabnzbd_api_key
+            elif service == "sonarr":
+                api_key_to_save = settings.sonarr_api_key
+            elif service == "radarr":
+                api_key_to_save = settings.radarr_api_key
+            elif service == "plex":
+                api_key_to_save = settings.plex_token
+            logger.info(f"Using env API key for {service} (masked key submitted, no DB key)")
+
     # Save settings to database
     try:
         await repo.save_service_settings(
             service_name=service,
             enabled=config.enabled,
-            url=config.url,
-            api_key_or_token=config.api_key_or_token,
+            url=config.url or "",
+            api_key_or_token=api_key_to_save,
             timeout=config.timeout,
         )
         logger.info(f"Saved {service} settings to database")
@@ -363,41 +770,48 @@ async def update_service_settings(
     settings = get_settings()
     if service == "sabnzbd":
         settings.sabnzbd_enabled = config.enabled
-        settings.sabnzbd_url = config.url
-        settings.sabnzbd_api_key = config.api_key_or_token
+        settings.sabnzbd_url = config.url or ""
+        settings.sabnzbd_api_key = api_key_to_save
         settings.sabnzbd_timeout = config.timeout
     elif service == "sonarr":
         settings.sonarr_enabled = config.enabled
-        settings.sonarr_url = config.url
-        settings.sonarr_api_key = config.api_key_or_token
+        settings.sonarr_url = config.url or ""
+        settings.sonarr_api_key = api_key_to_save
         settings.sonarr_timeout = config.timeout
     elif service == "radarr":
         settings.radarr_enabled = config.enabled
-        settings.radarr_url = config.url
-        settings.radarr_api_key = config.api_key_or_token
+        settings.radarr_url = config.url or ""
+        settings.radarr_api_key = api_key_to_save
         settings.radarr_timeout = config.timeout
     elif service == "plex":
         settings.plex_enabled = config.enabled
-        settings.plex_url = config.url
-        settings.plex_token = config.api_key_or_token
+        settings.plex_url = config.url or ""
+        settings.plex_token = api_key_to_save
         settings.plex_timeout = config.timeout
 
-    # Attempt to reconnect to the service
-    try:
-        if config.enabled:
-            await orchestrator.reconnect(service)
-            logger.info(f"Successfully reconnected to {service}")
-        else:
-            logger.info(f"Service {service} disabled")
-    except Exception as e:
-        logger.error(f"Failed to reconnect to {service}: {e}")
-        # Don't fail the save if reconnect fails - settings are already saved
-        logger.warning(f"Settings saved but reconnect failed: {str(e)}")
+    # Schedule reconnection as background task (non-blocking)
+    # This allows the API to respond immediately while reconnection happens in background
+    reconnecting = False
+    if config.enabled:
+
+        async def background_reconnect() -> None:
+            try:
+                await orchestrator.reconnect(service)
+                logger.info(f"Background reconnect to {service} succeeded")
+            except Exception as e:
+                logger.warning(f"Background reconnect to {service} failed: {e}")
+
+        asyncio.create_task(background_reconnect())
+        reconnecting = True
+        logger.info(f"Scheduled background reconnect for {service}")
+    else:
+        logger.info(f"Service {service} disabled, skipping reconnect")
 
     return {
         "success": True,
-        "message": f"Successfully updated and saved {service} configuration",
+        "message": f"Settings saved for {service}",
         "service": service,
+        "reconnecting": reconnecting,
     }
 
 
@@ -419,7 +833,7 @@ async def test_service_connection(
     try:
         # Import the appropriate client
         if service == "sabnzbd":
-            from sabnzbd.client import SABnzbdClient
+            from autoarr.mcp_servers.sabnzbd.client import SABnzbdClient
 
             async with await SABnzbdClient.create(
                 url=request.url,
@@ -435,7 +849,7 @@ async def test_service_connection(
                 )
 
         elif service == "sonarr":
-            from sonarr.client import SonarrClient
+            from autoarr.mcp_servers.sonarr.client import SonarrClient
 
             async with await SonarrClient.create(
                 url=request.url,
@@ -451,7 +865,7 @@ async def test_service_connection(
                 )
 
         elif service == "radarr":
-            from radarr.client import RadarrClient
+            from autoarr.mcp_servers.radarr.client import RadarrClient
 
             async with await RadarrClient.create(
                 url=request.url,
@@ -467,7 +881,7 @@ async def test_service_connection(
                 )
 
         elif service == "plex":
-            from plex.client import PlexClient
+            from autoarr.mcp_servers.plex.client import PlexClient
 
             async with await PlexClient.create(
                 url=request.url,
@@ -510,12 +924,39 @@ async def save_all_settings(
     Save configuration for all services at once.
 
     This endpoint updates all service configurations in the database and in memory.
+    If a masked API key is submitted, the existing key is preserved.
 
     Args:
         config: Configuration for all services
     """
     settings = get_settings()
     save_errors = []
+
+    # Helper to resolve API key (preserve existing if masked)
+    async def resolve_api_key(service_name: str, submitted_key: str) -> str:
+        """Get the actual API key to save, preserving existing if masked."""
+        if not is_masked_key(submitted_key):
+            return submitted_key or ""
+
+        # Masked key submitted - get existing
+        existing = await repo.get_service_settings(service_name)
+        if existing and existing.api_key_or_token:
+            logger.info(f"Preserving existing API key for {service_name}")
+            return str(existing.api_key_or_token)
+
+        # Fall back to env
+        if service_name == "sabnzbd":
+            return settings.sabnzbd_api_key
+        elif service_name == "sonarr":
+            return settings.sonarr_api_key
+        elif service_name == "radarr":
+            return settings.radarr_api_key
+        elif service_name == "plex":
+            return settings.plex_token
+        return ""
+
+    # Track resolved API keys for in-memory update
+    resolved_keys: Dict[str, str] = {}
 
     # Save each service configuration to database
     for service_name, service_config in [
@@ -526,11 +967,13 @@ async def save_all_settings(
     ]:
         if service_config:
             try:
+                api_key = await resolve_api_key(service_name, service_config.api_key_or_token or "")
+                resolved_keys[service_name] = api_key
                 await repo.save_service_settings(
                     service_name=service_name,
                     enabled=service_config.enabled,
-                    url=service_config.url,
-                    api_key_or_token=service_config.api_key_or_token,
+                    url=service_config.url or "",
+                    api_key_or_token=api_key,
                     timeout=service_config.timeout,
                 )
                 logger.info(f"Saved {service_name} settings to database")
@@ -541,26 +984,26 @@ async def save_all_settings(
     # Update in-memory settings for immediate effect
     if config.sabnzbd:
         settings.sabnzbd_enabled = config.sabnzbd.enabled
-        settings.sabnzbd_url = config.sabnzbd.url
-        settings.sabnzbd_api_key = config.sabnzbd.api_key_or_token
+        settings.sabnzbd_url = config.sabnzbd.url or ""
+        settings.sabnzbd_api_key = resolved_keys.get("sabnzbd", settings.sabnzbd_api_key)
         settings.sabnzbd_timeout = config.sabnzbd.timeout
 
     if config.sonarr:
         settings.sonarr_enabled = config.sonarr.enabled
-        settings.sonarr_url = config.sonarr.url
-        settings.sonarr_api_key = config.sonarr.api_key_or_token
+        settings.sonarr_url = config.sonarr.url or ""
+        settings.sonarr_api_key = resolved_keys.get("sonarr", settings.sonarr_api_key)
         settings.sonarr_timeout = config.sonarr.timeout
 
     if config.radarr:
         settings.radarr_enabled = config.radarr.enabled
-        settings.radarr_url = config.radarr.url
-        settings.radarr_api_key = config.radarr.api_key_or_token
+        settings.radarr_url = config.radarr.url or ""
+        settings.radarr_api_key = resolved_keys.get("radarr", settings.radarr_api_key)
         settings.radarr_timeout = config.radarr.timeout
 
     if config.plex:
         settings.plex_enabled = config.plex.enabled
-        settings.plex_url = config.plex.url
-        settings.plex_token = config.plex.api_key_or_token
+        settings.plex_url = config.plex.url or ""
+        settings.plex_token = resolved_keys.get("plex", settings.plex_token)
         settings.plex_timeout = config.plex.timeout
 
     # Reconnect to enabled services
@@ -692,7 +1135,7 @@ async def discover_services() -> list[DiscoveredService]:
         ("plex", 32400),
     ]
 
-    async def check_service(service_type: str, port: int):
+    async def check_service(service_type: str, port: int) -> None:
         """Check if a service is running on localhost:port."""
         url = f"http://localhost:{port}"
         try:

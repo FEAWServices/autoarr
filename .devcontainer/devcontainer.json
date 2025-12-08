@@ -1,16 +1,26 @@
 {
-  "name": "autoarr_devcontainer",
+  "name": "autoarr_dev",
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-  "runArgs": ["--name", "autoarr_devcontainer"],
+  "runArgs": [
+    "--name",
+    "autoarr_dev",
+    "--memory=4g",
+    "--memory-reservation=1g",
+    "--cpus=2"
+  ],
   "workspaceFolder": "/app",
   "mounts": [
-    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
-    "source=${localWorkspaceFolder}/../autoarr-premium,target=/autoarr-premium,type=bind,consistency=cached",
+    // Main project - mount from Windows for shared node_modules with test container
+    "source=c:/Git/autoarr,target=/app,type=bind,consistency=cached",
+    // Premium repo (optional)
+    "source=c:/Git/autoarr-premium,target=/autoarr-premium,type=bind,consistency=cached",
+    // Docker socket for running containers
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
-    "source=C:/Git/.common,target=/app/.common,type=bind,consistency=cached"
+    // Persist pnpm store to avoid re-downloading packages
+    "source=autoarr-pnpm-store,target=/root/.local/share/pnpm/store,type=volume"
   ],
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
@@ -25,7 +35,10 @@
         "charliermarsh.ruff",
         "streetsidesoftware.code-spell-checker",
         "eamodio.gitlens",
-        "ms-azuretools.vscode-docker"
+        "ms-azuretools.vscode-docker",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/app/.venv/bin/python",
@@ -34,27 +47,50 @@
         "python.linting.ruffEnabled": true,
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-          "source.organizeImports": true
+          "source.organizeImports": "explicit"
+        },
+        "files.watcherExclude": {
+          "**/node_modules/**": true,
+          "**/.venv/**": true,
+          "**/__pycache__/**": true
         }
       }
     }
   },
-  "forwardPorts": [8088, 3000, 8080, 8989, 7878, 32400, 5432, 6379],
+  "forwardPorts": [8088, 5173, 6006, 9080, 9081],
   "portsAttributes": {
     "8088": {
-      "label": "AutoArr API",
+      "label": "AutoArr API (direct)",
       "onAutoForward": "notify"
     },
-    "3000": {
-      "label": "AutoArr UI",
+    "5173": {
+      "label": "Vite Dev Server",
       "onAutoForward": "notify"
+    },
+    "6006": {
+      "label": "Storybook",
+      "onAutoForward": "notify"
+    },
+    "9080": {
+      "label": "AutoArr (test container)",
+      "onAutoForward": "silent"
+    },
+    "9081": {
+      "label": "AutoArr API (test container)",
+      "onAutoForward": "silent"
     }
   },
   "remoteUser": "root",
   "remoteEnv": {
     "PYTHONPATH": "/app:/autoarr-premium:/app/mcp-servers",
-    "PATH": "/root/.local/bin:${containerEnv:PATH}",
+    "PATH": "/root/.local/bin:/root/.local/share/pnpm:${containerEnv:PATH}",
+    "PNPM_HOME": "/root/.local/share/pnpm",
     "GITHUB_ADMIN_TOKEN": "${localEnv:GITHUB_ADMIN_TOKEN}",
-    "GH_TOKEN": "${localEnv:GITHUB_ADMIN_TOKEN}"
+    "GH_TOKEN": "${localEnv:GITHUB_ADMIN_TOKEN}",
+    "DOCKER_HOST": "unix:///var/run/docker.sock",
+    "GIT_AUTHOR_NAME": "${localEnv:GIT_AUTHOR_NAME}",
+    "GIT_AUTHOR_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}",
+    "GIT_COMMITTER_NAME": "${localEnv:GIT_AUTHOR_NAME}",
+    "GIT_COMMITTER_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}"
   }
 }

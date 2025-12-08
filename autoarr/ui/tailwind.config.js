@@ -202,6 +202,7 @@ export default {
       spacing: {
         18: '4.5rem',
         22: '5.5rem',
+        page: '50px', // Page container padding
       },
     },
   },
