@@ -5,7 +5,7 @@
  * Shows step-by-step instructions and tests connections.
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   ArrowRight,
   ArrowLeft,
@@ -39,20 +39,11 @@ export const ServiceConfigStep = () => {
   const currentServiceId = useCurrentServiceToConfig();
   const plugin = currentServiceId ? getServicePlugin(currentServiceId) : null;
 
-  const [url, setUrl] = useState('');
+  // Initialize state with default values based on current plugin
+  const [url, setUrl] = useState(() => plugin ? getDefaultUrl(plugin) : '');
   const [apiKey, setApiKey] = useState('');
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [testError, setTestError] = useState<string | null>(null);
-
-  // Reset form when service changes
-  useEffect(() => {
-    if (plugin) {
-      setUrl(getDefaultUrl(plugin));
-      setApiKey('');
-      setTestStatus('idle');
-      setTestError(null);
-    }
-  }, [plugin]);
 
   // If no services selected, this step shouldn't be shown
   if (!plugin || selectedServices.length === 0) {
@@ -122,7 +113,7 @@ export const ServiceConfigStep = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto" data-testid="service-config-step">
+    <div key={currentServiceId} className="max-w-2xl mx-auto" data-testid="service-config-step">
       {/* Progress header */}
       <div className="mb-6 p-4 rounded-xl bg-card border border-border">
         <div className="flex items-center justify-between text-sm">

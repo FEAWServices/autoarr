@@ -140,7 +140,7 @@ class ChatService {
       }
 
       return await response.json();
-    } catch (error) {
+    } catch {
       // Default classification on error
       return {
         topic: 'general_media',
