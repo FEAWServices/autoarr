@@ -265,6 +265,7 @@ Configure these secrets in your repository settings (Settings > Secrets and vari
 | `CLOUDFLARE_ACCOUNT_ID`   | Yes      | Your Cloudflare account ID                              | Cloudflare Dashboard > any domain > Overview > Account ID (right sidebar)        |
 | `FIREBASE_PROJECT_ID`     | Yes      | Firebase/GCP project ID                                 | Firebase Console > Project Settings > Project ID                                 |
 | `GCP_SERVICE_ACCOUNT_KEY` | Yes      | GCP service account JSON key                            | GCP Console > IAM > Service Accounts > Create Key (JSON)                         |
+| `GTAG_ID_AUTOARR_NET`     | No       | Google Analytics ID for autoarr.net (prod only)         | Google Analytics > Admin > Data Streams > Measurement ID (G-XXXXXXXX)            |
 
 ### Cloudflare API Token Permissions
 

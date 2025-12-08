@@ -3,8 +3,11 @@
 > **Intelligent cruise control for your \*arr media automation stack**
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%203.0-blue.svg)](./LICENSE)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/autoarr/autoarr)
-[![GitHub](https://img.shields.io/github/stars/autoarr/autoarr)](https://github.com/autoarr/autoarr)
+[![Version](https://img.shields.io/badge/version-0.8.0--beta-orange.svg)](./CHANGELOG.md)
+[![Docker](https://img.shields.io/badge/docker-ghcr.io%2Ffeawservices%2Fautoarr-blue.svg)](https://ghcr.io/feawservices/autoarr)
+[![GitHub](https://img.shields.io/github/stars/FEAWServices/autoarr)](https://github.com/FEAWServices/autoarr)
+
+> **Beta Release (v0.8.0)**: Configuration auditing and chat assistant are fully functional. Some autonomous features are still being refined. See [BUILD_PLAN_REMAINING.md](docs/BUILD_PLAN_REMAINING.md) for details.
 
 ---
 

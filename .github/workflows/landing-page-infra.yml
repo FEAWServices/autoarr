@@ -359,6 +359,8 @@ jobs:
 
       - name: Inject configuration
         working-directory: ${{ env.WORKING_DIR }}/site
+        env:
+          GTAG_ID: ${{ secrets.GTAG_ID_AUTOARR_NET }}
         run: |
           # Replace placeholder with actual Turnstile site key
           sed -i 's/TURNSTILE_SITE_KEY_PLACEHOLDER/${{ needs.deploy.outputs.turnstile_site_key }}/g' src/index.html
@@ -370,6 +372,15 @@ jobs:
             API_ENDPOINT="https://europe-west2-${{ secrets.FIREBASE_PROJECT_ID }}.cloudfunctions.net/submitInterest"
           fi
           sed -i "s|https://us-central1-YOUR_PROJECT.cloudfunctions.net/submitInterest|${API_ENDPOINT}|g" src/main.js
+
+          # Inject Google Analytics (production only, autoarr.net)
+          if [ "${{ github.event.inputs.environment }}" == "prod" ] && [ -n "$GTAG_ID" ]; then
+            GTAG_SCRIPT="<script async src=\"https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}\"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GTAG_ID}');</script>"
+            sed -i "s|<!-- GTAG_PLACEHOLDER -->|${GTAG_SCRIPT}|g" src/index.html
+          else
+            # Remove placeholder comment in non-prod
+            sed -i "s|<!-- GTAG_PLACEHOLDER -->||g" src/index.html
+          fi
 
       - name: Build site
         working-directory: ${{ env.WORKING_DIR }}/site
