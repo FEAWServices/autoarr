@@ -59,9 +59,12 @@ repos:
       - id: flake8
         args:
           - --max-line-length=100
-          - --extend-ignore=E203,W503,F541,F401,E402,F841
-          - --exclude=autoarr/tests/,autoarr/__pycache__/,autoarr/ui/
-          - --max-complexity=15
+          - --extend-ignore=E203,W503,F541,E402
+          # Don't ignore F401 (unused imports) or F841 (unused variables) - we want to catch these!
+          # Exclude __pycache__ but INCLUDE tests - we want to lint test files too
+          - --exclude=autoarr/__pycache__/,autoarr/ui/,node_modules/,.venv/
+          - --max-complexity=20
+          # Allow existing complexity in specific files with # noqa: C901 comments
         exclude: ^(autoarr/ui/|node_modules/|\.venv/)
 
   # Python: MyPy type checking
@@ -73,8 +76,10 @@ repos:
           - types-redis
           - types-requests
           - types-pyyaml
+          - pytest # Need pytest for test type checking
         args: [--config-file=pyproject.toml, --ignore-missing-imports]
-        exclude: ^(autoarr/tests/|autoarr/ui/|node_modules/|\.venv/)
+        # Include tests in type checking - important for catching type errors!
+        exclude: ^(autoarr/ui/|node_modules/|\.venv/)
 
   # Python: Bandit security scanner
   - repo: https://github.com/PyCQA/bandit
@@ -94,6 +99,26 @@ repos:
         files: \.(js|jsx|json|md|yml|yaml)$
         exclude: ^(poetry\.lock|package-lock\.json|pnpm-lock\.yaml|\.venv/|dist/|build/|playwright-report/)
         args: [--write, --ignore-unknown]
+
+  # Frontend: ESLint (local - uses project's eslint config)
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint (Frontend)
+        entry: bash -c 'cd autoarr/ui && pnpm exec eslint --fix'
+        language: system
+        files: ^autoarr/ui/src/.*\.(ts|tsx|js|jsx)$
+        pass_filenames: true
+
+  # Frontend: TypeScript type checking (local - uses project's tsconfig)
+  - repo: local
+    hooks:
+      - id: typescript
+        name: TypeScript type check
+        entry: bash -c 'cd autoarr/ui && pnpm exec tsc --noEmit'
+        language: system
+        files: ^autoarr/ui/src/.*\.(ts|tsx)$
+        pass_filenames: false
 
   # Dockerfile linting
   - repo: https://github.com/hadolint/hadolint
