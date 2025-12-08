@@ -157,26 +157,24 @@ class TestSABnzbdVersionAwareTools:
         tools = provider.get_tools(version="2.0.0")
 
         # Core tools only (no 3.x or 4.x features)
-        # get_queue, get_history, get_status, pause_queue, resume_queue,
-        # pause_download, resume_download, retry_download, delete_download,
-        # get_config, set_config = 11 tools
-        assert len(tools) == 11
+        # 23 tools available since SABnzbd 2.0
+        assert len(tools) == 23
 
     def test_get_tools_returns_correct_tool_count_3x(self):
         """Test correct number of tools for SABnzbd 3.x."""
         provider = SABnzbdToolProvider()
         tools = provider.get_tools(version="3.0.0")
 
-        # Core tools (11) + 3.x features (2) = 13 tools
-        assert len(tools) == 13
+        # Core tools (23) + 3.x features (2) = 25 tools
+        assert len(tools) == 25
 
     def test_get_tools_returns_correct_tool_count_4x(self):
         """Test correct number of tools for SABnzbd 4.x."""
         provider = SABnzbdToolProvider()
         tools = provider.get_tools(version="4.0.0")
 
-        # Core tools (11) + 3.x features (2) + 4.x features (1) = 14 tools
-        assert len(tools) == 14
+        # Core tools (23) + 3.x features (2) + 4.x features (1) = 26 tools
+        assert len(tools) == 26
 
 
 # =============================================================================
