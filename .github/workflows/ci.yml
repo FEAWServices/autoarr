@@ -27,7 +27,7 @@ jobs:
   # =============================================================================
   quick-type-check:
     name: ⚡ Quick Type Check
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
@@ -194,7 +194,7 @@ jobs:
   # =============================================================================
   python-lint:
     name: Python Lint & Type Check
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [detect-changes, quick-type-check]
     # Skip for docs-only changes; run on PRs or if Python files changed
@@ -282,7 +282,7 @@ jobs:
 
   python-test:
     name: Python Test (Python ${{ matrix.python-version }})
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: detect-changes
     # Skip for docs-only changes; run on PRs or if Python files changed
@@ -405,7 +405,7 @@ jobs:
 
   python-security:
     name: Python Security Scan
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: detect-changes
     # Skip for docs-only changes; run on PRs or if Python files changed
@@ -549,7 +549,7 @@ jobs:
   # =============================================================================
   frontend-lint:
     name: Frontend Lint & Type Check
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [detect-changes, quick-type-check]
     # Skip for docs-only changes; run on PRs or if frontend files changed
@@ -619,7 +619,7 @@ jobs:
 
   frontend-build:
     name: Frontend Build
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: detect-changes
     # Skip for docs-only changes; run on PRs or if frontend files changed
@@ -691,7 +691,7 @@ jobs:
 
   e2e-tests:
     name: E2E Tests (Playwright)
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     needs:
       [
@@ -915,7 +915,7 @@ jobs:
 
   accessibility-tests:
     name: Accessibility Tests
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: detect-changes
     # Skip for docs-only changes; run on PRs or if frontend files changed
@@ -983,7 +983,7 @@ jobs:
 
   bundle-size:
     name: Bundle Size Analysis
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     timeout-minutes: 10
 
@@ -1023,7 +1023,7 @@ jobs:
   # =============================================================================
   dependency-review:
     name: Dependency Review
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
     steps:

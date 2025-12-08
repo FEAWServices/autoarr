@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Activity } from 'lucide-react';
 import { SplashScreen } from './components/SplashScreen';
 import { MainLayout } from './layouts/MainLayout';
 import { Search } from './pages/Search';
@@ -8,13 +7,13 @@ import { Settings } from './pages/Settings';
 import { Appearance } from './pages/Appearance';
 import { Logs } from './pages/Logs';
 import { ConnectionStatus } from './components/ConnectionStatus';
-import { Placeholder } from './pages/Placeholder';
 import { Downloads } from './pages/Downloads';
 import { Shows } from './pages/Shows';
 import { Movies } from './pages/Movies';
 import { Media } from './pages/Media';
 import { Home } from './pages/Home';
 import { Onboarding } from './pages/Onboarding';
+import Activity from './pages/Activity';
 import ConfigAuditPage from './pages/ConfigAudit';
 import Optimize from './pages/Optimize';
 import { useThemeStore } from './stores/themeStore';
@@ -89,16 +88,7 @@ function App() {
             <Route path="shows" element={<Shows />} />
             <Route path="movies" element={<Movies />} />
             <Route path="media" element={<Media />} />
-            <Route
-              path="activity"
-              element={
-                <Placeholder
-                  icon={Activity}
-                  title="Activity"
-                  description="View recent activity and system logs"
-                />
-              }
-            />
+            <Route path="activity" element={<Activity />} />
           </Route>
         </Routes>
       </OnboardingRedirect>

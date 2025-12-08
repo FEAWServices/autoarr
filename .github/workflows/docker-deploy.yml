@@ -23,7 +23,7 @@ env:
 jobs:
   build-and-push:
     name: Build & Push Docker Image
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     # Only run if Python CI succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
@@ -131,7 +131,7 @@ jobs:
     name: Deploy to Synology Staging
     needs: build-and-push
     if: ${{ github.event.workflow_run.head_branch == 'develop' && github.event.workflow_run.conclusion == 'success' }}
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     steps:
       - name: Deploy notification
         run: |
@@ -164,7 +164,7 @@ jobs:
     name: Production Deployment Gate
     needs: build-and-push
     if: ${{ github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success' }}
-    runs-on: [self-hosted, alienware]
+    runs-on: ubuntu-latest
     environment:
       name: production
       url: https://github.com/${{ github.repository }}/packages
