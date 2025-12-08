@@ -1,0 +1,15 @@
+config:
+  # Cloudflare configuration
+  cloudflare:apiToken:
+    secure: # Set via: pulumi config set --secret cloudflare:apiToken <token>
+  autoarr-landing-page:cloudflareAccountId:
+    # Set via: pulumi config set autoarr-landing-page:cloudflareAccountId <id>
+  autoarr-landing-page:domain: autoarr.dev
+
+  # Firebase configuration
+  autoarr-landing-page:firebaseProjectId:
+    # Set via: pulumi config set autoarr-landing-page:firebaseProjectId <project-id>
+
+  # Turnstile configuration (created via Pulumi, but site key needed for frontend)
+  autoarr-landing-page:turnstileSiteKey:
+    # Will be set after Turnstile widget creation

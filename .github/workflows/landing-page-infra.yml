@@ -1,0 +1,444 @@
+name: Landing Page Infrastructure
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "infrastructure/landing-page/**"
+      - ".github/workflows/landing-page-infra.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "infrastructure/landing-page/**"
+      - ".github/workflows/landing-page-infra.yml"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Pulumi action to perform"
+        required: true
+        default: "preview"
+        type: choice
+        options:
+          - preview
+          - up
+          - destroy
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PULUMI_VERSION: "3.100.0"
+  NODE_VERSION: "20"
+  WORKING_DIR: "infrastructure/landing-page"
+
+jobs:
+  # =============================================================================
+  # VALIDATE - Lint and type check infrastructure code
+  # =============================================================================
+  validate:
+    name: Validate Infrastructure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install Pulumi dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: Install Functions dependencies
+        working-directory: ${{ env.WORKING_DIR }}/functions
+        run: npm ci
+
+      - name: Install Site dependencies
+        working-directory: ${{ env.WORKING_DIR }}/site
+        run: npm ci
+
+      - name: Type check Pulumi code
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx tsc --noEmit
+
+      - name: Type check Functions
+        working-directory: ${{ env.WORKING_DIR }}/functions
+        run: npx tsc --noEmit
+
+      - name: Build site
+        working-directory: ${{ env.WORKING_DIR }}/site
+        run: npm run build
+
+  # =============================================================================
+  # PREVIEW - Show what changes would be made (PRs and manual)
+  # =============================================================================
+  preview:
+    name: Preview Changes (${{ github.event.inputs.environment || 'dev' }})
+    runs-on: ubuntu-latest
+    needs: validate
+    timeout-minutes: 15
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'preview')
+
+    env:
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GOOGLE_CREDENTIALS: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v5
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: Select Pulumi stack
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          STACK="${{ github.event.inputs.environment || 'dev' }}"
+          pulumi stack select "autoarr-landing-page/${STACK}" --create
+
+      - name: Set Pulumi config from secrets
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Cloudflare config
+          pulumi config set cloudflare:apiToken "${{ secrets.CLOUDFLARE_API_TOKEN }}" --secret
+          pulumi config set autoarr-landing-page:cloudflareAccountId "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+
+          # Firebase/GCP config
+          pulumi config set autoarr-landing-page:firebaseProjectId "${{ secrets.FIREBASE_PROJECT_ID }}"
+
+          # Domain config (can be overridden per environment)
+          if [ "${{ github.event.inputs.environment }}" == "prod" ]; then
+            pulumi config set autoarr-landing-page:domain "autoarr.io"
+          else
+            pulumi config set autoarr-landing-page:domain "dev.autoarr.io"
+          fi
+
+      - name: Pulumi Preview
+        working-directory: ${{ env.WORKING_DIR }}
+        run: pulumi preview --diff
+
+      - name: Comment PR with preview
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            process.chdir('${{ env.WORKING_DIR }}');
+
+            let preview;
+            try {
+              preview = execSync('pulumi preview --diff --json 2>&1', { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 });
+            } catch (e) {
+              preview = e.stdout || e.message;
+            }
+
+            // Parse and summarize
+            let summary = '### Pulumi Preview Summary\n\n';
+            try {
+              const data = JSON.parse(preview);
+              const changes = data.changeSummary || {};
+              summary += `| Action | Count |\n|--------|-------|\n`;
+              summary += `| Create | ${changes.create || 0} |\n`;
+              summary += `| Update | ${changes.update || 0} |\n`;
+              summary += `| Delete | ${changes.delete || 0} |\n`;
+              summary += `| Same | ${changes.same || 0} |\n`;
+            } catch {
+              summary += '```\n' + preview.substring(0, 5000) + '\n```';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+  # =============================================================================
+  # DEPLOY - Apply infrastructure changes (main branch only)
+  # =============================================================================
+  deploy:
+    name: Deploy Infrastructure (${{ github.event.inputs.environment || 'dev' }})
+    runs-on: ubuntu-latest
+    needs: validate
+    timeout-minutes: 30
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'up')
+
+    environment:
+      name: ${{ github.event.inputs.environment || 'dev' }}
+      url: ${{ steps.outputs.outputs.pages_url }}
+
+    env:
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GOOGLE_CREDENTIALS: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v5
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: Select Pulumi stack
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          STACK="${{ github.event.inputs.environment || 'dev' }}"
+          pulumi stack select "autoarr-landing-page/${STACK}" --create
+
+      - name: Set Pulumi config from secrets
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Cloudflare config
+          pulumi config set cloudflare:apiToken "${{ secrets.CLOUDFLARE_API_TOKEN }}" --secret
+          pulumi config set autoarr-landing-page:cloudflareAccountId "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+
+          # Firebase/GCP config
+          pulumi config set autoarr-landing-page:firebaseProjectId "${{ secrets.FIREBASE_PROJECT_ID }}"
+
+          # Domain config
+          if [ "${{ github.event.inputs.environment }}" == "prod" ]; then
+            pulumi config set autoarr-landing-page:domain "autoarr.io"
+          else
+            pulumi config set autoarr-landing-page:domain "dev.autoarr.io"
+          fi
+
+      - name: Pulumi Up
+        working-directory: ${{ env.WORKING_DIR }}
+        run: pulumi up --yes --skip-preview
+
+      - name: Get Pulumi outputs
+        id: outputs
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "pages_url=$(pulumi stack output pagesUrl)" >> $GITHUB_OUTPUT
+          echo "turnstile_site_key=$(pulumi stack output turnstileSiteKey)" >> $GITHUB_OUTPUT
+
+      - name: Summary
+        run: |
+          echo "## Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Resource | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Pages URL | ${{ steps.outputs.outputs.pages_url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Turnstile Site Key | ${{ steps.outputs.outputs.turnstile_site_key }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ github.event.inputs.environment || 'dev' }} |" >> $GITHUB_STEP_SUMMARY
+
+    outputs:
+      pages_url: ${{ steps.outputs.outputs.pages_url }}
+      turnstile_site_key: ${{ steps.outputs.outputs.turnstile_site_key }}
+
+  # =============================================================================
+  # DEPLOY FUNCTIONS - Deploy Firebase Cloud Functions
+  # =============================================================================
+  deploy-functions:
+    name: Deploy Cloud Functions
+    runs-on: ubuntu-latest
+    needs: deploy
+    timeout-minutes: 15
+
+    env:
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Install function dependencies
+        working-directory: ${{ env.WORKING_DIR }}/functions
+        run: npm ci
+
+      - name: Build functions
+        working-directory: ${{ env.WORKING_DIR }}/functions
+        run: npm run build
+
+      - name: Get Turnstile secret from Pulumi
+        id: turnstile
+        working-directory: ${{ env.WORKING_DIR }}
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+        run: |
+          npm ci
+          STACK="${{ github.event.inputs.environment || 'dev' }}"
+          pulumi stack select "autoarr-landing-page/${STACK}"
+          echo "secret=$(pulumi stack output turnstileSecretKey --show-secrets)" >> $GITHUB_OUTPUT
+
+      - name: Set Firebase Functions config
+        run: |
+          firebase functions:config:set \
+            turnstile.secret_key="${{ steps.turnstile.outputs.secret }}" \
+            --project "${{ env.FIREBASE_PROJECT_ID }}"
+
+      - name: Deploy Functions
+        working-directory: ${{ env.WORKING_DIR }}/functions
+        run: |
+          firebase deploy --only functions --project "${{ env.FIREBASE_PROJECT_ID }}"
+
+  # =============================================================================
+  # BUILD & DEPLOY SITE - Build static site and deploy to Cloudflare Pages
+  # =============================================================================
+  deploy-site:
+    name: Deploy Static Site
+    runs-on: ubuntu-latest
+    needs: deploy
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install site dependencies
+        working-directory: ${{ env.WORKING_DIR }}/site
+        run: npm ci
+
+      - name: Inject configuration
+        working-directory: ${{ env.WORKING_DIR }}/site
+        run: |
+          # Replace placeholder with actual Turnstile site key
+          sed -i 's/TURNSTILE_SITE_KEY_PLACEHOLDER/${{ needs.deploy.outputs.turnstile_site_key }}/g' src/index.html
+
+          # Update API endpoint based on environment
+          if [ "${{ github.event.inputs.environment }}" == "prod" ]; then
+            API_ENDPOINT="https://europe-west2-${{ secrets.FIREBASE_PROJECT_ID }}.cloudfunctions.net/submitInterest"
+          else
+            API_ENDPOINT="https://europe-west2-${{ secrets.FIREBASE_PROJECT_ID }}.cloudfunctions.net/submitInterest"
+          fi
+          sed -i "s|https://us-central1-YOUR_PROJECT.cloudfunctions.net/submitInterest|${API_ENDPOINT}|g" src/main.js
+
+      - name: Build site
+        working-directory: ${{ env.WORKING_DIR }}/site
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ${{ env.WORKING_DIR }}/site/dist --project-name=autoarr-landing
+
+  # =============================================================================
+  # DESTROY - Tear down infrastructure (manual only, with confirmation)
+  # =============================================================================
+  destroy:
+    name: Destroy Infrastructure (${{ github.event.inputs.environment }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+
+    environment:
+      name: ${{ github.event.inputs.environment }}-destroy
+
+    env:
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GOOGLE_CREDENTIALS: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v5
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: Select Pulumi stack
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          STACK="${{ github.event.inputs.environment }}"
+          pulumi stack select "autoarr-landing-page/${STACK}"
+
+      - name: Set Pulumi config from secrets
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          pulumi config set cloudflare:apiToken "${{ secrets.CLOUDFLARE_API_TOKEN }}" --secret
+          pulumi config set autoarr-landing-page:cloudflareAccountId "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          pulumi config set autoarr-landing-page:firebaseProjectId "${{ secrets.FIREBASE_PROJECT_ID }}"
+
+      - name: Pulumi Destroy
+        working-directory: ${{ env.WORKING_DIR }}
+        run: pulumi destroy --yes --skip-preview
+
+      - name: Summary
+        run: |
+          echo "## Infrastructure Destroyed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Environment: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "Stack: autoarr-landing-page/${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
