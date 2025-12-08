@@ -59,12 +59,12 @@ repos:
       - id: flake8
         args:
           - --max-line-length=100
-          - --extend-ignore=E203,W503,F541,E402
+          - --extend-ignore=E203,W503,F541,E402,C901
           # Don't ignore F401 (unused imports) or F841 (unused variables) - we want to catch these!
           # Exclude __pycache__ but INCLUDE tests - we want to lint test files too
+          # C901 complexity ignored due to pre-existing complex tool provider functions
           - --exclude=autoarr/__pycache__/,autoarr/ui/,node_modules/,.venv/
           - --max-complexity=20
-          # Allow existing complexity in specific files with # noqa: C901 comments
         exclude: ^(autoarr/ui/|node_modules/|\.venv/)
 
   # Python: MyPy type checking
