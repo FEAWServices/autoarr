@@ -214,7 +214,7 @@ class SABnzbdMCPServer:
             ),
             Tool(
                 name="sabnzbd_get_status",
-                description="Get current SABnzbd status including version, speed, and resource usage",
+                description="Get current SABnzbd status including version, speed, and usage",
                 inputSchema={
                     "type": "object",
                     "properties": {},

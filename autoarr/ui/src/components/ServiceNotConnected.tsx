@@ -80,21 +80,19 @@ export const ServiceNotConnected = ({
     >
       <div className="text-center max-w-lg">
         {/* Icon with glow effect */}
-        <div
-          data-component="ServiceIcon"
-          className="relative mb-8 flex justify-center"
-        >
-          <div className={`absolute inset-[-30%] animate-pulse rounded-full ${colors.glow} blur-2xl`} />
-          <div className={`relative p-6 rounded-2xl bg-card/50 ${colors.border} backdrop-blur-sm shadow-[0_0_40px_rgba(168,85,247,0.2)]`}>
+        <div data-component="ServiceIcon" className="relative mb-8 flex justify-center">
+          <div
+            className={`absolute inset-[-30%] animate-pulse rounded-full ${colors.glow} blur-2xl`}
+          />
+          <div
+            className={`relative p-6 rounded-2xl bg-card/50 ${colors.border} backdrop-blur-sm shadow-[0_0_40px_rgba(168,85,247,0.2)]`}
+          >
             <Icon className={`w-12 h-12 ${colors.icon}`} />
           </div>
         </div>
 
         {/* Title */}
-        <h1
-          data-component="ServiceTitle"
-          className="text-3xl font-bold text-foreground mb-4"
-        >
+        <h1 data-component="ServiceTitle" className="text-3xl font-bold text-foreground mb-4">
           Connect to {serviceName}
         </h1>
 
@@ -107,10 +105,7 @@ export const ServiceNotConnected = ({
         </p>
 
         {/* Feature highlights */}
-        <div
-          data-component="FeatureGrid"
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10"
-        >
+        <div data-component="FeatureGrid" className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
           {features.map((feature, index) => (
             <div
               key={index}
@@ -146,10 +141,7 @@ export const ServiceNotConnected = ({
         </div>
 
         {/* Help text */}
-        <p
-          data-component="HelpText"
-          className="mt-6 text-sm text-muted-foreground"
-        >
+        <p data-component="HelpText" className="mt-6 text-sm text-muted-foreground">
           Need help? Check out{' '}
           <a
             href={docsUrl}

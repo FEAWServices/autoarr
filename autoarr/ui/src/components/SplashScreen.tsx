@@ -37,11 +37,7 @@ export const SplashScreen = ({ onComplete, minDisplayTime = 2000 }: SplashScreen
         {/* Logo with text */}
         <div className="mb-6 animate-pulse">
           <div className="bg-white rounded-full p-8 shadow-lg">
-            <img
-              src="/logo.png"
-              alt="AutoArr"
-              className="w-48 h-auto"
-            />
+            <img src="/logo.png" alt="AutoArr" className="w-48 h-auto" />
           </div>
         </div>
 

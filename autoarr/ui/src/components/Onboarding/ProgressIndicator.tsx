@@ -18,11 +18,7 @@ interface ProgressIndicatorProps {
   onStepClick?: (stepId: string) => void;
 }
 
-export const ProgressIndicator = ({
-  steps,
-  currentStep,
-  onStepClick,
-}: ProgressIndicatorProps) => {
+export const ProgressIndicator = ({ steps, currentStep, onStepClick }: ProgressIndicatorProps) => {
   const currentIndex = steps.findIndex((s) => s.id === currentStep);
 
   return (
@@ -55,11 +51,7 @@ export const ProgressIndicator = ({
                 data-testid={`step-indicator-${step.id}`}
                 aria-label={`Go to ${step.label} step`}
               >
-                {isCompleted ? (
-                  <Check className="w-4 h-4" />
-                ) : (
-                  <span>{index + 1}</span>
-                )}
+                {isCompleted ? <Check className="w-4 h-4" /> : <span>{index + 1}</span>}
               </button>
               <span
                 className={`

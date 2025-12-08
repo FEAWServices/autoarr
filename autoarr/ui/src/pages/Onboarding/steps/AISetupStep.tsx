@@ -186,9 +186,7 @@ export const AISetupStep = () => {
         <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
           <Bot className="w-8 h-8 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          Connect Your AI
-        </h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Connect Your AI</h2>
         <p className="text-muted-foreground">
           AutoArr uses AI to power intelligent features. Choose from 200+ models via OpenRouter.
         </p>
@@ -369,8 +367,8 @@ export const AISetupStep = () => {
           </div>
           <h3 className="font-semibold text-foreground mb-2">AutoArr Premium</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Get access to a specialized AI model trained specifically on the *arr suite
-            of tools for even better recommendations and automation.
+            Get access to a specialized AI model trained specifically on the *arr suite of tools for
+            even better recommendations and automation.
           </p>
 
           {isOnWaitlist || waitlistSuccess ? (

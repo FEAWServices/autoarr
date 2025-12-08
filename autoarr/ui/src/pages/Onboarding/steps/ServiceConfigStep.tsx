@@ -5,7 +5,7 @@
  * Shows step-by-step instructions and tests connections.
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   ArrowRight,
   ArrowLeft,
@@ -18,11 +18,7 @@ import {
   SkipForward,
 } from 'lucide-react';
 import { useOnboardingStore, useCurrentServiceToConfig } from '../../../stores/onboardingStore';
-import {
-  getServicePlugin,
-  getColorClasses,
-  getDefaultUrl,
-} from '../../../plugins/services';
+import { getServicePlugin, getColorClasses, getDefaultUrl } from '../../../plugins/services';
 
 export const ServiceConfigStep = () => {
   const {
@@ -39,20 +35,11 @@ export const ServiceConfigStep = () => {
   const currentServiceId = useCurrentServiceToConfig();
   const plugin = currentServiceId ? getServicePlugin(currentServiceId) : null;
 
-  const [url, setUrl] = useState('');
+  // Initialize state with default values based on current plugin
+  const [url, setUrl] = useState(() => (plugin ? getDefaultUrl(plugin) : ''));
   const [apiKey, setApiKey] = useState('');
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [testError, setTestError] = useState<string | null>(null);
-
-  // Reset form when service changes
-  useEffect(() => {
-    if (plugin) {
-      setUrl(getDefaultUrl(plugin));
-      setApiKey('');
-      setTestStatus('idle');
-      setTestError(null);
-    }
-  }, [plugin]);
 
   // If no services selected, this step shouldn't be shown
   if (!plugin || selectedServices.length === 0) {
@@ -122,7 +109,7 @@ export const ServiceConfigStep = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto" data-testid="service-config-step">
+    <div key={currentServiceId} className="max-w-2xl mx-auto" data-testid="service-config-step">
       {/* Progress header */}
       <div className="mb-6 p-4 rounded-xl bg-card border border-border">
         <div className="flex items-center justify-between text-sm">
@@ -149,15 +136,13 @@ export const ServiceConfigStep = () => {
 
       {/* Service header */}
       <div className="text-center mb-8">
-        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl ${colors.bg} flex items-center justify-center`}>
+        <div
+          className={`w-16 h-16 mx-auto mb-4 rounded-2xl ${colors.bg} flex items-center justify-center`}
+        >
           <Icon className={`w-8 h-8 ${colors.text}`} />
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          Configure {plugin.name}
-        </h2>
-        <p className="text-muted-foreground">
-          {plugin.description}
-        </p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Configure {plugin.name}</h2>
+        <p className="text-muted-foreground">{plugin.description}</p>
       </div>
 
       {/* Already configured notice */}
@@ -179,13 +164,13 @@ export const ServiceConfigStep = () => {
             <Key className={`w-5 h-5 ${colors.text}`} />
             Where to find your API key
           </h3>
-          <p className="text-sm text-muted-foreground mb-3">
-            {plugin.apiKeyLocation}
-          </p>
+          <p className="text-sm text-muted-foreground mb-3">{plugin.apiKeyLocation}</p>
           <ol className="space-y-2">
             {plugin.apiKeySteps.map((step, index) => (
               <li key={index} className="flex gap-3 text-sm">
-                <span className={`w-5 h-5 rounded-full ${colors.bg} ${colors.text} flex items-center justify-center flex-shrink-0 text-xs font-medium`}>
+                <span
+                  className={`w-5 h-5 rounded-full ${colors.bg} ${colors.text} flex items-center justify-center flex-shrink-0 text-xs font-medium`}
+                >
                   {index + 1}
                 </span>
                 <span className="text-muted-foreground">{step}</span>
@@ -206,12 +191,13 @@ export const ServiceConfigStep = () => {
         {/* Form fields */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
+            <label htmlFor="service-url" className="block text-sm font-medium text-foreground mb-2">
               Service URL
             </label>
             <div className="relative">
               <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
+                id="service-url"
                 type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -223,12 +209,13 @@ export const ServiceConfigStep = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
+            <label htmlFor="api-key" className="block text-sm font-medium text-foreground mb-2">
               API Key
             </label>
             <div className="relative">
               <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
+                id="api-key"
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
@@ -256,21 +243,19 @@ export const ServiceConfigStep = () => {
             `}
             data-testid="test-connection-button"
           >
-            {testStatus === 'testing' ? (
+            {testStatus === 'testing' && (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Testing Connection...
               </>
-            ) : testStatus === 'success' ? (
+            )}
+            {testStatus === 'success' && (
               <>
                 <CheckCircle className="w-4 h-4" />
                 Connected!
               </>
-            ) : (
-              <>
-                Test Connection
-              </>
             )}
+            {testStatus !== 'testing' && testStatus !== 'success' && <>Test Connection</>}
           </button>
 
           {testStatus === 'error' && testError && (

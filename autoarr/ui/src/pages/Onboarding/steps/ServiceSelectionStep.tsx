@@ -9,11 +9,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, ArrowLeft, Check, CheckCircle2 } from 'lucide-react';
 import { useOnboardingStore } from '../../../stores/onboardingStore';
-import {
-  servicePlugins,
-  getColorClasses,
-  type ServicePlugin,
-} from '../../../plugins/services';
+import { servicePlugins, getColorClasses, type ServicePlugin } from '../../../plugins/services';
 
 interface ServiceCardProps {
   plugin: ServicePlugin;
@@ -45,7 +41,9 @@ const ServiceCard = ({ plugin, selected, onToggle, connected = false }: ServiceC
     >
       {/* Selected/Connected indicator */}
       {(selected || connected) && (
-        <div className={`absolute top-3 right-3 w-6 h-6 rounded-full ${connected ? 'bg-green-500/20' : colors.bg} flex items-center justify-center`}>
+        <div
+          className={`absolute top-3 right-3 w-6 h-6 rounded-full ${connected ? 'bg-green-500/20' : colors.bg} flex items-center justify-center`}
+        >
           {connected ? (
             <CheckCircle2 className="w-4 h-4 text-green-500" />
           ) : (
@@ -57,11 +55,7 @@ const ServiceCard = ({ plugin, selected, onToggle, connected = false }: ServiceC
       <div className="flex items-start gap-4">
         {/* Logo image - fixed size for consistency */}
         <div className="w-12 h-12 rounded-xl bg-card flex items-center justify-center flex-shrink-0 overflow-hidden">
-          <img
-            src={plugin.logo}
-            alt={`${plugin.name} logo`}
-            className="w-10 h-10 object-contain"
-          />
+          <img src={plugin.logo} alt={`${plugin.name} logo`} className="w-10 h-10 object-contain" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -77,9 +71,7 @@ const ServiceCard = ({ plugin, selected, onToggle, connected = false }: ServiceC
               </span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {plugin.description}
-          </p>
+          <p className="text-sm text-muted-foreground line-clamp-2">{plugin.description}</p>
           <div className="mt-2 text-xs text-muted-foreground">
             Default port: {plugin.defaultPort}
           </div>
@@ -90,13 +82,8 @@ const ServiceCard = ({ plugin, selected, onToggle, connected = false }: ServiceC
 };
 
 export const ServiceSelectionStep = () => {
-  const {
-    previousStep,
-    nextStep,
-    selectedServices,
-    selectService,
-    isLoading,
-  } = useOnboardingStore();
+  const { previousStep, nextStep, selectedServices, selectService, isLoading } =
+    useOnboardingStore();
 
   // Track which services are already connected
   const [connectedServices, setConnectedServices] = useState<string[]>([]);
@@ -139,8 +126,8 @@ export const ServiceSelectionStep = () => {
   };
 
   // Separate connected and unconnected services
-  const unconnectedPlugins = servicePlugins.filter(p => !connectedServices.includes(p.id));
-  const connectedPlugins = servicePlugins.filter(p => connectedServices.includes(p.id));
+  const unconnectedPlugins = servicePlugins.filter((p) => !connectedServices.includes(p.id));
+  const connectedPlugins = servicePlugins.filter((p) => connectedServices.includes(p.id));
 
   // Group unconnected services by category
   const downloadServices = unconnectedPlugins.filter((p) => p.category === 'download');
@@ -151,12 +138,10 @@ export const ServiceSelectionStep = () => {
     <div className="max-w-2xl mx-auto" data-testid="service-selection-step">
       {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          Select Your Services
-        </h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Select Your Services</h2>
         <p className="text-muted-foreground">
-          Choose which services you want to integrate with AutoArr.
-          You can add more later from Settings.
+          Choose which services you want to integrate with AutoArr. You can add more later from
+          Settings.
         </p>
       </div>
 

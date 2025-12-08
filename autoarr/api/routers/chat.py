@@ -28,7 +28,7 @@ from typing import Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
-from autoarr.api.services.chat_agent import ChatAgent, ChatResponse, QueryTopic
+from autoarr.api.services.chat_agent import ChatAgent, QueryTopic
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +155,7 @@ async def get_chat_agent() -> ChatAgent:
         llm_settings = None
 
     # Get service versions for context
-    service_versions = {}
+    service_versions: Dict[str, str] = {}
     try:
         # TODO: Fetch actual versions from connected services
         pass

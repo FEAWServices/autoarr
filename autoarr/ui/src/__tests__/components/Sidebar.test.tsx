@@ -81,9 +81,9 @@ describe('Sidebar AI Service Status - Regression', () => {
       renderWithRouter(<Sidebar />);
 
       await waitFor(() => {
-        const serviceStatus = screen.getByTestId('sidebar-status-ai')?.closest(
-          '[data-component="SidebarServiceStatus"]'
-        );
+        const serviceStatus = screen
+          .getByTestId('sidebar-status-ai')
+          ?.closest('[data-component="SidebarServiceStatus"]');
         expect(serviceStatus).toHaveTextContent('/5)');
       });
     });

@@ -100,104 +100,104 @@ export const useChatStore = create<ChatStore>()(
   (set, get) => ({
     // Initial State - start with empty messages
     messages: [],
-      isTyping: false,
-      currentRequestId: null,
-      currentRequests: new Map(),
-      error: null,
+    isTyping: false,
+    currentRequestId: null,
+    currentRequests: new Map(),
+    error: null,
 
-      // Message Actions
-      addMessage: (message: Message) => {
-        set((state) => {
-          const newMessages = [...state.messages, message];
-          saveToStorage(newMessages);
-          return { messages: newMessages };
-        });
-      },
+    // Message Actions
+    addMessage: (message: Message) => {
+      set((state) => {
+        const newMessages = [...state.messages, message];
+        saveToStorage(newMessages);
+        return { messages: newMessages };
+      });
+    },
 
-      clearHistory: () => {
-        set({ messages: [], currentRequests: new Map() });
-        localStorage.removeItem(STORAGE_KEY);
-      },
+    clearHistory: () => {
+      set({ messages: [], currentRequests: new Map() });
+      localStorage.removeItem(STORAGE_KEY);
+    },
 
-      loadHistory: () => {
-        const messages = loadFromStorage();
-        set({ messages });
-      },
+    loadHistory: () => {
+      const messages = loadFromStorage();
+      set({ messages });
+    },
 
-      saveHistory: () => {
-        const { messages } = get();
-        saveToStorage(messages);
-      },
+    saveHistory: () => {
+      const { messages } = get();
+      saveToStorage(messages);
+    },
 
-      // Typing Actions
-      setTyping: (isTyping: boolean) => {
-        set({ isTyping });
-      },
+    // Typing Actions
+    setTyping: (isTyping: boolean) => {
+      set({ isTyping });
+    },
 
-      // Request Actions
-      setCurrentRequestId: (requestId: string | null) => {
-        set({ currentRequestId: requestId });
-      },
+    // Request Actions
+    setCurrentRequestId: (requestId: string | null) => {
+      set({ currentRequestId: requestId });
+    },
 
-      updateRequestStatus: (requestId: string, request: RequestInfo) => {
-        set((state) => {
-          const newRequests = new Map(state.currentRequests);
-          newRequests.set(requestId, request);
-          return { currentRequests: newRequests };
-        });
-      },
+    updateRequestStatus: (requestId: string, request: RequestInfo) => {
+      set((state) => {
+        const newRequests = new Map(state.currentRequests);
+        newRequests.set(requestId, request);
+        return { currentRequests: newRequests };
+      });
+    },
 
-      getRequest: (requestId: string) => {
-        const { currentRequests } = get();
-        return currentRequests.get(requestId);
-      },
+    getRequest: (requestId: string) => {
+      const { currentRequests } = get();
+      return currentRequests.get(requestId);
+    },
 
-      removeRequest: (requestId: string) => {
-        set((state) => {
-          const newRequests = new Map(state.currentRequests);
-          newRequests.delete(requestId);
-          return { currentRequests: newRequests };
-        });
-      },
+    removeRequest: (requestId: string) => {
+      set((state) => {
+        const newRequests = new Map(state.currentRequests);
+        newRequests.delete(requestId);
+        return { currentRequests: newRequests };
+      });
+    },
 
-      // Error Actions
-      setError: (error: string | null) => {
-        set({ error });
-      },
+    // Error Actions
+    setError: (error: string | null) => {
+      set({ error });
+    },
 
-      // Utility Actions
-      getFilteredMessages: (filter) => {
-        const { messages } = get();
+    // Utility Actions
+    getFilteredMessages: (filter) => {
+      const { messages } = get();
 
-        if (!filter) return messages;
+      if (!filter) return messages;
 
-        return messages.filter((msg) => {
-          // Filter by search term
-          if (filter.searchTerm) {
-            const searchLower = filter.searchTerm.toLowerCase();
-            if (!msg.content.toLowerCase().includes(searchLower)) {
-              return false;
-            }
+      return messages.filter((msg) => {
+        // Filter by search term
+        if (filter.searchTerm) {
+          const searchLower = filter.searchTerm.toLowerCase();
+          if (!msg.content.toLowerCase().includes(searchLower)) {
+            return false;
           }
+        }
 
-          // Filter by content type
-          if (filter.type && msg.metadata?.classification) {
-            if (msg.metadata.classification.content_type !== filter.type) {
-              return false;
-            }
+        // Filter by content type
+        if (filter.type && msg.metadata?.classification) {
+          if (msg.metadata.classification.content_type !== filter.type) {
+            return false;
           }
+        }
 
-          // Filter by request status
-          if (filter.status && msg.metadata?.requestStatus) {
-            if (msg.metadata.requestStatus !== filter.status) {
-              return false;
-            }
+        // Filter by request status
+        if (filter.status && msg.metadata?.requestStatus) {
+          if (msg.metadata.requestStatus !== filter.status) {
+            return false;
           }
+        }
 
-          return true;
-        });
-      },
-    })
+        return true;
+      });
+    },
+  })
 );
 
 // Helper hook to add system message
