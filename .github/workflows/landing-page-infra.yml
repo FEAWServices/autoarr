@@ -42,6 +42,7 @@ env:
   PULUMI_VERSION: "3.100.0"
   NODE_VERSION: "20"
   WORKING_DIR: "infrastructure/landing-page"
+  PULUMI_ORG: "autoarr"
 
 permissions:
   contents: read
@@ -133,7 +134,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           STACK="${{ github.event.inputs.environment || 'dev' }}"
-          pulumi stack select "autoarr-landing-page/${STACK}" --create
+          pulumi stack select "${{ env.PULUMI_ORG }}/${STACK}" --create
 
       - name: Set Pulumi config from secrets
         working-directory: ${{ env.WORKING_DIR }}
@@ -237,7 +238,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           STACK="${{ github.event.inputs.environment || 'dev' }}"
-          pulumi stack select "autoarr-landing-page/${STACK}" --create
+          pulumi stack select "${{ env.PULUMI_ORG }}/${STACK}" --create
 
       - name: Set Pulumi config from secrets
         working-directory: ${{ env.WORKING_DIR }}
@@ -326,7 +327,7 @@ jobs:
         run: |
           npm ci
           STACK="${{ github.event.inputs.environment || 'dev' }}"
-          pulumi stack select "autoarr-landing-page/${STACK}"
+          pulumi stack select "${{ env.PULUMI_ORG }}/${STACK}"
           echo "secret=$(pulumi stack output turnstileSecretKey --show-secrets)" >> $GITHUB_OUTPUT
 
       - name: Set Firebase Functions config
@@ -439,7 +440,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: |
           STACK="${{ github.event.inputs.environment }}"
-          pulumi stack select "autoarr-landing-page/${STACK}"
+          pulumi stack select "${{ env.PULUMI_ORG }}/${STACK}"
 
       - name: Set Pulumi config from secrets
         working-directory: ${{ env.WORKING_DIR }}
@@ -457,4 +458,4 @@ jobs:
           echo "## Infrastructure Destroyed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Environment: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "Stack: autoarr-landing-page/${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "Stack: ${{ env.PULUMI_ORG }}/${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
