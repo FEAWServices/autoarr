@@ -18,6 +18,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   # =============================================================================
   # QUICK FAIL TYPE CHECK (Fast feedback - runs immediately)

@@ -43,6 +43,10 @@ env:
   NODE_VERSION: "20"
   WORKING_DIR: "infrastructure/landing-page"
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   # =============================================================================
   # VALIDATE - Lint and type check infrastructure code
