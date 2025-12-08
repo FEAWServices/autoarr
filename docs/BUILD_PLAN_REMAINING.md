@@ -25,7 +25,7 @@ AutoArr v0.8.0 is a **beta release** with the following working:
 - Monitoring service (implemented, needs startup integration)
 - Recovery service (implemented, needs real-world testing)
 - Event bus (implemented, needs production validation)
-- Activity logging (implemented, needs API exposure)
+- Activity logging (implemented, API and UI complete)
 
 ---
 
@@ -33,12 +33,14 @@ AutoArr v0.8.0 is a **beta release** with the following working:
 
 ### High Priority
 
-#### Activity Feed (Backend + Frontend)
+#### Activity Feed (Backend + Frontend) - ✅ COMPLETE
 
-- [ ] Create `/api/v1/activity` router to expose existing ActivityLogService
-- [ ] Create Activity.tsx page with paginated feed
-- [ ] Add real-time activity updates via WebSocket
-- [ ] Add activity filtering (by service, type, severity)
+- [x] Create `/api/v1/activity` router to expose existing ActivityLogService
+- [x] Create Activity.tsx page with paginated feed
+- [x] Add activity filtering (by service, type, severity, search)
+- [x] Add export to JSON functionality
+- [x] Add cleanup with configurable retention
+- [ ] Add real-time activity updates via WebSocket (deferred)
 
 #### Test Coverage
 
