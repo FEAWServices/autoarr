@@ -1,21 +1,14 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main # Production
-      - develop # Staging/Daily latest
-      - "feature/**" # Feature branches
-      - "fix/**" # Bug fixes
   pull_request:
     branches:
       - main # PRs to production
       - develop # PRs to staging
 
-# Cancel in-progress runs when a new workflow is triggered
-# Use head_ref for PRs, ref for pushes to ensure proper grouping
+# Cancel in-progress runs when a new PR commit is pushed
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref }}
   cancel-in-progress: true
 
 permissions:
