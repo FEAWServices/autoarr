@@ -44,10 +44,14 @@ cosign verify-attestation ghcr.io/feawservices/autoarr:latest \
 
 ### Official Image Registries
 
-| Registry                  | Image                                   |
-| ------------------------- | --------------------------------------- |
-| GitHub Container Registry | `ghcr.io/feawservices/autoarr:latest`   |
-| Docker Hub                | `docker.io/feawservices/autoarr:latest` |
+All releases are published to both registries with identical security attestations:
+
+| Registry                  | Image                                    |
+| ------------------------- | ---------------------------------------- |
+| GitHub Container Registry | `ghcr.io/feawservices/autoarr:latest`    |
+| Docker Hub                | `docker.io/YOUR_USERNAME/autoarr:latest` |
+
+**Note:** Replace `YOUR_USERNAME` with the actual Docker Hub username once configured.
 
 ## Security Features
 
@@ -226,9 +230,10 @@ We maintain comprehensive security tests:
 
 - **Static Analysis**: Bandit for Python code scanning
 - **Dependency Scanning**: Dependabot + Trivy for known vulnerabilities
-- **Container Scanning**: Trivy HIGH/CRITICAL blocking in CI
+- **Container Scanning**: Trivy HIGH/CRITICAL blocking in CI and releases
 - **Unit Tests**: Security-focused test suite (`tests/security/`)
 - **Integration Tests**: API security tests
+- **CodeQL Analysis**: Continuous code scanning for vulnerabilities
 
 ### CI/CD Security
 
@@ -236,9 +241,12 @@ Every build includes:
 
 - Bandit static analysis
 - Safety dependency checks
-- Trivy container vulnerability scanning
-- SBOM generation
-- Image signing
+- Trivy container vulnerability scanning (blocks on HIGH/CRITICAL)
+- SBOM generation (SPDX format)
+- SLSA provenance attestations
+- Security scan reports attached to releases
+
+**Detailed documentation**: See [docs/SECURITY_SCANNING.md](docs/SECURITY_SCANNING.md)
 
 ## Security Resources
 
