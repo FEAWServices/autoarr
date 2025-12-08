@@ -12,7 +12,7 @@ const proxyOptions = {
   timeout: 5000,
   proxyTimeout: 5000,
   // Configure proxy to avoid hanging connections
-  configure: (proxy: { on: (event: string, handler: Function) => void }) => {
+  configure: (proxy: { on: (event: string, handler: (...args: unknown[]) => void) => void }) => {
     proxy.on('proxyReq', (proxyReq: { setHeader: (name: string, value: string) => void }) => {
       // Disable connection keep-alive to prevent hanging
       proxyReq.setHeader('Connection', 'close');
