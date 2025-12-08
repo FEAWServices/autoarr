@@ -7,7 +7,14 @@ specific rules and best practices.
 
 1. **Root Directory Cleanup**
 
-   - KEEP in root: Only README.md, claude.md, AGENTS.md and contributing.md
+   - KEEP in root (standard open source files):
+     - `README.md` - Project overview and quick start
+     - `CLAUDE.md` - Claude Code configuration
+     - `CHANGELOG.md` - Version history (required for releases)
+     - `CONTRIBUTING.md` - Contribution guidelines
+     - `SECURITY.md` - Security policy and vulnerability reporting
+     - `LICENSE` - License file
+     - `CODE_OF_CONDUCT.md` - Community guidelines (if present)
    - MOVE everything else: All other .md files should be relocated to
      appropriate /docs folders
 

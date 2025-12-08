@@ -5,24 +5,58 @@ All notable changes to AutoArr will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0](https://github.com/FEAWServices/autoarr/compare/v1.0.0...v1.1.0) (2025-11-27)
+## [0.8.0] - 2025-12-08
 
+### Important
 
-### Features
+This is a **beta release**. AutoArr is feature-complete for configuration auditing and chat-based content requests, but some autonomous features are still being refined.
 
-* Add local test harness matching CI pipeline (DRY principle) ([7a7d4e2](https://github.com/FEAWServices/autoarr/commit/7a7d4e2875a4fd5903b5c6b99141209b412f7277))
-* Add VS Code Dev Container with Poetry and Claude CLI ([9896afe](https://github.com/FEAWServices/autoarr/commit/9896afe023eff486a96892ffff825eb5f21b79ca))
-* **ci:** Add GitHub Action to auto-rebase dependabot PRs ([#128](https://github.com/FEAWServices/autoarr/issues/128)) ([0a882ff](https://github.com/FEAWServices/autoarr/commit/0a882ffb78a44642901ef22177158787403a7858))
-* Complete Phase 1 - Foundation with Web Admin Interface ([c3b6161](https://github.com/FEAWServices/autoarr/commit/c3b61617d06769aa74c7d4a5d230ebf925e4af1a))
+### Added
 
+- **Configuration Intelligence**: AI-powered configuration auditing with recommendations
+- **Chat Assistant**: Natural language interface for content requests with LLM tool calling
+- **MCP Server Integrations**: Full integration with SABnzbd, Sonarr, Radarr, and Plex
+- **Dashboard**: Service health monitoring and status overview
+- **Settings Management**: Service connection configuration and testing
+- **Activity Logging**: Backend service for tracking system activities
+- **Monitoring Service**: Download queue monitoring (backend implemented)
+- **Recovery Service**: Intelligent retry strategies (backend implemented)
+- **Event Bus**: Pub/sub event system with correlation tracking
+
+### Changed
+
+- Version numbering aligned with actual feature completeness (was 1.1.0, now 0.8.0)
+- Honest feature status in documentation
+
+### Security
+
+- Enterprise-grade container security (SBOM, cosign signing, SLSA provenance)
+- Blocking Trivy scans for HIGH/CRITICAL vulnerabilities
+- Docker Hub publishing alongside GHCR
+- Non-root container user
+- Comprehensive security policy
 
 ### Documentation
 
-* Add comprehensive testing guide ([2aa3733](https://github.com/FEAWServices/autoarr/commit/2aa37337bd633cbb627d974943711b0d94067e0e))
-* restructure README with comprehensive vision and organized documentation ([68f4abe](https://github.com/FEAWServices/autoarr/commit/68f4abeffe929ed0292a321808c5557b978de83e))
-* Update README to format init.py section correctly ([2f5c06f](https://github.com/FEAWServices/autoarr/commit/2f5c06f7a5f2d36ca851c0117212962e7ce6575c))
+- Added BUILD_PLAN_REMAINING.md documenting path to v1.0
+- Updated SECURITY.md with container security verification
+- Added links to Sonarr/Radarr wikis
 
-## [1.0.0] - 2025-10-19
+## [0.7.0] - 2025-11-27
+
+### Features
+
+- Add local test harness matching CI pipeline (DRY principle)
+- Add VS Code Dev Container with Poetry and Claude CLI
+- Add GitHub Action to auto-rebase dependabot PRs
+- Complete Phase 1 - Foundation with Web Admin Interface
+
+### Documentation
+
+- Add comprehensive testing guide
+- Restructure README with comprehensive vision and organized documentation
+
+## [0.6.0] - 2025-10-19
 
 ### Added
 
@@ -73,7 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Dockerfile Python version (3.14 → 3.11)
+- Dockerfile Python version (3.14 -> 3.11)
 - Frontend CI pnpm installation order
 
 ### Security
@@ -84,10 +118,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for v1.1.0
+### Planned for v1.0.0
 
-- WebSocket Manager backend service
-- Additional integrations (Prowlarr, Bazarr)
-- Performance optimizations
+- Activity API router (expose existing ActivityLogService)
+- Activity UI page
+- Monitoring service auto-start on application startup
+- WebSocket real-time updates for activity feed
+- Test coverage improvement (25% -> 85%)
 
-[1.0.0]: https://github.com/FEAWServices/autoarr/releases/tag/v1.0.0
+[0.8.0]: https://github.com/FEAWServices/autoarr/releases/tag/v0.8.0
+[0.7.0]: https://github.com/FEAWServices/autoarr/releases/tag/v0.7.0
+[0.6.0]: https://github.com/FEAWServices/autoarr/releases/tag/v0.6.0

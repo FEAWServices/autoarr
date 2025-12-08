@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     # Server Settings
     # ============================================================================
 
-    host: str = "0.0.0.0"
+    host: str = "0.0.0.0"  # nosec B104 - Intentional for container networking
     port: int = 8088
     reload: bool = False
     workers: int = 1
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     # ============================================================================
 
     app_name: str = "AutoArr API"
-    app_version: str = "1.0.0"
+    app_version: str = "0.8.0"
     app_description: str = "Intelligent media automation orchestrator"
     app_env: str = "development"
     log_level: str = "INFO"
