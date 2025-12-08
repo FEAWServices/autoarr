@@ -40,6 +40,7 @@ from .dependencies import get_orchestrator, shutdown_orchestrator
 from .middleware import ErrorHandlerMiddleware, RequestLoggingMiddleware, add_security_headers
 from .rate_limiter import limiter
 from .routers import (
+    activity,
     chat,
     configuration,
     downloads,
@@ -293,6 +294,13 @@ app.include_router(
     optimize.router,
     prefix=f"{_settings.api_v1_prefix}/optimize",
     tags=["optimize"],
+)
+
+# Activity log endpoints
+app.include_router(
+    activity.router,
+    prefix=f"{_settings.api_v1_prefix}/activity",
+    tags=["activity"],
 )
 
 
