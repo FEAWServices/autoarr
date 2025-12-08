@@ -140,19 +140,19 @@ Once the release PR is merged, GitHub Actions automatically:
 
 After the workflow completes (15-30 minutes):
 
-1. **Check GitHub Release:** https://github.com/YOUR_ORG/autoarr/releases
+1. **Check GitHub Release:** https://github.com/FEAWServices/autoarr/releases
 
    - Verify version tag (vX.Y.Z)
    - Confirm all native executables are attached
    - Check SHA256SUMS.txt is present
 
-2. **Verify Docker Hub:** https://hub.docker.com/r/YOUR_USERNAME/autoarr
+2. **Verify Docker Hub:** https://hub.docker.com/r/feawservices/autoarr
 
    - Confirm `latest` tag is updated
    - Verify version tags (X.Y.Z, X.Y)
    - Check both amd64 and arm64 manifests
 
-3. **Verify GHCR:** https://github.com/YOUR_ORG/autoarr/pkgs/container/autoarr
+3. **Verify GHCR:** https://github.com/FEAWServices/autoarr/pkgs/container/autoarr
 
    - Confirm image is published
    - Check multi-arch support
@@ -161,12 +161,12 @@ After the workflow completes (15-30 minutes):
 
    ```bash
    # Test Docker Hub
-   docker pull YOUR_USERNAME/autoarr:latest
-   docker run --rm YOUR_USERNAME/autoarr:latest --version
+   docker pull feawservices/autoarr:latest
+   docker run --rm feawservices/autoarr:latest --version
 
    # Test GHCR
-   docker pull ghcr.io/YOUR_ORG/autoarr:latest
-   docker run --rm ghcr.io/YOUR_ORG/autoarr:latest --version
+   docker pull ghcr.io/FEAWServices/autoarr:latest
+   docker run --rm ghcr.io/FEAWServices/autoarr:latest --version
    ```
 
 ## Required GitHub Secrets
@@ -216,7 +216,7 @@ These are automatically available:
 1. Verify `DOCKERHUB_USERNAME` secret is set correctly
 2. Verify `DOCKERHUB_TOKEN` is valid and not expired
 3. Check Docker Hub token has "Read, Write, Delete" permissions
-4. Ensure repository name matches: `YOUR_USERNAME/autoarr`
+4. Ensure repository name matches: `feawservices/autoarr`
 
 ### Native Build Fails
 
@@ -320,7 +320,7 @@ If you encounter issues with the release process:
 
 1. Check GitHub Actions logs for errors
 2. Review this guide for troubleshooting steps
-3. Open an issue: https://github.com/YOUR_ORG/autoarr/issues
+3. Open an issue: https://github.com/FEAWServices/autoarr/issues
 4. Contact maintainers in discussions
 
 ---

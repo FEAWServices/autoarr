@@ -4,8 +4,8 @@
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%203.0-blue.svg)](./LICENSE)
 [![Version](https://img.shields.io/badge/version-0.8.0--beta-orange.svg)](./CHANGELOG.md)
-[![Docker Hub](https://img.shields.io/docker/pulls/YOUR_USERNAME/autoarr?label=docker%20pulls)](https://hub.docker.com/r/YOUR_USERNAME/autoarr)
-[![Docker Image Size](https://img.shields.io/docker/image-size/YOUR_USERNAME/autoarr/latest?label=image%20size)](https://hub.docker.com/r/YOUR_USERNAME/autoarr)
+[![Docker Hub](https://img.shields.io/docker/pulls/feawservices/autoarr?label=docker%20pulls)](https://hub.docker.com/r/feawservices/autoarr)
+[![Docker Image Size](https://img.shields.io/docker/image-size/feawservices/autoarr/latest?label=image%20size)](https://hub.docker.com/r/feawservices/autoarr)
 [![GHCR](https://img.shields.io/badge/ghcr.io-feawservices%2Fautoarr-blue.svg)](https://ghcr.io/feawservices/autoarr)
 [![GitHub Stars](https://img.shields.io/github/stars/FEAWServices/autoarr)](https://github.com/FEAWServices/autoarr)
 

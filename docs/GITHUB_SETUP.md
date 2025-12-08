@@ -105,16 +105,16 @@ _Note: These are currently commented out in the workflow but can be enabled for 
    - **Description:** "Intelligent orchestration layer for media automation stacks"
 4. Click **Create**
 
-Your Docker Hub repository URL will be: `https://hub.docker.com/r/YOUR_USERNAME/autoarr`
+Your Docker Hub repository URL will be: `https://hub.docker.com/r/feawservices/autoarr`
 
 ### Verifying Repository Access
 
 ```bash
 # Test login locally
-echo $DOCKERHUB_TOKEN | docker login -u YOUR_USERNAME --password-stdin
+echo $DOCKERHUB_TOKEN | docker login -u feawservices --password-stdin
 
 # Test pulling (after first release)
-docker pull YOUR_USERNAME/autoarr:latest
+docker pull feawservices/autoarr:latest
 ```
 
 ---
@@ -165,7 +165,7 @@ Before creating your first release, verify:
 
 - [ ] `DOCKERHUB_USERNAME` secret is set
 - [ ] `DOCKERHUB_TOKEN` secret is set and valid
-- [ ] Docker Hub repository `YOUR_USERNAME/autoarr` exists
+- [ ] Docker Hub repository `feawservices/autoarr` exists
 - [ ] GitHub Actions has read/write permissions
 - [ ] Branch protection rules configured for `main`
 - [ ] Workflow files are present in `.github/workflows/`
@@ -178,11 +178,11 @@ You can test without creating a release:
 1. **Test Docker Login** (locally):
 
    ```bash
-   echo $DOCKERHUB_TOKEN | docker login -u YOUR_USERNAME --password-stdin
+   echo $DOCKERHUB_TOKEN | docker login -u feawservices --password-stdin
    docker pull python:3.11-slim
-   docker tag python:3.11-slim YOUR_USERNAME/autoarr:test
-   docker push YOUR_USERNAME/autoarr:test
-   docker rmi YOUR_USERNAME/autoarr:test
+   docker tag python:3.11-slim feawservices/autoarr:test
+   docker push feawservices/autoarr:test
+   docker rmi feawservices/autoarr:test
    ```
 
 2. **Test GitHub Actions Syntax**:
@@ -216,7 +216,7 @@ You can test without creating a release:
 
 1. Verify `DOCKERHUB_USERNAME` matches your actual Docker Hub username (case-sensitive)
 2. Verify `DOCKERHUB_TOKEN` is valid and not expired
-3. Ensure Docker Hub repository exists: `YOUR_USERNAME/autoarr`
+3. Ensure Docker Hub repository exists: `feawservices/autoarr`
 4. Check token permissions include "Read, Write, Delete"
 
 **How to Fix:**
@@ -324,7 +324,7 @@ You can test without creating a release:
 # Visit: https://hub.docker.com/settings/security
 
 # Test Docker Hub login
-echo $DOCKERHUB_TOKEN | docker login -u YOUR_USERNAME --password-stdin
+echo $DOCKERHUB_TOKEN | docker login -u feawservices --password-stdin
 
 # Test GitHub Actions locally (using act)
 act -j docker-release --secret-file .secrets

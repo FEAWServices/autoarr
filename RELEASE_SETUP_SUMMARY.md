@@ -18,7 +18,7 @@ All release management improvements have been successfully implemented! Your rep
 - Configured multi-registry publishing (GHCR + Docker Hub)
 - Images will be pushed to both:
   - `ghcr.io/feawservices/autoarr` (GitHub Container Registry)
-  - `YOUR_USERNAME/autoarr` (Docker Hub)
+  - `feawservices/autoarr` (Docker Hub)
 
 **Impact:** Users can now easily pull images from Docker Hub, the most popular container registry.
 
@@ -117,7 +117,7 @@ Before the automated release process will work, you need to configure GitHub sec
 ### 3. Add GitHub Secrets
 
 ```bash
-# Go to: https://github.com/YOUR_ORG/autoarr/settings/secrets/actions
+# Go to: https://github.com/FEAWServices/autoarr/settings/secrets/actions
 
 # Add Secret 1:
 # Name: DOCKERHUB_USERNAME
@@ -133,8 +133,8 @@ Before the automated release process will work, you need to configure GitHub sec
 Replace `YOUR_USERNAME` in README.md badges with your actual Docker Hub username:
 
 ```markdown
-[![Docker Hub](https://img.shields.io/docker/pulls/YOUR_USERNAME/autoarr?label=docker%20pulls)](https://hub.docker.com/r/YOUR_USERNAME/autoarr)
-[![Docker Image Size](https://img.shields.io/docker/image-size/YOUR_USERNAME/autoarr/latest?label=image%20size)](https://hub.docker.com/r/YOUR_USERNAME/autoarr)
+[![Docker Hub](https://img.shields.io/docker/pulls/feawservices/autoarr?label=docker%20pulls)](https://hub.docker.com/r/feawservices/autoarr)
+[![Docker Image Size](https://img.shields.io/docker/image-size/feawservices/autoarr/latest?label=image%20size)](https://hub.docker.com/r/feawservices/autoarr)
 ```
 
 ### 5. Update Release Workflow
@@ -144,7 +144,7 @@ Replace `YOUR_USERNAME` in `.github/workflows/release-please.yml`:
 ```yaml
 images: |
   ghcr.io/${{ github.repository }}
-  YOUR_USERNAME/autoarr  # <- Change this
+  feawservices/autoarr  # <- Change this
 ```
 
 **Detailed instructions:** See `docs/GITHUB_SETUP.md`
@@ -186,7 +186,7 @@ images: |
    - Creates GitHub release with all artifacts
 
 6. **Release is live!** 🎉
-   - Docker: `docker pull YOUR_USERNAME/autoarr:latest`
+   - Docker: `docker pull feawservices/autoarr:latest`
    - Native: Download from GitHub releases
    - Changelog: Automatically generated
 
@@ -198,7 +198,7 @@ Each release automatically creates:
 
 ### Docker Images
 
-- **Docker Hub**: `YOUR_USERNAME/autoarr:latest`, `YOUR_USERNAME/autoarr:X.Y.Z`
+- **Docker Hub**: `feawservices/autoarr:latest`, `feawservices/autoarr:X.Y.Z`
 - **GHCR**: `ghcr.io/feawservices/autoarr:latest`, `ghcr.io/feawservices/autoarr:X.Y.Z`
 - **Platforms**: linux/amd64, linux/arm64
 
@@ -234,7 +234,7 @@ Before creating your first release:
 
 - [ ] Configure `DOCKERHUB_USERNAME` secret in GitHub
 - [ ] Configure `DOCKERHUB_TOKEN` secret in GitHub
-- [ ] Create Docker Hub repository: `YOUR_USERNAME/autoarr`
+- [ ] Create Docker Hub repository: `feawservices/autoarr`
 - [ ] Update `YOUR_USERNAME` in README.md badges
 - [ ] Update `YOUR_USERNAME` in release-please.yml
 - [ ] Verify GitHub Actions has read/write permissions

@@ -46,12 +46,10 @@ cosign verify-attestation ghcr.io/feawservices/autoarr:latest \
 
 All releases are published to both registries with identical security attestations:
 
-| Registry                  | Image                                    |
-| ------------------------- | ---------------------------------------- |
-| GitHub Container Registry | `ghcr.io/feawservices/autoarr:latest`    |
-| Docker Hub                | `docker.io/YOUR_USERNAME/autoarr:latest` |
-
-**Note:** Replace `YOUR_USERNAME` with the actual Docker Hub username once configured.
+| Registry                  | Image                                   |
+| ------------------------- | --------------------------------------- |
+| GitHub Container Registry | `ghcr.io/feawservices/autoarr:latest`   |
+| Docker Hub                | `docker.io/feawservices/autoarr:latest` |
 
 ## Security Features
 
