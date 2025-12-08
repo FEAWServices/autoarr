@@ -28,8 +28,11 @@ export interface ServicePlugin {
   /** Short description */
   description: string;
 
-  /** Lucide icon component */
+  /** Lucide icon component (fallback) */
   icon: LucideIcon;
+
+  /** Path to logo image (e.g., '/logos/sabnzbd.png') */
+  logo: string;
 
   /** Brand/accent color (Tailwind color name) */
   color: string;
@@ -72,6 +75,7 @@ export const sabnzbdPlugin: ServicePlugin = {
   name: 'SABnzbd',
   description: 'Usenet download client for automated NZB downloading',
   icon: Download,
+  logo: '/logos/sabnzbd.png',
   color: 'amber',
   category: 'download',
   defaultPort: 8080,
@@ -119,6 +123,7 @@ export const sonarrPlugin: ServicePlugin = {
   name: 'Sonarr',
   description: 'TV show management and automatic episode downloading',
   icon: Tv,
+  logo: '/logos/sonarr.png',
   color: 'blue',
   category: 'media',
   defaultPort: 8989,
@@ -165,6 +170,7 @@ export const radarrPlugin: ServicePlugin = {
   name: 'Radarr',
   description: 'Movie collection manager and automatic downloading',
   icon: Film,
+  logo: '/logos/radarr.png',
   color: 'orange',
   category: 'media',
   defaultPort: 7878,
@@ -211,6 +217,7 @@ export const plexPlugin: ServicePlugin = {
   name: 'Plex',
   description: 'Media server for streaming your library anywhere',
   icon: Server,
+  logo: '/logos/plex.png',
   color: 'amber',
   category: 'streaming',
   defaultPort: 32400,

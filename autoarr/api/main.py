@@ -36,7 +36,7 @@ from slowapi.errors import RateLimitExceeded
 
 from .config import get_settings
 from .database import get_database, init_database
-from .dependencies import shutdown_orchestrator
+from .dependencies import get_orchestrator, shutdown_orchestrator
 from .middleware import ErrorHandlerMiddleware, RequestLoggingMiddleware, add_security_headers
 from .rate_limiter import limiter
 from .routers import (
@@ -49,6 +49,7 @@ from .routers import (
     media,
     movies,
     onboarding,
+    optimize,
     requests,
 )
 from .routers import settings as settings_router
@@ -119,6 +120,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning(f"Warmup failed (non-critical): {e}")
         # Don't fail startup if warmup fails - app can still serve requests
+
+    # Initialize MCP orchestrator and connect to services configured via env vars
+    try:
+        logger.info("Initializing MCP orchestrator...")
+        # get_orchestrator is an async generator, so we need to iterate it
+        async for orchestrator in get_orchestrator():
+            connected = orchestrator.get_connected_servers()
+            if connected:
+                logger.info(f"MCP orchestrator connected to: {', '.join(connected)}")
+            else:
+                logger.info("MCP orchestrator initialized (no services configured)")
+            break  # Only need first yield
+    except Exception as e:
+        logger.warning(f"MCP orchestrator initialization failed (non-critical): {e}")
+        # Don't fail startup - services can still be configured later
 
     yield
 
@@ -270,6 +286,13 @@ app.include_router(
     logs.router,
     prefix=f"{_settings.api_v1_prefix}/logs",
     tags=["logs"],
+)
+
+# Optimization assessment endpoints
+app.include_router(
+    optimize.router,
+    prefix=f"{_settings.api_v1_prefix}/optimize",
+    tags=["optimize"],
 )
 
 

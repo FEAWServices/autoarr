@@ -121,45 +121,64 @@ class TopicClassificationResponse(BaseModel):
 
 # Global chat agent instance (lazily initialized)
 _chat_agent: Optional[ChatAgent] = None
+_chat_agent_config_hash: Optional[str] = None
+
+
+def _get_config_hash(api_key: Optional[str], model: str) -> str:
+    """Create a hash of the config to detect changes."""
+    import hashlib
+
+    config_str = f"{api_key or ''}:{model}"
+    return hashlib.md5(config_str.encode(), usedforsecurity=False).hexdigest()  # nosec B324
+
+
+def reset_chat_agent() -> None:
+    """Reset the chat agent singleton (call when LLM settings change)."""
+    global _chat_agent, _chat_agent_config_hash
+    _chat_agent = None
+    _chat_agent_config_hash = None
 
 
 async def get_chat_agent() -> ChatAgent:
     """Get or create chat agent instance."""
-    global _chat_agent
+    global _chat_agent, _chat_agent_config_hash
 
-    if _chat_agent is None:
-        # Get configuration from settings via repository
-        from autoarr.api.database import LLMSettingsRepository, get_database
+    # Get configuration from settings via repository
+    from autoarr.api.database import LLMSettingsRepository, get_database
 
-        try:
-            db = get_database()
-            llm_repo = LLMSettingsRepository(db)
-            llm_settings = await llm_repo.get_settings()
-        except RuntimeError:
-            # Database not available, use defaults
-            llm_settings = None
+    try:
+        db = get_database()
+        llm_repo = LLMSettingsRepository(db)
+        llm_settings = await llm_repo.get_settings()
+    except RuntimeError:
+        # Database not available, use defaults
+        llm_settings = None
 
-        # Get service versions for context
-        service_versions = {}
-        try:
-            # TODO: Fetch actual versions from connected services
-            pass
-        except Exception:
-            pass
+    # Get service versions for context
+    service_versions = {}
+    try:
+        # TODO: Fetch actual versions from connected services
+        pass
+    except Exception:
+        pass
 
-        # Extract settings or use defaults
-        api_key = None
-        model = "anthropic/claude-3.5-sonnet"
-        if llm_settings and llm_settings.enabled:
-            api_key = llm_settings.api_key if llm_settings.api_key else None
-            model = llm_settings.selected_model
+    # Extract settings or use defaults
+    api_key = None
+    model = "anthropic/claude-3.5-sonnet"
+    if llm_settings and llm_settings.enabled:
+        api_key = llm_settings.api_key if llm_settings.api_key else None
+        model = llm_settings.selected_model
 
+    # Check if config has changed - if so, recreate the agent
+    new_config_hash = _get_config_hash(api_key, model)
+    if _chat_agent is None or _chat_agent_config_hash != new_config_hash:
         _chat_agent = ChatAgent(
             api_key=api_key,
             model=model,
             brave_api_key=None,  # Brave search not yet implemented in settings
             service_versions=service_versions,
         )
+        _chat_agent_config_hash = new_config_hash
 
     return _chat_agent
 
@@ -197,11 +216,16 @@ async def send_message(
     - Content requests: Downloading specific content
     """
     try:
-        # Get response from chat agent
-        response = await agent.chat(
+        logger.info(f"Chat request received: '{input_data.message[:50]}...' (truncated)")
+
+        # Use chat_with_tools for full agentic experience with tool calling
+        # This allows the LLM to interact with connected services like SABnzbd
+        response = await agent.chat_with_tools(
             query=input_data.message,
             conversation_history=input_data.history,
         )
+
+        logger.info(f"Chat response generated: topic={response.topic}, intent={response.intent}")
 
         # Check if this is a content request that should use the legacy flow
         is_content_request = response.topic == QueryTopic.CONTENT_REQUEST.value
@@ -219,10 +243,40 @@ async def send_message(
         )
 
     except Exception as e:
+        error_str = str(e)
         logger.error(f"Chat error: {e}", exc_info=True)
+
+        # Provide user-friendly error messages for common issues
+        if "429" in error_str or "Too Many Requests" in error_str:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=(
+                    "Rate limit exceeded. You're using a free AI model with strict limits. "
+                    "Please wait 60 seconds and try again, or switch to a paid model in "
+                    "Settings > AI Settings for higher limits."
+                ),
+            )
+        elif "401" in error_str or "Unauthorized" in error_str:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=(
+                    "Invalid API key. Please check your OpenRouter API key in "
+                    "Settings > AI Settings. You can get a free key at openrouter.ai/keys"
+                ),
+            )
+        elif "402" in error_str or "Payment Required" in error_str:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=(
+                    "Insufficient credits on your OpenRouter account. "
+                    "Add credits at openrouter.ai or switch to a free model like "
+                    "'google/gemini-2.0-flash-exp:free' in Settings > AI Settings."
+                ),
+            )
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process message: {str(e)}",
+            detail=f"Failed to process message: {error_str}",
         )
 
 
@@ -281,7 +335,7 @@ async def get_topics() -> Dict:
             {
                 "id": "sabnzbd",
                 "name": "SABnzbd",
-                "description": "Usenet download client - queue management, configuration, troubleshooting",
+                "description": "Usenet download client - queue, config, troubleshooting",
                 "icon": "download",
             },
             {
@@ -293,7 +347,7 @@ async def get_topics() -> Dict:
             {
                 "id": "radarr",
                 "name": "Radarr",
-                "description": "Movie automation - movie management, quality profiles, custom formats",
+                "description": "Movie automation - management, quality profiles, formats",
                 "icon": "film",
             },
             {

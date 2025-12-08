@@ -16,6 +16,7 @@ import { Media } from './pages/Media';
 import { Home } from './pages/Home';
 import { Onboarding } from './pages/Onboarding';
 import ConfigAuditPage from './pages/ConfigAudit';
+import Optimize from './pages/Optimize';
 import { useThemeStore } from './stores/themeStore';
 import { useOnboardingStore } from './stores/onboardingStore';
 
@@ -83,6 +84,7 @@ function App() {
             <Route path="settings/appearance" element={<Appearance />} />
             <Route path="settings/config-audit" element={<ConfigAuditPage />} />
             <Route path="settings/logs" element={<Logs />} />
+            <Route path="optimize" element={<Optimize />} />
             <Route path="downloads" element={<Downloads />} />
             <Route path="shows" element={<Shows />} />
             <Route path="movies" element={<Movies />} />

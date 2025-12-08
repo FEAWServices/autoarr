@@ -556,12 +556,11 @@ async def llm_health() -> Dict[str, Any]:
 @router.get("/health/{service}", response_model=ServiceHealth, tags=["health"])
 async def service_health(
     service: str,
-    orchestrator: MCPOrchestrator = Depends(get_orchestrator),
 ) -> ServiceHealth:
     """
     Individual service health check.
 
-    Check the health of a specific MCP service.
+    Check the health of a specific MCP service using direct HTTP calls.
 
     Args:
         service: Service name (sabnzbd, sonarr, radarr, or plex)
@@ -584,6 +583,11 @@ async def service_health(
         }
         ```
     """
+    import httpx
+
+    from ..config import get_settings
+    from ..database import SettingsRepository, get_database
+
     # Validate service name
     valid_services = ["sabnzbd", "sonarr", "radarr", "plex"]
     if service not in valid_services:
@@ -592,9 +596,44 @@ async def service_health(
             detail=f"Invalid service name. Must be one of: {', '.join(valid_services)}",
         )
 
-    # Check if service is connected by checking if it's in _clients
-    if service not in orchestrator._clients:
-        # Return unconfigured status instead of error - this is expected for optional services
+    # Get service configuration from database (priority) or environment
+    settings = get_settings()
+    service_url = None
+    service_api_key = None
+    service_enabled = False
+
+    try:
+        db = get_database()
+        repo = SettingsRepository(db)
+        db_settings = await repo.get_service_settings(service)
+        if db_settings and db_settings.enabled and db_settings.api_key_or_token:
+            service_url = db_settings.url
+            service_api_key = db_settings.api_key_or_token
+            service_enabled = True
+    except Exception:
+        pass  # Fall through to env vars
+
+    # Fall back to environment variables
+    if not service_enabled:
+        if service == "sabnzbd":
+            service_url = settings.sabnzbd_url
+            service_api_key = settings.sabnzbd_api_key
+            service_enabled = settings.sabnzbd_enabled and bool(settings.sabnzbd_api_key)
+        elif service == "sonarr":
+            service_url = settings.sonarr_url
+            service_api_key = settings.sonarr_api_key
+            service_enabled = settings.sonarr_enabled and bool(settings.sonarr_api_key)
+        elif service == "radarr":
+            service_url = settings.radarr_url
+            service_api_key = settings.radarr_api_key
+            service_enabled = settings.radarr_enabled and bool(settings.radarr_api_key)
+        elif service == "plex":
+            service_url = settings.plex_url
+            service_api_key = settings.plex_token
+            service_enabled = settings.plex_enabled and bool(settings.plex_token)
+
+    # Return unconfigured status if service is not enabled
+    if not service_enabled or not service_api_key:
         return ServiceHealth(
             healthy=False,
             latency_ms=None,
@@ -603,18 +642,45 @@ async def service_health(
             circuit_breaker_state="unconfigured",
         )
 
-    # Perform health check
+    # Perform direct HTTP health check
     start_time = time.time()
-    is_healthy = await orchestrator.health_check(service)
-    latency = (time.time() - start_time) * 1000  # Convert to milliseconds
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            if service == "sabnzbd":
+                # SABnzbd health check - get version
+                url = f"{service_url.rstrip('/')}/api?mode=version&apikey={service_api_key}&output=json"
+                response = await client.get(url)
+                is_healthy = response.status_code == 200
+            elif service in ["sonarr", "radarr"]:
+                # *arr services - use system/status endpoint
+                url = f"{service_url.rstrip('/')}/api/v3/system/status"
+                headers = {"X-Api-Key": service_api_key}
+                response = await client.get(url, headers=headers)
+                is_healthy = response.status_code == 200
+            elif service == "plex":
+                # Plex - identity endpoint
+                url = f"{service_url.rstrip('/')}/identity"
+                headers = {"X-Plex-Token": service_api_key}
+                response = await client.get(url, headers=headers)
+                is_healthy = response.status_code == 200
+            else:
+                is_healthy = False
 
-    # Get circuit breaker state
-    cb_state = orchestrator.get_circuit_breaker_state(service)
+        latency = (time.time() - start_time) * 1000
 
-    return ServiceHealth(
-        healthy=is_healthy,
-        latency_ms=round(latency, 2) if is_healthy else None,
-        error=None if is_healthy else "Service health check failed",
-        last_check=datetime.utcnow().isoformat() + "Z",
-        circuit_breaker_state=cb_state.get("state", "unknown"),
-    )
+        return ServiceHealth(
+            healthy=is_healthy,
+            latency_ms=round(latency, 2) if is_healthy else None,
+            error=None if is_healthy else "Service health check failed",
+            last_check=datetime.utcnow().isoformat() + "Z",
+            circuit_breaker_state="closed" if is_healthy else "open",
+        )
+    except Exception as e:
+        latency = (time.time() - start_time) * 1000
+        return ServiceHealth(
+            healthy=False,
+            latency_ms=round(latency, 2),
+            error=str(e),
+            last_check=datetime.utcnow().isoformat() + "Z",
+            circuit_breaker_state="open",
+        )

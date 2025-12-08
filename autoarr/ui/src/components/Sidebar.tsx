@@ -13,6 +13,7 @@ import {
   Palette,
   Menu,
   X,
+  Gauge,
 } from 'lucide-react';
 
 interface ServiceStatus {
@@ -44,6 +45,7 @@ const serviceNavItems: Record<string, NavItem> = {
 
 // Always visible nav items at the end
 const footerNavItems: NavItem[] = [
+  { path: '/optimize', icon: Gauge, label: 'Optimize' },
   { path: '/activity', icon: Activity, label: 'Activity' },
   {
     path: '/settings',
@@ -190,10 +192,9 @@ export const Sidebar = ({ isOpen = true, onClose, isMobile = false }: SidebarPro
         {/* Sidebar */}
         <aside
           className={`
-            fixed top-0 left-0 z-50 flex flex-col
+            fixed top-0 left-0 z-50 flex flex-col lg:hidden
             transform transition-transform duration-300 ease-in-out
             ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-            lg:relative lg:translate-x-0
           `}
           style={{
             width: 'var(--sidebar-width, 240px)',

@@ -182,9 +182,7 @@ export const Onboarding = () => {
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <span className="text-primary text-xl font-bold">A</span>
-              </div>
+              <img src="/logo-192.png" alt="AutoArr Logo" className="w-10 h-10 object-contain" />
               <div>
                 <h1 className="text-lg font-bold text-foreground">AutoArr</h1>
                 <p className="text-xs text-muted-foreground">Setup Wizard</p>

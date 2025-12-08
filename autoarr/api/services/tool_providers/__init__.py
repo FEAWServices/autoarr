@@ -26,22 +26,38 @@ version-aware tool definitions for its service.
 
 Available Providers:
 - SABnzbdToolProvider: SABnzbd download client tools
-- (Sonarr, Radarr, Plex providers to be added)
+- SonarrToolProvider: Sonarr TV show management tools
+- RadarrToolProvider: Radarr movie management tools
+- PlexToolProvider: Plex media server tools
 
 Usage:
-    from autoarr.api.services.tool_providers import SABnzbdToolProvider
+    from autoarr.api.services.tool_providers import (
+        SABnzbdToolProvider,
+        SonarrToolProvider,
+        RadarrToolProvider,
+        PlexToolProvider,
+    )
     from autoarr.api.services.tool_provider import get_tool_registry
 
     # Register providers
     registry = get_tool_registry()
     registry.register_provider(SABnzbdToolProvider())
+    registry.register_provider(SonarrToolProvider())
+    registry.register_provider(RadarrToolProvider())
+    registry.register_provider(PlexToolProvider())
 
     # Get all available tools
     tools = await registry.get_available_tools()
 """
 
+from .plex_provider import PlexToolProvider
+from .radarr_provider import RadarrToolProvider
 from .sabnzbd_provider import SABnzbdToolProvider
+from .sonarr_provider import SonarrToolProvider
 
 __all__ = [
     "SABnzbdToolProvider",
+    "SonarrToolProvider",
+    "RadarrToolProvider",
+    "PlexToolProvider",
 ]
