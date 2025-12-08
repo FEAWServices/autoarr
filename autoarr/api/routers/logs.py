@@ -21,7 +21,7 @@ import asyncio
 import logging
 from collections import deque
 from datetime import datetime
-from typing import Any, Deque, Dict, List, Optional
+from typing import Deque, List, Optional
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
@@ -315,7 +315,7 @@ async def set_log_level(request: LogLevelRequest) -> LogLevelResponse:
 
 
 @router.websocket("/stream")
-async def stream_logs(websocket: WebSocket) -> None:
+async def stream_logs(websocket: WebSocket) -> None:  # noqa: C901
     """
     WebSocket endpoint for streaming logs in real-time.
 

@@ -22,7 +22,6 @@ This module provides health check endpoints for monitoring the overall
 system health and individual service health.
 """
 
-import asyncio
 import logging
 import time
 from datetime import datetime
@@ -491,6 +490,8 @@ async def llm_health() -> Dict[str, Any]:
 
     from ..database import LLMSettingsRepository, get_database
 
+    result: Dict[str, Any]
+
     try:
         db = get_database()
         llm_repo = LLMSettingsRepository(db)
@@ -554,7 +555,7 @@ async def llm_health() -> Dict[str, Any]:
 # NOTE: This dynamic route MUST come AFTER all specific /health/* routes
 # to prevent FastAPI from matching "ready", "live", "database", etc. as service names
 @router.get("/health/{service}", response_model=ServiceHealth, tags=["health"])
-async def service_health(
+async def service_health(  # noqa: C901
     service: str,
 ) -> ServiceHealth:
     """
@@ -643,12 +644,17 @@ async def service_health(
         )
 
     # Perform direct HTTP health check
+    # At this point service_url and service_api_key are guaranteed to be non-None
+    assert service_url is not None
+    assert service_api_key is not None
+
     start_time = time.time()
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             if service == "sabnzbd":
                 # SABnzbd health check - get version
-                url = f"{service_url.rstrip('/')}/api?mode=version&apikey={service_api_key}&output=json"
+                base_url = service_url.rstrip("/")
+                url = f"{base_url}/api?mode=version&apikey={service_api_key}&output=json"
                 response = await client.get(url)
                 is_healthy = response.status_code == 200
             elif service in ["sonarr", "radarr"]:

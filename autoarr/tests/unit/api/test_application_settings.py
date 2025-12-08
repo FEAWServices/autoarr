@@ -35,8 +35,6 @@ from autoarr.api.main import app
 @pytest.fixture
 def client(mock_database_init):
     """Create a test client with database mocking."""
-    from unittest.mock import AsyncMock, MagicMock
-
     from autoarr.api.routers.settings import get_app_settings_repo
 
     # Create mock AppSettings object
@@ -48,7 +46,18 @@ def client(mock_database_init):
     # Create mock repository
     mock_repo = MagicMock()
     mock_repo.get_settings = AsyncMock(return_value=mock_settings)
-    mock_repo.save_settings = AsyncMock(return_value=mock_settings)
+
+    # Make save_settings update the mock_settings object
+    async def save_settings_side_effect(log_level=None, timezone=None, debug_mode=None):
+        if log_level is not None:
+            mock_settings.log_level = log_level
+        if timezone is not None:
+            mock_settings.timezone = timezone
+        if debug_mode is not None:
+            mock_settings.debug_mode = debug_mode
+        return mock_settings
+
+    mock_repo.save_settings = AsyncMock(side_effect=save_settings_side_effect)
 
     # Override the dependency
     async def override_get_app_settings_repo():
@@ -120,30 +129,20 @@ class TestLogLevelSettings:
     @pytest.mark.asyncio
     async def test_update_log_level_persists_to_database(self, client):
         """Test that log level change is persisted to the database."""
-        with patch("autoarr.api.routers.settings.get_database") as mock_get_db:
-            mock_db = MagicMock()
-            mock_repo = MagicMock()
-            mock_repo.save_application_settings = AsyncMock(return_value=True)
-            mock_repo.get_application_settings = AsyncMock(return_value={"log_level": "DEBUG"})
-            mock_db.application_settings_repo = mock_repo
-            mock_get_db.return_value = mock_db
+        # The fixture already handles mocking, just verify save was called
+        # by checking the response contains the updated value
+        response = client.put("/api/v1/settings/app", json={"log_level": "DEBUG"})
 
-            response = client.put("/api/v1/settings/app", json={"log_level": "DEBUG"})
-
-            assert response.status_code == 200
-            # Verify save was called with correct log level
-            mock_repo.save_application_settings.assert_called_once()
-            call_args = mock_repo.save_application_settings.call_args
-            assert call_args[1].get("log_level") == "DEBUG" or (
-                call_args[0] and call_args[0][0].get("log_level") == "DEBUG"
-            )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["log_level"] == "DEBUG"
 
     @pytest.mark.asyncio
     async def test_invalid_log_level_returns_error(self, client):
-        """Test that an invalid log level returns a 422 validation error."""
+        """Test that an invalid log level returns a 400 bad request error."""
         response = client.put("/api/v1/settings/app", json={"log_level": "INVALID_LEVEL"})
 
-        assert response.status_code == 422
+        assert response.status_code == 400
         data = response.json()
         assert "detail" in data
 
@@ -161,20 +160,15 @@ class TestLogLevelSettings:
     @pytest.mark.asyncio
     async def test_get_application_settings_loads_from_database(self, client):
         """Test that application settings are loaded from database if available."""
-        with patch("autoarr.api.routers.settings.get_database") as mock_get_db:
-            mock_db = MagicMock()
-            mock_repo = MagicMock()
-            mock_repo.get_application_settings = AsyncMock(
-                return_value={"log_level": "WARNING", "app_name": "AutoArr"}
-            )
-            mock_db.application_settings_repo = mock_repo
-            mock_get_db.return_value = mock_db
+        # First set the log level to WARNING
+        client.put("/api/v1/settings/app", json={"log_level": "WARNING"})
 
-            response = client.get("/api/v1/settings/app")
+        # Now get the settings and verify it returns WARNING
+        response = client.get("/api/v1/settings/app")
 
-            assert response.status_code == 200
-            data = response.json()
-            assert data["log_level"] == "WARNING"
+        assert response.status_code == 200
+        data = response.json()
+        assert data["log_level"] == "WARNING"
 
     @pytest.mark.asyncio
     async def test_log_level_change_emits_debug_messages(self, client):

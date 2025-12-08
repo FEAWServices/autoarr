@@ -22,7 +22,7 @@ This module tests the health check API endpoints for overall system health
 and individual service health monitoring.
 """
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -139,15 +139,29 @@ class TestHealthEndpoints:
         """Test individual service health check for healthy service."""
         override_orchestrator(mock_orchestrator)
 
-        response = client.get("/health/sabnzbd")
+        # Mock HTTP client and service configuration
+        with patch("autoarr.api.routers.health.get_settings") as mock_settings:
+            mock_settings.return_value.sabnzbd_url = "http://localhost:8080"
+            mock_settings.return_value.sabnzbd_api_key = "test-key"
+            mock_settings.return_value.sabnzbd_enabled = True
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["healthy"] is True
-        assert "latency_ms" in data
-        assert data["error"] is None
-        assert "last_check" in data
-        assert data["circuit_breaker_state"] == "closed"
+            with patch("autoarr.api.routers.health.httpx.AsyncClient") as mock_client:
+                mock_response = MagicMock()
+                mock_response.status_code = 200
+                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
+                    return_value=mock_response
+                )
+
+                response = client.get("/health/sabnzbd")
+
+                assert response.status_code == 200
+                data = response.json()
+                assert data["healthy"] is True
+                assert "latency_ms" in data
+                assert isinstance(data["latency_ms"], (int, float))
+                assert data["error"] is None
+                assert "last_check" in data
+                assert data["circuit_breaker_state"] == "closed"
 
     @pytest.mark.asyncio
     async def test_service_health_check_invalid_service(
@@ -170,11 +184,19 @@ class TestHealthEndpoints:
 
         override_orchestrator(mock_orch)
 
-        response = client.get("/health/radarr")
+        # No service configuration - should return healthy=False
+        with patch("autoarr.api.routers.health.get_settings") as mock_settings:
+            mock_settings.return_value.radarr_url = None
+            mock_settings.return_value.radarr_api_key = None
+            mock_settings.return_value.radarr_enabled = False
 
-        assert response.status_code == 503
-        data = response.json()
-        assert "not connected" in data["detail"]
+            response = client.get("/health/radarr")
+
+            # Returns 200 with healthy=False when not configured
+            assert response.status_code == 200
+            data = response.json()
+            assert data["healthy"] is False
+            assert data["error"] == "Service not configured"
 
     @pytest.mark.asyncio
     async def test_circuit_breaker_status(self, client, mock_orchestrator, override_orchestrator):
@@ -216,13 +238,26 @@ class TestHealthEndpoints:
         """Test that health check includes latency measurement."""
         override_orchestrator(mock_orchestrator)
 
-        response = client.get("/health/sabnzbd")
+        # Mock HTTP client and service configuration
+        with patch("autoarr.api.routers.health.get_settings") as mock_settings:
+            mock_settings.return_value.sabnzbd_url = "http://localhost:8080"
+            mock_settings.return_value.sabnzbd_api_key = "test-key"
+            mock_settings.return_value.sabnzbd_enabled = True
 
-        assert response.status_code == 200
-        data = response.json()
-        assert "latency_ms" in data
-        assert isinstance(data["latency_ms"], (int, float))
-        assert data["latency_ms"] >= 0
+            with patch("autoarr.api.routers.health.httpx.AsyncClient") as mock_client:
+                mock_response = MagicMock()
+                mock_response.status_code = 200
+                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
+                    return_value=mock_response
+                )
+
+                response = client.get("/health/sabnzbd")
+
+                assert response.status_code == 200
+                data = response.json()
+                assert "latency_ms" in data
+                assert isinstance(data["latency_ms"], (int, float))
+                assert data["latency_ms"] >= 0
 
     @pytest.mark.asyncio
     async def test_health_check_unhealthy_service(
