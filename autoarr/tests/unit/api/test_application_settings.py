@@ -23,7 +23,7 @@ it is properly saved to the database and applied to the Python logger at runtime
 """
 
 import logging
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -98,7 +98,7 @@ class TestLogLevelSettings:
         assert response.status_code == 200
         data = response.json()
         assert data["log_level"] == "DEBUG"
-        assert data["message"] == "Application settings updated successfully"
+        # Note: AppSettingsResponse returns log_level, timezone, debug_mode - no message field
 
     @pytest.mark.asyncio
     async def test_update_log_level_applies_to_logger(self, client):

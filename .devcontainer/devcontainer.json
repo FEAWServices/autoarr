@@ -16,8 +16,6 @@
   "mounts": [
     // Main project - mount from Windows for shared node_modules with test container
     "source=c:/Git/autoarr,target=/app,type=bind,consistency=cached",
-    // Premium repo (optional)
-    "source=c:/Git/autoarr-premium,target=/autoarr-premium,type=bind,consistency=cached",
     // Docker socket for running containers
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
     // Persist pnpm store to avoid re-downloading packages
@@ -83,7 +81,7 @@
   },
   "remoteUser": "root",
   "remoteEnv": {
-    "PYTHONPATH": "/app:/autoarr-premium:/app/mcp-servers",
+    "PYTHONPATH": "/app:/app/mcp-servers",
     "PATH": "/root/.local/bin:/root/.local/share/pnpm:${containerEnv:PATH}",
     "PNPM_HOME": "/root/.local/share/pnpm",
     "GITHUB_ADMIN_TOKEN": "${localEnv:GITHUB_ADMIN_TOKEN}",

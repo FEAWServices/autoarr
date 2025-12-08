@@ -139,29 +139,37 @@ class TestHealthEndpoints:
         """Test individual service health check for healthy service."""
         override_orchestrator(mock_orchestrator)
 
-        # Mock HTTP client and service configuration
-        with patch("autoarr.api.routers.health.get_settings") as mock_settings:
-            mock_settings.return_value.sabnzbd_url = "http://localhost:8080"
-            mock_settings.return_value.sabnzbd_api_key = "test-key"
-            mock_settings.return_value.sabnzbd_enabled = True
+        # Mock database to return configured service (priority over env vars)
+        mock_db_settings = MagicMock()
+        mock_db_settings.url = "http://localhost:8080"
+        mock_db_settings.api_key_or_token = "test-key"
+        mock_db_settings.enabled = True
 
-            with patch("autoarr.api.routers.health.httpx.AsyncClient") as mock_client:
-                mock_response = MagicMock()
-                mock_response.status_code = 200
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    return_value=mock_response
-                )
+        # The function imports get_database from ..database, so patch at source
+        with patch("autoarr.api.database.get_database") as mock_get_db:
+            mock_repo = MagicMock()
+            mock_repo.get_service_settings = AsyncMock(return_value=mock_db_settings)
+            mock_db = MagicMock()
+            mock_get_db.return_value = mock_db
 
-                response = client.get("/health/sabnzbd")
+            with patch("autoarr.api.database.SettingsRepository", return_value=mock_repo):
+                with patch("httpx.AsyncClient") as mock_client:
+                    mock_response = MagicMock()
+                    mock_response.status_code = 200
+                    mock_client.return_value.__aenter__.return_value.get = AsyncMock(
+                        return_value=mock_response
+                    )
 
-                assert response.status_code == 200
-                data = response.json()
-                assert data["healthy"] is True
-                assert "latency_ms" in data
-                assert isinstance(data["latency_ms"], (int, float))
-                assert data["error"] is None
-                assert "last_check" in data
-                assert data["circuit_breaker_state"] == "closed"
+                    response = client.get("/health/sabnzbd")
+
+                    assert response.status_code == 200
+                    data = response.json()
+                    assert data["healthy"] is True
+                    assert "latency_ms" in data
+                    assert isinstance(data["latency_ms"], (int, float))
+                    assert data["error"] is None
+                    assert "last_check" in data
+                    assert data["circuit_breaker_state"] == "closed"
 
     @pytest.mark.asyncio
     async def test_service_health_check_invalid_service(
@@ -184,19 +192,25 @@ class TestHealthEndpoints:
 
         override_orchestrator(mock_orch)
 
-        # No service configuration - should return healthy=False
-        with patch("autoarr.api.routers.health.get_settings") as mock_settings:
-            mock_settings.return_value.radarr_url = None
-            mock_settings.return_value.radarr_api_key = None
-            mock_settings.return_value.radarr_enabled = False
+        # Mock database to raise exception (fallback to env vars)
+        # Then mock settings to show service not configured
+        with patch(
+            "autoarr.api.database.get_database",
+            side_effect=RuntimeError("Database not initialized"),
+        ):
+            # Mock env var settings - service not configured
+            with patch("autoarr.api.config.get_settings") as mock_settings:
+                mock_settings.return_value.radarr_url = None
+                mock_settings.return_value.radarr_api_key = None
+                mock_settings.return_value.radarr_enabled = False
 
-            response = client.get("/health/radarr")
+                response = client.get("/health/radarr")
 
-            # Returns 200 with healthy=False when not configured
-            assert response.status_code == 200
-            data = response.json()
-            assert data["healthy"] is False
-            assert data["error"] == "Service not configured"
+                # Returns 200 with healthy=False when not configured
+                assert response.status_code == 200
+                data = response.json()
+                assert data["healthy"] is False
+                assert data["error"] == "Service not configured"
 
     @pytest.mark.asyncio
     async def test_circuit_breaker_status(self, client, mock_orchestrator, override_orchestrator):
@@ -238,26 +252,34 @@ class TestHealthEndpoints:
         """Test that health check includes latency measurement."""
         override_orchestrator(mock_orchestrator)
 
-        # Mock HTTP client and service configuration
-        with patch("autoarr.api.routers.health.get_settings") as mock_settings:
-            mock_settings.return_value.sabnzbd_url = "http://localhost:8080"
-            mock_settings.return_value.sabnzbd_api_key = "test-key"
-            mock_settings.return_value.sabnzbd_enabled = True
+        # Mock database to return configured service
+        mock_db_settings = MagicMock()
+        mock_db_settings.url = "http://localhost:8080"
+        mock_db_settings.api_key_or_token = "test-key"
+        mock_db_settings.enabled = True
 
-            with patch("autoarr.api.routers.health.httpx.AsyncClient") as mock_client:
-                mock_response = MagicMock()
-                mock_response.status_code = 200
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    return_value=mock_response
-                )
+        # The function imports get_database from ..database, so patch at source
+        with patch("autoarr.api.database.get_database") as mock_get_db:
+            mock_repo = MagicMock()
+            mock_repo.get_service_settings = AsyncMock(return_value=mock_db_settings)
+            mock_db = MagicMock()
+            mock_get_db.return_value = mock_db
 
-                response = client.get("/health/sabnzbd")
+            with patch("autoarr.api.database.SettingsRepository", return_value=mock_repo):
+                with patch("httpx.AsyncClient") as mock_client:
+                    mock_response = MagicMock()
+                    mock_response.status_code = 200
+                    mock_client.return_value.__aenter__.return_value.get = AsyncMock(
+                        return_value=mock_response
+                    )
 
-                assert response.status_code == 200
-                data = response.json()
-                assert "latency_ms" in data
-                assert isinstance(data["latency_ms"], (int, float))
-                assert data["latency_ms"] >= 0
+                    response = client.get("/health/sabnzbd")
+
+                    assert response.status_code == 200
+                    data = response.json()
+                    assert "latency_ms" in data
+                    assert isinstance(data["latency_ms"], (int, float))
+                    assert data["latency_ms"] >= 0
 
     @pytest.mark.asyncio
     async def test_health_check_unhealthy_service(

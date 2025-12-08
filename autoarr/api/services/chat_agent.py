@@ -37,16 +37,8 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 # Import tool provider system
-from autoarr.api.services.tool_provider import ToolDefinition, ToolRegistry
-from autoarr.api.services.tool_provider import ToolResult as ToolProviderResult
-from autoarr.api.services.tool_provider import get_tool_registry
-from autoarr.shared.llm import (
-    BaseLLMProvider,
-    LLMMessage,
-    LLMProviderFactory,
-    LLMResponseWithTools,
-    ToolCall,
-)
+from autoarr.api.services.tool_provider import ToolRegistry, get_tool_registry
+from autoarr.shared.llm import BaseLLMProvider, LLMMessage, LLMProviderFactory, LLMResponseWithTools
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +61,9 @@ GREETING_RESPONSES = [
 
 # Fun facts to sprinkle in responses
 MEDIA_FUN_FACTS = [
-    "💡 **Pro tip:** Quality profiles in Sonarr/Radarr let you automatically upgrade to better versions!",
+    "💡 **Pro tip:** Quality profiles in Sonarr/Radarr let you auto-upgrade to better versions!",
     "💡 **Did you know?** SABnzbd can repair incomplete downloads using PAR2 files automatically.",
-    "💡 **Fun fact:** The *arr stack (Sonarr, Radarr, etc.) started with Sonarr - originally called NzbDrone!",
+    "💡 **Fun fact:** The *arr stack started with Sonarr - originally called NzbDrone!",
     "💡 **Tip:** Custom formats in Radarr v3+ give you super fine-grained quality control.",
     "💡 **Did you know?** Plex Pass users get hardware transcoding - great for 4K content!",
     "💡 **Pro tip:** Use delay profiles to wait for better releases before downloading.",
@@ -353,63 +345,61 @@ class ChatAgent:
     }
 
     # System prompt for the chat agent
-    SYSTEM_PROMPT = """You are AutoArr Assistant, an expert helper for home media automation.
-
-You have deep knowledge of:
-- **SABnzbd**: Usenet download client - queue management, configuration, troubleshooting
-- **Sonarr**: TV show automation - series management, quality profiles, indexers
-- **Radarr**: Movie automation - movie management, quality profiles, custom formats
-- **Plex**: Media server - libraries, playback, transcoding, metadata
-- **AutoArr**: This application - configuration audit, natural language requests, activity monitoring
-
-IMPORTANT CONSTRAINTS:
-1. ONLY answer questions about media automation (SABnzbd, Sonarr, Radarr, Plex) and AutoArr
-2. For off-topic questions, politely redirect: "I specialize in media automation. I can help with SABnzbd, Sonarr, Radarr, Plex, or AutoArr. What would you like to know?"
-3. Be concise but thorough - provide actionable answers
-4. When documentation is provided, use it to give accurate, version-specific advice
-5. Always cite sources when using retrieved documentation
-6. If unsure, say so and suggest checking official documentation
-
-RESPONSE FORMAT:
-- Start with a direct answer to the question
-- Provide step-by-step instructions when applicable
-- Include relevant settings/configuration values
-- End with a helpful follow-up suggestion if appropriate
-- Keep responses focused and under 500 words unless more detail is needed"""
+    # Note: This is a multi-line string literal - line length is checked per logical line
+    SYSTEM_PROMPT = (  # noqa: E501
+        "You are AutoArr Assistant, an expert helper for home media automation.\n\n"
+        "You have deep knowledge of:\n"
+        "- **SABnzbd**: Usenet download client - queue, config, troubleshooting\n"
+        "- **Sonarr**: TV show automation - series management, quality profiles\n"
+        "- **Radarr**: Movie automation - movie management, quality profiles\n"
+        "- **Plex**: Media server - libraries, playback, transcoding, metadata\n"
+        "- **AutoArr**: Configuration audit, natural language requests, monitoring\n\n"
+        "IMPORTANT CONSTRAINTS:\n"
+        "1. ONLY answer questions about media automation and AutoArr\n"
+        "2. For off-topic questions, politely redirect to media automation topics\n"
+        "3. Be concise but thorough - provide actionable answers\n"
+        "4. When documentation is provided, use it for accurate advice\n"
+        "5. Always cite sources when using retrieved documentation\n"
+        "6. If unsure, say so and suggest checking official documentation\n\n"
+        "RESPONSE FORMAT:\n"
+        "- Start with a direct answer to the question\n"
+        "- Provide step-by-step instructions when applicable\n"
+        "- Include relevant settings/configuration values\n"
+        "- End with a helpful follow-up suggestion if appropriate\n"
+        "- Keep responses focused and under 500 words unless more detail is needed"
+    )
 
     # System prompt for agent mode with tool use
-    SYSTEM_PROMPT_WITH_TOOLS = """You are AutoArr Assistant, an expert helper for home media automation with direct access to service APIs.
-
-You can USE TOOLS to interact with:
-- **SABnzbd**: Check queue, pause/resume downloads, view history, retry failed downloads, configure settings
-- **Sonarr**: Manage TV shows (coming soon)
-- **Radarr**: Manage movies (coming soon)
-- **Plex**: Manage media server (coming soon)
-
-TOOL USAGE GUIDELINES:
-1. USE TOOLS when the user asks about:
-   - Current download status → sabnzbd_get_queue or sabnzbd_get_status
-   - Download history → sabnzbd_get_history
-   - Pausing/resuming downloads → sabnzbd_pause_queue, sabnzbd_resume_queue
-   - Retrying failed downloads → sabnzbd_retry_download
-   - Configuration values → sabnzbd_get_config
-   - Changing settings → sabnzbd_set_config
-
-2. DO NOT use tools for:
-   - General questions about how features work (answer from knowledge)
-   - Off-topic questions (politely redirect)
-   - Hypothetical scenarios
-
-3. After using tools:
-   - Summarize the results in a user-friendly way
-   - Don't dump raw JSON - extract key information
-   - Highlight important values (speeds, progress, errors)
-
-CONSTRAINTS:
-- ONLY answer questions about media automation
-- For off-topic questions, politely redirect
-- If a tool fails, explain the error and suggest solutions
-- Never expose API keys or sensitive configuration"""
+    # Note: E501 suppressed for this multi-line string constant
+    SYSTEM_PROMPT_WITH_TOOLS = (  # noqa: E501
+        "You are AutoArr Assistant with direct access to service APIs.\n\n"
+        "You can USE TOOLS to interact with:\n"
+        "- **SABnzbd**: Check queue, pause/resume downloads, view history, retry\n"
+        "- **Sonarr**: Manage TV shows (coming soon)\n"
+        "- **Radarr**: Manage movies (coming soon)\n"
+        "- **Plex**: Manage media server (coming soon)\n\n"
+        "TOOL USAGE GUIDELINES:\n"
+        "1. USE TOOLS when the user asks about:\n"
+        "   - Current download status -> sabnzbd_get_queue or sabnzbd_get_status\n"
+        "   - Download history -> sabnzbd_get_history\n"
+        "   - Pausing/resuming downloads -> sabnzbd_pause_queue/resume_queue\n"
+        "   - Retrying failed downloads -> sabnzbd_retry_download\n"
+        "   - Configuration values -> sabnzbd_get_config\n"
+        "   - Changing settings -> sabnzbd_set_config\n\n"
+        "2. DO NOT use tools for:\n"
+        "   - General questions about how features work (answer from knowledge)\n"
+        "   - Off-topic questions (politely redirect)\n"
+        "   - Hypothetical scenarios\n\n"
+        "3. After using tools:\n"
+        "   - Summarize the results in a user-friendly way\n"
+        "   - Don't dump raw JSON - extract key information\n"
+        "   - Highlight important values (speeds, progress, errors)\n\n"
+        "CONSTRAINTS:\n"
+        "- ONLY answer questions about media automation\n"
+        "- For off-topic questions, politely redirect\n"
+        "- If a tool fails, explain the error and suggest solutions\n"
+        "- Never expose API keys or sensitive configuration"
+    )
 
     def __init__(
         self,
@@ -973,19 +963,21 @@ Please answer the user's question using the context above when relevant."""
         display_name = service_info.get("name", service_name.capitalize())
         default_port = service_info.get("default_port", "")
 
-        message = f"""I'd love to help you with {display_name}, but it's not connected to AutoArr yet.
-
-**To set up {display_name}:**
-1. Go to **Settings** in the sidebar
-2. Find the **{display_name}** section
-3. Enter your {display_name} URL (usually `http://localhost:{default_port}`)
-4. Add your API key (found in {display_name}'s settings)
-5. Click **Test Connection** to verify
-
-Once connected, I can help you with:
-- Configuration questions and best practices
-- Troubleshooting issues
-- Understanding features and settings"""
+        message = (
+            f"I'd love to help you with {display_name}, "
+            "but it's not connected to AutoArr yet.\n\n"
+            f"**To set up {display_name}:**\n"
+            "1. Go to **Settings** in the sidebar\n"
+            f"2. Find the **{display_name}** section\n"
+            f"3. Enter your {display_name} URL "
+            f"(usually `http://localhost:{default_port}`)\n"
+            f"4. Add your API key (found in {display_name}'s settings)\n"
+            "5. Click **Test Connection** to verify\n\n"
+            "Once connected, I can help you with:\n"
+            "- Configuration questions and best practices\n"
+            "- Troubleshooting issues\n"
+            "- Understanding features and settings"
+        )
 
         return ChatResponse(
             message=message,
@@ -1119,7 +1111,10 @@ Once connected, I can help you with:
             # Suggest what they could add
             if not_configured_services:
                 missing_list = " or ".join([name for _, name in not_configured_services[:2]])
-                message += f"🔌 **Expand your setup** - Connect {missing_list} to unlock more features!\n\n"
+                message += (
+                    f"🔌 **Expand your setup** - Connect {missing_list} "
+                    "to unlock more features!\n\n"
+                )
                 suggestions.append(f"How do I connect {not_configured_services[0][1]}?")
 
             message += "💬 **Get help** - Ask me anything about configuring your services\n\n"
