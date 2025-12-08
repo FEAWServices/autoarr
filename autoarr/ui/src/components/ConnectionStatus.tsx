@@ -13,7 +13,7 @@ export const ConnectionStatus = ({
   const [isConnected, setIsConnected] = useState(true);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // @ts-expect-error - failureCount is used internally by setFailureCount callback
   const [failureCount, setFailureCount] = useState(0);
 
   // Returns true if connection succeeded
