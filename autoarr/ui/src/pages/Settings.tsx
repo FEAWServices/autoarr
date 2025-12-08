@@ -518,7 +518,9 @@ export const Settings = () => {
     >
       <div className="mb-6 sm:mb-8" data-component="SettingsPageHeader">
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>
-        <p className="text-sm sm:text-base text-gray-400">Configure your media automation services</p>
+        <p className="text-sm sm:text-base text-gray-400">
+          Configure your media automation services
+        </p>
       </div>
 
       <div className="space-y-6 sm:space-y-8">
@@ -538,7 +540,9 @@ export const Settings = () => {
               </div>
               <div>
                 <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)]">Appearance</h3>
-                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">Themes & colors</p>
+                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">
+                  Themes & colors
+                </p>
               </div>
             </div>
             <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
@@ -554,8 +558,12 @@ export const Settings = () => {
                 <ClipboardCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)]">Config Audit</h3>
-                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">Analyze & optimize</p>
+                <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)]">
+                  Config Audit
+                </h3>
+                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">
+                  Analyze & optimize
+                </p>
               </div>
             </div>
             <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-color)] transition-colors" />
@@ -572,7 +580,9 @@ export const Settings = () => {
               </div>
               <div>
                 <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)]">Logs</h3>
-                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">View app logs</p>
+                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">
+                  View app logs
+                </p>
               </div>
             </div>
             <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--text-muted)] group-hover:text-blue-500 transition-colors" />
@@ -589,8 +599,12 @@ export const Settings = () => {
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)]">Setup Wizard</h3>
-                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">Re-run guided setup</p>
+                <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)]">
+                  Setup Wizard
+                </h3>
+                <p className="text-[10px] sm:text-xs text-[var(--text-muted)] hidden sm:block">
+                  Re-run guided setup
+                </p>
               </div>
             </div>
             <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--text-muted)] group-hover:text-primary transition-colors" />
@@ -599,7 +613,9 @@ export const Settings = () => {
 
         {/* Media Services */}
         <div data-component="MediaServicesSection">
-          <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Media Services</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">
+            Media Services
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <ServiceCard
               title="SABnzbd"
@@ -671,7 +687,9 @@ export const Settings = () => {
 
         {/* AI & Application Settings - Side by Side */}
         <div data-component="AIAndAppSection">
-          <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Configuration</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">
+            Configuration
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {/* OpenRouter Card */}
             <div
@@ -679,7 +697,10 @@ export const Settings = () => {
               data-testid="openrouter-card"
               data-component="OpenRouterCard"
             >
-              <div className="flex items-center justify-between" data-component="OpenRouterCardHeader">
+              <div
+                className="flex items-center justify-between"
+                data-component="OpenRouterCardHeader"
+              >
                 <h3 className="text-base font-semibold text-white">OpenRouter</h3>
                 <label className="flex items-center gap-1.5">
                   <input
@@ -813,7 +834,10 @@ export const Settings = () => {
               className="bg-gray-800 rounded-lg p-4 space-y-3 h-full overflow-hidden min-w-0"
               data-component="ApplicationCard"
             >
-              <div className="flex items-center justify-between" data-component="ApplicationCardHeader">
+              <div
+                className="flex items-center justify-between"
+                data-component="ApplicationCardHeader"
+              >
                 <h3 className="text-base font-semibold text-white">Application</h3>
               </div>
 
@@ -896,7 +920,10 @@ export const Settings = () => {
         </div>
 
         {/* Save Button */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4" data-component="SaveButtonSection">
+        <div
+          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
+          data-component="SaveButtonSection"
+        >
           <button
             onClick={handleSave}
             disabled={saveStatus === 'saving'}
@@ -927,7 +954,9 @@ export const Settings = () => {
           {saveStatus === 'idle' && reconnectingServices.length > 0 && (
             <div className="flex items-center gap-2 text-blue-400">
               <RefreshCw className="w-4 h-4 animate-spin" />
-              <span className="text-xs sm:text-sm">Reconnecting to {reconnectingServices.join(', ')}...</span>
+              <span className="text-xs sm:text-sm">
+                Reconnecting to {reconnectingServices.join(', ')}...
+              </span>
             </div>
           )}
 
@@ -936,7 +965,9 @@ export const Settings = () => {
               <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />
               <div className="flex flex-col">
                 <span className="text-sm sm:text-base font-medium">Failed to save settings</span>
-                {saveError && <span className="text-xs sm:text-sm text-red-300 mt-1">{saveError}</span>}
+                {saveError && (
+                  <span className="text-xs sm:text-sm text-red-300 mt-1">{saveError}</span>
+                )}
               </div>
             </div>
           )}

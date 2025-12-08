@@ -32,7 +32,8 @@ export const SetupBanner = () => {
   // 1. Onboarding is complete (user didn't go through wizard) AND
   // 2. Banner not dismissed AND
   // 3. Setup is incomplete (AI not configured OR no services configured)
-  const hasSkippedSetup = skippedSteps.length > 0 || !aiConfigured || servicesConfigured.length === 0;
+  const hasSkippedSetup =
+    skippedSteps.length > 0 || !aiConfigured || servicesConfigured.length === 0;
   const isVisible = completed && !bannerDismissed && hasSkippedSetup;
 
   if (!isVisible) {
@@ -68,7 +69,8 @@ export const SetupBanner = () => {
                 <span className="font-medium">Complete your setup</span>
                 {missingItems.length > 0 && (
                   <span className="text-muted-foreground">
-                    {' '}to unlock all features. Missing: {missingItems.join(', ')}.
+                    {' '}
+                    to unlock all features. Missing: {missingItems.join(', ')}.
                   </span>
                 )}
               </p>

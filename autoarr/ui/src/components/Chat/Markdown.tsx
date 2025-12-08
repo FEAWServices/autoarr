@@ -9,12 +9,8 @@ interface MarkdownProps {
 // Custom components for styling markdown elements
 const components: Components = {
   // Headings
-  h1: ({ children }) => (
-    <h1 className="text-xl font-bold mb-3 mt-4 first:mt-0">{children}</h1>
-  ),
-  h2: ({ children }) => (
-    <h2 className="text-lg font-bold mb-2 mt-3 first:mt-0">{children}</h2>
-  ),
+  h1: ({ children }) => <h1 className="text-xl font-bold mb-3 mt-4 first:mt-0">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-lg font-bold mb-2 mt-3 first:mt-0">{children}</h2>,
   h3: ({ children }) => (
     <h3 className="text-base font-semibold mb-2 mt-2 first:mt-0">{children}</h3>
   ),

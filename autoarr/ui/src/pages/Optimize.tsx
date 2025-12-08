@@ -48,22 +48,42 @@ const statusColors = {
 const statusIcons = {
   critical: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+      />
     </svg>
   ),
   warning: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
     </svg>
   ),
   recommendation: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
     </svg>
   ),
   good: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
     </svg>
   ),
 };
@@ -80,22 +100,42 @@ const serviceLogos: Record<string, string> = {
 const serviceIcons: Record<string, React.ReactNode> = {
   sabnzbd: (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+      />
     </svg>
   ),
   sonarr: (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+      />
     </svg>
   ),
   radarr: (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
+      />
     </svg>
   ),
   plex: (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
+      />
     </svg>
   ),
 };
@@ -279,9 +319,7 @@ function ServiceCard({
         {result.overall_status !== 'not_connected' && (
           <div className="mt-4 flex gap-4 text-sm">
             {result.summary.critical > 0 && (
-              <span className="text-red-400">
-                {result.summary.critical} critical
-              </span>
+              <span className="text-red-400">{result.summary.critical} critical</span>
             )}
             {result.summary.warnings > 0 && (
               <span className="text-yellow-400">
@@ -290,13 +328,12 @@ function ServiceCard({
             )}
             {result.summary.recommendations > 0 && (
               <span className="text-blue-400">
-                {result.summary.recommendations} recommendation{result.summary.recommendations !== 1 ? 's' : ''}
+                {result.summary.recommendations} recommendation
+                {result.summary.recommendations === 1 ? '' : 's'}
               </span>
             )}
             {result.summary.good > 0 && (
-              <span className="text-green-400">
-                {result.summary.good} passed
-              </span>
+              <span className="text-green-400">{result.summary.good} passed</span>
             )}
           </div>
         )}
@@ -348,20 +385,21 @@ function ServiceCard({
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
-                {showGood ? 'Hide' : 'Show'} {goodChecks.length} passed check{goodChecks.length !== 1 ? 's' : ''}
+                {showGood ? 'Hide' : 'Show'} {goodChecks.length} passed check
+                {goodChecks.length === 1 ? '' : 's'}
               </button>
 
               {showGood && (
                 <div className="mt-3 space-y-3">
                   {goodChecks.map((check) => (
-                    <CheckCard
-                      key={check.id}
-                      check={check}
-                      onFix={() => {}}
-                      isFixing={false}
-                    />
+                    <CheckCard key={check.id} check={check} onFix={() => {}} isFixing={false} />
                   ))}
                 </div>
               )}
@@ -486,12 +524,12 @@ export default function Optimize() {
                   {data.overall_status === 'excellent'
                     ? 'Your services are optimally configured!'
                     : data.overall_status === 'good'
-                    ? 'Minor optimizations available'
-                    : data.overall_status === 'warning'
-                    ? 'Some issues need attention'
-                    : data.overall_status === 'critical'
-                    ? 'Critical issues require immediate attention'
-                    : 'Connect services to see health status'}
+                      ? 'Minor optimizations available'
+                      : data.overall_status === 'warning'
+                        ? 'Some issues need attention'
+                        : data.overall_status === 'critical'
+                          ? 'Critical issues require immediate attention'
+                          : 'Connect services to see health status'}
                 </p>
               </div>
             </div>

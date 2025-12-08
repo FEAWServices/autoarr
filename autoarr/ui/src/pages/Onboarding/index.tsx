@@ -8,7 +8,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { useOnboardingStore, ONBOARDING_STEPS, type OnboardingStep } from '../../stores/onboardingStore';
+import {
+  useOnboardingStore,
+  ONBOARDING_STEPS,
+  type OnboardingStep,
+} from '../../stores/onboardingStore';
 import { ProgressIndicator } from '../../components/Onboarding/ProgressIndicator';
 import { PullToRefresh } from '../../components/PullToRefresh';
 import { WelcomeStep } from './steps/WelcomeStep';
@@ -42,15 +46,8 @@ const stepLabels: Record<OnboardingStep, string> = {
 
 export const Onboarding = () => {
   const navigate = useNavigate();
-  const {
-    completed,
-    currentStep,
-    isInitializing,
-    error,
-    fetchStatus,
-    clearError,
-    goToStep,
-  } = useOnboardingStore();
+  const { completed, currentStep, isInitializing, error, fetchStatus, clearError, goToStep } =
+    useOnboardingStore();
 
   // Initialize service config statuses when component mounts
   useEffect(() => {
@@ -115,14 +112,17 @@ export const Onboarding = () => {
   }, [currentStep, aiAutoSkipChecked, goToStep]);
 
   // Handle step click from progress indicator
-  const handleStepClick = useCallback((stepId: string) => {
-    goToStep(stepId as OnboardingStep);
-    // Reset the AI auto-skip check if navigating back to ai_setup
-    // This allows the user to stay on the page if they manually navigate there
-    if (stepId === 'ai_setup') {
-      setAiAutoSkipChecked(true); // Keep it true so we don't auto-skip when user manually goes back
-    }
-  }, [goToStep]);
+  const handleStepClick = useCallback(
+    (stepId: string) => {
+      goToStep(stepId as OnboardingStep);
+      // Reset the AI auto-skip check if navigating back to ai_setup
+      // This allows the user to stay on the page if they manually navigate there
+      if (stepId === 'ai_setup') {
+        setAiAutoSkipChecked(true); // Keep it true so we don't auto-skip when user manually goes back
+      }
+    },
+    [goToStep]
+  );
 
   // Redirect to home after user completes the wizard during this session
   useEffect(() => {
@@ -138,8 +138,11 @@ export const Onboarding = () => {
   useEffect(() => {
     const unsubscribe = useOnboardingStore.subscribe((state, prevState) => {
       // Detect when user completes onboarding (transition to complete)
-      if (state.completed && state.currentStep === 'complete' &&
-          (!prevState.completed || prevState.currentStep !== 'complete')) {
+      if (
+        state.completed &&
+        state.currentStep === 'complete' &&
+        (!prevState.completed || prevState.currentStep !== 'complete')
+      ) {
         setCompletedThisSession(true);
       }
     });
@@ -206,10 +209,7 @@ export const Onboarding = () => {
       </header>
 
       {/* Main content area - scrollable with pull-to-refresh on mobile */}
-      <PullToRefresh
-        onRefresh={handleRefresh}
-        className="flex-1 min-h-0 pb-safe"
-      >
+      <PullToRefresh onRefresh={handleRefresh} className="flex-1 min-h-0 pb-safe">
         <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24">
           {/* Error display */}
           {error && (
@@ -219,10 +219,7 @@ export const Onboarding = () => {
             >
               <div className="flex items-center justify-between">
                 <p>{error}</p>
-                <button
-                  onClick={clearError}
-                  className="text-red-500/70 hover:text-red-500"
-                >
+                <button onClick={clearError} className="text-red-500/70 hover:text-red-500">
                   Dismiss
                 </button>
               </div>

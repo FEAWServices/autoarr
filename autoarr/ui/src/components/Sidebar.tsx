@@ -199,7 +199,7 @@ export const Sidebar = ({ isOpen = true, onClose, isMobile = false }: SidebarPro
           style={{
             width: 'var(--sidebar-width, 240px)',
             minWidth: 'var(--sidebar-width, 240px)',
-            height: '100dvh', /* Use dvh for better mobile support */
+            height: '100dvh' /* Use dvh for better mobile support */,
             backgroundColor: 'hsl(222 47% 11%)',
           }}
         >
@@ -246,7 +246,9 @@ export const Sidebar = ({ isOpen = true, onClose, isMobile = false }: SidebarPro
                   key={service.key}
                   data-testid={`sidebar-status-${service.key}`}
                   className="flex items-center gap-1.5 px-1 py-0.5"
-                  title={service.connected ? `${service.name} connected` : `${service.name} offline`}
+                  title={
+                    service.connected ? `${service.name} connected` : `${service.name} offline`
+                  }
                 >
                   <div
                     className={`w-1.5 h-1.5 rounded-full ${

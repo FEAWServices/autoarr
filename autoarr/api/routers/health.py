@@ -552,10 +552,79 @@ async def llm_health() -> Dict[str, Any]:
         return {**result, "cached": False}
 
 
+async def _get_service_config_from_db(service: str) -> tuple[str | None, str | None, bool]:
+    """Get service configuration from database."""
+    from ..database import SettingsRepository, get_database
+
+    try:
+        db = get_database()
+        repo = SettingsRepository(db)
+        db_settings = await repo.get_service_settings(service)
+        if db_settings and db_settings.enabled and db_settings.api_key_or_token:
+            return db_settings.url, db_settings.api_key_or_token, True
+    except Exception:
+        pass
+    return None, None, False
+
+
+def _get_service_config_from_env(service: str) -> tuple[str | None, str | None, bool]:
+    """Get service configuration from environment variables."""
+    from ..config import get_settings
+
+    settings = get_settings()
+    config_map = {
+        "sabnzbd": (
+            settings.sabnzbd_url,
+            settings.sabnzbd_api_key,
+            settings.sabnzbd_enabled and bool(settings.sabnzbd_api_key),
+        ),
+        "sonarr": (
+            settings.sonarr_url,
+            settings.sonarr_api_key,
+            settings.sonarr_enabled and bool(settings.sonarr_api_key),
+        ),
+        "radarr": (
+            settings.radarr_url,
+            settings.radarr_api_key,
+            settings.radarr_enabled and bool(settings.radarr_api_key),
+        ),
+        "plex": (
+            settings.plex_url,
+            settings.plex_token,
+            settings.plex_enabled and bool(settings.plex_token),
+        ),
+    }
+    return config_map.get(service, (None, None, False))
+
+
+async def _check_service_health(
+    service: str, service_url: str, service_api_key: str
+) -> tuple[bool, int]:
+    """Perform HTTP health check for a service. Returns (is_healthy, status_code)."""
+    import httpx
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        base_url = service_url.rstrip("/")
+
+        if service == "sabnzbd":
+            url = f"{base_url}/api?mode=version&apikey={service_api_key}&output=json"
+            response = await client.get(url)
+        elif service in ["sonarr", "radarr"]:
+            url = f"{base_url}/api/v3/system/status"
+            response = await client.get(url, headers={"X-Api-Key": service_api_key})
+        elif service == "plex":
+            url = f"{base_url}/identity"
+            response = await client.get(url, headers={"X-Plex-Token": service_api_key})
+        else:
+            return False, 0
+
+        return response.status_code == 200, response.status_code
+
+
 # NOTE: This dynamic route MUST come AFTER all specific /health/* routes
 # to prevent FastAPI from matching "ready", "live", "database", etc. as service names
 @router.get("/health/{service}", response_model=ServiceHealth, tags=["health"])
-async def service_health(  # noqa: C901
+async def service_health(
     service: str,
 ) -> ServiceHealth:
     """
@@ -584,12 +653,6 @@ async def service_health(  # noqa: C901
         }
         ```
     """
-    import httpx
-
-    from ..config import get_settings
-    from ..database import SettingsRepository, get_database
-
-    # Validate service name
     valid_services = ["sabnzbd", "sonarr", "radarr", "plex"]
     if service not in valid_services:
         raise HTTPException(
@@ -597,43 +660,11 @@ async def service_health(  # noqa: C901
             detail=f"Invalid service name. Must be one of: {', '.join(valid_services)}",
         )
 
-    # Get service configuration from database (priority) or environment
-    settings = get_settings()
-    service_url = None
-    service_api_key = None
-    service_enabled = False
-
-    try:
-        db = get_database()
-        repo = SettingsRepository(db)
-        db_settings = await repo.get_service_settings(service)
-        if db_settings and db_settings.enabled and db_settings.api_key_or_token:
-            service_url = db_settings.url
-            service_api_key = db_settings.api_key_or_token
-            service_enabled = True
-    except Exception:
-        pass  # Fall through to env vars
-
-    # Fall back to environment variables
+    # Try database first, then fall back to environment
+    service_url, service_api_key, service_enabled = await _get_service_config_from_db(service)
     if not service_enabled:
-        if service == "sabnzbd":
-            service_url = settings.sabnzbd_url
-            service_api_key = settings.sabnzbd_api_key
-            service_enabled = settings.sabnzbd_enabled and bool(settings.sabnzbd_api_key)
-        elif service == "sonarr":
-            service_url = settings.sonarr_url
-            service_api_key = settings.sonarr_api_key
-            service_enabled = settings.sonarr_enabled and bool(settings.sonarr_api_key)
-        elif service == "radarr":
-            service_url = settings.radarr_url
-            service_api_key = settings.radarr_api_key
-            service_enabled = settings.radarr_enabled and bool(settings.radarr_api_key)
-        elif service == "plex":
-            service_url = settings.plex_url
-            service_api_key = settings.plex_token
-            service_enabled = settings.plex_enabled and bool(settings.plex_token)
+        service_url, service_api_key, service_enabled = _get_service_config_from_env(service)
 
-    # Return unconfigured status if service is not enabled
     if not service_enabled or not service_api_key:
         return ServiceHealth(
             healthy=False,
@@ -643,35 +674,12 @@ async def service_health(  # noqa: C901
             circuit_breaker_state="unconfigured",
         )
 
-    # Perform direct HTTP health check
-    # At this point service_url and service_api_key are guaranteed to be non-None
     assert service_url is not None
     assert service_api_key is not None
 
     start_time = time.time()
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            if service == "sabnzbd":
-                # SABnzbd health check - get version
-                base_url = service_url.rstrip("/")
-                url = f"{base_url}/api?mode=version&apikey={service_api_key}&output=json"
-                response = await client.get(url)
-                is_healthy = response.status_code == 200
-            elif service in ["sonarr", "radarr"]:
-                # *arr services - use system/status endpoint
-                url = f"{service_url.rstrip('/')}/api/v3/system/status"
-                headers = {"X-Api-Key": service_api_key}
-                response = await client.get(url, headers=headers)
-                is_healthy = response.status_code == 200
-            elif service == "plex":
-                # Plex - identity endpoint
-                url = f"{service_url.rstrip('/')}/identity"
-                headers = {"X-Plex-Token": service_api_key}
-                response = await client.get(url, headers=headers)
-                is_healthy = response.status_code == 200
-            else:
-                is_healthy = False
-
+        is_healthy, _ = await _check_service_health(service, service_url, service_api_key)
         latency = (time.time() - start_time) * 1000
 
         return ServiceHealth(

@@ -314,8 +314,64 @@ async def set_log_level(request: LogLevelRequest) -> LogLevelResponse:
 # ============================================================================
 
 
+class _LogStreamFilterState:
+    """Mutable filter state for log streaming."""
+
+    LEVEL_ORDER = {"DEBUG": 0, "INFO": 1, "WARNING": 2, "ERROR": 3, "CRITICAL": 4}
+
+    def __init__(self) -> None:
+        self.min_level = 0
+        self.search_term: Optional[str] = None
+
+    def handle_command(self, data: dict) -> None:
+        """Process a filter command from the client."""
+        msg_type = data.get("type")
+        if msg_type == "set_level":
+            level = data.get("level", "DEBUG").upper()
+            self.min_level = self.LEVEL_ORDER.get(level, 0)
+        elif msg_type == "set_search":
+            self.search_term = data.get("search")
+        elif msg_type == "clear_filters":
+            self.min_level = 0
+            self.search_term = None
+
+    def should_send(self, entry: LogEntry) -> bool:
+        """Check if an entry passes the current filters."""
+        entry_level = self.LEVEL_ORDER.get(entry.level.upper(), 0)
+        if entry_level < self.min_level:
+            return False
+        if self.search_term and self.search_term.lower() not in entry.message.lower():
+            return False
+        return True
+
+
+async def _receive_log_commands(websocket: WebSocket, filter_state: _LogStreamFilterState) -> None:
+    """Receive and process filter commands from the websocket client."""
+    while True:
+        try:
+            data = await websocket.receive_json()
+            filter_state.handle_command(data)
+        except Exception:
+            break
+
+
+async def _send_log_entries(
+    websocket: WebSocket, queue: asyncio.Queue, filter_state: _LogStreamFilterState
+) -> None:
+    """Send filtered log entries to the websocket client."""
+    while True:
+        try:
+            entry: LogEntry = await asyncio.wait_for(queue.get(), timeout=30.0)
+            if filter_state.should_send(entry):
+                await websocket.send_json(entry.model_dump())
+        except asyncio.TimeoutError:
+            await websocket.send_json({"type": "ping"})
+        except Exception:
+            break
+
+
 @router.websocket("/stream")
-async def stream_logs(websocket: WebSocket) -> None:  # noqa: C901
+async def stream_logs(websocket: WebSocket) -> None:
     """
     WebSocket endpoint for streaming logs in real-time.
 
@@ -328,59 +384,16 @@ async def stream_logs(websocket: WebSocket) -> None:  # noqa: C901
 
     buffer = get_log_buffer()
     queue = await buffer.subscribe()
-
-    # Client filter state
-    min_level = 0
-    search_term: Optional[str] = None
-    level_order = {"DEBUG": 0, "INFO": 1, "WARNING": 2, "ERROR": 3, "CRITICAL": 4}
+    filter_state = _LogStreamFilterState()
 
     try:
         # Send initial batch of recent logs
-        recent = buffer.get_recent(limit=50)
-        for entry in recent:
+        for entry in buffer.get_recent(limit=50):
             await websocket.send_json(entry.model_dump())
 
-        # Create tasks for receiving and sending
-        async def receive_commands() -> None:
-            nonlocal min_level, search_term
-            while True:
-                try:
-                    data = await websocket.receive_json()
-                    msg_type = data.get("type")
-
-                    if msg_type == "set_level":
-                        level = data.get("level", "DEBUG").upper()
-                        min_level = level_order.get(level, 0)
-                    elif msg_type == "set_search":
-                        search_term = data.get("search")
-                    elif msg_type == "clear_filters":
-                        min_level = 0
-                        search_term = None
-                except Exception:
-                    break
-
-        async def send_logs() -> None:
-            while True:
-                try:
-                    entry: LogEntry = await asyncio.wait_for(queue.get(), timeout=30.0)
-
-                    # Apply filters
-                    entry_level = level_order.get(entry.level.upper(), 0)
-                    if entry_level < min_level:
-                        continue
-                    if search_term and search_term.lower() not in entry.message.lower():
-                        continue
-
-                    await websocket.send_json(entry.model_dump())
-                except asyncio.TimeoutError:
-                    # Send keepalive ping
-                    await websocket.send_json({"type": "ping"})
-                except Exception:
-                    break
-
-        # Run both tasks concurrently
-        receive_task = asyncio.create_task(receive_commands())
-        send_task = asyncio.create_task(send_logs())
+        # Run receive and send tasks concurrently
+        receive_task = asyncio.create_task(_receive_log_commands(websocket, filter_state))
+        send_task = asyncio.create_task(_send_log_entries(websocket, queue, filter_state))
 
         done, pending = await asyncio.wait(
             [receive_task, send_task],

@@ -66,12 +66,8 @@ const AIConnectionStatus = ({
       aria-label={`AI Assistant status: ${status}`}
       title={getTooltip()}
     >
-      <Bot
-        className={`w-3.5 h-3.5 ${isOnline ? 'text-green-500' : 'text-yellow-500'}`}
-      />
-      <span
-        className={`text-xs font-medium ${isOnline ? 'text-green-500' : 'text-yellow-500'}`}
-      >
+      <Bot className={`w-3.5 h-3.5 ${isOnline ? 'text-green-500' : 'text-yellow-500'}`} />
+      <span className={`text-xs font-medium ${isOnline ? 'text-green-500' : 'text-yellow-500'}`}>
         {getLabel()}
       </span>
     </div>

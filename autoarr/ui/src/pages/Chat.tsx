@@ -315,9 +315,7 @@ export const Chat = () => {
       <div className="flex-shrink-0 border-b border-primary/20 bg-card/50 backdrop-blur-md px-3 sm:px-4 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
-            <h1 className="text-base sm:text-lg font-bold text-primary">
-              AutoArr Assistant
-            </h1>
+            <h1 className="text-base sm:text-lg font-bold text-primary">AutoArr Assistant</h1>
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">

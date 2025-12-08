@@ -205,7 +205,9 @@ describe('ChatService API Endpoints - Regression', () => {
 
     it('should throw timeout error when request times out', async () => {
       // Mock AbortError
-      mockFetch.mockRejectedValueOnce(Object.assign(new Error('The operation was aborted'), { name: 'AbortError' }));
+      mockFetch.mockRejectedValueOnce(
+        Object.assign(new Error('The operation was aborted'), { name: 'AbortError' })
+      );
 
       await expect(chatService.sendMessage('test')).rejects.toThrow('Request timed out');
     });
