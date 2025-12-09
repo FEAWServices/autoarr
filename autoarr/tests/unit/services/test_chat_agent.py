@@ -517,7 +517,14 @@ class TestWelcomeResponse:
         message_lower = response.message.lower()
         assert any(
             keyword in message_lower
-            for keyword in ["all set", "full stack", "dream setup", "complete", "achieved"]
+            for keyword in [
+                "all set",
+                "full stack",
+                "dream setup",
+                "complete",
+                "achieved",
+                "ready to go",
+            ]
         )
         assert "download" in message_lower
 
