@@ -311,25 +311,32 @@ class TestChatMethod:
     async def test_chat_with_conversation_history(self) -> None:
         """Test chat with conversation history."""
         with patch.object(ChatAgent, "_ensure_provider") as mock_provider_method:
-            mock_llm = MagicMock()
-            mock_llm.complete = AsyncMock(
-                return_value=LLMResponse(
-                    content="SABnzbd is a download client.",
-                    model="test-model",
-                    provider="test-provider",
+            with patch.object(ChatAgent, "_get_services_status") as mock_services_status:
+                # Mock SABnzbd as connected so the chat continues instead of returning setup response
+                mock_services_status.return_value = {
+                    "sabnzbd": ServiceStatus(name="sabnzbd", connected=True, healthy=True)
+                }
+                mock_llm = MagicMock()
+                mock_llm.complete = AsyncMock(
+                    return_value=LLMResponse(
+                        content="SABnzbd is a download client.",
+                        model="test-model",
+                        provider="test-provider",
+                    )
                 )
-            )
-            mock_provider_method.return_value = mock_llm
-            agent = ChatAgent()
-            history = [{"role": "user", "content": "What is SABnzbd?"}]
-            response = await agent.chat("Tell me more about SABnzbd", conversation_history=history)
-            assert response.message == "SABnzbd is a download client."
-            # Verify history was passed to LLM
-            call_args = mock_llm.complete.call_args
-            if call_args:
-                messages = call_args.kwargs.get("messages", [])
-                # Should have system + history + new message
-                assert len(messages) >= 2
+                mock_provider_method.return_value = mock_llm
+                agent = ChatAgent()
+                history = [{"role": "user", "content": "What is SABnzbd?"}]
+                response = await agent.chat(
+                    "Tell me more about SABnzbd", conversation_history=history
+                )
+                assert response.message == "SABnzbd is a download client."
+                # Verify history was passed to LLM
+                call_args = mock_llm.complete.call_args
+                if call_args:
+                    messages = call_args.kwargs.get("messages", [])
+                    # Should have system + history + new message
+                    assert len(messages) >= 2
 
     async def test_chat_with_autoarr_knowledge(self) -> None:
         """Test that AutoArr queries use internal knowledge."""
@@ -687,9 +694,12 @@ class TestToolIntegration:
                     topic=QueryTopic.SABNZBD.value,
                     intent=ChatIntent.HELP.value,
                 )
-                agent = ChatAgent()
-                response = await agent.chat_with_tools("What is SABnzbd?")
-                mock_chat.assert_called_once()
+                with patch.object(ChatAgent, "_ensure_provider") as mock_ensure_provider:
+                    mock_provider = MagicMock()
+                    mock_ensure_provider.return_value = mock_provider
+                    agent = ChatAgent()
+                    response = await agent.chat_with_tools("What is SABnzbd?")
+                    mock_chat.assert_called_once()
 
     async def test_chat_with_tools_llm_response_without_tools(self) -> None:
         """Test chat with tools when LLM responds without calling tools."""
@@ -710,7 +720,11 @@ class TestToolIntegration:
                 mock_provider = MagicMock()
                 mock_provider.complete_with_tools = AsyncMock(
                     return_value=LLMResponseWithTools(
-                        content="The queue is empty.", model_name="test", tool_calls=None
+                        content="The queue is empty.",
+                        model="test-model",
+                        provider="test-provider",
+                        model_name="test",
+                        tool_calls=None,
                     )
                 )
                 mock_ensure_provider.return_value = mock_provider
