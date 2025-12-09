@@ -159,6 +159,25 @@ class Settings(BaseSettings):
     parallel_timeout: Optional[float] = None
 
     # ============================================================================
+    # Monitoring Service Settings
+    # ============================================================================
+
+    # Enable/disable automatic monitoring on startup
+    monitoring_enabled: bool = True
+
+    # Polling interval in seconds (how often to check SABnzbd queue)
+    monitoring_poll_interval: int = 60
+
+    # Enable automatic failure detection and alerting
+    monitoring_failure_detection_enabled: bool = True
+
+    # Minimum time (seconds) a download must be in failed state before alerting
+    monitoring_min_failure_time: int = 300  # 5 minutes
+
+    # Cooldown period (seconds) between alerts for the same failed download
+    monitoring_failure_alert_cooldown: int = 3600  # 1 hour
+
+    # ============================================================================
     # API Settings
     # ============================================================================
 

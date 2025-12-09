@@ -139,10 +139,38 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.warning(f"MCP orchestrator initialization failed (non-critical): {e}")
         # Don't fail startup - services can still be configured later
 
+    # Start monitoring service if enabled
+    if settings.monitoring_enabled:
+        try:
+            logger.info("Starting monitoring service...")
+            from .dependencies import get_monitoring_service
+
+            async for monitoring_service in get_monitoring_service():
+                # Start monitoring in background task
+                import asyncio
+
+                monitoring_task = asyncio.create_task(monitoring_service.start_monitoring())
+                monitoring_service._monitoring_task = monitoring_task
+                logger.info("Monitoring service started successfully")
+                break  # Only need first yield
+        except Exception as e:
+            logger.warning(f"Monitoring service initialization failed (non-critical): {e}")
+            # Don't fail startup - monitoring can be started later
+    else:
+        logger.info("Monitoring service disabled (monitoring_enabled=False)")
+
     yield
 
     # Shutdown
     logger.info("Shutting down AutoArr FastAPI Gateway...")
+
+    # Stop monitoring service
+    try:
+        from .dependencies import shutdown_monitoring_service
+
+        await shutdown_monitoring_service()
+    except Exception as e:
+        logger.error(f"Error shutting down monitoring service: {e}")
 
     # Shutdown WebSocket bridge
     try:
