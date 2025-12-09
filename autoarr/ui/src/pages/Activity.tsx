@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Activity as ActivityIcon,
   RefreshCw,
@@ -29,7 +29,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Filter,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Types
 interface ActivityLog {
@@ -66,28 +66,28 @@ interface ActivityStats {
 const SeverityBadge: React.FC<{ severity: string }> = ({ severity }) => {
   const config: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
     critical: {
-      bg: "bg-red-100 dark:bg-red-900/30",
-      text: "text-red-800 dark:text-red-300",
+      bg: 'bg-red-100 dark:bg-red-900/30',
+      text: 'text-red-800 dark:text-red-300',
       icon: <AlertCircle className="w-3 h-3" />,
     },
     error: {
-      bg: "bg-red-100 dark:bg-red-900/30",
-      text: "text-red-800 dark:text-red-300",
+      bg: 'bg-red-100 dark:bg-red-900/30',
+      text: 'text-red-800 dark:text-red-300',
       icon: <AlertCircle className="w-3 h-3" />,
     },
     warning: {
-      bg: "bg-yellow-100 dark:bg-yellow-900/30",
-      text: "text-yellow-800 dark:text-yellow-300",
+      bg: 'bg-yellow-100 dark:bg-yellow-900/30',
+      text: 'text-yellow-800 dark:text-yellow-300',
       icon: <AlertTriangle className="w-3 h-3" />,
     },
     info: {
-      bg: "bg-blue-100 dark:bg-blue-900/30",
-      text: "text-blue-800 dark:text-blue-300",
+      bg: 'bg-blue-100 dark:bg-blue-900/30',
+      text: 'text-blue-800 dark:text-blue-300',
       icon: <Info className="w-3 h-3" />,
     },
     success: {
-      bg: "bg-green-100 dark:bg-green-900/30",
-      text: "text-green-800 dark:text-green-300",
+      bg: 'bg-green-100 dark:bg-green-900/30',
+      text: 'text-green-800 dark:text-green-300',
       icon: <CheckCircle className="w-3 h-3" />,
     },
   };
@@ -107,21 +107,17 @@ const SeverityBadge: React.FC<{ severity: string }> = ({ severity }) => {
 // Service badge component
 const ServiceBadge: React.FC<{ service: string }> = ({ service }) => {
   const colors: Record<string, string> = {
-    sabnzbd: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-    sonarr: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300",
-    radarr: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-    plex: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-    system: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-    chat: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+    sabnzbd: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+    sonarr: 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300',
+    radarr: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+    plex: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+    system: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    chat: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
   };
 
   const colorClass = colors[service.toLowerCase()] || colors.system;
 
-  return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium ${colorClass}`}>
-      {service}
-    </span>
-  );
+  return <span className={`px-2 py-0.5 rounded text-xs font-medium ${colorClass}`}>{service}</span>;
 };
 
 // Main Activity Page Component
@@ -137,10 +133,10 @@ const Activity: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
 
   // Filters
-  const [searchQuery, setSearchQuery] = useState("");
-  const [serviceFilter, setServiceFilter] = useState<string>("");
-  const [severityFilter, setSeverityFilter] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [serviceFilter, setServiceFilter] = useState<string>('');
+  const [severityFilter, setSeverityFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
   // Available filter options
@@ -156,14 +152,14 @@ const Activity: React.FC = () => {
       const params = new URLSearchParams({
         page: page.toString(),
         page_size: pageSize.toString(),
-        order_by: "timestamp",
-        order: "desc",
+        order_by: 'timestamp',
+        order: 'desc',
       });
 
-      if (searchQuery) params.append("search", searchQuery);
-      if (serviceFilter) params.append("service", serviceFilter);
-      if (severityFilter) params.append("severity", severityFilter);
-      if (typeFilter) params.append("activity_type", typeFilter);
+      if (searchQuery) params.append('search', searchQuery);
+      if (serviceFilter) params.append('service', serviceFilter);
+      if (severityFilter) params.append('severity', severityFilter);
+      if (typeFilter) params.append('activity_type', typeFilter);
 
       const response = await fetch(`/api/v1/activity?${params.toString()}`);
       if (!response.ok) {
@@ -175,7 +171,7 @@ const Activity: React.FC = () => {
       setTotalPages(data.total_pages);
       setTotalItems(data.total_items);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch activities");
+      setError(err instanceof Error ? err.message : 'Failed to fetch activities');
     } finally {
       setLoading(false);
     }
@@ -184,7 +180,7 @@ const Activity: React.FC = () => {
   // Fetch stats
   const fetchStats = useCallback(async () => {
     try {
-      const response = await fetch("/api/v1/activity/stats");
+      const response = await fetch('/api/v1/activity/stats');
       if (response.ok) {
         const data: ActivityStats = await response.json();
         setStats(data);
@@ -198,8 +194,8 @@ const Activity: React.FC = () => {
   const fetchFilterOptions = useCallback(async () => {
     try {
       const [typesRes, severitiesRes] = await Promise.all([
-        fetch("/api/v1/activity/types"),
-        fetch("/api/v1/activity/severities"),
+        fetch('/api/v1/activity/types'),
+        fetch('/api/v1/activity/severities'),
       ]);
 
       if (typesRes.ok) {
@@ -231,10 +227,9 @@ const Activity: React.FC = () => {
     }
 
     try {
-      const response = await fetch(
-        `/api/v1/activity/cleanup?retention_days=${retentionDays}`,
-        { method: "DELETE" }
-      );
+      const response = await fetch(`/api/v1/activity/cleanup?retention_days=${retentionDays}`, {
+        method: 'DELETE',
+      });
 
       if (response.ok) {
         const result = await response.json();
@@ -242,21 +237,21 @@ const Activity: React.FC = () => {
         fetchActivities();
         fetchStats();
       } else {
-        throw new Error("Cleanup failed");
+        throw new Error('Cleanup failed');
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Cleanup failed");
+      alert(err instanceof Error ? err.message : 'Cleanup failed');
     }
   };
 
   // Export activities
   const handleExport = () => {
     const dataStr = JSON.stringify(activities, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
+    const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = `activity-log-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `activity-log-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -270,7 +265,7 @@ const Activity: React.FC = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return "Just now";
+    if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
@@ -281,7 +276,7 @@ const Activity: React.FC = () => {
   const availableServices = stats ? Object.keys(stats.by_service) : [];
 
   return (
-    <div className="flex flex-col h-full" style={{ padding: "var(--page-padding, 50px)" }}>
+    <div className="flex flex-col h-full" style={{ padding: 'var(--page-padding, 50px)' }}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
@@ -301,7 +296,7 @@ const Activity: React.FC = () => {
             onClick={() => fetchActivities()}
             className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </button>
           <button
@@ -374,8 +369,8 @@ const Activity: React.FC = () => {
             onClick={() => setShowFilters(!showFilters)}
             className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border ${
               showFilters
-                ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-600"
-                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600"
+                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-600'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600'
             }`}
           >
             <Filter className="w-4 h-4" />
@@ -437,10 +432,10 @@ const Activity: React.FC = () => {
             {(serviceFilter || severityFilter || typeFilter || searchQuery) && (
               <button
                 onClick={() => {
-                  setServiceFilter("");
-                  setSeverityFilter("");
-                  setTypeFilter("");
-                  setSearchQuery("");
+                  setServiceFilter('');
+                  setSeverityFilter('');
+                  setTypeFilter('');
+                  setSearchQuery('');
                   setPage(1);
                 }}
                 className="px-3 py-2 text-sm text-purple-600 dark:text-purple-400 hover:underline"
@@ -460,16 +455,18 @@ const Activity: React.FC = () => {
           </div>
         )}
 
-        {loading && activities.length === 0 ? (
+        {loading && activities.length === 0 && (
           <div className="flex items-center justify-center h-64">
             <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
           </div>
-        ) : activities.length === 0 ? (
+        )}
+        {!loading && activities.length === 0 && (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
             <ActivityIcon className="w-12 h-12 mb-4 opacity-50" />
             <p>No activities found</p>
           </div>
-        ) : (
+        )}
+        {activities.length > 0 && (
           <div className="space-y-2">
             {activities.map((activity) => (
               <div
@@ -488,9 +485,7 @@ const Activity: React.FC = () => {
                     {formatTime(activity.timestamp)}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                  {activity.message}
-                </p>
+                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{activity.message}</p>
                 {activity.correlation_id && (
                   <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 font-mono">
                     Correlation: {activity.correlation_id}

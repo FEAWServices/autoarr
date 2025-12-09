@@ -542,7 +542,7 @@ class PlexToolProvider(BaseToolProvider):
 
                 # Get item count if available
                 try:
-                    items = await client.get_library_items(str(lib.get("key", "")), limit=1)
+                    await client.get_library_items(str(lib.get("key", "")), limit=1)
                     # Note: We're just checking if we can access it
                     checks.append(
                         {
@@ -589,9 +589,8 @@ class PlexToolProvider(BaseToolProvider):
                 }
             )
 
-            # Check for transcoding vs direct play
+            # Check for transcoding
             transcoding = [s for s in sessions if s.get("TranscodeSession")]
-            direct_play = [s for s in sessions if not s.get("TranscodeSession")]
 
             if transcoding:
                 checks.append(

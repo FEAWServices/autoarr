@@ -663,8 +663,8 @@ class WebSearchService:
         Returns:
             Cache key string
         """
-        # Use hash to keep keys consistent length
-        value_hash = hashlib.md5(value.encode()).hexdigest()
+        # Use hash to keep keys consistent length (not for security)
+        value_hash = hashlib.md5(value.encode(), usedforsecurity=False).hexdigest()  # nosec B324
         return f"{prefix}:{value_hash}"
 
     async def search_movie_metadata(

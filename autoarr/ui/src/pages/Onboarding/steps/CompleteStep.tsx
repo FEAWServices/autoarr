@@ -21,13 +21,8 @@ import { getColorClasses, servicePlugins } from '../../../plugins/services';
 
 export const CompleteStep = () => {
   const navigate = useNavigate();
-  const {
-    aiConfigured,
-    servicesConfigured,
-    skippedSteps,
-    completeOnboarding,
-    completed,
-  } = useOnboardingStore();
+  const { aiConfigured, servicesConfigured, skippedSteps, completeOnboarding, completed } =
+    useOnboardingStore();
 
   // Mark onboarding as complete when we reach this step
   useEffect(() => {
@@ -48,9 +43,7 @@ export const CompleteStep = () => {
         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/25 animate-bounce">
           <PartyPopper className="w-10 h-10 text-white" />
         </div>
-        <h1 className="text-4xl font-bold text-foreground mb-4">
-          You're All Set!
-        </h1>
+        <h1 className="text-4xl font-bold text-foreground mb-4">You're All Set!</h1>
         <p className="text-lg text-muted-foreground">
           AutoArr is ready to help you manage your media stack.
         </p>
@@ -64,7 +57,9 @@ export const CompleteStep = () => {
           {/* AI Status */}
           <div className="flex items-center justify-between py-2 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${hasAI ? 'bg-green-500/10' : 'bg-muted'}`}>
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${hasAI ? 'bg-green-500/10' : 'bg-muted'}`}
+              >
                 <Bot className={`w-4 h-4 ${hasAI ? 'text-green-500' : 'text-muted-foreground'}`} />
               </div>
               <span className="text-foreground">AI Assistant</span>
@@ -75,9 +70,7 @@ export const CompleteStep = () => {
                 Connected
               </span>
             ) : (
-              <span className="text-muted-foreground text-sm">
-                Not configured
-              </span>
+              <span className="text-muted-foreground text-sm">Not configured</span>
             )}
           </div>
 
@@ -93,8 +86,12 @@ export const CompleteStep = () => {
                 className="flex items-center justify-between py-2 border-b border-border last:border-0"
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isConfigured ? colors.bg : 'bg-muted'}`}>
-                    <Icon className={`w-4 h-4 ${isConfigured ? colors.text : 'text-muted-foreground'}`} />
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${isConfigured ? colors.bg : 'bg-muted'}`}
+                  >
+                    <Icon
+                      className={`w-4 h-4 ${isConfigured ? colors.text : 'text-muted-foreground'}`}
+                    />
                   </div>
                   <span className="text-foreground">{plugin.name}</span>
                 </div>
@@ -104,9 +101,7 @@ export const CompleteStep = () => {
                     Connected
                   </span>
                 ) : (
-                  <span className="text-muted-foreground text-sm">
-                    Not configured
-                  </span>
+                  <span className="text-muted-foreground text-sm">Not configured</span>
                 )}
               </div>
             );
@@ -127,9 +122,7 @@ export const CompleteStep = () => {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-foreground mb-1">Start Chatting</h3>
-              <p className="text-sm text-muted-foreground">
-                Ask AI to find and download content
-              </p>
+              <p className="text-sm text-muted-foreground">Ask AI to find and download content</p>
             </div>
             <ArrowRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
@@ -145,9 +138,7 @@ export const CompleteStep = () => {
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-foreground mb-1">Configuration Audit</h3>
-            <p className="text-sm text-muted-foreground">
-              Check your settings for best practices
-            </p>
+            <p className="text-sm text-muted-foreground">Check your settings for best practices</p>
           </div>
           <ArrowRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
@@ -163,9 +154,7 @@ export const CompleteStep = () => {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-foreground mb-1">Complete Setup</h3>
-              <p className="text-sm text-muted-foreground">
-                Configure remaining services
-              </p>
+              <p className="text-sm text-muted-foreground">Configure remaining services</p>
             </div>
             <ArrowRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>

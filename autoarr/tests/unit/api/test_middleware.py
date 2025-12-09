@@ -228,10 +228,14 @@ class TestRequestLoggingMiddleware:
         assert response.headers["X-Request-ID"] == "test-123"
 
     def test_adds_default_request_id_when_missing(self, client):
-        """Test that default request ID is added when missing."""
+        """Test that default request ID is generated when missing."""
         response = client.get("/test")
         assert "X-Request-ID" in response.headers
-        assert response.headers["X-Request-ID"] == "N/A"
+        # Middleware generates a short UUID (8 chars) when no ID is provided
+        request_id = response.headers["X-Request-ID"]
+        assert len(request_id) == 8
+        # Should be a valid hex string (partial UUID)
+        assert all(c in "0123456789abcdef" for c in request_id)
 
     def test_adds_process_time_header(self, client):
         """Test that X-Process-Time header is added."""

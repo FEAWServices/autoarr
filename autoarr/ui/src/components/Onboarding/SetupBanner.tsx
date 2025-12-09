@@ -6,7 +6,7 @@
  * to finish configuration.
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, X, ArrowRight } from 'lucide-react';
 import { useOnboardingStore } from '../../stores/onboardingStore';
@@ -22,30 +22,25 @@ export const SetupBanner = () => {
     dismissBanner,
   } = useOnboardingStore();
 
-  const [isVisible, setIsVisible] = useState(false);
-
   // Fetch status on mount
   useEffect(() => {
     fetchStatus();
   }, [fetchStatus]);
 
-  // Determine if banner should show
-  useEffect(() => {
-    // Show banner if:
-    // 1. Onboarding is complete (user didn't go through wizard) AND
-    // 2. Banner not dismissed AND
-    // 3. Setup is incomplete (AI not configured OR no services configured)
-    const hasSkippedSetup = skippedSteps.length > 0 || !aiConfigured || servicesConfigured.length === 0;
-    const shouldShow = completed && !bannerDismissed && hasSkippedSetup;
-    setIsVisible(shouldShow);
-  }, [completed, bannerDismissed, skippedSteps, aiConfigured, servicesConfigured]);
+  // Determine if banner should show (derived state, no useEffect)
+  // Show banner if:
+  // 1. Onboarding is complete (user didn't go through wizard) AND
+  // 2. Banner not dismissed AND
+  // 3. Setup is incomplete (AI not configured OR no services configured)
+  const hasSkippedSetup =
+    skippedSteps.length > 0 || !aiConfigured || servicesConfigured.length === 0;
+  const isVisible = completed && !bannerDismissed && hasSkippedSetup;
 
   if (!isVisible) {
     return null;
   }
 
   const handleDismiss = async () => {
-    setIsVisible(false);
     await dismissBanner();
   };
 
@@ -74,7 +69,8 @@ export const SetupBanner = () => {
                 <span className="font-medium">Complete your setup</span>
                 {missingItems.length > 0 && (
                   <span className="text-muted-foreground">
-                    {' '}to unlock all features. Missing: {missingItems.join(', ')}.
+                    {' '}
+                    to unlock all features. Missing: {missingItems.join(', ')}.
                   </span>
                 )}
               </p>

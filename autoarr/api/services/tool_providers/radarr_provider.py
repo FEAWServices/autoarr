@@ -831,7 +831,7 @@ class RadarrToolProvider(BaseToolProvider):
                         "category": "library",
                         "status": "recommendation",
                         "title": "Monitored Movies Without Files",
-                        "description": f"{len(monitored_without_files)} monitored movies missing files.",
+                        "description": f"{len(monitored_without_files)} monitored movies missing.",
                         "recommendation": "Search for missing movies or check availability.",
                         "current_value": f"{len(monitored_without_files)} missing",
                         "optimal_value": "All monitored movies downloaded",

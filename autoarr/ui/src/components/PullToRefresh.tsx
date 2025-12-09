@@ -119,9 +119,7 @@ export const PullToRefresh = ({
           <RefreshCw
             className={`w-5 h-5 transition-transform ${isRefreshing ? 'animate-spin' : ''}`}
             style={{
-              transform: isRefreshing
-                ? undefined
-                : `rotate(${progress * 180}deg)`,
+              transform: isRefreshing ? undefined : `rotate(${progress * 180}deg)`,
             }}
           />
         </div>

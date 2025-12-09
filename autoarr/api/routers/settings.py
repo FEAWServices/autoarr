@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 """
 Settings API endpoints for managing application configuration.
 
@@ -760,10 +762,10 @@ async def update_service_settings(
         )
         logger.info(f"Saved {service} settings to database")
     except Exception as e:
-        logger.error(f"Failed to save {service} settings: {e}")
+        logger.error(f"Failed to save {service} settings: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save settings: {str(e)}",
+            detail="Failed to save settings. Please check the logs for details.",
         )
 
     # Update in-memory settings for immediate effect
@@ -1090,10 +1092,10 @@ SECRET_KEY={settings.secret_key}
         }
 
     except Exception as e:
-        logger.error(f"Failed to save settings to .env: {e}")
+        logger.error(f"Failed to save settings to .env: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save settings: {str(e)}",
+            detail="Failed to save settings. Please check the logs for details.",
         )
 
 
@@ -1310,10 +1312,10 @@ async def deactivate_license() -> Dict[str, str]:
         return {"message": "License deactivated successfully"}
 
     except Exception as e:
-        logger.error(f"License deactivation failed: {e}")
+        logger.error(f"License deactivation failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to deactivate license: {str(e)}",
+            detail="Failed to deactivate license. Please check the logs for details.",
         )
 
 
@@ -1381,10 +1383,10 @@ async def get_premium_config() -> PremiumConfigResponse:
         return PremiumConfigResponse(**config)
 
     except Exception as e:
-        logger.error(f"Failed to get premium config: {e}")
+        logger.error(f"Failed to get premium config: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get premium config: {str(e)}",
+            detail="Failed to get premium configuration. Please check the logs for details.",
         )
 
 

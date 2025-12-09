@@ -18,12 +18,10 @@ export const WelcomeStep = () => {
         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/25">
           <Bot className="w-10 h-10 text-white" />
         </div>
-        <h1 className="text-4xl font-bold text-foreground mb-4">
-          Welcome to AutoArr
-        </h1>
+        <h1 className="text-4xl font-bold text-foreground mb-4">Welcome to AutoArr</h1>
         <p className="text-lg text-muted-foreground leading-relaxed">
-          Your intelligent media automation assistant. AutoArr orchestrates your
-          media stack with AI-powered insights and automatic management.
+          Your intelligent media automation assistant. AutoArr orchestrates your media stack with
+          AI-powered insights and automatic management.
         </p>
       </div>
 
@@ -49,8 +47,8 @@ export const WelcomeStep = () => {
           <div>
             <h3 className="font-semibold text-foreground mb-1">Automatic Recovery</h3>
             <p className="text-sm text-muted-foreground">
-              Failed downloads are automatically detected and retried with intelligent
-              strategies. Less manual intervention, more successful downloads.
+              Failed downloads are automatically detected and retried with intelligent strategies.
+              Less manual intervention, more successful downloads.
             </p>
           </div>
         </div>
@@ -62,8 +60,8 @@ export const WelcomeStep = () => {
           <div>
             <h3 className="font-semibold text-foreground mb-1">Privacy First</h3>
             <p className="text-sm text-muted-foreground">
-              Your data stays on your server. AutoArr is self-hosted and open source
-              (GPL-3.0). No data collection, no phone home.
+              Your data stays on your server. AutoArr is self-hosted and open source (GPL-3.0). No
+              data collection, no phone home.
             </p>
           </div>
         </div>

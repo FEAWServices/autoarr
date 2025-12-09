@@ -64,7 +64,10 @@ export interface ServicePlugin {
    * @param apiKey - API key or token
    * @returns Promise resolving to result with success flag and optional error message
    */
-  testConnection: (url: string, apiKey: string) => Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }>;
+  testConnection: (
+    url: string,
+    apiKey: string
+  ) => Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }>;
 }
 
 /**
@@ -90,16 +93,16 @@ export const sabnzbdPlugin: ServicePlugin = {
   ],
   docsUrl: 'https://sabnzbd.org/wiki/configuration/general',
   optional: false,
-  testConnection: async (url: string, apiKey: string): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
+  testConnection: async (
+    url: string,
+    apiKey: string
+  ): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
     try {
-      const response = await fetch(
-        `/api/v1/settings/test/sabnzbd`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, api_key_or_token: apiKey, timeout: 10 }),
-        }
-      );
+      const response = await fetch(`/api/v1/settings/test/sabnzbd`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, api_key_or_token: apiKey, timeout: 10 }),
+      });
       const data = await response.json();
       return {
         success: data.success === true,
@@ -137,16 +140,16 @@ export const sonarrPlugin: ServicePlugin = {
   ],
   docsUrl: 'https://wiki.servarr.com/sonarr',
   optional: false,
-  testConnection: async (url: string, apiKey: string): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
+  testConnection: async (
+    url: string,
+    apiKey: string
+  ): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
     try {
-      const response = await fetch(
-        `/api/v1/settings/test/sonarr`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, api_key_or_token: apiKey, timeout: 10 }),
-        }
-      );
+      const response = await fetch(`/api/v1/settings/test/sonarr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, api_key_or_token: apiKey, timeout: 10 }),
+      });
       const data = await response.json();
       return {
         success: data.success === true,
@@ -184,16 +187,16 @@ export const radarrPlugin: ServicePlugin = {
   ],
   docsUrl: 'https://wiki.servarr.com/radarr',
   optional: false,
-  testConnection: async (url: string, apiKey: string): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
+  testConnection: async (
+    url: string,
+    apiKey: string
+  ): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
     try {
-      const response = await fetch(
-        `/api/v1/settings/test/radarr`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, api_key_or_token: apiKey, timeout: 10 }),
-        }
-      );
+      const response = await fetch(`/api/v1/settings/test/radarr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, api_key_or_token: apiKey, timeout: 10 }),
+      });
       const data = await response.json();
       return {
         success: data.success === true,
@@ -232,18 +235,19 @@ export const plexPlugin: ServicePlugin = {
     'In the URL, find "X-Plex-Token=XXXX" and copy the token',
     'Alternatively, visit plex.tv/claim for a one-time token',
   ],
-  docsUrl: 'https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/',
+  docsUrl:
+    'https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/',
   optional: true,
-  testConnection: async (url: string, apiKey: string): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
+  testConnection: async (
+    url: string,
+    apiKey: string
+  ): Promise<{ success: boolean; message?: string; details?: Record<string, unknown> }> => {
     try {
-      const response = await fetch(
-        `/api/v1/settings/test/plex`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, api_key_or_token: apiKey, timeout: 10 }),
-        }
-      );
+      const response = await fetch(`/api/v1/settings/test/plex`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, api_key_or_token: apiKey, timeout: 10 }),
+      });
       const data = await response.json();
       return {
         success: data.success === true,
@@ -339,6 +343,10 @@ export const colorClasses: Record<string, { bg: string; text: string; border: st
 /**
  * Get color classes for a service plugin
  */
-export function getColorClasses(plugin: ServicePlugin): { bg: string; text: string; border: string } {
+export function getColorClasses(plugin: ServicePlugin): {
+  bg: string;
+  text: string;
+  border: string;
+} {
   return colorClasses[plugin.color] || colorClasses.blue;
 }

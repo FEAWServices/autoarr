@@ -981,7 +981,7 @@ class SABnzbdToolProvider(BaseToolProvider):
             raise ValueError("Server host is required")
 
         # SABnzbd add_server API
-        result = await client._request(
+        await client._request(
             "set_config_default",
             section="servers",
             keyword=host,
@@ -1196,9 +1196,9 @@ class SABnzbdToolProvider(BaseToolProvider):
 
         # Get status for runtime checks
         try:
-            status = await client.get_status()
+            await client.get_status()
         except Exception:
-            status = {}
+            pass
 
         # Get warnings count
         try:

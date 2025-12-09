@@ -68,10 +68,7 @@ export const MainLayout = () => {
           {/* Setup Banner - shows when onboarding incomplete */}
           <SetupBanner />
 
-          <PullToRefresh
-            onRefresh={handleRefresh}
-            className="flex-1 overflow-x-hidden"
-          >
+          <PullToRefresh onRefresh={handleRefresh} className="flex-1 overflow-x-hidden">
             <div className="min-h-full w-full max-w-full overflow-x-hidden">
               <Outlet />
             </div>

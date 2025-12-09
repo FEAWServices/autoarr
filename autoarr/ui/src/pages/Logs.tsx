@@ -401,7 +401,9 @@ export const Logs = () => {
       <div className="flex items-center gap-4 mb-2 text-xs text-gray-500">
         <span>Showing {filteredLogs.length} logs</span>
         <span>|</span>
-        <span>Buffer: {logs.length}/{MAX_LOGS}</span>
+        <span>
+          Buffer: {logs.length}/{MAX_LOGS}
+        </span>
         {isPaused && pausedLogsRef.current.length > 0 && (
           <>
             <span>|</span>
@@ -430,7 +432,9 @@ export const Logs = () => {
                   key={`${log.timestamp}-${index}`}
                   className={`flex items-start gap-2 px-2 py-1 rounded ${LEVEL_BG_COLORS[log.level] || ''}`}
                 >
-                  <LevelIcon className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${LEVEL_COLORS[log.level]}`} />
+                  <LevelIcon
+                    className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${LEVEL_COLORS[log.level]}`}
+                  />
                   <span className="text-gray-500 flex-shrink-0 w-[140px]">
                     {new Date(log.timestamp).toLocaleTimeString()}
                   </span>
