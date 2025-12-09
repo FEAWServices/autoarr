@@ -623,6 +623,51 @@ async def _check_service_health(
         return response.status_code == 200, response.status_code
 
 
+@router.get("/health/monitoring", tags=["health"])
+async def monitoring_health_check() -> Dict[str, Any]:
+    """
+    Monitoring service health check.
+
+    Returns the current health status of the monitoring service, including
+    whether it's running, last poll time, and tracked download counts.
+
+    Returns:
+        Dict with monitoring service health information
+
+    Example:
+        ```
+        GET /health/monitoring
+        {
+            "is_running": true,
+            "last_poll_time": "2025-12-09T10:30:45Z",
+            "tracked_downloads_count": 5,
+            "alerted_failures_count": 2,
+            "last_error": null,
+            "poll_interval_seconds": 60,
+            "failure_detection_enabled": true
+        }
+        ```
+    """
+    try:
+        from ..dependencies import get_monitoring_service
+
+        # Try to get monitoring service
+        async for monitoring_service in get_monitoring_service():
+            health_status = monitoring_service.get_health_status()
+            return health_status
+    except Exception as e:
+        logger.error(f"Error getting monitoring service health: {e}")
+        return {
+            "is_running": False,
+            "last_poll_time": None,
+            "tracked_downloads_count": 0,
+            "alerted_failures_count": 0,
+            "last_error": "Failed to get monitoring service status",
+            "poll_interval_seconds": 0,
+            "failure_detection_enabled": False,
+        }
+
+
 # NOTE: This dynamic route MUST come AFTER all specific /health/* routes
 # to prevent FastAPI from matching "ready", "live", "database", etc. as service names
 @router.get("/health/{service}", response_model=ServiceHealth, tags=["health"])

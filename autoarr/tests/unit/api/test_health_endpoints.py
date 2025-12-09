@@ -427,3 +427,126 @@ class TestDatabaseHealthEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["type"] == "postgresql"
+
+    @pytest.mark.asyncio
+    async def test_monitoring_health_check_running(self, client):
+        """Test monitoring health check when service is running."""
+        from datetime import datetime
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        # Create mock monitoring service
+        mock_monitoring_service = MagicMock()
+        mock_monitoring_service.get_health_status.return_value = {
+            "is_running": True,
+            "last_poll_time": datetime.utcnow().isoformat() + "Z",
+            "tracked_downloads_count": 3,
+            "alerted_failures_count": 1,
+            "last_error": None,
+            "poll_interval_seconds": 60,
+            "failure_detection_enabled": True,
+        }
+
+        # Mock the get_monitoring_service dependency at the import location
+        async def mock_get_monitoring_service():
+            yield mock_monitoring_service
+
+        with patch(
+            "autoarr.api.dependencies.get_monitoring_service",
+            side_effect=mock_get_monitoring_service,
+        ):
+            response = client.get("/health/monitoring")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_running"] is True
+        assert data["tracked_downloads_count"] == 3
+        assert data["alerted_failures_count"] == 1
+        assert data["last_error"] is None
+        assert data["poll_interval_seconds"] == 60
+        assert data["failure_detection_enabled"] is True
+
+    @pytest.mark.asyncio
+    async def test_monitoring_health_check_not_running(self, client):
+        """Test monitoring health check when service is not running."""
+        from unittest.mock import MagicMock, patch
+
+        # Create mock monitoring service
+        mock_monitoring_service = MagicMock()
+        mock_monitoring_service.get_health_status.return_value = {
+            "is_running": False,
+            "last_poll_time": None,
+            "tracked_downloads_count": 0,
+            "alerted_failures_count": 0,
+            "last_error": None,
+            "poll_interval_seconds": 60,
+            "failure_detection_enabled": True,
+        }
+
+        # Mock the get_monitoring_service dependency at the import location
+        async def mock_get_monitoring_service():
+            yield mock_monitoring_service
+
+        with patch(
+            "autoarr.api.dependencies.get_monitoring_service",
+            side_effect=mock_get_monitoring_service,
+        ):
+            response = client.get("/health/monitoring")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_running"] is False
+        assert data["last_poll_time"] is None
+        assert data["tracked_downloads_count"] == 0
+
+    @pytest.mark.asyncio
+    async def test_monitoring_health_check_with_error(self, client):
+        """Test monitoring health check when service has error."""
+        from unittest.mock import MagicMock, patch
+
+        # Create mock monitoring service with error
+        mock_monitoring_service = MagicMock()
+        mock_monitoring_service.get_health_status.return_value = {
+            "is_running": True,
+            "last_poll_time": "2025-12-09T10:30:00Z",
+            "tracked_downloads_count": 2,
+            "alerted_failures_count": 0,
+            "last_error": "Connection timeout",
+            "poll_interval_seconds": 60,
+            "failure_detection_enabled": True,
+        }
+
+        # Mock the get_monitoring_service dependency at the import location
+        async def mock_get_monitoring_service():
+            yield mock_monitoring_service
+
+        with patch(
+            "autoarr.api.dependencies.get_monitoring_service",
+            side_effect=mock_get_monitoring_service,
+        ):
+            response = client.get("/health/monitoring")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_running"] is True
+        assert data["last_error"] == "Connection timeout"
+
+    @pytest.mark.asyncio
+    async def test_monitoring_health_check_service_unavailable(self, client):
+        """Test monitoring health check when service is unavailable."""
+        from unittest.mock import patch
+
+        # Mock get_monitoring_service to raise exception
+        async def mock_get_monitoring_service():
+            raise Exception("Monitoring service not initialized")
+            yield  # Make it a generator
+
+        with patch(
+            "autoarr.api.dependencies.get_monitoring_service",
+            side_effect=mock_get_monitoring_service,
+        ):
+            response = client.get("/health/monitoring")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_running"] is False
+        assert "Failed to get monitoring service" in data["last_error"]

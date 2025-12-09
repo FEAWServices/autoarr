@@ -25,7 +25,10 @@ managing the MCP Orchestrator lifecycle and providing it to endpoints.
 """
 
 import logging
-from typing import Any, AsyncGenerator, Dict, Optional
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, Optional
+
+if TYPE_CHECKING:
+    from .services.monitoring_service import MonitoringService
 
 from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
@@ -255,3 +258,79 @@ def reset_orchestrator() -> None:
     """
     global _orchestrator
     _orchestrator = None
+
+
+# Global monitoring service instance (singleton)
+_monitoring_service: Optional["MonitoringService"] = None
+
+
+async def get_monitoring_service() -> AsyncGenerator["MonitoringService", None]:
+    """
+    Get or create MonitoringService instance.
+
+    This is a FastAPI dependency that provides the monitoring service to endpoints.
+    It manages the monitoring service lifecycle.
+
+    Yields:
+        MonitoringService: The monitoring service instance
+    """
+    global _monitoring_service
+
+    # Create monitoring service if it doesn't exist
+    if _monitoring_service is None:
+        from .services.event_bus import get_event_bus
+        from .services.monitoring_service import MonitoringConfig, MonitoringService
+
+        settings = get_settings()
+
+        # Get orchestrator and event bus
+        async for orchestrator in get_orchestrator():
+            event_bus = get_event_bus()
+
+            # Create monitoring config from settings
+            config = MonitoringConfig(
+                poll_interval=settings.monitoring_poll_interval,
+                failure_detection_enabled=settings.monitoring_failure_detection_enabled,
+                min_failure_time=settings.monitoring_min_failure_time,
+                failure_alert_cooldown=settings.monitoring_failure_alert_cooldown,
+            )
+
+            _monitoring_service = MonitoringService(
+                orchestrator=orchestrator,
+                event_bus=event_bus,
+                config=config,
+            )
+
+            logger.info("Monitoring service dependency initialized")
+            break
+
+    yield _monitoring_service
+
+
+async def shutdown_monitoring_service() -> None:
+    """
+    Shutdown the monitoring service on application shutdown.
+
+    This should be called during FastAPI app shutdown to properly
+    stop the monitoring task.
+    """
+    global _monitoring_service
+
+    if _monitoring_service is not None:
+        try:
+            _monitoring_service.stop_monitoring()
+            logger.info("Monitoring service stopped successfully")
+        except Exception as e:
+            logger.error(f"Error stopping monitoring service: {e}")
+        finally:
+            _monitoring_service = None
+
+
+def reset_monitoring_service() -> None:
+    """
+    Reset the monitoring service instance.
+
+    This is primarily used for testing to ensure a clean state.
+    """
+    global _monitoring_service
+    _monitoring_service = None

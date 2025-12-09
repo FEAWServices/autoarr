@@ -1,7 +1,7 @@
 # AutoArr Troubleshooting Guide
 
-**Version:** 1.0.0
-**Last Updated:** 2025-01-08
+**Version:** 1.1.0
+**Last Updated:** 2025-12-09
 
 ---
 
@@ -11,11 +11,12 @@
 2. [Configuration Issues](#configuration-issues)
 3. [Performance Issues](#performance-issues)
 4. [LLM Issues](#llm-issues)
-5. [Docker Issues](#docker-issues)
-6. [Database Issues](#database-issues)
-7. [UI Issues](#ui-issues)
-8. [Diagnostic Tools](#diagnostic-tools)
-9. [Getting Help](#getting-help)
+5. [Chat Issues](#chat-issues)
+6. [Docker Issues](#docker-issues)
+7. [Database Issues](#database-issues)
+8. [UI Issues](#ui-issues)
+9. [Diagnostic Tools](#diagnostic-tools)
+10. [Getting Help](#getting-help)
 
 ---
 
@@ -753,6 +754,592 @@ print(f'Config size: {len(json.dumps(config))} characters')
 
 ---
 
+## Chat Issues
+
+### Chat Not Responding
+
+**Symptoms:**
+
+- Chat input sends but no response appears
+- "Failed to send message" error
+- Infinite loading state
+- Timeout errors
+
+**Diagnosis:**
+
+```bash
+# 1. Check backend is responding
+curl http://localhost:8000/api/v1/chat/topics
+
+# 2. Check LLM settings are configured
+curl http://localhost:8000/api/v1/settings/llm
+
+# 3. Check chat agent logs
+docker logs autoarr | grep -i "chat"
+
+# 4. Test chat endpoint directly
+curl -X POST http://localhost:8000/api/v1/chat/message \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello"}'
+```
+
+**Solutions:**
+
+1. **Configure AI Settings**
+
+   - Navigate to Settings > AI Settings
+   - Get free API key from https://openrouter.ai/keys
+   - Select a model (recommended: `google/gemini-2.0-flash-exp:free`)
+   - Save settings and test connection
+
+2. **Check Backend Connection**
+
+   ```bash
+   # Verify API is accessible
+   curl http://localhost:8000/health
+
+   # Check if chat endpoints are registered
+   curl http://localhost:8000/docs | grep chat
+   ```
+
+3. **Restart Chat Agent**
+
+   ```bash
+   # Restart container to reload LLM settings
+   docker restart autoarr
+   ```
+
+4. **Check Browser Console**
+
+   - F12 → Console tab
+   - Look for CORS errors
+   - Check Network tab for failed requests
+
+**Prevention:**
+
+- Always configure AI settings before using chat
+- Monitor API key validity
+- Check backend logs regularly
+- Implement proper error handling in UI
+
+---
+
+### AI API Key Errors
+
+**Symptoms:**
+
+- "Invalid API key" errors
+- "401 Unauthorized" responses
+- Chat works briefly then fails
+- "Authentication failed" messages
+
+**Diagnosis:**
+
+```bash
+# Check configured LLM settings
+curl http://localhost:8000/api/v1/settings/llm | python -m json.tool
+
+# Test API key directly (OpenRouter example)
+curl https://openrouter.ai/api/v1/models \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+**Solutions:**
+
+1. **Get Valid API Key**
+
+   **OpenRouter (Recommended):**
+   - Visit: https://openrouter.ai/keys
+   - Create free account
+   - Generate API key
+   - Free tier includes access to multiple models
+   - Update in Settings > AI Settings
+
+   **Anthropic (Direct):**
+   - Visit: https://console.anthropic.com/
+   - Create API key
+   - Requires paid account
+   - Configure in Settings > AI Settings
+
+2. **Verify API Key Format**
+
+   ```bash
+   # OpenRouter keys start with: sk-or-v1-...
+   # Anthropic keys start with: sk-ant-api03-...
+
+   # Check for common issues:
+   # - No spaces or quotes
+   # - Complete key without truncation
+   # - No trailing/leading whitespace
+   ```
+
+3. **Update API Key**
+
+   - Go to Settings > AI Settings
+   - Paste new API key
+   - Select appropriate provider
+   - Save and test connection
+
+4. **Check Account Status**
+   - Verify account is active
+   - Check credit balance (if paid)
+   - Ensure no billing issues
+
+**Prevention:**
+
+- Store API key securely
+- Use free models for testing
+- Monitor API usage
+- Set up billing alerts
+- Document API key source
+
+---
+
+### Rate Limiting and Credit Issues
+
+**Symptoms:**
+
+- "429 Too Many Requests" errors
+- "Rate limit exceeded" messages
+- "402 Payment Required" errors
+- "Insufficient credits" warnings
+- Chat works then suddenly stops
+
+**Diagnosis:**
+
+```bash
+# Check error details
+docker logs autoarr --tail 50 | grep -i "rate\|429\|402"
+
+# Check API provider dashboard
+# OpenRouter: https://openrouter.ai/activity
+# Anthropic: https://console.anthropic.com/usage
+```
+
+**Solutions:**
+
+1. **Rate Limit Exceeded (429)**
+
+   **Free Models:**
+   ```
+   Free models have strict limits (e.g., 10 requests/minute)
+
+   Solutions:
+   - Wait 60 seconds between requests
+   - Switch to paid model in Settings > AI Settings
+   - Use less frequently
+   ```
+
+   **Paid Models:**
+   ```
+   Even paid models have rate limits
+
+   Solutions:
+   - Upgrade account tier
+   - Spread requests over time
+   - Contact provider for higher limits
+   ```
+
+2. **Insufficient Credits (402)**
+
+   ```bash
+   # Add credits to account:
+   # OpenRouter: https://openrouter.ai/credits
+   # Anthropic: https://console.anthropic.com/settings/billing
+
+   # Or switch to free model:
+   # Settings > AI Settings > Model:
+   # - google/gemini-2.0-flash-exp:free
+   # - meta-llama/llama-3.1-8b-instruct:free
+   ```
+
+3. **Reduce Request Frequency**
+
+   - Combine multiple questions into one message
+   - Avoid sending messages rapidly
+   - Wait for response before next message
+   - Use chat history for context
+
+4. **Switch Models**
+
+   **Free Models (No credits required):**
+   - `google/gemini-2.0-flash-exp:free` - Fast, good quality
+   - `meta-llama/llama-3.1-8b-instruct:free` - Good for basic queries
+   - `mistralai/mistral-7b-instruct:free` - Fast, concise
+
+   **Paid Models (Requires credits):**
+   - `anthropic/claude-3.5-sonnet` - Highest quality
+   - `openai/gpt-4-turbo` - Very good
+   - `anthropic/claude-3-haiku` - Fast and cheap
+
+**Prevention:**
+
+- Start with free models
+- Monitor usage in provider dashboard
+- Set up low credit alerts
+- Budget credits appropriately
+- Document rate limits
+
+---
+
+### Poor Response Quality
+
+**Symptoms:**
+
+- Vague or unhelpful responses
+- Wrong information provided
+- Low confidence scores
+- Incomplete answers
+- Responses don't match question
+
+**Diagnosis:**
+
+```javascript
+// Check response confidence in browser console
+// Look for confidence < 0.7
+
+// Check which model is being used
+fetch('http://localhost:8000/api/v1/settings/llm')
+  .then(r => r.json())
+  .then(data => console.log('Model:', data.selected_model));
+```
+
+**Solutions:**
+
+1. **Use Better Model**
+
+   ```
+   Good → Better → Best:
+
+   Free:
+   mistral-7b → llama-3.1-8b → gemini-2.0-flash
+
+   Paid:
+   claude-haiku → gpt-4-turbo → claude-3.5-sonnet
+
+   Configure in: Settings > AI Settings
+   ```
+
+2. **Provide More Context**
+
+   ```
+   Bad:  "How to configure?"
+   Good: "How do I configure quality profiles in Sonarr to prefer 1080p x264?"
+
+   Bad:  "Not working"
+   Good: "SABnzbd downloads are failing with 'unpacking error' - how do I fix this?"
+   ```
+
+3. **Connect Services First**
+
+   ```
+   Chat works better when services are connected:
+
+   - SABnzbd: Chat can check queue, diagnose issues
+   - Sonarr/Radarr: Chat can query configurations
+   - All services: More context = better answers
+
+   Connect services: Settings > Service Configuration
+   ```
+
+4. **Use Specific Questions**
+
+   ```
+   Vague → Specific:
+
+   "Help with downloads"
+   → "Why are my downloads stuck at 99%?"
+
+   "Sonarr issue"
+   → "Why isn't Sonarr finding releases for my show?"
+
+   "Quality problem"
+   → "How do I set up custom formats for HDR content?"
+   ```
+
+5. **Check Service Connections**
+
+   ```bash
+   # If asking about specific service, ensure it's connected
+   curl http://localhost:8000/health/sabnzbd
+   curl http://localhost:8000/health/sonarr
+   curl http://localhost:8000/health/radarr
+   ```
+
+**Prevention:**
+
+- Use high-quality models when possible
+- Provide detailed questions with context
+- Connect all services for full functionality
+- Build conversation history for context
+- Review suggestions provided by assistant
+
+---
+
+### Content Request Classification Issues
+
+**Symptoms:**
+
+- Chat classifies movies as TV shows (or vice versa)
+- Wrong content detected
+- "No results found" for valid content
+- Ambiguous content warnings
+- Service setup prompts when services are connected
+
+**Diagnosis:**
+
+```bash
+# Test classification directly
+curl -X POST http://localhost:8000/api/v1/chat/classify \
+  -H "Content-Type: application/json" \
+  -d '{"message": "download Dune 2021"}'
+
+# Check connected services
+curl http://localhost:8000/health
+```
+
+**Solutions:**
+
+1. **Be More Specific**
+
+   ```
+   Ambiguous → Clear:
+
+   "download Dune"
+   → "download the movie Dune from 2021"
+
+   "get Breaking Bad"
+   → "add Breaking Bad TV series to Sonarr"
+
+   "download Westworld season 4"
+   → "download Westworld S04 TV show"
+   ```
+
+2. **Include Keywords**
+
+   ```
+   Movie keywords:
+   - "movie", "film", "cinema"
+   - Year (e.g., "2021")
+   - Director name
+
+   TV show keywords:
+   - "series", "show", "season", "episode"
+   - "S01E01" format
+   - "season 1"
+   ```
+
+3. **Verify Service Connection**
+
+   ```bash
+   # Movies require Radarr
+   curl http://localhost:8000/health/radarr
+
+   # TV shows require Sonarr
+   curl http://localhost:8000/health/sonarr
+
+   # If not connected, go to Settings > Service Configuration
+   ```
+
+4. **Use Follow-up Questions**
+
+   ```
+   If chat asks for clarification:
+   - Answer the disambiguation question
+   - Provide year, quality, or other details
+   - Confirm which content you meant
+   ```
+
+**Prevention:**
+
+- Always specify content type (movie/TV)
+- Include year when available
+- Use full official titles
+- Connect Sonarr and Radarr
+- Review chat suggestions
+
+---
+
+### Chat Service Connection Errors
+
+**Symptoms:**
+
+- "Service 'sabnzbd' needs to be connected" messages
+- Chat can't perform actions
+- Tool call failures
+- "Connect in Settings" prompts
+
+**Diagnosis:**
+
+```bash
+# Check which services are connected
+curl http://localhost:8000/health | python -m json.tool
+
+# Check MCP server status
+docker logs autoarr | grep -i "mcp"
+
+# Test specific service
+curl http://localhost:8000/health/sabnzbd
+```
+
+**Solutions:**
+
+1. **Connect Required Services**
+
+   ```
+   Chat features require service connections:
+
+   SABnzbd:
+   - Check download queue
+   - Diagnose download issues
+   - Retry failed downloads
+
+   Sonarr/Radarr:
+   - Add content
+   - Check quality profiles
+   - Search for releases
+
+   Plex (optional):
+   - Check library status
+   - Verify content availability
+   ```
+
+2. **Configure Services**
+
+   ```bash
+   # Go to Settings > Service Configuration
+   # For each service:
+   # 1. Enter URL (e.g., http://sabnzbd:8080)
+   # 2. Enter API key
+   # 3. Click "Test Connection"
+   # 4. Save if test succeeds
+   ```
+
+3. **Verify Network Access**
+
+   ```bash
+   # Test from AutoArr container
+   docker exec autoarr curl http://sabnzbd:8080/api?mode=version
+   docker exec autoarr curl http://sonarr:8989/api/v3/system/status
+   docker exec autoarr curl http://radarr:7878/api/v3/system/status
+   ```
+
+4. **Check Service Health**
+
+   ```bash
+   # Ensure services are running
+   docker ps | grep -E "sabnzbd|sonarr|radarr"
+
+   # Check service logs
+   docker logs sabnzbd --tail 20
+   docker logs sonarr --tail 20
+   docker logs radarr --tail 20
+   ```
+
+**Prevention:**
+
+- Configure all services during onboarding
+- Monitor service health regularly
+- Use health check endpoints
+- Document service URLs and keys
+- Test connections periodically
+
+---
+
+### Chat Performance Issues
+
+**Symptoms:**
+
+- Chat responses take > 30 seconds
+- Timeout errors
+- Slow typing indicators
+- UI becomes unresponsive
+
+**Diagnosis:**
+
+```bash
+# Check response times
+time curl -X POST http://localhost:8000/api/v1/chat/message \
+  -H "Content-Type: application/json" \
+  -d '{"message": "test"}'
+
+# Check system resources
+docker stats autoarr --no-stream
+
+# Check LLM provider status
+# OpenRouter: https://openrouter.ai/status
+# Anthropic: https://status.anthropic.com/
+```
+
+**Solutions:**
+
+1. **Use Faster Model**
+
+   ```
+   Slow → Fast:
+
+   claude-3.5-sonnet (5-10s)
+   → gpt-4-turbo (3-5s)
+   → claude-haiku (2-3s)
+   → gemini-2.0-flash (1-2s)
+
+   Configure: Settings > AI Settings > Model
+   ```
+
+2. **Check Provider Status**
+
+   ```bash
+   # If provider is experiencing issues:
+   # - Check status page
+   # - Switch to different provider/model
+   # - Wait for resolution
+   ```
+
+3. **Simplify Questions**
+
+   ```
+   Long questions → Shorter questions
+
+   "Can you explain in detail all the steps required to configure..."
+   → "How do I configure quality profiles?"
+
+   Then ask follow-up questions for details
+   ```
+
+4. **Reduce Tool Calls**
+
+   ```
+   # Complex queries trigger multiple tool calls
+   # Each tool call adds latency
+
+   Ask one thing at a time:
+   ✗ "Check queue, retry failures, and audit config"
+   ✓ "Check SABnzbd queue" (then ask next question)
+   ```
+
+5. **Check Network Latency**
+
+   ```bash
+   # Test latency to LLM provider
+   ping openrouter.ai
+   ping api.anthropic.com
+
+   # If high latency, check:
+   # - Network connection
+   # - VPN/proxy settings
+   # - ISP issues
+   ```
+
+**Prevention:**
+
+- Use fast models for quick queries
+- Save slower models for complex questions
+- Monitor provider status
+- Keep questions concise
+- Optimize network connection
+
+---
+
 ## Docker Issues
 
 ### Container Won't Start
@@ -1332,18 +1919,28 @@ Include:
 
 ## Appendix: Common Error Messages
 
-| Error Message                  | Cause                  | Solution                                  |
-| ------------------------------ | ---------------------- | ----------------------------------------- |
-| "Service 'X' is not connected" | MCP server not running | Check service URL and API key             |
-| "Circuit breaker open"         | Too many failures      | Wait 60s or restart AutoArr               |
-| "Rate limit exceeded"          | Too many requests      | Wait or upgrade API tier                  |
-| "Invalid API key"              | Wrong API key          | Regenerate and update `.env`              |
-| "Database locked"              | Concurrent writes      | Enable WAL mode or use PostgreSQL         |
-| "Port already allocated"       | Port conflict          | Change port or stop conflicting service   |
-| "Permission denied"            | File permissions       | Fix ownership with `chown`                |
-| "Context length exceeded"      | Input too large        | Reduce configuration size or use chunking |
+| Error Message                             | Cause                           | Solution                                       |
+| ----------------------------------------- | ------------------------------- | ---------------------------------------------- |
+| "Service 'X' is not connected"            | MCP server not running          | Check service URL and API key                  |
+| "Circuit breaker open"                    | Too many failures               | Wait 60s or restart AutoArr                    |
+| "Rate limit exceeded"                     | Too many LLM requests           | Wait 60s or switch to paid model               |
+| "429 Too Many Requests"                   | Free model rate limit           | Wait or upgrade to paid model                  |
+| "401 Unauthorized"                        | Invalid API key                 | Update API key in Settings > AI Settings       |
+| "402 Payment Required"                    | Insufficient credits            | Add credits or switch to free model            |
+| "Invalid API key"                         | Wrong API key                   | Regenerate and update in Settings              |
+| "Chat not responding"                     | AI not configured               | Configure API key in Settings > AI Settings    |
+| "Service 'sabnzbd' needs to be connected" | Service not configured          | Connect service in Settings                    |
+| "Failed to process message"               | LLM error                       | Check logs and API key                         |
+| "Database locked"                         | Concurrent writes               | Enable WAL mode or use PostgreSQL              |
+| "Port already allocated"                  | Port conflict                   | Change port or stop conflicting service        |
+| "Permission denied"                       | File permissions                | Fix ownership with `chown`                     |
+| "Context length exceeded"                 | Input too large                 | Reduce configuration size or use chunking      |
+| "No results found"                        | Content not in TMDB             | Try different search terms or check spelling   |
+| "WebSocket disconnected"                  | Connection lost                 | Check network and reverse proxy configuration  |
+| "Tool call failed"                        | MCP tool execution error        | Check service connection and logs              |
+| "Classification failed"                   | LLM classification error        | Provide more context or retry                  |
 
 ---
 
-**Last Updated:** 2025-01-08
-**For updates:** Check https://github.com/autoarr/autoarr/docs/TROUBLESHOOTING.md
+**Last Updated:** 2025-12-09
+**For updates:** Check https://github.com/autoarr/autoarr/docs/guides/troubleshooting.md
