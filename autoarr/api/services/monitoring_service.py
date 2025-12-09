@@ -122,6 +122,8 @@ class MonitoringConfig:
     pattern_recognition_enabled: bool = True
     max_retry_attempts: int = 3
     alert_on_failure: bool = True
+    min_failure_time: int = 300  # seconds - minimum time in failed state before alerting
+    failure_alert_cooldown: int = 3600  # seconds - cooldown between alerts for same download
 
 
 @dataclass
@@ -250,6 +252,11 @@ class MonitoringService:
         self._monitoring_task: Optional[asyncio.Task] = None
         self._stop_monitoring = False
         self._poll_lock = asyncio.Lock()
+
+        # Health tracking for health check endpoint
+        self._is_running = False
+        self._last_poll_time: Optional[datetime] = None
+        self._last_error: Optional[str] = None
 
     # ========================================================================
     # Queue Polling
@@ -696,12 +703,18 @@ class MonitoringService:
         Polls queue at configured intervals and detects failures.
         """
         self._stop_monitoring = False
+        self._is_running = True
+        self._last_error = None
         logger.info(f"Starting monitoring service (poll interval: {self.config.poll_interval}s)")
 
         while not self._stop_monitoring:
             try:
                 # Poll queue
                 await self.poll_queue()
+
+                # Update health tracking
+                self._last_poll_time = datetime.utcnow()
+                self._last_error = None
 
                 # Check for failures if enabled
                 if self.config.failure_detection_enabled:
@@ -712,12 +725,15 @@ class MonitoringService:
 
             except asyncio.CancelledError:
                 logger.info("Monitoring task cancelled")
+                self._is_running = False
                 break
             except Exception as e:
                 logger.error(f"Error in monitoring loop: {e}", exc_info=True)
+                self._last_error = str(e)
                 # Continue monitoring even after errors
                 await asyncio.sleep(self.config.poll_interval)
 
+        self._is_running = False
         logger.info("Monitoring service stopped")
 
     def stop_monitoring(self) -> None:
@@ -725,3 +741,22 @@ class MonitoringService:
         self._stop_monitoring = True
         if self._monitoring_task:
             self._monitoring_task.cancel()
+
+    def get_health_status(self) -> Dict[str, Any]:
+        """
+        Get current health status of the monitoring service.
+
+        Returns:
+            Dictionary with health status information
+        """
+        return {
+            "is_running": self._is_running,
+            "last_poll_time": (
+                self._last_poll_time.isoformat() + "Z" if self._last_poll_time else None
+            ),
+            "tracked_downloads_count": len(self._tracked_downloads),
+            "alerted_failures_count": len(self._alerted_failures),
+            "last_error": self._last_error,
+            "poll_interval_seconds": self.config.poll_interval,
+            "failure_detection_enabled": self.config.failure_detection_enabled,
+        }
