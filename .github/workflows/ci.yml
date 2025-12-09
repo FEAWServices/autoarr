@@ -397,13 +397,6 @@ jobs:
           name: coverage-html
           path: htmlcov/
 
-      - name: Upload coverage XML for SonarCloud
-        if: always() && (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request') && matrix.python-version == '3.11'
-        uses: actions/upload-artifact@v5
-        with:
-          name: coverage-xml
-          path: coverage.xml
-
       - name: Skip if no changes
         if: steps.changed-files.outputs.changed != 'true' && github.event_name != 'pull_request'
         run: echo "No Python files changed, skipping tests"
@@ -493,61 +486,6 @@ jobs:
       - name: Skip if no changes
         if: steps.changed-files.outputs.changed != 'true' && github.event_name != 'pull_request'
         run: echo "No Python files changed, skipping security scan"
-
-  # =============================================================================
-  # Code Quality Analysis (SonarCloud)
-  # =============================================================================
-  sonarcloud:
-    name: SonarCloud Analysis
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [detect-changes, python-test]
-    # Run on main/develop branches and PRs, skip for docs-only and forks
-    # Only run if SONAR_TOKEN is configured
-    if: |
-      needs.detect-changes.outputs.docs-only == 'false' &&
-      (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
-
-    steps:
-      - name: Check if SonarCloud is configured
-        id: sonar-check
-        run: |
-          if [ -n "${{ secrets.SONAR_TOKEN }}" ]; then
-            echo "configured=true" >> $GITHUB_OUTPUT
-          else
-            echo "configured=false" >> $GITHUB_OUTPUT
-            echo "SonarCloud token not configured. Skipping analysis."
-            echo "To enable SonarCloud, add SONAR_TOKEN to repository secrets."
-          fi
-
-      - name: Checkout code
-        if: steps.sonar-check.outputs.configured == 'true'
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Download coverage XML report
-        if: steps.sonar-check.outputs.configured == 'true'
-        uses: actions/download-artifact@v6
-        with:
-          name: coverage-xml
-          path: .
-        continue-on-error: true
-
-      - name: SonarCloud Scan
-        if: steps.sonar-check.outputs.configured == 'true'
-        uses: SonarSource/sonarqube-scan-action@v6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=FEAWServices_autoarr
-            -Dsonar.organization=feawservices
-
-      - name: Skip notice
-        if: steps.sonar-check.outputs.configured != 'true'
-        run: echo "SonarCloud analysis skipped - SONAR_TOKEN not configured"
 
   # =============================================================================
   # Frontend Jobs
