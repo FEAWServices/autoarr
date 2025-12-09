@@ -72,9 +72,7 @@ class TestRecoveryServiceIntegration:
         orchestrator = MCPOrchestrator(config=config)
 
         # Default mock responses
-        async def mock_tool_call(
-            service: str, tool: str, args: Dict[str, Any]
-        ) -> Dict[str, Any]:
+        async def mock_tool_call(service: str, tool: str, args: Dict[str, Any]) -> Dict[str, Any]:
             if tool == "retry_download":
                 return {"success": True, "result": {"nzo_id": "retry_123"}}
             elif tool == "episode_search":
@@ -159,9 +157,7 @@ class TestRecoveryServiceIntegration:
 
         # Verify backoff event was emitted
         await asyncio.sleep(0.1)
-        backoff_events = [
-            e for e in events_received if e["type"] == "recovery.backoff_scheduled"
-        ]
+        backoff_events = [e for e in events_received if e["type"] == "recovery.backoff_scheduled"]
         assert len(backoff_events) >= 1
         assert backoff_events[0]["data"]["nzo_id"] == "failed_456"
         assert backoff_events[0]["data"]["delay"] == 120  # 60 * 2^1
@@ -297,9 +293,7 @@ class TestRecoveryServiceIntegration:
         # Arrange
         call_count = 0
 
-        async def mock_slow_retry(
-            service: str, tool: str, args: Dict[str, Any]
-        ) -> Dict[str, Any]:
+        async def mock_slow_retry(service: str, tool: str, args: Dict[str, Any]) -> Dict[str, Any]:
             nonlocal call_count
             call_count += 1
             await asyncio.sleep(0.2)  # Simulate slow retry
@@ -538,9 +532,7 @@ class TestRecoveryServiceIntegration:
         ]
 
         # Act - trigger parallel retries
-        results = await asyncio.gather(
-            *[recovery_service.trigger_retry(dl) for dl in downloads]
-        )
+        results = await asyncio.gather(*[recovery_service.trigger_retry(dl) for dl in downloads])
 
         # Assert - all should succeed
         assert all(results)
