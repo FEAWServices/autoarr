@@ -410,21 +410,32 @@ async def test_quality_fallback_when_high_quality_fails(recovery_service, mock_o
         category="tv",
     )
 
-    # Mock Sonarr search with lower quality
-    mock_orchestrator.call_tool.return_value = {
-        "status": True,
-        "command_id": 123,
-    }
+    # Mock Sonarr integration flow
+    # Sonarr provider returns {"series_count": N, "series": [...]} in data
+    mock_orchestrator.call_tool.side_effect = [
+        # Get series
+        {"success": True, "data": {"series_count": 1, "series": [{"id": 1, "title": "Test Show"}]}},
+        # Get episodes
+        {
+            "success": True,
+            "data": {
+                "episode_count": 1,
+                "episodes": [{"id": 10, "seasonNumber": 1, "episodeNumber": 1}],
+            },
+        },
+        # Search episode
+        {"success": True, "data": {"id": 999}},
+    ]
 
     # Act
     result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.strategy == RetryStrategy.QUALITY_FALLBACK
-    # Should have triggered a new search with lower quality profile
-    mock_orchestrator.call_tool.assert_called()
-    call_args = mock_orchestrator.call_tool.call_args
-    assert call_args[1]["tool"] in ["search_series", "episode_search"]
+    # Should have called sonarr_search_episode
+    assert mock_orchestrator.call_tool.call_count == 3
+    final_call = mock_orchestrator.call_tool.call_args_list[2]
+    assert final_call[1]["tool"] == "sonarr_search_episode"
 
 
 @pytest.mark.asyncio
@@ -480,16 +491,33 @@ async def test_quality_fallback_for_tv_show(recovery_service, mock_orchestrator)
         category="tv",
         retry_count=1,
     )
-    mock_orchestrator.call_tool.return_value = {"status": True, "command_id": 123}
+
+    # Mock Sonarr integration
+    # Sonarr provider returns nested data structure
+    mock_orchestrator.call_tool.side_effect = [
+        {
+            "success": True,
+            "data": {"series_count": 1, "series": [{"id": 1, "title": "Breaking Bad"}]},
+        },
+        {
+            "success": True,
+            "data": {
+                "episode_count": 1,
+                "episodes": [{"id": 10, "seasonNumber": 1, "episodeNumber": 1}],
+            },
+        },
+        {"success": True, "data": {"id": 999}},
+    ]
 
     # Act
     result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.strategy == RetryStrategy.QUALITY_FALLBACK
-    # Should call Sonarr's episode search with lower quality
-    call_args = mock_orchestrator.call_tool.call_args
-    assert call_args[1]["server"] == "sonarr"
+    # Should call Sonarr's episode search
+    final_call = mock_orchestrator.call_tool.call_args_list[2]
+    assert final_call[1]["server"] == "sonarr"
+    assert final_call[1]["tool"] == "sonarr_search_episode"
 
 
 @pytest.mark.asyncio
@@ -503,16 +531,26 @@ async def test_quality_fallback_for_movie(recovery_service, mock_orchestrator):
         category="movies",
         retry_count=1,
     )
-    mock_orchestrator.call_tool.return_value = {"status": True, "command_id": 456}
+
+    # Mock Radarr integration
+    # Radarr provider returns {"movie_count": N, "movies": [...]} in data
+    mock_orchestrator.call_tool.side_effect = [
+        {
+            "success": True,
+            "data": {"movie_count": 1, "movies": [{"id": 1, "title": "The Matrix", "year": 1999}]},
+        },
+        {"success": True, "data": {"id": 999}},
+    ]
 
     # Act
     result = await recovery_service.trigger_retry(failed_download)  # noqa: F841
 
     # Assert
     assert result.strategy == RetryStrategy.QUALITY_FALLBACK
-    # Should call Radarr's movie search with lower quality
-    call_args = mock_orchestrator.call_tool.call_args
-    assert call_args[1]["server"] == "radarr"
+    # Should call Radarr's movie search
+    final_call = mock_orchestrator.call_tool.call_args_list[1]
+    assert final_call[1]["server"] == "radarr"
+    assert final_call[1]["tool"] == "radarr_search_movie"
 
 
 @pytest.mark.asyncio
@@ -665,7 +703,21 @@ async def test_coordinate_with_sonarr_for_episode_search(recovery_service, mock_
         category="tv",
         retry_count=1,
     )
-    mock_orchestrator.call_tool.return_value = {"status": True, "command_id": 123}
+    # Mock full Sonarr integration flow with proper response format
+    mock_orchestrator.call_tool.side_effect = [
+        {
+            "success": True,
+            "data": {"series_count": 1, "series": [{"id": 1, "title": "Breaking Bad"}]},
+        },
+        {
+            "success": True,
+            "data": {
+                "episode_count": 1,
+                "episodes": [{"id": 14, "seasonNumber": 5, "episodeNumber": 14}],
+            },
+        },
+        {"success": True, "data": {"id": 999}},
+    ]
 
     # Act
     await recovery_service.trigger_retry(failed_download)
@@ -673,7 +725,7 @@ async def test_coordinate_with_sonarr_for_episode_search(recovery_service, mock_
     # Assert - Should call Sonarr's episode search
     call_args = mock_orchestrator.call_tool.call_args
     assert call_args[1]["server"] == "sonarr"
-    assert call_args[1]["tool"] in ["episode_search", "search_series"]
+    assert call_args[1]["tool"] == "sonarr_search_episode"
 
 
 @pytest.mark.asyncio
@@ -686,7 +738,14 @@ async def test_coordinate_with_radarr_for_movie_search(recovery_service, mock_or
         category="movies",
         retry_count=1,
     )
-    mock_orchestrator.call_tool.return_value = {"status": True, "command_id": 456}
+    # Mock full Radarr integration flow with proper response format
+    mock_orchestrator.call_tool.side_effect = [
+        {
+            "success": True,
+            "data": {"movie_count": 1, "movies": [{"id": 1, "title": "Inception", "year": 2010}]},
+        },
+        {"success": True, "data": {"id": 999}},
+    ]
 
     # Act
     await recovery_service.trigger_retry(failed_download)
@@ -694,7 +753,7 @@ async def test_coordinate_with_radarr_for_movie_search(recovery_service, mock_or
     # Assert - Should call Radarr's movie search
     call_args = mock_orchestrator.call_tool.call_args
     assert call_args[1]["server"] == "radarr"
-    assert call_args[1]["tool"] in ["movie_search", "search_movies"]
+    assert call_args[1]["tool"] == "radarr_search_movie"
 
 
 @pytest.mark.asyncio
