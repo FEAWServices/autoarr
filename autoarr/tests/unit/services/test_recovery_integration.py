@@ -33,11 +33,7 @@ import pytest
 
 from autoarr.api.services.event_bus import EventBus, EventType
 from autoarr.api.services.monitoring_service import DownloadStatus, FailedDownload
-from autoarr.api.services.recovery_service import (
-    RecoveryConfig,
-    RecoveryService,
-    RetryStrategy,
-)
+from autoarr.api.services.recovery_service import RecoveryConfig, RecoveryService, RetryStrategy
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 
 # ============================================================================
@@ -128,22 +124,29 @@ async def test_quality_fallback_finds_series_and_triggers_search(
     )
 
     # Mock responses for the integration flow
+    # Sonarr provider returns nested data structure
     mock_orchestrator.call_tool.side_effect = [
         # First call: sonarr_get_series
         {
             "success": True,
-            "data": [
-                {"id": 123, "title": "Breaking Bad"},
-                {"id": 456, "title": "Better Call Saul"},
-            ],
+            "data": {
+                "series_count": 2,
+                "series": [
+                    {"id": 123, "title": "Breaking Bad"},
+                    {"id": 456, "title": "Better Call Saul"},
+                ],
+            },
         },
         # Second call: sonarr_get_episodes
         {
             "success": True,
-            "data": [
-                {"id": 789, "seasonNumber": 1, "episodeNumber": 1, "title": "Pilot"},
-                {"id": 790, "seasonNumber": 1, "episodeNumber": 2},
-            ],
+            "data": {
+                "episode_count": 2,
+                "episodes": [
+                    {"id": 789, "seasonNumber": 1, "episodeNumber": 1, "title": "Pilot"},
+                    {"id": 790, "seasonNumber": 1, "episodeNumber": 2},
+                ],
+            },
         },
         # Third call: sonarr_search_episode
         {"success": True, "data": {"id": 999, "status": "queued"}},
@@ -196,14 +199,18 @@ async def test_quality_fallback_finds_movie_and_triggers_search(
     )
 
     # Mock responses
+    # Radarr provider returns nested data structure
     mock_orchestrator.call_tool.side_effect = [
         # First call: radarr_get_movies
         {
             "success": True,
-            "data": [
-                {"id": 123, "title": "The Matrix", "year": 1999},
-                {"id": 456, "title": "The Matrix Reloaded", "year": 2003},
-            ],
+            "data": {
+                "movie_count": 2,
+                "movies": [
+                    {"id": 123, "title": "The Matrix", "year": 1999},
+                    {"id": 456, "title": "The Matrix Reloaded", "year": 2003},
+                ],
+            },
         },
         # Second call: radarr_search_movie
         {"success": True, "data": {"id": 999, "status": "queued"}},
@@ -249,9 +256,13 @@ async def test_quality_fallback_handles_series_not_found(
     )
 
     # Mock responses
+    # Sonarr provider returns nested data structure
     mock_orchestrator.call_tool.side_effect = [
         # First call: sonarr_get_series (no matching series)
-        {"success": True, "data": [{"id": 123, "title": "Some Other Show"}]},
+        {
+            "success": True,
+            "data": {"series_count": 1, "series": [{"id": 123, "title": "Some Other Show"}]},
+        },
         # Fallback to SABnzbd retry (exponential backoff)
         {"status": True},
     ]
@@ -288,11 +299,21 @@ async def test_quality_fallback_handles_episode_not_found(
     )
 
     # Mock responses
+    # Sonarr provider returns nested data structure
     mock_orchestrator.call_tool.side_effect = [
         # First call: sonarr_get_series (series found)
-        {"success": True, "data": [{"id": 123, "title": "Breaking Bad"}]},
+        {
+            "success": True,
+            "data": {"series_count": 1, "series": [{"id": 123, "title": "Breaking Bad"}]},
+        },
         # Second call: sonarr_get_episodes (no matching episode)
-        {"success": True, "data": [{"id": 789, "seasonNumber": 1, "episodeNumber": 1}]},
+        {
+            "success": True,
+            "data": {
+                "episode_count": 1,
+                "episodes": [{"id": 789, "seasonNumber": 1, "episodeNumber": 1}],
+            },
+        },
         # Fallback to SABnzbd retry
         {"status": True},
     ]
@@ -320,9 +341,16 @@ async def test_quality_fallback_emits_detailed_notifications(
     )
 
     # Mock successful flow
+    # Sonarr provider returns nested data structure
     mock_orchestrator.call_tool.side_effect = [
-        {"success": True, "data": [{"id": 1, "title": "Test Show"}]},
-        {"success": True, "data": [{"id": 10, "seasonNumber": 1, "episodeNumber": 1}]},
+        {"success": True, "data": {"series_count": 1, "series": [{"id": 1, "title": "Test Show"}]}},
+        {
+            "success": True,
+            "data": {
+                "episode_count": 1,
+                "episodes": [{"id": 10, "seasonNumber": 1, "episodeNumber": 1}],
+            },
+        },
         {"success": True, "data": {"id": 999}},
     ]
 
@@ -430,12 +458,16 @@ async def test_exponential_backoff_emits_notifications_with_delay(
 async def test_find_series_normalizes_names_correctly(recovery_service, mock_orchestrator):
     """Test series name normalization handles dots, underscores, and case."""
     # Arrange
+    # Sonarr provider returns nested data structure
     mock_orchestrator.call_tool.return_value = {
         "success": True,
-        "data": [
-            {"id": 1, "title": "The Walking Dead"},
-            {"id": 2, "title": "Breaking Bad"},
-        ],
+        "data": {
+            "series_count": 2,
+            "series": [
+                {"id": 1, "title": "The Walking Dead"},
+                {"id": 2, "title": "Breaking Bad"},
+            ],
+        },
     }
 
     # Act - Test various name formats
@@ -456,12 +488,16 @@ async def test_find_series_normalizes_names_correctly(recovery_service, mock_orc
 async def test_find_movie_matches_with_year_tolerance(recovery_service, mock_orchestrator):
     """Test movie matching allows 1-year tolerance in year matching."""
     # Arrange
+    # Radarr provider returns nested data structure
     mock_orchestrator.call_tool.return_value = {
         "success": True,
-        "data": [
-            {"id": 1, "title": "The Matrix", "year": 1999},
-            {"id": 2, "title": "The Matrix Reloaded", "year": 2003},
-        ],
+        "data": {
+            "movie_count": 2,
+            "movies": [
+                {"id": 1, "title": "The Matrix", "year": 1999},
+                {"id": 2, "title": "The Matrix Reloaded", "year": 2003},
+            ],
+        },
     }
 
     # Act - Test year tolerance
