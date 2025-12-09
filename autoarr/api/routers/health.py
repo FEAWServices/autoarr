@@ -662,7 +662,7 @@ async def monitoring_health_check() -> Dict[str, Any]:
             "last_poll_time": None,
             "tracked_downloads_count": 0,
             "alerted_failures_count": 0,
-            "last_error": f"Failed to get monitoring service: {str(e)}",
+            "last_error": "Failed to get monitoring service status",
             "poll_interval_seconds": 0,
             "failure_detection_enabled": False,
         }
