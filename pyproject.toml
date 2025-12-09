@@ -67,14 +67,6 @@ addopts = [
     "--cov-fail-under=0"
 ]
 
-[tool.coverage.run]
-branch = true
-source = ["autoarr"]
-omit = [
-    "autoarr/tests/*",
-    "autoarr/ui/*",
-]
-
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
