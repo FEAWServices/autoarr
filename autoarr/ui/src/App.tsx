@@ -21,6 +21,7 @@ import { useThemeStore } from './stores/themeStore';
 import { useOnboardingStore } from './stores/onboardingStore';
 import { websocketService } from './services/websocket';
 import { handleWebSocketNotification } from './services/notifications';
+import { WebSocketEvent } from './types/chat';
 
 /**
  * Component that checks onboarding status and redirects if needed
@@ -65,7 +66,7 @@ function App() {
   // Set up WebSocket notification handler
   useEffect(() => {
     // Subscribe to all WebSocket events
-    const handleEvent = (event: any) => {
+    const handleEvent = (event: WebSocketEvent) => {
       // Only show notifications for 'event' type messages
       if (event.type === 'event') {
         handleWebSocketNotification(event);
