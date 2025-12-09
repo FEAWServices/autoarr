@@ -129,29 +129,57 @@ export interface ChatState {
  * WebSocket event types for real-time updates
  */
 export type WebSocketEventType =
+  | 'connection'
+  | 'event'
+  | 'ack'
   | 'request-submitted'
   | 'request-classified'
   | 'request-searching'
   | 'request-downloading'
   | 'request-completed'
   | 'request-failed'
-  | 'download-progress';
+  | 'download-progress'
+  | 'download-started'
+  | 'download-completed'
+  | 'download-failed'
+  | 'download-paused'
+  | 'download-resumed'
+  | 'download-state-changed'
+  | 'recovery-attempted'
+  | 'recovery-success'
+  | 'recovery-failed'
+  | 'config-audit-started'
+  | 'config-audit-completed'
+  | 'config-audit-failed';
 
 /**
  * WebSocket event payload
  */
 export interface WebSocketEvent {
   type: WebSocketEventType;
-  requestId: string;
-  data: {
+  event_type?: string;
+  correlation_id?: string;
+  requestId?: string;
+  data?: {
     status?: RequestStatus;
     progress?: number;
     eta?: string;
     error?: string;
     title?: string;
+    nzo_id?: string;
+    filename?: string;
+    category?: string;
+    strategy?: string;
+    message?: string;
     [key: string]: unknown;
   };
-  timestamp: string;
+  metadata?: {
+    source?: string;
+    [key: string]: unknown;
+  };
+  timestamp?: string;
+  message?: string;
+  status?: string;
 }
 
 /**
