@@ -130,10 +130,7 @@ export function handleWebSocketNotification(event: WebSocketEvent): void {
   switch (eventType) {
     // Download events
     case 'download_started':
-      showInfo(
-        `Download started: ${event.data?.filename || event.data?.title || 'Unknown'}`,
-        3000
-      );
+      showInfo(`Download started: ${event.data?.filename || event.data?.title || 'Unknown'}`, 3000);
       break;
 
     case 'download_completed':
@@ -160,10 +157,7 @@ export function handleWebSocketNotification(event: WebSocketEvent): void {
       break;
 
     case 'download_resumed':
-      showInfo(
-        `Download resumed: ${event.data?.filename || event.data?.title || 'Unknown'}`,
-        3000
-      );
+      showInfo(`Download resumed: ${event.data?.filename || event.data?.title || 'Unknown'}`, 3000);
       break;
 
     // Recovery events
@@ -188,7 +182,9 @@ export function handleWebSocketNotification(event: WebSocketEvent): void {
     case 'recovery_failed':
       showError(
         `Recovery failed: ${event.data?.filename || event.data?.title || 'Unknown'}${
-          event.data?.error || event.data?.message ? ` - ${event.data.error || event.data.message}` : ''
+          event.data?.error || event.data?.message
+            ? ` - ${event.data.error || event.data.message}`
+            : ''
         }`,
         6000
       );
@@ -216,26 +212,17 @@ export function handleWebSocketNotification(event: WebSocketEvent): void {
     // Content request events
     case 'request_created':
     case 'content_requested':
-      showInfo(
-        `Content request created: ${event.data?.title || 'Unknown'}`,
-        3000
-      );
+      showInfo(`Content request created: ${event.data?.title || 'Unknown'}`, 3000);
       break;
 
     case 'request_processed':
     case 'content_added':
-      showSuccess(
-        `Content added: ${event.data?.title || 'Unknown'}`,
-        4000
-      );
+      showSuccess(`Content added: ${event.data?.title || 'Unknown'}`, 4000);
       break;
 
     case 'request_failed':
     case 'content_request_failed':
-      showError(
-        `Content request failed${event.data?.error ? `: ${event.data.error}` : ''}`,
-        6000
-      );
+      showError(`Content request failed${event.data?.error ? `: ${event.data.error}` : ''}`, 6000);
       break;
 
     default:
@@ -247,31 +234,24 @@ export function handleWebSocketNotification(event: WebSocketEvent): void {
 /**
  * Show a custom progress toast (for downloads)
  */
-export function showProgress(
-  title: string,
-  progress: number,
-  message?: string
-): string {
+export function showProgress(title: string, progress: number, message?: string): string {
   const progressPercent = Math.round(progress);
-  const progressBar = '█'.repeat(Math.floor(progressPercent / 5)) +
-                      '░'.repeat(20 - Math.floor(progressPercent / 5));
+  const progressBar =
+    '█'.repeat(Math.floor(progressPercent / 5)) + '░'.repeat(20 - Math.floor(progressPercent / 5));
 
-  return toast(
-    `${title}\n${progressBar} ${progressPercent}%${message ? `\n${message}` : ''}`,
-    {
-      duration: Infinity,
-      position: 'bottom-right',
-      icon: '⬇️',
-      style: {
-        background: '#6366f1',
-        color: '#fff',
-        borderRadius: '0.5rem',
-        padding: '1rem',
-        maxWidth: '500px',
-        whiteSpace: 'pre-line',
-      },
-    }
-  );
+  return toast(`${title}\n${progressBar} ${progressPercent}%${message ? `\n${message}` : ''}`, {
+    duration: Infinity,
+    position: 'bottom-right',
+    icon: '⬇️',
+    style: {
+      background: '#6366f1',
+      color: '#fff',
+      borderRadius: '0.5rem',
+      padding: '1rem',
+      maxWidth: '500px',
+      whiteSpace: 'pre-line',
+    },
+  });
 }
 
 /**
@@ -284,35 +264,29 @@ export function updateProgress(
   message?: string
 ): void {
   const progressPercent = Math.round(progress);
-  const progressBar = '█'.repeat(Math.floor(progressPercent / 5)) +
-                      '░'.repeat(20 - Math.floor(progressPercent / 5));
+  const progressBar =
+    '█'.repeat(Math.floor(progressPercent / 5)) + '░'.repeat(20 - Math.floor(progressPercent / 5));
 
   if (progress >= 100) {
-    toast.success(
-      `${title} - Complete!`,
-      {
-        id: toastId,
-        duration: 3000,
-        position: 'bottom-right',
-      }
-    );
+    toast.success(`${title} - Complete!`, {
+      id: toastId,
+      duration: 3000,
+      position: 'bottom-right',
+    });
   } else {
-    toast(
-      `${title}\n${progressBar} ${progressPercent}%${message ? `\n${message}` : ''}`,
-      {
-        id: toastId,
-        duration: Infinity,
-        position: 'bottom-right',
-        icon: '⬇️',
-        style: {
-          background: '#6366f1',
-          color: '#fff',
-          borderRadius: '0.5rem',
-          padding: '1rem',
-          maxWidth: '500px',
-          whiteSpace: 'pre-line',
-        },
-      }
-    );
+    toast(`${title}\n${progressBar} ${progressPercent}%${message ? `\n${message}` : ''}`, {
+      id: toastId,
+      duration: Infinity,
+      position: 'bottom-right',
+      icon: '⬇️',
+      style: {
+        background: '#6366f1',
+        color: '#fff',
+        borderRadius: '0.5rem',
+        padding: '1rem',
+        maxWidth: '500px',
+        whiteSpace: 'pre-line',
+      },
+    });
   }
 }
