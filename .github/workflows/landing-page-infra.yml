@@ -101,9 +101,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate
     timeout-minutes: 15
-    # Skip preview for external PRs (forks/dependabot) as secrets aren't available
+    # Skip preview for external PRs (forks) and dependabot as secrets aren't available
+    # Dependabot opens branches in this repo but doesn't have access to secrets
     if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       github.actor != 'dependabot[bot]') ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'preview')
 
     env:
