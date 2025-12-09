@@ -63,7 +63,27 @@ addopts = [
     "--cov=autoarr",
     "--cov-report=term-missing",
     "--cov-report=html",
+    "--cov-report=xml",
     "--cov-fail-under=0"
+]
+
+[tool.coverage.run]
+branch = true
+source = ["autoarr"]
+omit = [
+    "autoarr/tests/*",
+    "autoarr/ui/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "from __future__ import annotations",
 ]
 
 [tool.black]
