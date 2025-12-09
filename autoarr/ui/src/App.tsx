@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { SplashScreen } from './components/SplashScreen';
 import { MainLayout } from './layouts/MainLayout';
 import { Search } from './pages/Search';
@@ -18,6 +19,9 @@ import ConfigAuditPage from './pages/ConfigAudit';
 import Optimize from './pages/Optimize';
 import { useThemeStore } from './stores/themeStore';
 import { useOnboardingStore } from './stores/onboardingStore';
+import { websocketService } from './services/websocket';
+import { handleWebSocketNotification } from './services/notifications';
+import { WebSocketEvent } from './types/chat';
 
 /**
  * Component that checks onboarding status and redirects if needed
@@ -59,6 +63,24 @@ function App() {
     _initializeTheme();
   }, [_initializeTheme]);
 
+  // Set up WebSocket notification handler
+  useEffect(() => {
+    // Subscribe to all WebSocket events
+    const handleEvent = (event: WebSocketEvent) => {
+      // Only show notifications for 'event' type messages
+      if (event.type === 'event') {
+        handleWebSocketNotification(event);
+      }
+    };
+
+    websocketService.on('event', handleEvent);
+
+    // Cleanup on unmount
+    return () => {
+      websocketService.off('event', handleEvent);
+    };
+  }, []);
+
   const handleSplashComplete = () => {
     setShowSplash(false);
   };
@@ -70,6 +92,7 @@ function App() {
   return (
     <BrowserRouter>
       <ConnectionStatus />
+      <Toaster />
       <OnboardingRedirect>
         <Routes>
           {/* Onboarding wizard - standalone, no sidebar */}
