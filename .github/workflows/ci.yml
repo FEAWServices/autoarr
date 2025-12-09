@@ -397,6 +397,13 @@ jobs:
           name: coverage-html
           path: htmlcov/
 
+      - name: Upload coverage XML for SonarCloud
+        if: always() && (steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request') && matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v5
+        with:
+          name: coverage-xml
+          path: coverage.xml
+
       - name: Skip if no changes
         if: steps.changed-files.outputs.changed != 'true' && github.event_name != 'pull_request'
         run: echo "No Python files changed, skipping tests"
@@ -519,12 +526,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download coverage report
+      - name: Download coverage XML report
         if: steps.sonar-check.outputs.configured == 'true'
         uses: actions/download-artifact@v6
         with:
-          name: coverage-html
-          path: coverage-report/
+          name: coverage-xml
+          path: .
         continue-on-error: true
 
       - name: SonarCloud Scan
