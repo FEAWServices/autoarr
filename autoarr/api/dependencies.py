@@ -25,7 +25,10 @@ managing the MCP Orchestrator lifecycle and providing it to endpoints.
 """
 
 import logging
-from typing import Any, AsyncGenerator, Dict, Optional
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, Optional
+
+if TYPE_CHECKING:
+    from .services.monitoring_service import MonitoringService
 
 from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
 from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
