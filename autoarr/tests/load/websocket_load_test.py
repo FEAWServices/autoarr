@@ -177,8 +177,7 @@ class WebSocketUser(User):
                 break
             else:
                 logger.warning(
-                    f"WebSocket connection attempt {attempt + 1} failed, "
-                    f"retrying..."
+                    f"WebSocket connection attempt {attempt + 1} failed, " f"retrying..."
                 )
                 if attempt < max_retries - 1:
                     time.sleep(1)
@@ -269,7 +268,7 @@ class WebSocketUser(User):
     def connection_stability_check(self) -> None:
         """Check if connection is still stable."""
         is_connected = self.ws_client.connected and (
-            self.ws_client.ws is not None and not self.ws_client.ws.connected == False
+            self.ws_client.ws is not None and self.ws_client.ws.connected is not False
         )
 
         # Record connectivity check

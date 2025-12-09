@@ -36,8 +36,7 @@ import argparse
 import csv
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-
+from typing import Any, Dict, List
 
 # ============================================================================
 # Performance Budgets (SLAs)
@@ -196,7 +195,9 @@ class LoadTestAnalyzer:
                 self.summary[endpoint] = {
                     "request_count": request_count,
                     "failure_count": failure_count,
-                    "failure_rate": (failure_count / request_count * 100) if request_count > 0 else 0,
+                    "failure_rate": (
+                        (failure_count / request_count * 100) if request_count > 0 else 0
+                    ),
                     "p50": p50,
                     "p95": p95,
                     "p99": p99,
@@ -233,9 +234,7 @@ class LoadTestAnalyzer:
         print_header("Test Results Summary")
 
         total_endpoints = len(self.summary)
-        endpoints_ok = sum(
-            1 for s in self.summary.values() if s["p95_ok"] and s["p99_ok"]
-        )
+        endpoints_ok = sum(1 for s in self.summary.values() if s["p95_ok"] and s["p99_ok"])
         endpoints_violated = total_endpoints - endpoints_ok
 
         print(f"Total Endpoints: {total_endpoints}")
@@ -266,17 +265,21 @@ class LoadTestAnalyzer:
             print(f"\n{BOLD}{endpoint}{END}")
 
             # Status
-            status = GREEN + "OK" + END if (metrics["p95_ok"] and metrics["p99_ok"]) else RED + "VIOLATED" + END
+            status = (
+                GREEN + "OK" + END
+                if (metrics["p95_ok"] and metrics["p99_ok"])
+                else RED + "VIOLATED" + END
+            )
             print(f"  Status: {status}")
 
             # Request metrics
             print(f"  Requests: {metrics['request_count']}")
-            print(
-                f"  Failure Rate: {metrics['failure_rate']:.2f}% ({metrics['failure_count']} failures)"
-            )
+            fail_rate = metrics["failure_rate"]
+            fail_count = metrics["failure_count"]
+            print(f"  Failure Rate: {fail_rate:.2f}% ({fail_count} failures)")
 
             # Response time metrics
-            print(f"  Response Times:")
+            print("  Response Times:")
             print_metric("    Min", format_ms(metrics["min"]))
             print_metric("    Avg", format_ms(metrics["avg"]))
             print_metric("    p50", format_ms(metrics["p50"]))
@@ -343,32 +346,32 @@ class LoadTestAnalyzer:
 
         # Group violations by severity
         critical_violations = [
-            v for v in self.violations
+            v
+            for v in self.violations
             if v["p95"] > v["p95_budget"] * 1.5  # More than 50% over budget
         ]
 
         high_violations = [
-            v for v in self.violations
-            if v["p95_budget"] < v["p95"] <= v["p95_budget"] * 1.5
+            v for v in self.violations if v["p95_budget"] < v["p95"] <= v["p95_budget"] * 1.5
         ]
 
         if critical_violations:
             print(f"{RED}{BOLD}Critical Violations (>50% over budget):{END}\n")
             for violation in critical_violations:
                 print(f"  • {violation['endpoint']}")
-                print(f"    - Investigate database queries for bottlenecks")
-                print(f"    - Check for N+1 query problems")
-                print(f"    - Verify indexing on frequently accessed columns")
-                print(f"    - Consider caching frequently accessed data")
+                print("    - Investigate database queries for bottlenecks")
+                print("    - Check for N+1 query problems")
+                print("    - Verify indexing on frequently accessed columns")
+                print("    - Consider caching frequently accessed data")
                 print()
 
         if high_violations:
             print(f"{YELLOW}{BOLD}High Violations (10-50% over budget):{END}\n")
             for violation in high_violations:
                 print(f"  • {violation['endpoint']}")
-                print(f"    - Profile endpoint for performance hotspots")
-                print(f"    - Review API implementation for optimizations")
-                print(f"    - Consider adding output filtering/pagination")
+                print("    - Profile endpoint for performance hotspots")
+                print("    - Review API implementation for optimizations")
+                print("    - Consider adding output filtering/pagination")
                 print()
 
     def generate_report(self) -> bool:

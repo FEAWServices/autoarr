@@ -32,7 +32,7 @@ Profiles:
 """
 
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -117,11 +117,11 @@ NORMAL_LOAD_PROFILE = LoadProfile(
     duration_seconds=600,  # 10 minutes
     user_classes={
         "HealthCheckUser": 15,  # Most health checks from monitoring
-        "MonitoringUser": 10,   # Active dashboard users
-        "BrowsingUser": 8,      # Users browsing content
+        "MonitoringUser": 10,  # Active dashboard users
+        "BrowsingUser": 8,  # Users browsing content
         "ConfigurationAuditUser": 3,  # Occasional config checks
         "ContentRequestUser": 2,  # Content requests
-        "AdminUser": 2,         # Admin operations
+        "AdminUser": 2,  # Admin operations
     },
     ramp_up_seconds=60,
     ramp_down_seconds=30,
@@ -133,12 +133,12 @@ PEAK_LOAD_PROFILE = LoadProfile(
     description="Peak usage scenario - expected maximum production load.",
     duration_seconds=900,  # 15 minutes
     user_classes={
-        "HealthCheckUser": 40,   # Heavy health check traffic
-        "MonitoringUser": 25,    # Multiple dashboard users
-        "BrowsingUser": 20,      # Heavy browsing
+        "HealthCheckUser": 40,  # Heavy health check traffic
+        "MonitoringUser": 25,  # Multiple dashboard users
+        "BrowsingUser": 20,  # Heavy browsing
         "ConfigurationAuditUser": 8,  # More config operations
         "ContentRequestUser": 5,  # Multiple requests
-        "AdminUser": 2,          # Admin operations
+        "AdminUser": 2,  # Admin operations
     },
     ramp_up_seconds=120,
     ramp_down_seconds=60,
@@ -151,11 +151,11 @@ STRESS_TEST_PROFILE = LoadProfile(
     duration_seconds=1200,  # 20 minutes
     user_classes={
         "HealthCheckUser": 100,  # Heavy health checks
-        "MonitoringUser": 50,    # Heavy monitoring
-        "BrowsingUser": 40,      # Heavy browsing
+        "MonitoringUser": 50,  # Heavy monitoring
+        "BrowsingUser": 40,  # Heavy browsing
         "ConfigurationAuditUser": 20,  # Heavy config operations
         "ContentRequestUser": 10,  # Heavy content requests
-        "AdminUser": 5,          # Admin operations
+        "AdminUser": 5,  # Admin operations
     },
     ramp_up_seconds=300,
     ramp_down_seconds=120,
@@ -167,9 +167,9 @@ SPIKE_TEST_PROFILE = LoadProfile(
     description="Sudden traffic spike to test system resilience.",
     duration_seconds=600,  # 10 minutes
     user_classes={
-        "HealthCheckUser": 80,   # Sudden spike in health checks
-        "MonitoringUser": 40,    # Sudden spike in monitoring
-        "BrowsingUser": 30,      # Sudden spike in browsing
+        "HealthCheckUser": 80,  # Sudden spike in health checks
+        "MonitoringUser": 40,  # Sudden spike in monitoring
+        "BrowsingUser": 30,  # Sudden spike in browsing
         "ConfigurationAuditUser": 15,
         "ContentRequestUser": 8,
         "AdminUser": 2,
@@ -234,9 +234,7 @@ def get_profile(profile_name: str) -> LoadProfile:
     profile_name_lower = profile_name.lower()
     if profile_name_lower not in PROFILES:
         available = ", ".join(PROFILES.keys())
-        raise ValueError(
-            f"Unknown profile '{profile_name}'. Available profiles: {available}"
-        )
+        raise ValueError(f"Unknown profile '{profile_name}'. Available profiles: {available}")
     return PROFILES[profile_name_lower]
 
 
@@ -255,7 +253,7 @@ def print_profiles() -> None:
         print(f"  Max Concurrent Users: {profile.max_users}")
         print(f"  Duration: {profile.duration_seconds} seconds")
         print(f"  Ramp-up: {profile.ramp_up_seconds}s, Ramp-down: {profile.ramp_down_seconds}s")
-        print(f"  User Distribution:")
+        print("  User Distribution:")
         for user_class, count in profile.user_classes.items():
             print(f"    - {user_class}: {count} users")
     print("\n" + "=" * 80)

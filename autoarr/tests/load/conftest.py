@@ -329,7 +329,7 @@ def build_url(endpoint: str, api_prefix: bool = True) -> str:
 
 def validate_environment() -> bool:
     """Validate that test environment is properly configured."""
-    logger.info(f"Test Configuration:")
+    logger.info("Test Configuration:")
     logger.info(f"  Base URL: {BASE_URL}")
     logger.info(f"  API Prefix: {API_V1_PREFIX}")
     logger.info(f"  Report Directory: {REPORT_DIR}")
@@ -345,8 +345,7 @@ def validate_environment() -> bool:
                 return True
             else:
                 logger.warning(
-                    f"✗ AutoArr API returned status {response.status_code}. "
-                    "Tests may fail."
+                    f"✗ AutoArr API returned status {response.status_code}. " "Tests may fail."
                 )
                 return False
     except Exception as e:

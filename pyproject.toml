@@ -67,6 +67,11 @@ addopts = [
     "--cov-fail-under=0"
 ]
 
+[tool.coverage.run]
+omit = [
+    "autoarr/tests/load/*",
+]
+
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",

@@ -26,11 +26,10 @@ This module defines multiple user scenarios that simulate realistic usage patter
 5. AdminUser - Administrative operations (settings, configuration)
 """
 
-import json
 import logging
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from locust import HttpUser, TaskSet, between, task, web
 
@@ -345,11 +344,11 @@ class ContentRequestTasks(TaskSet):
     def submit_content_request(self) -> None:
         """Submit a content request via natural language."""
         payload = {
-            "user_message": "I'd like to watch Breaking Bad",
-            "request_type": "show",
+            "query": "I'd like to watch Breaking Bad",
+            "user_id": "load-test-user",
         }
         with self.client.post(
-            "/content/request",
+            f"{API_V1_PREFIX}/requests/content",
             json=payload,
             catch_response=True,
             timeout=15,
@@ -363,7 +362,7 @@ class ContentRequestTasks(TaskSet):
     def get_pending_requests(self) -> None:
         """Get pending content requests."""
         with self.client.get(
-            "/content/requests",
+            f"{API_V1_PREFIX}/requests",
             catch_response=True,
             timeout=10,
         ) as response:
