@@ -1,17 +1,19 @@
 # AutoArr API Reference
 
 **Version:** 1.0.0
-**Base URL:** `http://localhost:8000`
-**Last Updated:** 2025-01-08
+**API Version:** v1
+**Base URL:** `http://localhost:8088/api/v1`
+**Last Updated:** 2025-12-09
 
 ---
 
 ## Table of Contents
 
-1. [Authentication](#authentication)
-2. [Rate Limiting](#rate-limiting)
-3. [Error Handling](#error-handling)
-4. [Endpoints](#endpoints)
+1. [Versioning](#versioning)
+2. [Authentication](#authentication)
+3. [Rate Limiting](#rate-limiting)
+4. [Error Handling](#error-handling)
+5. [Endpoints](#endpoints)
    - [Health Check](#health-check)
    - [Configuration Management](#configuration-management)
    - [Downloads (SABnzbd)](#downloads-sabnzbd)
@@ -22,6 +24,71 @@
    - [MCP Proxy](#mcp-proxy)
 5. [WebSocket API](#websocket-api)
 6. [Request/Response Examples](#requestresponse-examples)
+
+---
+
+## Versioning
+
+AutoArr uses **URL-based versioning** for its REST API. All endpoints are prefixed with `/api/v1`.
+
+### Current Version
+
+- **API Version**: v1
+- **Application Version**: 1.0.0
+- **Base Path**: `/api/v1`
+
+### Version Format
+
+All API requests must include the version in the URL path:
+
+```
+https://your-autoarr-instance/api/v1/{resource}
+```
+
+**Examples:**
+```bash
+# Health check
+GET /api/v1/health
+
+# Configuration audit
+POST /api/v1/config/audit
+
+# Downloads
+GET /api/v1/downloads
+```
+
+### Version Discovery
+
+To discover the current API version and available endpoints:
+
+```bash
+curl http://localhost:8088/api
+```
+
+**Response:**
+```json
+{
+  "name": "AutoArr API",
+  "version": "1.0.0",
+  "description": "Intelligent media automation orchestrator",
+  "docs": "/docs",
+  "health": "/health"
+}
+```
+
+### Versioning Strategy
+
+For detailed information about API versioning, deprecation policy, migration guides, and best practices, see:
+
+**📚 [API Versioning Guide](versioning.md)**
+
+Key topics covered:
+- Version lifecycle and support policy
+- Breaking vs non-breaking changes
+- Deprecation process and timeline
+- Migration guide for version upgrades
+- Backward compatibility guarantees
+- Best practices for API consumers
 
 ---
 
@@ -41,7 +108,7 @@ API keys are configured in the settings or generated during initial setup.
 
 ```bash
 # Example request with API key
-curl -H "X-API-Key: abc123..." http://localhost:8000/api/v1/health
+curl -H "X-API-Key: abc123..." http://localhost:8088/api/v1/health
 ```
 
 ---
