@@ -1030,9 +1030,7 @@ class RecoveryService:
             logger.error(f"Error finding series ID: {e}")
             return None
 
-    async def _find_episode_id(
-        self, series_id: int, season: int, episode: int
-    ) -> Optional[int]:
+    async def _find_episode_id(self, series_id: int, season: int, episode: int) -> Optional[int]:
         """
         Find episode ID in Sonarr by series ID, season, and episode number.
 
@@ -1065,9 +1063,7 @@ class RecoveryService:
                 if ep.get("seasonNumber") == season and ep.get("episodeNumber") == episode:
                     return ep.get("id")
 
-            logger.warning(
-                f"Episode S{season:02d}E{episode:02d} not found for series {series_id}"
-            )
+            logger.warning(f"Episode S{season:02d}E{episode:02d} not found for series {series_id}")
             return None
 
         except Exception as e:
