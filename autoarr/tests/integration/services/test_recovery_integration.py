@@ -81,7 +81,7 @@ class TestRecoveryServiceIntegration:
                 return {"success": True, "result": {"triggered": True}}
             return {"success": True, "result": {}}
 
-        orchestrator.call_mcp_tool = AsyncMock(side_effect=mock_tool_call)
+        orchestrator.call_tool = AsyncMock(side_effect=mock_tool_call)
         return orchestrator
 
     @pytest.fixture
@@ -121,8 +121,8 @@ class TestRecoveryServiceIntegration:
 
         # Assert
         assert result is True
-        orchestrator.call_mcp_tool.assert_called_once()
-        call_args = orchestrator.call_mcp_tool.call_args
+        orchestrator.call_tool.assert_called_once()
+        call_args = orchestrator.call_tool.call_args
         assert call_args[0][0] == "sabnzbd"  # service
         assert call_args[0][1] == "retry_download"  # tool
         assert call_args[0][2]["nzo_id"] == "failed_123"
@@ -182,7 +182,7 @@ class TestRecoveryServiceIntegration:
 
         # Verify Sonarr episode_search was called
         sonarr_calls = [
-            call for call in orchestrator.call_mcp_tool.call_args_list if call[0][0] == "sonarr"
+            call for call in orchestrator.call_tool.call_args_list if call[0][0] == "sonarr"
         ]
         assert len(sonarr_calls) >= 1
         assert sonarr_calls[0][0][1] == "episode_search"
@@ -207,7 +207,7 @@ class TestRecoveryServiceIntegration:
 
         # Verify Radarr movie_search was called
         radarr_calls = [
-            call for call in orchestrator.call_mcp_tool.call_args_list if call[0][0] == "radarr"
+            call for call in orchestrator.call_tool.call_args_list if call[0][0] == "radarr"
         ]
         assert len(radarr_calls) >= 1
         assert radarr_calls[0][0][1] == "movie_search"
@@ -299,7 +299,7 @@ class TestRecoveryServiceIntegration:
             await asyncio.sleep(0.2)  # Simulate slow retry
             return {"success": True, "result": {"nzo_id": "retry_123"}}
 
-        orchestrator.call_mcp_tool = AsyncMock(side_effect=mock_slow_retry)
+        orchestrator.call_tool = AsyncMock(side_effect=mock_slow_retry)
 
         failed_download = {
             "nzo_id": "concurrent_test",
@@ -360,7 +360,7 @@ class TestRecoveryServiceIntegration:
         ) -> Dict[str, Any]:
             raise Exception("Orchestrator connection failed")
 
-        orchestrator.call_mcp_tool = AsyncMock(side_effect=mock_failing_retry)
+        orchestrator.call_tool = AsyncMock(side_effect=mock_failing_retry)
 
         failed_download = {
             "nzo_id": "error_test",
@@ -579,7 +579,7 @@ class TestRecoveryServiceIntegration:
 
         # Assert - verify Sonarr was called with proper episode info
         sonarr_calls = [
-            call for call in orchestrator.call_mcp_tool.call_args_list if call[0][0] == "sonarr"
+            call for call in orchestrator.call_tool.call_args_list if call[0][0] == "sonarr"
         ]
 
         if sonarr_calls:
@@ -604,7 +604,7 @@ class TestRecoveryServiceIntegration:
 
         # Assert - verify Radarr was called
         radarr_calls = [
-            call for call in orchestrator.call_mcp_tool.call_args_list if call[0][0] == "radarr"
+            call for call in orchestrator.call_tool.call_args_list if call[0][0] == "radarr"
         ]
 
         if radarr_calls:
