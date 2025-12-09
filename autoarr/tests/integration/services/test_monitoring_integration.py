@@ -575,9 +575,9 @@ class TestMonitoringServiceIntegration:
 
         # Act - start monitoring (use correct method name)
         await monitoring_service.start_monitoring()
-        await asyncio.sleep(2.5)  # Wait for ~2 polls (interval is 1s)
+        await asyncio.sleep(0.3)  # Wait for ~2 polls (interval is 1s)
         monitoring_service.stop_monitoring()
-        await asyncio.sleep(0.2)  # Allow cleanup
+        await asyncio.sleep(0.05)  # Allow cleanup
 
         # Assert - should have polled multiple times
         assert poll_count >= 2, f"Expected at least 2 polls, got {poll_count}"

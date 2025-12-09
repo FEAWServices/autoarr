@@ -47,6 +47,7 @@ isort = "^7.0.0"
 pylint = "^4.0.3"
 safety = "^3.7.0"
 pyinstaller = {version = "^6.11.0", python = "<3.14"}
+pytest-xdist = "^3.8.0"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

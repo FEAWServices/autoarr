@@ -340,6 +340,7 @@ jobs:
         run: |
           poetry run pytest autoarr/tests/unit/ \
             -v \
+            -n auto \
             --cov=autoarr/api \
             --cov=autoarr/shared \
             --cov=autoarr/mcp_servers \
@@ -356,6 +357,7 @@ jobs:
         run: |
           poetry run pytest autoarr/tests/integration/ \
             -v \
+            -n auto \
             --junit-xml=test-results/integration-junit.xml \
             --maxfail=5 \
             -ra

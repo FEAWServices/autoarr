@@ -254,7 +254,7 @@ async def test_poll_queue_periodic_polling(monitoring_service, mock_orchestrator
 
     # Act - Start monitoring in background
     monitoring_task = asyncio.create_task(monitoring_service.start_monitoring())
-    await asyncio.sleep(2.5)  # Wait for ~2 poll cycles
+    await asyncio.sleep(0.3)  # Wait for ~2 poll cycles
     monitoring_service.stop_monitoring()
     await monitoring_task
 
@@ -795,7 +795,7 @@ async def test_continue_monitoring_after_error(monitoring_service, mock_orchestr
 
     # Act
     monitoring_task = asyncio.create_task(monitoring_service.start_monitoring())
-    await asyncio.sleep(2.5)
+    await asyncio.sleep(0.3)
     monitoring_service.stop_monitoring()
     await monitoring_task
 
@@ -867,7 +867,7 @@ async def test_concurrent_polling_does_not_overlap(monitoring_service, mock_orch
 
     async def slow_call(*args, **kwargs):
         poll_started.append(datetime.now())
-        await asyncio.sleep(0.5)  # Simulate slow API call
+        await asyncio.sleep(0.05)  # Simulate slow API call
         poll_completed.append(datetime.now())
         return {"queue": {"status": "Downloading", "slots": []}}
 
