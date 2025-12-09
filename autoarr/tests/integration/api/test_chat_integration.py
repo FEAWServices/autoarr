@@ -22,12 +22,17 @@ Tests the complete flow from API endpoint through the ChatAgent service,
 including topic classification, intent detection, and response generation.
 """
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from httpx import AsyncClient
 
-from autoarr.api.services.chat_agent import ChatResponse, TopicClassification, QueryTopic, ChatIntent
+from autoarr.api.services.chat_agent import (
+    ChatIntent,
+    ChatResponse,
+    QueryTopic,
+    TopicClassification,
+)
 
 
 @pytest.fixture
