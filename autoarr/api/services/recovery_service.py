@@ -349,6 +349,9 @@ class RecoveryService:
         """
         Execute immediate retry (no delay).
 
+        This is used for transient network errors where an immediate retry
+        is likely to succeed.
+
         Args:
             failed_download: Failed download
             attempt_number: Retry attempt number
@@ -358,8 +361,18 @@ class RecoveryService:
             RecoveryResult
         """
         try:
+            # Emit notification before retry
+            await self._emit_retry_notification(
+                failed_download,
+                RetryStrategy.IMMEDIATE,
+                attempt_number,
+                correlation_id,
+                "starting",
+                delay_seconds=0,
+            )
+
             # Retry immediately via SABnzbd
-            result = await self.orchestrator.call_tool(  # noqa: F841
+            result = await self.orchestrator.call_tool(
                 server="sabnzbd",
                 tool="retry_download",
                 arguments={"nzo_id": failed_download.nzo_id},
@@ -367,17 +380,41 @@ class RecoveryService:
 
             success = result.get("status", False)
 
+            # Emit success/failure notification
+            await self._emit_retry_notification(
+                failed_download,
+                RetryStrategy.IMMEDIATE,
+                attempt_number,
+                correlation_id,
+                "success" if success else "failed",
+                delay_seconds=0,
+                error=None if success else "SABnzbd retry command failed",
+            )
+
             return RecoveryResult(
                 success=success,
                 retry_triggered=True,
                 strategy=RetryStrategy.IMMEDIATE,
-                message="Immediate retry triggered",
+                message=(
+                    "Immediate retry triggered successfully"
+                    if success
+                    else "Immediate retry command sent but status unclear"
+                ),
                 retry_attempt_number=attempt_number,
                 delay_seconds=0,
             )
 
         except Exception as e:
             logger.error(f"Immediate retry failed: {e}")
+            await self._emit_retry_notification(
+                failed_download,
+                RetryStrategy.IMMEDIATE,
+                attempt_number,
+                correlation_id,
+                "failed",
+                delay_seconds=0,
+                error=str(e),
+            )
             return RecoveryResult(
                 success=False,
                 retry_triggered=False,
@@ -392,6 +429,9 @@ class RecoveryService:
         """
         Execute retry with exponential backoff.
 
+        This is used for repeated failures or system issues where waiting
+        before retrying increases the chance of success.
+
         Args:
             failed_download: Failed download
             attempt_number: Retry attempt number
@@ -405,9 +445,19 @@ class RecoveryService:
             delay = self._calculate_backoff_delay(failed_download.retry_count)
             scheduled_time = datetime.utcnow() + timedelta(seconds=delay)
 
+            # Emit notification before retry
+            await self._emit_retry_notification(
+                failed_download,
+                RetryStrategy.EXPONENTIAL_BACKOFF,
+                attempt_number,
+                correlation_id,
+                "starting",
+                delay_seconds=delay,
+            )
+
             # Schedule retry (in real implementation, would use task scheduler)
             # For now, we'll trigger immediately and return scheduled info
-            result = await self.orchestrator.call_tool(  # noqa: F841
+            result = await self.orchestrator.call_tool(
                 server="sabnzbd",
                 tool="retry_download",
                 arguments={"nzo_id": failed_download.nzo_id},
@@ -415,11 +465,26 @@ class RecoveryService:
 
             success = result.get("status", False)
 
+            # Emit success/failure notification
+            await self._emit_retry_notification(
+                failed_download,
+                RetryStrategy.EXPONENTIAL_BACKOFF,
+                attempt_number,
+                correlation_id,
+                "success" if success else "failed",
+                delay_seconds=delay,
+                error=None if success else "SABnzbd retry command failed",
+            )
+
             return RecoveryResult(
                 success=success,
                 retry_triggered=True,
                 strategy=RetryStrategy.EXPONENTIAL_BACKOFF,
-                message=f"Retry scheduled with {delay}s delay",
+                message=(
+                    f"Retry scheduled with {delay}s backoff delay (attempt {attempt_number})"
+                    if success
+                    else f"Retry command sent with {delay}s delay but status unclear"
+                ),
                 retry_attempt_number=attempt_number,
                 delay_seconds=delay,
                 scheduled_time=scheduled_time,
@@ -427,6 +492,16 @@ class RecoveryService:
 
         except Exception as e:
             logger.error(f"Backoff retry failed: {e}")
+            delay = self._calculate_backoff_delay(failed_download.retry_count)
+            await self._emit_retry_notification(
+                failed_download,
+                RetryStrategy.EXPONENTIAL_BACKOFF,
+                attempt_number,
+                correlation_id,
+                "failed",
+                delay_seconds=delay,
+                error=str(e),
+            )
             return RecoveryResult(
                 success=False,
                 retry_triggered=False,
@@ -445,6 +520,12 @@ class RecoveryService:
         """
         Execute retry with quality fallback (search for lower quality).
 
+        This method:
+        1. Extracts content info from the failed download filename
+        2. Searches for the content in Sonarr/Radarr to find its ID
+        3. Triggers a new search which will find alternative releases
+        4. Sonarr/Radarr will automatically select the best available quality
+
         Args:
             failed_download: Failed download
             attempt_number: Retry attempt number
@@ -458,45 +539,112 @@ class RecoveryService:
             # Determine service based on category
             server = "sonarr" if failed_download.category == "tv" else "radarr"
 
-            # Extract content info from filename
+            # Extract content info from filename and find content ID
             if server == "sonarr":
                 series_info = self._extract_series_info(failed_download.name)
                 if not series_info:
                     raise ValueError("Could not extract series info from filename")
 
+                series_name, season, episode = series_info
+
+                # Find series by name
+                content_id = await self._find_series_id(series_name)
+                if not content_id:
+                    raise ValueError(f"Could not find series '{series_name}' in Sonarr")
+
+                # Find specific episode
+                episode_id = await self._find_episode_id(content_id, season, episode)
+                if not episode_id:
+                    raise ValueError(
+                        f"Could not find episode S{season:02d}E{episode:02d} for series"
+                    )
+
                 # Trigger episode search
-                tool = "episode_search"
-                arguments = {
-                    "series_name": series_info[0],
-                    "season": series_info[1],
-                    "episode": series_info[2],
-                }
+                tool = "sonarr_search_episode"
+                arguments = {"episode_id": episode_id}
+                content_description = f"episode S{season:02d}E{episode:02d} of {series_name}"
+
             else:
                 movie_info = self._extract_movie_info(failed_download.name)
                 if not movie_info:
                     raise ValueError("Could not extract movie info from filename")
 
+                movie_name, year = movie_info
+
+                # Find movie by name and year
+                content_id = await self._find_movie_id(movie_name, year)
+                if not content_id:
+                    raise ValueError(f"Could not find movie '{movie_name} ({year})' in Radarr")
+
                 # Trigger movie search
-                tool = "movie_search"
-                arguments = {"movie_name": movie_info[0], "year": movie_info[1]}
+                tool = "radarr_search_movie"
+                arguments = {"movie_id": content_id}
+                content_description = f"movie {movie_name} ({year})"
+
+            # Emit notification before search
+            await self._emit_quality_fallback_notification(
+                failed_download,
+                content_description,
+                current_quality,
+                correlation_id,
+                "searching",
+            )
 
             # Call search tool
-            result = await self.orchestrator.call_tool(  # noqa: F841
+            result = await self.orchestrator.call_tool(
                 server=server, tool=tool, arguments=arguments
             )
 
-            success = result.get("status", False)
+            # Parse result - MCP servers return {"success": True, "data": {...}}
+            success = result.get("success", False)
+            if success:
+                command_data = result.get("data", {})
+                command_id = command_data.get("id")
+                logger.info(
+                    f"Quality fallback search triggered for {content_description}, "
+                    f"command ID: {command_id}"
+                )
 
-            return RecoveryResult(
-                success=success,
-                retry_triggered=True,
-                strategy=RetryStrategy.QUALITY_FALLBACK,
-                message=f"Quality fallback search triggered via {server}",
-                retry_attempt_number=attempt_number,
-            )
+                # Emit success notification
+                await self._emit_quality_fallback_notification(
+                    failed_download,
+                    content_description,
+                    current_quality,
+                    correlation_id,
+                    "success",
+                )
+
+                return RecoveryResult(
+                    success=True,
+                    retry_triggered=True,
+                    strategy=RetryStrategy.QUALITY_FALLBACK,
+                    message=(
+                        f"Quality fallback search triggered for {content_description}. "
+                        f"Sonarr/Radarr will automatically find alternative releases."
+                    ),
+                    retry_attempt_number=attempt_number,
+                )
+            else:
+                error_msg = result.get("error", "Unknown error")
+                raise Exception(f"Search command failed: {error_msg}")
 
         except Exception as e:
-            logger.warning(f"Quality fallback failed, falling back to exponential backoff: {e}")
+            error_details = str(e)
+            logger.warning(
+                f"Quality fallback failed for {failed_download.name}: {error_details}. "
+                f"Falling back to exponential backoff."
+            )
+
+            # Emit failure notification
+            await self._emit_quality_fallback_notification(
+                failed_download,
+                failed_download.name,
+                current_quality,
+                correlation_id,
+                "failed",
+                error_details,
+            )
+
             # If quality fallback fails (e.g., can't parse filename), use exponential backoff
             return await self._execute_backoff_retry(
                 failed_download, attempt_number, correlation_id
@@ -718,3 +866,256 @@ class RecoveryService:
         )
 
         await self.event_bus.publish(event)
+
+    async def _emit_retry_notification(
+        self,
+        failed_download: FailedDownload,
+        strategy: RetryStrategy,
+        attempt_number: int,
+        correlation_id: str,
+        status: str,
+        delay_seconds: int = 0,
+        error: Optional[str] = None,
+    ) -> None:
+        """
+        Emit notification for retry actions (immediate and backoff).
+
+        Args:
+            failed_download: Failed download
+            strategy: Retry strategy used
+            attempt_number: Retry attempt number
+            correlation_id: Correlation ID
+            status: Status of the action (starting, success, failed)
+            delay_seconds: Delay before retry (for backoff strategy)
+            error: Error details if status is failed
+        """
+        if status == "starting":
+            event_type = EventType.RECOVERY_ATTEMPTED
+            if strategy == RetryStrategy.IMMEDIATE:
+                message = (
+                    f"Attempting immediate retry for '{failed_download.name}' "
+                    f"(attempt {attempt_number})"
+                )
+            else:
+                message = (
+                    f"Scheduling retry for '{failed_download.name}' with {delay_seconds}s delay "
+                    f"(attempt {attempt_number})"
+                )
+        elif status == "success":
+            event_type = EventType.RECOVERY_ATTEMPTED
+            if strategy == RetryStrategy.IMMEDIATE:
+                message = f"Successfully triggered immediate retry for '{failed_download.name}'"
+            else:
+                message = (
+                    f"Successfully scheduled retry for '{failed_download.name}' "
+                    f"with {delay_seconds}s backoff"
+                )
+        else:  # failed
+            event_type = EventType.RECOVERY_FAILED
+            message = (
+                f"Failed to trigger {strategy.value} retry for '{failed_download.name}': {error}"
+            )
+
+        event = Event(
+            event_type=event_type,
+            data={
+                "nzo_id": failed_download.nzo_id,
+                "name": failed_download.name,
+                "strategy": strategy.value,
+                "attempt_number": attempt_number,
+                "status": status,
+                "message": message,
+                "delay_seconds": delay_seconds,
+                "error": error if status == "failed" else None,
+            },
+            correlation_id=correlation_id,
+            source=f"recovery_service.{strategy.value}",
+        )
+
+        await self.event_bus.publish(event)
+
+    async def _emit_quality_fallback_notification(
+        self,
+        failed_download: FailedDownload,
+        content_description: str,
+        current_quality: Optional[str],
+        correlation_id: str,
+        status: str,
+        error_details: Optional[str] = None,
+    ) -> None:
+        """
+        Emit notification for quality fallback actions.
+
+        Args:
+            failed_download: Failed download
+            content_description: Human-readable content description
+            current_quality: Current quality level
+            correlation_id: Correlation ID
+            status: Status of the action (searching, success, failed)
+            error_details: Error details if status is failed
+        """
+        if status == "searching":
+            event_type = EventType.RECOVERY_ATTEMPTED
+            message = (
+                f"Searching for alternative releases of {content_description}. "
+                f"Original quality: {current_quality or 'unknown'}"
+            )
+        elif status == "success":
+            event_type = EventType.RECOVERY_ATTEMPTED
+            message = (
+                f"Successfully triggered search for {content_description}. "
+                f"Sonarr/Radarr will automatically find the best available release."
+            )
+        else:  # failed
+            event_type = EventType.RECOVERY_FAILED
+            message = (
+                f"Quality fallback search failed for {content_description}: {error_details}. "
+                f"Will retry with exponential backoff instead."
+            )
+
+        event = Event(
+            event_type=event_type,
+            data={
+                "nzo_id": failed_download.nzo_id,
+                "name": failed_download.name,
+                "content_description": content_description,
+                "current_quality": current_quality,
+                "status": status,
+                "message": message,
+                "error": error_details if status == "failed" else None,
+            },
+            correlation_id=correlation_id,
+            source="recovery_service.quality_fallback",
+        )
+
+        await self.event_bus.publish(event)
+
+    async def _find_series_id(self, series_name: str) -> Optional[int]:
+        """
+        Find series ID in Sonarr by name.
+
+        Args:
+            series_name: Name of the series
+
+        Returns:
+            Series ID if found, None otherwise
+        """
+        try:
+            # Get all series from Sonarr
+            result = await self.orchestrator.call_tool(
+                server="sonarr",
+                tool="sonarr_get_series",
+                arguments={},
+            )
+
+            if not result.get("success"):
+                logger.warning(f"Failed to get series list from Sonarr: {result}")
+                return None
+
+            series_list = result.get("data", [])
+
+            # Normalize series name for comparison
+            normalized_search = series_name.lower().replace(".", " ").replace("_", " ").strip()
+
+            # Find matching series
+            for series in series_list:
+                series_title = series.get("title", "").lower()
+                if normalized_search in series_title or series_title in normalized_search:
+                    return series.get("id")
+
+            logger.warning(f"Series '{series_name}' not found in Sonarr")
+            return None
+
+        except Exception as e:
+            logger.error(f"Error finding series ID: {e}")
+            return None
+
+    async def _find_episode_id(
+        self, series_id: int, season: int, episode: int
+    ) -> Optional[int]:
+        """
+        Find episode ID in Sonarr by series ID, season, and episode number.
+
+        Args:
+            series_id: Series ID
+            season: Season number
+            episode: Episode number
+
+        Returns:
+            Episode ID if found, None otherwise
+        """
+        try:
+            # Get episodes for the series
+            result = await self.orchestrator.call_tool(
+                server="sonarr",
+                tool="sonarr_get_episodes",
+                arguments={"series_id": series_id, "season_number": season},
+            )
+
+            if not result.get("success"):
+                logger.warning(
+                    f"Failed to get episodes for series {series_id} season {season}: {result}"
+                )
+                return None
+
+            episodes = result.get("data", [])
+
+            # Find matching episode
+            for ep in episodes:
+                if ep.get("seasonNumber") == season and ep.get("episodeNumber") == episode:
+                    return ep.get("id")
+
+            logger.warning(
+                f"Episode S{season:02d}E{episode:02d} not found for series {series_id}"
+            )
+            return None
+
+        except Exception as e:
+            logger.error(f"Error finding episode ID: {e}")
+            return None
+
+    async def _find_movie_id(self, movie_name: str, year: int) -> Optional[int]:
+        """
+        Find movie ID in Radarr by name and year.
+
+        Args:
+            movie_name: Name of the movie
+            year: Release year
+
+        Returns:
+            Movie ID if found, None otherwise
+        """
+        try:
+            # Get all movies from Radarr
+            result = await self.orchestrator.call_tool(
+                server="radarr",
+                tool="radarr_get_movies",
+                arguments={},
+            )
+
+            if not result.get("success"):
+                logger.warning(f"Failed to get movie list from Radarr: {result}")
+                return None
+
+            movies = result.get("data", [])
+
+            # Normalize movie name for comparison
+            normalized_search = movie_name.lower().replace(".", " ").replace("_", " ").strip()
+
+            # Find matching movie
+            for movie in movies:
+                movie_title = movie.get("title", "").lower()
+                movie_year = movie.get("year")
+
+                # Match by name and year (with 1-year tolerance)
+                if (normalized_search in movie_title or movie_title in normalized_search) and (
+                    movie_year and abs(movie_year - year) <= 1
+                ):
+                    return movie.get("id")
+
+            logger.warning(f"Movie '{movie_name} ({year})' not found in Radarr")
+            return None
+
+        except Exception as e:
+            logger.error(f"Error finding movie ID: {e}")
+            return None
