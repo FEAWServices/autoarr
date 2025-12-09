@@ -37,12 +37,20 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.7.1
-          virtualenvs-create: true
-          virtualenvs-in-project: true
+      - name: Install Poetry (with retry)
+        run: |
+          for i in 1 2 3; do
+            echo "Attempt $i: Installing Poetry..."
+            curl -sSL https://install.python-poetry.org | python3 - --version 1.7.1 && break
+            echo "Attempt $i failed, retrying in 10 seconds..."
+            sleep 10
+          done
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
 
       - name: Cache Poetry dependencies
         uses: actions/cache@v4
@@ -222,13 +230,22 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Poetry
+      - name: Install Poetry (with retry)
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.7.1
-          virtualenvs-create: true
-          virtualenvs-in-project: true
+        run: |
+          for i in 1 2 3; do
+            echo "Attempt $i: Installing Poetry..."
+            curl -sSL https://install.python-poetry.org | python3 - --version 1.7.1 && break
+            echo "Attempt $i failed, retrying in 10 seconds..."
+            sleep 10
+          done
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Configure Poetry
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
 
       - name: Cache Poetry dependencies
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
@@ -314,13 +331,22 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Poetry
+      - name: Install Poetry (with retry)
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.7.1
-          virtualenvs-create: true
-          virtualenvs-in-project: true
+        run: |
+          for i in 1 2 3; do
+            echo "Attempt $i: Installing Poetry..."
+            curl -sSL https://install.python-poetry.org | python3 - --version 1.7.1 && break
+            echo "Attempt $i failed, retrying in 10 seconds..."
+            sleep 10
+          done
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Configure Poetry
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
 
       - name: Cache Poetry dependencies
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
@@ -433,13 +459,22 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Poetry
+      - name: Install Poetry (with retry)
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.7.1
-          virtualenvs-create: true
-          virtualenvs-in-project: true
+        run: |
+          for i in 1 2 3; do
+            echo "Attempt $i: Installing Poetry..."
+            curl -sSL https://install.python-poetry.org | python3 - --version 1.7.1 && break
+            echo "Attempt $i failed, retrying in 10 seconds..."
+            sleep 10
+          done
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Configure Poetry
+        if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
 
       - name: Cache Poetry dependencies
         if: steps.changed-files.outputs.changed == 'true' || github.event_name == 'pull_request'
