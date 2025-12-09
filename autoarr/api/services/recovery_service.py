@@ -1012,7 +1012,9 @@ class RecoveryService:
                 logger.warning(f"Failed to get series list from Sonarr: {result}")
                 return None
 
-            series_list = result.get("data", [])
+            # Sonarr provider returns {"series_count": N, "series": [...]} in data
+            data = result.get("data", {})
+            series_list = data.get("series", []) if isinstance(data, dict) else []
 
             # Normalize series name for comparison
             normalized_search = series_name.lower().replace(".", " ").replace("_", " ").strip()
@@ -1056,7 +1058,9 @@ class RecoveryService:
                 )
                 return None
 
-            episodes = result.get("data", [])
+            # Sonarr provider returns {"episode_count": N, "episodes": [...]} in data
+            data = result.get("data", {})
+            episodes = data.get("episodes", []) if isinstance(data, dict) else []
 
             # Find matching episode
             for ep in episodes:
@@ -1093,7 +1097,9 @@ class RecoveryService:
                 logger.warning(f"Failed to get movie list from Radarr: {result}")
                 return None
 
-            movies = result.get("data", [])
+            # Radarr provider returns {"movie_count": N, "movies": [...]} in data
+            data = result.get("data", {})
+            movies = data.get("movies", []) if isinstance(data, dict) else []
 
             # Normalize movie name for comparison
             normalized_search = movie_name.lower().replace(".", " ").replace("_", " ").strip()
