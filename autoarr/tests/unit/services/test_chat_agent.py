@@ -463,9 +463,7 @@ class TestServiceSetupResponse:
         """Test generating setup response for SABnzbd."""
         agent = ChatAgent()
         service_status = ServiceStatus(name="sabnzbd", connected=False, healthy=False)
-        response = agent._generate_service_setup_response(
-            QueryTopic.SABNZBD, service_status
-        )
+        response = agent._generate_service_setup_response(QueryTopic.SABNZBD, service_status)
         assert response is not None
         assert "SABnzbd" in response.message
         assert "Settings" in response.message
@@ -476,9 +474,7 @@ class TestServiceSetupResponse:
         """Test generating setup response for invalid topic."""
         agent = ChatAgent()
         service_status = ServiceStatus(name="test", connected=False, healthy=False)
-        response = agent._generate_service_setup_response(
-            QueryTopic.OFF_TOPIC, service_status
-        )
+        response = agent._generate_service_setup_response(QueryTopic.OFF_TOPIC, service_status)
         assert response is None
 
 
@@ -512,7 +508,10 @@ class TestWelcomeResponse:
         response = await agent._generate_welcome_response(status)
         # Should show celebration and features
         message_lower = response.message.lower()
-        assert any(keyword in message_lower for keyword in ["all set", "full stack", "dream setup", "complete", "achieved"])
+        assert any(
+            keyword in message_lower
+            for keyword in ["all set", "full stack", "dream setup", "complete", "achieved"]
+        )
         assert "download" in message_lower
 
     async def test_welcome_some_services_configured(self) -> None:
