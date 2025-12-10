@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 # Copyright (C) 2025 AutoArr Contributors
 #
 # This file is part of AutoArr.
