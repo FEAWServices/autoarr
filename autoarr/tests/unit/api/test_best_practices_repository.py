@@ -1,3 +1,5 @@
+import pytest_asyncio
+
 # Copyright (C) 2025 AutoArr Contributors
 #
 # This file is part of AutoArr.
@@ -30,7 +32,7 @@ from typing import AsyncGenerator
 import pytest
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_database() -> AsyncGenerator:
     """Create a test database instance."""
     from autoarr.api.database import Database
@@ -44,7 +46,7 @@ async def test_database() -> AsyncGenerator:
     await db.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def best_practices_repository(test_database):
     """Create a BestPracticesRepository instance."""
     from autoarr.api.database import BestPracticesRepository
@@ -52,7 +54,7 @@ async def best_practices_repository(test_database):
     return BestPracticesRepository(test_database)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def sample_practice_data() -> dict:
     """Sample best practice data for testing."""
     return {

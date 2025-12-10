@@ -21,6 +21,7 @@ import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 
 from autoarr.api.database import Database, LLMSettings, LLMSettingsRepository
@@ -72,7 +73,7 @@ class TestLLMSettingsModel:
 class TestLLMSettingsRepository:
     """Tests for LLMSettingsRepository."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def db(self, tmp_path):
         """Create a test database."""
         db_path = tmp_path / "test.db"
@@ -80,7 +81,7 @@ class TestLLMSettingsRepository:
         await db.init_db()
         yield db
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     def repo(self, db):
         """Create a repository instance."""
         return LLMSettingsRepository(db)

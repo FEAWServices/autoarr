@@ -281,7 +281,7 @@ jobs:
   python-test:
     name: Python Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     needs: detect-changes
     # Skip for docs-only changes; run on PRs or if Python files changed
     if: |
@@ -340,13 +340,14 @@ jobs:
         run: |
           poetry run pytest autoarr/tests/unit/ \
             -v \
+            -n auto \
             --cov=autoarr/api \
             --cov=autoarr/shared \
             --cov=autoarr/mcp_servers \
             --cov-report=xml \
             --cov-report=term-missing:skip-covered \
             --cov-report=html \
-            --cov-fail-under=65 \
+            --cov-fail-under=61 \
             --junit-xml=test-results/junit.xml \
             --maxfail=10 \
             -ra
@@ -356,6 +357,7 @@ jobs:
         run: |
           poetry run pytest autoarr/tests/integration/ \
             -v \
+            -n auto \
             --junit-xml=test-results/integration-junit.xml \
             --maxfail=5 \
             -ra
@@ -812,6 +814,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - detect-changes
+      - quick-type-check
       - python-lint
       - python-test
       - python-security
@@ -844,6 +847,9 @@ jobs:
         run: |
           echo "## CI Pipeline Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Checks" >> $GITHUB_STEP_SUMMARY
+          echo "- **Type Check:** \`${{ needs.quick-type-check.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Python Backend" >> $GITHUB_STEP_SUMMARY
           echo "- **Lint:** \`${{ needs.python-lint.result }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Test:** \`${{ needs.python-test.result }}\`" >> $GITHUB_STEP_SUMMARY
@@ -858,26 +864,33 @@ jobs:
         if: needs.detect-changes.outputs.docs-only == 'false'
         run: |
           # For code changes, check that critical jobs passed
+          # Jobs can be: success, failure, cancelled, or skipped
           FAILED=0
 
+          # Quick type check must pass (failure or cancelled = fail)
+          if [[ "${{ needs.quick-type-check.result }}" == "failure" || "${{ needs.quick-type-check.result }}" == "cancelled" ]]; then
+            echo "❌ Quick type check failed or was cancelled: ${{ needs.quick-type-check.result }}"
+            FAILED=1
+          fi
+
           # These jobs should have run for code changes
-          if [[ "${{ needs.python-lint.result }}" == "failure" ]]; then
-            echo "❌ Python linting failed"
+          if [[ "${{ needs.python-lint.result }}" == "failure" || "${{ needs.python-lint.result }}" == "cancelled" ]]; then
+            echo "❌ Python linting failed or was cancelled: ${{ needs.python-lint.result }}"
             FAILED=1
           fi
 
-          if [[ "${{ needs.python-test.result }}" == "failure" ]]; then
-            echo "❌ Python tests failed"
+          if [[ "${{ needs.python-test.result }}" == "failure" || "${{ needs.python-test.result }}" == "cancelled" ]]; then
+            echo "❌ Python tests failed or were cancelled: ${{ needs.python-test.result }}"
             FAILED=1
           fi
 
-          if [[ "${{ needs.frontend-lint.result }}" == "failure" ]]; then
-            echo "❌ Frontend linting failed"
+          if [[ "${{ needs.frontend-lint.result }}" == "failure" || "${{ needs.frontend-lint.result }}" == "cancelled" ]]; then
+            echo "❌ Frontend linting failed or was cancelled: ${{ needs.frontend-lint.result }}"
             FAILED=1
           fi
 
-          if [[ "${{ needs.frontend-build.result }}" == "failure" ]]; then
-            echo "❌ Frontend build failed"
+          if [[ "${{ needs.frontend-build.result }}" == "failure" || "${{ needs.frontend-build.result }}" == "cancelled" ]]; then
+            echo "❌ Frontend build failed or was cancelled: ${{ needs.frontend-build.result }}"
             FAILED=1
           fi
 

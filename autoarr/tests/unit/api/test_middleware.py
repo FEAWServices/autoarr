@@ -46,6 +46,7 @@ app = FastAPI()
 
 
 @app.get("/test")
+@pytest.mark.asyncio
 async def test_endpoint():
     """Test endpoint for middleware testing."""
     return {"message": "success"}

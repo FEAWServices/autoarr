@@ -204,7 +204,7 @@ async def test_no_duplicate_concurrent_retries(recovery_service, mock_orchestrat
     failed_download = create_failed_download("nzo_1", "Test.mkv")
 
     async def slow_retry(*args, **kwargs):
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.05)
         return {"status": True, "nzo_id": "nzo_retry_1"}
 
     mock_orchestrator.call_tool.side_effect = slow_retry
@@ -386,7 +386,7 @@ async def test_scheduled_retry_executes_at_correct_time(recovery_service, mock_o
     result.scheduled_time
 
     # Wait for scheduled time
-    await asyncio.sleep(2.5)
+    await asyncio.sleep(0.3)
 
     # Assert - Retry should have been executed
     # (This would require checking internal state or mocking time)

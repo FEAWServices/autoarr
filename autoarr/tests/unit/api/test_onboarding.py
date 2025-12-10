@@ -82,6 +82,7 @@ class TestOnboardingStateRepository:
         """Create repository with mock database."""
         return OnboardingStateRepository(mock_db)
 
+    @pytest.mark.asyncio
     async def test_get_or_create_state_returns_existing(self, repository, mock_session):
         """get_or_create_state should return existing state if found."""
         existing_state = OnboardingState(id=1, completed=True)
@@ -94,6 +95,7 @@ class TestOnboardingStateRepository:
         assert result.completed is True
         mock_session.add.assert_not_called()
 
+    @pytest.mark.asyncio
     async def test_get_or_create_state_creates_new(self, repository, mock_session):
         """get_or_create_state should create new state if none exists."""
         mock_result = MagicMock()
@@ -107,6 +109,7 @@ class TestOnboardingStateRepository:
         mock_session.add.assert_called_once()
         mock_session.commit.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_update_step(self, repository, mock_session):
         """update_step should update the current_step field."""
         existing_state = OnboardingState(id=1, current_step="welcome")
@@ -119,6 +122,7 @@ class TestOnboardingStateRepository:
         assert result.current_step == "ai_setup"
         mock_session.commit.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_skip_step(self, repository, mock_session):
         """skip_step should add step to skipped_steps list."""
         existing_state = OnboardingState(id=1, skipped_steps=[])
@@ -131,6 +135,7 @@ class TestOnboardingStateRepository:
         assert "ai_setup" in result.skipped_steps
         mock_session.commit.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_skip_step_idempotent(self, repository, mock_session):
         """skip_step should not duplicate steps."""
         existing_state = OnboardingState(id=1, skipped_steps=["ai_setup"])
@@ -142,6 +147,7 @@ class TestOnboardingStateRepository:
 
         assert result.skipped_steps.count("ai_setup") == 1
 
+    @pytest.mark.asyncio
     async def test_set_ai_configured(self, repository, mock_session):
         """set_ai_configured should update ai_configured field."""
         existing_state = OnboardingState(id=1, ai_configured=False)
@@ -154,6 +160,7 @@ class TestOnboardingStateRepository:
         assert result.ai_configured is True
         mock_session.commit.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_add_configured_service(self, repository, mock_session):
         """add_configured_service should add service to list."""
         existing_state = OnboardingState(id=1, services_configured=[])
@@ -166,6 +173,7 @@ class TestOnboardingStateRepository:
         assert "sabnzbd" in result.services_configured
         mock_session.commit.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_add_configured_service_idempotent(self, repository, mock_session):
         """add_configured_service should not duplicate services."""
         existing_state = OnboardingState(id=1, services_configured=["sabnzbd"])
@@ -177,6 +185,7 @@ class TestOnboardingStateRepository:
 
         assert result.services_configured.count("sabnzbd") == 1
 
+    @pytest.mark.asyncio
     async def test_complete_onboarding(self, repository, mock_session):
         """complete_onboarding should set completed and timestamp."""
         existing_state = OnboardingState(id=1, completed=False)
@@ -190,6 +199,7 @@ class TestOnboardingStateRepository:
         assert result.completed_at is not None
         mock_session.commit.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_dismiss_banner(self, repository, mock_session):
         """dismiss_banner should update banner_dismissed field."""
         existing_state = OnboardingState(id=1, banner_dismissed=False)
@@ -202,6 +212,7 @@ class TestOnboardingStateRepository:
         assert result.banner_dismissed is True
         mock_session.commit.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_reset_onboarding(self, repository, mock_session):
         """reset_onboarding should restore all fields to defaults."""
         existing_state = OnboardingState(
@@ -229,6 +240,7 @@ class TestOnboardingStateRepository:
         assert result.completed_at is None
         mock_session.commit.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_skip_onboarding(self, repository, mock_session):
         """skip_onboarding should mark all steps as skipped."""
         existing_state = OnboardingState(id=1, completed=False, skipped_steps=[])

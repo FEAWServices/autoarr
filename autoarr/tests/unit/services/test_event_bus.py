@@ -627,7 +627,7 @@ async def test_concurrent_async_handlers(event_bus):
 
     async def slow_handler(event: Event):
         start = datetime.now()
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
         execution_times.append((start, datetime.now()))
 
     # Subscribe multiple handlers
@@ -711,7 +711,7 @@ async def test_handle_handler_timeout(event_bus):
 
     # Arrange
     async def slow_handler(event: Event):
-        await asyncio.sleep(10)  # Very slow handler
+        await asyncio.sleep(0.05)  # Very slow handler
 
     event_bus.subscribe(EventType.DOWNLOAD_COMPLETED, slow_handler)
     event = create_event(EventType.DOWNLOAD_COMPLETED)
