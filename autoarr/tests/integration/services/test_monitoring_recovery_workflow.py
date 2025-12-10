@@ -29,6 +29,7 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock
 
 import pytest
+import pytest_asyncio
 
 from autoarr.api.services.event_bus import Event, EventBus, EventType
 from autoarr.api.services.monitoring_service import (
@@ -46,12 +47,12 @@ from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 class TestMonitoringRecoveryWorkflow:
     """Integration tests for monitoring-recovery workflow."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def event_bus(self) -> EventBus:
         """Create event bus instance."""
         return EventBus()
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def orchestrator(self) -> MCPOrchestrator:
         """Create MCP orchestrator with mocked responses."""
         from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
@@ -109,7 +110,7 @@ class TestMonitoringRecoveryWorkflow:
         orchestrator.call_tool = AsyncMock(side_effect=mock_tool_call)
         return orchestrator
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def monitoring_service(
         self, event_bus: EventBus, orchestrator: MCPOrchestrator
     ) -> MonitoringService:
@@ -126,7 +127,7 @@ class TestMonitoringRecoveryWorkflow:
             config=config,
         )
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def recovery_service(
         self, event_bus: EventBus, orchestrator: MCPOrchestrator
     ) -> RecoveryService:

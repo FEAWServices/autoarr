@@ -31,6 +31,7 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock
 
 import pytest
+import pytest_asyncio
 
 from autoarr.api.services.event_bus import Event, EventBus, EventType
 from autoarr.api.services.monitoring_service import (
@@ -38,7 +39,6 @@ from autoarr.api.services.monitoring_service import (
     FailedDownload,
     MonitoringConfig,
     MonitoringService,
-    QueueItem,
     QueueState,
     WantedEpisode,
 )
@@ -48,12 +48,12 @@ from autoarr.shared.core.mcp_orchestrator import MCPOrchestrator
 class TestMonitoringServiceIntegration:
     """Integration tests for monitoring service."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def event_bus(self) -> EventBus:
         """Create event bus instance."""
         return EventBus()
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def orchestrator(self) -> MCPOrchestrator:
         """Create MCP orchestrator with mocked clients."""
         from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
@@ -113,7 +113,7 @@ class TestMonitoringServiceIntegration:
         orchestrator.call_tool = AsyncMock(side_effect=mock_sabnzbd_call)
         return orchestrator
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def monitoring_service(
         self, event_bus: EventBus, orchestrator: MCPOrchestrator
     ) -> MonitoringService:

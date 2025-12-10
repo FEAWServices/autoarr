@@ -26,11 +26,11 @@ These tests verify the recovery service works end-to-end with:
 """
 
 import asyncio
-from datetime import datetime
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock
 
 import pytest
+import pytest_asyncio
 
 from autoarr.api.services.event_bus import Event, EventBus, EventType
 from autoarr.api.services.monitoring_service import DownloadStatus, FailedDownload
@@ -59,12 +59,12 @@ def create_failed_download(
 class TestRecoveryServiceIntegration:
     """Integration tests for recovery service."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def event_bus(self) -> EventBus:
         """Create event bus instance."""
         return EventBus()
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def orchestrator(self) -> MCPOrchestrator:
         """Create MCP orchestrator with mocked clients."""
         from autoarr.shared.core.config import MCPOrchestratorConfig, ServerConfig
@@ -129,7 +129,7 @@ class TestRecoveryServiceIntegration:
         orchestrator.call_tool = AsyncMock(side_effect=mock_tool_call)
         return orchestrator
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def recovery_service(
         self, event_bus: EventBus, orchestrator: MCPOrchestrator
     ) -> RecoveryService:
