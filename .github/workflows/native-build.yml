@@ -83,7 +83,7 @@ jobs:
           virtualenvs-in-project: true
 
       - name: Cache Poetry dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ matrix.arch }}-${{ matrix.python }}-${{ hashFiles('**/poetry.lock') }}
@@ -105,7 +105,7 @@ jobs:
           node-version: "20"
 
       - name: Cache pnpm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
           key: pnpm-${{ runner.os }}-${{ hashFiles('autoarr/ui/pnpm-lock.yaml') }}
