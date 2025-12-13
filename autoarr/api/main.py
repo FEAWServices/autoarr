@@ -54,9 +54,7 @@ from .routers import (
     requests,
 )
 from .routers import settings as settings_router
-from .routers import (
-    shows,
-)
+from .routers import shows
 from .routers.logs import setup_log_buffer_handler
 from .services.event_bus import get_event_bus
 from .services.websocket_bridge import initialize_websocket_bridge, shutdown_websocket_bridge
@@ -475,20 +473,39 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 @app.get("/{full_path:path}", include_in_schema=False)
 async def serve_spa(full_path: str) -> FileResponse:
     """
-    Catch-all route to serve the React SPA.
+    Catch-all route to serve the React SPA and static files.
 
-    This serves index.html for all non-API routes, allowing React Router
-    to handle client-side routing.
+    First checks if the requested path corresponds to a static file in the
+    dist directory (e.g., logo-192.png, manifest.json, logos/*.png).
+    If found, serves that file. Otherwise, serves index.html for React Router.
 
     Args:
         full_path: The requested path
 
     Returns:
-        FileResponse: The index.html file
+        FileResponse: The requested file or index.html for SPA routing
     """
     ui_dist_dir = Path(__file__).parent.parent / "ui" / "dist"
-    index_file = ui_dist_dir / "index.html"
 
+    # First, check if the requested path is a static file in dist
+    if full_path:
+        requested_file = ui_dist_dir / full_path
+        # Security: ensure the resolved path is within ui_dist_dir
+        try:
+            requested_file = requested_file.resolve()
+            if requested_file.is_file() and str(requested_file).startswith(
+                str(ui_dist_dir.resolve())
+            ):
+                # Determine media type based on file extension
+                import mimetypes
+
+                media_type, _ = mimetypes.guess_type(str(requested_file))
+                return FileResponse(str(requested_file), media_type=media_type)
+        except (ValueError, OSError):
+            pass  # Invalid path, fall through to index.html
+
+    # Serve index.html for SPA routing
+    index_file = ui_dist_dir / "index.html"
     if index_file.exists():
         return FileResponse(str(index_file))
 
