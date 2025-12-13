@@ -54,9 +54,7 @@ from .routers import (
     requests,
 )
 from .routers import settings as settings_router
-from .routers import (
-    shows,
-)
+from .routers import shows
 from .routers.logs import setup_log_buffer_handler
 from .services.event_bus import get_event_bus
 from .services.websocket_bridge import initialize_websocket_bridge, shutdown_websocket_bridge
@@ -512,6 +510,24 @@ async def serve_favicon() -> FileResponse:
     if favicon_file.exists():
         return FileResponse(str(favicon_file.resolve()), media_type="image/x-icon")
     raise HTTPException(status_code=404, detail="favicon.ico not found")
+
+
+@app.get("/logo.png", include_in_schema=False)
+async def serve_logo() -> FileResponse:
+    """Serve main logo from UI dist directory."""
+    logo_file = Path(__file__).parent.parent / "ui" / "dist" / "logo.png"
+    if logo_file.exists():
+        return FileResponse(str(logo_file.resolve()), media_type="image/png")
+    raise HTTPException(status_code=404, detail="logo.png not found")
+
+
+@app.get("/apple-touch-icon.png", include_in_schema=False)
+async def serve_apple_touch_icon() -> FileResponse:
+    """Serve Apple touch icon from UI dist directory."""
+    icon_file = Path(__file__).parent.parent / "ui" / "dist" / "apple-touch-icon.png"
+    if icon_file.exists():
+        return FileResponse(str(icon_file.resolve()), media_type="image/png")
+    raise HTTPException(status_code=404, detail="apple-touch-icon.png not found")
 
 
 # ============================================================================

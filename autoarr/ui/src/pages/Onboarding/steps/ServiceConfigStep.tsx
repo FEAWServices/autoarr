@@ -137,9 +137,19 @@ export const ServiceConfigStep = () => {
       {/* Service header */}
       <div className="text-center mb-8">
         <div
-          className={`w-16 h-16 mx-auto mb-4 rounded-2xl ${colors.bg} flex items-center justify-center`}
+          className={`w-20 h-20 mx-auto mb-4 rounded-2xl ${colors.bg} flex items-center justify-center p-3`}
         >
-          <Icon className={`w-8 h-8 ${colors.text}`} />
+          <img
+            src={plugin.logo}
+            alt={`${plugin.name} logo`}
+            className="w-full h-full object-contain"
+            onError={(e) => {
+              // Fallback to icon if logo fails to load
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+          <Icon className={`w-10 h-10 ${colors.text} hidden`} />
         </div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Configure {plugin.name}</h2>
         <p className="text-muted-foreground">{plugin.description}</p>

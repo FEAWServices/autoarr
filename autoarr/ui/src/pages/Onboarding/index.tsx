@@ -46,8 +46,16 @@ const stepLabels: Record<OnboardingStep, string> = {
 
 export const Onboarding = () => {
   const navigate = useNavigate();
-  const { completed, currentStep, isInitializing, error, fetchStatus, clearError, goToStep } =
-    useOnboardingStore();
+  const {
+    completed,
+    currentStep,
+    isInitializing,
+    error,
+    fetchStatus,
+    clearError,
+    goToStep,
+    currentServiceIndex,
+  } = useOnboardingStore();
 
   // Initialize service config statuses when component mounts
   useEffect(() => {
@@ -227,7 +235,14 @@ export const Onboarding = () => {
           )}
 
           {/* Current step component */}
-          <StepComponent />
+          {/* Key changes when service index changes to reset form state */}
+          <StepComponent
+            key={
+              currentStep === 'service_config'
+                ? `service_config_${currentServiceIndex}`
+                : currentStep
+            }
+          />
         </main>
       </PullToRefresh>
     </div>
