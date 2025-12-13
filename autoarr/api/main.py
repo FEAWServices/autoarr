@@ -54,7 +54,9 @@ from .routers import (
     requests,
 )
 from .routers import settings as settings_router
-from .routers import shows
+from .routers import (
+    shows,
+)
 from .routers.logs import setup_log_buffer_handler
 from .services.event_bus import get_event_bus
 from .services.websocket_bridge import initialize_websocket_bridge, shutdown_websocket_bridge
