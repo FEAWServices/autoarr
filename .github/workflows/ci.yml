@@ -1,14 +1,16 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - main # Triggers Docker build after merge
   pull_request:
     branches:
       - main # PRs to production
-      - develop # PRs to staging
 
-# Cancel in-progress runs when a new PR commit is pushed
+# Cancel in-progress runs when a new commit is pushed
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
   cancel-in-progress: true
 
 permissions:
