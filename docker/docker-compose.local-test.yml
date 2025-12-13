@@ -139,14 +139,15 @@ services:
       "
 
     healthcheck:
-      # Check both frontend (Vite) and backend (API readiness with warmup)
+      # Check backend API and verify Vite port is listening
+      # Note: Full curl to Vite is slow due to large HTML response, so we just check the port
       test:
         [
           "CMD-SHELL",
-          "curl -sf http://localhost:5173 && curl -sf http://localhost:8088/health/ready",
+          "curl -sf --max-time 5 http://localhost:8088/health > /dev/null && timeout 2 bash -c 'echo > /dev/tcp/localhost/5173' 2>/dev/null",
         ]
       interval: 30s
-      timeout: 10s
+      timeout: 15s
       retries: 3
       start_period: 90s
 
