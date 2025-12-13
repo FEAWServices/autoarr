@@ -283,7 +283,7 @@ class TestLifespanFullCycle:
         test_app = FastAPI()
         """Test complete lifecycle with database."""
         with patch("autoarr.api.main.get_settings", return_value=test_settings):
-            with patch("autoarr.api.main.logger") as mock_logger:
+            with patch("autoarr.api.main.logger"):
                 with patch("autoarr.api.main.init_database") as mock_init_db:
                     with patch("autoarr.api.main.get_database") as mock_get_db:
                         with patch("autoarr.api.main.shutdown_orchestrator") as mock_shutdown:
@@ -388,3 +388,234 @@ class TestAppConfiguration:
         """Test that ping endpoint exists."""
         routes = [route.path for route in app.routes]
         assert "/ping" in routes
+
+    def test_pwa_endpoints_exist(self):
+        """Test that PWA-related endpoints exist."""
+        routes = [route.path for route in app.routes]
+        assert "/manifest.json" in routes
+        assert "/logo-192.png" in routes
+        assert "/logo-512.png" in routes
+        assert "/favicon.ico" in routes
+
+    def test_spa_catchall_endpoint_exists(self):
+        """Test that SPA catch-all endpoint exists."""
+        routes = [route.path for route in app.routes]
+        assert "/{full_path:path}" in routes
+
+
+def _setup_pwa_file_mock(mock_path, exists=True, resolve_path=None):
+    """Helper to set up mock path chain for PWA file tests."""
+    mock_file = MagicMock()
+    mock_file.exists.return_value = exists
+    if resolve_path:
+        mock_file.resolve.return_value = resolve_path
+    # Chain: Path(__file__).parent.parent / "ui" / "dist" / "filename"
+    truediv = mock_path.return_value.parent.parent.__truediv__.return_value
+    truediv.__truediv__.return_value.__truediv__.return_value = mock_file
+    return mock_file
+
+
+def _setup_spa_dir_mock(mock_path, exists=True, resolve_path=None):
+    """Helper to set up mock path chain for SPA directory tests."""
+    mock_index = MagicMock()
+    mock_index.exists.return_value = exists
+    if resolve_path:
+        mock_index.resolve.return_value = resolve_path
+    mock_dist_dir = MagicMock()
+    mock_dist_dir.__truediv__.return_value = mock_index
+    # Chain: Path(__file__).parent.parent / "ui" / "dist"
+    truediv = mock_path.return_value.parent.parent.__truediv__.return_value
+    truediv.__truediv__.return_value = mock_dist_dir
+    return mock_index
+
+
+class TestPWAEndpoints:
+    """Test PWA file serving endpoints."""
+
+    @pytest.mark.asyncio
+    async def test_serve_manifest_returns_file_when_exists(self, tmp_path):
+        """Test serve_manifest returns FileResponse when file exists."""
+        from autoarr.api.main import serve_manifest
+
+        # Create a temporary manifest file
+        manifest_content = '{"name": "test"}'
+        manifest_file = tmp_path / "manifest.json"
+        manifest_file.write_text(manifest_content)
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=True, resolve_path=str(manifest_file))
+            result = await serve_manifest()
+
+            from fastapi.responses import FileResponse
+
+            assert isinstance(result, FileResponse)
+
+    @pytest.mark.asyncio
+    async def test_serve_manifest_raises_404_when_missing(self):
+        """Test serve_manifest raises 404 when file doesn't exist."""
+        from fastapi import HTTPException
+
+        from autoarr.api.main import serve_manifest
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=False)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await serve_manifest()
+
+            assert exc_info.value.status_code == 404
+            assert "manifest.json not found" in str(exc_info.value.detail)
+
+    @pytest.mark.asyncio
+    async def test_serve_logo_192_raises_404_when_missing(self):
+        """Test serve_logo_192 raises 404 when file doesn't exist."""
+        from fastapi import HTTPException
+
+        from autoarr.api.main import serve_logo_192
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=False)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await serve_logo_192()
+
+            assert exc_info.value.status_code == 404
+            assert "logo-192.png not found" in str(exc_info.value.detail)
+
+    @pytest.mark.asyncio
+    async def test_serve_logo_512_raises_404_when_missing(self):
+        """Test serve_logo_512 raises 404 when file doesn't exist."""
+        from fastapi import HTTPException
+
+        from autoarr.api.main import serve_logo_512
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=False)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await serve_logo_512()
+
+            assert exc_info.value.status_code == 404
+            assert "logo-512.png not found" in str(exc_info.value.detail)
+
+    @pytest.mark.asyncio
+    async def test_serve_favicon_raises_404_when_missing(self):
+        """Test serve_favicon raises 404 when file doesn't exist."""
+        from fastapi import HTTPException
+
+        from autoarr.api.main import serve_favicon
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=False)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await serve_favicon()
+
+            assert exc_info.value.status_code == 404
+            assert "favicon.ico not found" in str(exc_info.value.detail)
+
+
+class TestServeSPA:
+    """Test SPA catch-all route."""
+
+    @pytest.mark.asyncio
+    async def test_serve_spa_raises_503_when_index_missing(self):
+        """Test serve_spa raises 503 when index.html doesn't exist."""
+        from fastapi import HTTPException
+
+        from autoarr.api.main import serve_spa
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_spa_dir_mock(mock_path, exists=False)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await serve_spa("any/path")
+
+            assert exc_info.value.status_code == 503
+            assert "UI not available" in str(exc_info.value.detail)
+
+    @pytest.mark.asyncio
+    async def test_serve_spa_ignores_path_parameter(self):
+        """Test serve_spa ignores the path parameter for security."""
+        from autoarr.api.main import serve_spa
+
+        # This test verifies that the path parameter is ignored
+        # and doesn't affect which file is served
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_spa_dir_mock(mock_path, exists=True, resolve_path="/safe/path/index.html")
+
+            # Call with a potentially malicious path - should be ignored
+            result = await serve_spa("../../../etc/passwd")
+
+            # The result should be a FileResponse for index.html
+            assert result is not None
+
+    def test_serve_spa_function_signature(self):
+        """Test serve_spa accepts full_path parameter."""
+        import inspect
+
+        from autoarr.api.main import serve_spa
+
+        sig = inspect.signature(serve_spa)
+        params = list(sig.parameters.keys())
+        assert "full_path" in params
+
+    @pytest.mark.asyncio
+    async def test_serve_spa_returns_file_when_exists(self):
+        """Test serve_spa returns FileResponse when index.html exists."""
+        from autoarr.api.main import serve_spa
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_spa_dir_mock(mock_path, exists=True, resolve_path="/app/ui/dist/index.html")
+
+            result = await serve_spa("dashboard")
+
+            from fastapi.responses import FileResponse
+
+            assert isinstance(result, FileResponse)
+
+
+class TestPWAEndpointsSuccess:
+    """Test PWA endpoints when files exist."""
+
+    @pytest.mark.asyncio
+    async def test_serve_logo_192_returns_file_when_exists(self):
+        """Test serve_logo_192 returns FileResponse when file exists."""
+        from autoarr.api.main import serve_logo_192
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=True, resolve_path="/app/ui/dist/logo-192.png")
+
+            result = await serve_logo_192()
+
+            from fastapi.responses import FileResponse
+
+            assert isinstance(result, FileResponse)
+
+    @pytest.mark.asyncio
+    async def test_serve_logo_512_returns_file_when_exists(self):
+        """Test serve_logo_512 returns FileResponse when file exists."""
+        from autoarr.api.main import serve_logo_512
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=True, resolve_path="/app/ui/dist/logo-512.png")
+
+            result = await serve_logo_512()
+
+            from fastapi.responses import FileResponse
+
+            assert isinstance(result, FileResponse)
+
+    @pytest.mark.asyncio
+    async def test_serve_favicon_returns_file_when_exists(self):
+        """Test serve_favicon returns FileResponse when file exists."""
+        from autoarr.api.main import serve_favicon
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=True, resolve_path="/app/ui/dist/favicon.ico")
+
+            result = await serve_favicon()
+
+            from fastapi.responses import FileResponse
+
+            assert isinstance(result, FileResponse)

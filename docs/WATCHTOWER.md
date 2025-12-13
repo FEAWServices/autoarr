@@ -61,7 +61,28 @@ Start the stack:
 docker-compose up -d
 ```
 
-### Option 2: Docker Run Commands
+### Option 2: Synology NAS
+
+Use the pre-configured Synology docker-compose file:
+
+```bash
+# SSH into your Synology
+ssh admin@your-synology-ip
+
+# Create directory
+mkdir -p /volume1/docker/autoarr/{data,logs}
+cd /volume1/docker/autoarr
+
+# Download the Synology compose file
+curl -O https://raw.githubusercontent.com/FEAWServices/autoarr/main/docker/docker-compose.synology.yml
+
+# Start the stack
+docker-compose -f docker-compose.synology.yml up -d
+```
+
+See [Synology Deployment Guide](deployment/synology-deployment.md) for detailed instructions.
+
+### Option 3: Docker Run Commands
 
 ```bash
 # Create network
@@ -158,6 +179,12 @@ Check when AutoArr was last updated:
 docker inspect autoarr --format '{{.Created}}'
 ```
 
+Watch for updates in real-time:
+
+```bash
+docker logs -f watchtower
+```
+
 ## Troubleshooting
 
 ### Container Not Updating
@@ -165,6 +192,14 @@ docker inspect autoarr --format '{{.Created}}'
 1. Check Watchtower logs: `docker logs watchtower`
 2. Verify label is set: `docker inspect autoarr | grep watchtower`
 3. Ensure registry is accessible: `docker pull ghcr.io/feawservices/autoarr:staging`
+4. Check if new image exists: `docker images | grep autoarr`
+
+### Force Update Now
+
+```bash
+# Trigger immediate update check
+docker exec watchtower /watchtower --run-once
+```
 
 ### Private Registry Authentication
 
@@ -193,10 +228,11 @@ watchtower:
 ## Security Considerations
 
 - Watchtower requires access to Docker socket (`/var/run/docker.sock`)
-- Consider using `WATCHTOWER_LABEL_ENABLE=true` to limit which containers can be updated
+- Use `WATCHTOWER_LABEL_ENABLE=true` to limit which containers can be updated
 - Review container images before enabling auto-updates in production
 
 ## Further Reading
 
 - [Watchtower Documentation](https://containrrr.dev/watchtower/)
+- [AutoArr Synology Guide](deployment/synology-deployment.md)
 - [AutoArr Docker Guide](QUICK-START.md)

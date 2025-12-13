@@ -919,10 +919,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [detect-changes, frontend-build]
-    # Run on main/develop branches or PRs with code changes
+    # Run on PRs with code changes (validates container before merge)
     if: |
       needs.detect-changes.outputs.docs-only == 'false' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.event_name == 'pull_request')
+      github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code
@@ -998,16 +998,18 @@ jobs:
           docker rm autoarr-test || true
 
   # =============================================================================
-  # Discord Notifications
+  # Discord Notifications (Optional - for PR CI failures)
   # =============================================================================
+  # Note: Discord notifications for deployments are handled in docker-deploy.yml
   discord-notify:
     name: Discord Notification
     runs-on: ubuntu-latest
     needs: [all-checks-passed]
+    # Only notify on PR CI failures (successes are silent - deployment notifies)
     if: |
       always() &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
-      github.event_name == 'push'
+      github.event_name == 'pull_request' &&
+      needs.all-checks-passed.result == 'failure'
 
     steps:
       - name: Check if Discord is configured
@@ -1020,44 +1022,26 @@ jobs:
           else
             echo "configured=false" >> $GITHUB_OUTPUT
             echo "Discord webhook not configured. Skipping notification."
-            echo "To enable Discord notifications, add DISCORD_WEBHOOK_URL to repository secrets."
           fi
 
-      - name: Determine build status
-        if: steps.discord-check.outputs.configured == 'true'
-        id: status
-        run: |
-          if [[ "${{ needs.all-checks-passed.result }}" == "success" ]]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo "color=3066993" >> $GITHUB_OUTPUT
-            echo "emoji=✅" >> $GITHUB_OUTPUT
-          else
-            echo "status=failure" >> $GITHUB_OUTPUT
-            echo "color=15158332" >> $GITHUB_OUTPUT
-            echo "emoji=❌" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Send Discord notification
+      - name: Send Discord failure notification
         if: steps.discord-check.outputs.configured == 'true'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          BRANCH="${GITHUB_REF#refs/heads/}"
-          COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -1 | sed 's/"/\\"/g')
-          COMMIT_SHA="${{ github.sha }}"
-          COMMIT_SHORT="${COMMIT_SHA:0:7}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
           ACTOR="${{ github.actor }}"
-          REPO="${{ github.repository }}"
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           curl -H "Content-Type: application/json" \
             -X POST \
             -d "{
               \"embeds\": [{
-                \"title\": \"${{ steps.status.outputs.emoji }} AutoArr CI - ${{ steps.status.outputs.status }}\",
-                \"description\": \"**Branch:** \`${BRANCH}\`\\n**Commit:** [\`${COMMIT_SHORT}\`](https://github.com/${REPO}/commit/${COMMIT_SHA})\\n**Message:** ${COMMIT_MSG}\\n**Author:** ${ACTOR}\",
-                \"color\": ${{ steps.status.outputs.color }},
-                \"url\": \"${RUN_URL}\",
+                \"title\": \"CI Failed: PR #${PR_NUMBER}\",
+                \"description\": \"**PR:** [${PR_TITLE}](${PR_URL})\\n**Author:** ${ACTOR}\\n**Action:** [View CI Run](${RUN_URL})\",
+                \"color\": 15158332,
                 \"footer\": {
                   \"text\": \"AutoArr CI Pipeline\"
                 },

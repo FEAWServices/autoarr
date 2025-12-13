@@ -27,7 +27,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -347,6 +347,10 @@ if static_dir.exists():
 ui_dist_dir = Path(__file__).parent.parent / "ui" / "dist"
 if ui_dist_dir.exists():
     app.mount("/assets", StaticFiles(directory=str(ui_dist_dir / "assets")), name="assets")
+    # Mount logos directory for PWA icons
+    logos_dir = ui_dist_dir / "logos"
+    if logos_dir.exists():
+        app.mount("/logos", StaticFiles(directory=str(logos_dir)), name="logos")
 
 
 # ============================================================================
@@ -468,6 +472,49 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
 
 # ============================================================================
+# PWA Root-Level Files
+# ============================================================================
+# Explicit routes for PWA files that must be served from root level
+# (manifest.json, service workers, icons, etc.)
+
+
+@app.get("/manifest.json", include_in_schema=False)
+async def serve_manifest() -> FileResponse:
+    """Serve PWA manifest.json from UI dist directory."""
+    manifest_file = Path(__file__).parent.parent / "ui" / "dist" / "manifest.json"
+    if manifest_file.exists():
+        return FileResponse(str(manifest_file.resolve()), media_type="application/json")
+    raise HTTPException(status_code=404, detail="manifest.json not found")
+
+
+@app.get("/logo-192.png", include_in_schema=False)
+async def serve_logo_192() -> FileResponse:
+    """Serve PWA 192x192 icon from UI dist directory."""
+    logo_file = Path(__file__).parent.parent / "ui" / "dist" / "logo-192.png"
+    if logo_file.exists():
+        return FileResponse(str(logo_file.resolve()), media_type="image/png")
+    raise HTTPException(status_code=404, detail="logo-192.png not found")
+
+
+@app.get("/logo-512.png", include_in_schema=False)
+async def serve_logo_512() -> FileResponse:
+    """Serve PWA 512x512 icon from UI dist directory."""
+    logo_file = Path(__file__).parent.parent / "ui" / "dist" / "logo-512.png"
+    if logo_file.exists():
+        return FileResponse(str(logo_file.resolve()), media_type="image/png")
+    raise HTTPException(status_code=404, detail="logo-512.png not found")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def serve_favicon() -> FileResponse:
+    """Serve favicon from UI dist directory."""
+    favicon_file = Path(__file__).parent.parent / "ui" / "dist" / "favicon.ico"
+    if favicon_file.exists():
+        return FileResponse(str(favicon_file.resolve()), media_type="image/x-icon")
+    raise HTTPException(status_code=404, detail="favicon.ico not found")
+
+
+# ============================================================================
 # UI Catch-all Route (SPA)
 # ============================================================================
 
@@ -477,24 +524,29 @@ async def serve_spa(full_path: str) -> FileResponse:
     """
     Catch-all route to serve the React SPA.
 
-    This serves index.html for all non-API routes, allowing React Router
-    to handle client-side routing.
+    Serves index.html for all routes, allowing React Router to handle
+    client-side routing.
+
+    Note: Static assets (JS, CSS, images) are served by FastAPI's
+    StaticFiles mount at the root level, configured elsewhere.
 
     Args:
-        full_path: The requested path
+        full_path: The requested path (unused, kept for route matching)
 
     Returns:
-        FileResponse: The index.html file
+        FileResponse: The index.html file for SPA routing
     """
+    # Explicitly ignore the user-provided path for security
+    # Static files are handled by StaticFiles mount, not this catch-all
+    _ = full_path  # Mark as intentionally unused
+
     ui_dist_dir = Path(__file__).parent.parent / "ui" / "dist"
     index_file = ui_dist_dir / "index.html"
 
     if index_file.exists():
-        return FileResponse(str(index_file))
+        return FileResponse(str(index_file.resolve()))
 
     # Fallback if UI not built
-    from fastapi import HTTPException
-
     raise HTTPException(status_code=503, detail="UI not available")
 
 

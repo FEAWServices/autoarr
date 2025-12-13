@@ -2,6 +2,18 @@
 
 This guide will help you deploy AutoArr on your Synology NAS using Docker Compose and the GitHub Container Registry (GHCR) image.
 
+## Fast Deployment Pipeline
+
+AutoArr is configured for rapid deployment with automatic updates:
+
+| Step                         | Duration     |
+| ---------------------------- | ------------ |
+| PR merged to main            | 0 min        |
+| Docker build & push to GHCR  | ~3-5 min     |
+| Watchtower detects new image | ~0-2 min     |
+| Container restart            | ~30 sec      |
+| **Total**                    | **~5-8 min** |
+
 ## Prerequisites
 
 ### 1. Synology Setup
@@ -12,7 +24,7 @@ This guide will help you deploy AutoArr on your Synology NAS using Docker Compos
 
 ### 2. Existing Services
 
-AutoArr requires the following services to be running:
+AutoArr works with your existing media automation stack:
 
 - **SABnzbd** (Usenet downloader)
 - **Sonarr** (TV show manager)
@@ -28,33 +40,43 @@ You'll need API keys for each service:
 - SABnzbd: Config > General > API Key
 - Sonarr: Settings > General > Security > API Key
 - Radarr: Settings > General > Security > API Key
-- Plex Token: [See instructions in .env.synology.example](.env.synology.example)
+- Plex Token: [See instructions below](#getting-your-plex-token)
 
-## Quick Start
+## Quick Start (SSH)
 
-### Method 1: Using File Station & Container Manager UI
+```bash
+# SSH into your Synology
+ssh admin@your-synology-ip
+sudo -i
 
-#### Step 1: Create Directory Structure
+# Create directory
+mkdir -p /volume1/docker/autoarr/{data,logs}
+cd /volume1/docker/autoarr
+
+# Download docker-compose file (includes Watchtower for auto-updates)
+curl -O https://raw.githubusercontent.com/FEAWServices/autoarr/main/docker/docker-compose.synology.yml
+
+# Start the stack
+docker compose -f docker-compose.synology.yml up -d
+```
+
+That's it! AutoArr will be available at `http://your-synology-ip:8088` and will automatically update when new versions are released.
+
+## Container Manager UI Method
+
+### Step 1: Create Directory Structure
 
 1. Open **File Station**
 2. Navigate to `/docker/` (create if it doesn't exist)
-3. Create the following folders:
-   ```
-   /docker/autoarr/
-   /docker/autoarr/data/
-   /docker/autoarr/logs/
-   ```
+3. Create folders: `/docker/autoarr/data/` and `/docker/autoarr/logs/`
 
-#### Step 2: Upload Configuration Files
+### Step 2: Download Configuration
 
-1. Download these files from the AutoArr repository:
-   - `docker-compose.synology.yml`
-   - `.env.synology.example`
-2. Upload both files to `/docker/autoarr/`
-3. Rename `.env.synology.example` to `.env`
-4. Edit `.env` with your API keys and service URLs
+1. Download `docker-compose.synology.yml` from:
+   `https://raw.githubusercontent.com/FEAWServices/autoarr/main/docker/docker-compose.synology.yml`
+2. Upload to `/docker/autoarr/`
 
-#### Step 3: Deploy with Container Manager
+### Step 3: Deploy with Container Manager
 
 1. Open **Container Manager**
 2. Go to **Project** tab
@@ -65,89 +87,59 @@ You'll need API keys for each service:
    - **Source**: Select `docker-compose.synology.yml`
 5. Click **Next**, review settings, then **Done**
 
-The container will automatically pull the image from GitHub Container Registry and start.
+## Automatic Updates with Watchtower
 
-### Method 2: Using SSH (Advanced)
+The Synology compose file includes Watchtower, which automatically pulls new images when they're released.
 
-#### Step 1: SSH into Synology
+**How it works:**
 
-```bash
-ssh admin@your-synology-ip
-sudo -i
-```
+- Watchtower polls GHCR every 2 minutes
+- When a new `staging` tag is detected, it pulls the image
+- AutoArr container is automatically restarted with the new version
 
-#### Step 2: Create Directory and Download Files
-
-```bash
-# Create directory
-mkdir -p /volume1/docker/autoarr/{data,logs}
-cd /volume1/docker/autoarr
-
-# Download docker-compose file
-curl -O https://raw.githubusercontent.com/yourusername/autoarr/main/docker-compose.synology.yml
-
-# Download environment template
-curl -O https://raw.githubusercontent.com/yourusername/autoarr/main/.env.synology.example
-mv .env.synology.example .env
-```
-
-#### Step 3: Configure Environment
+**Check Watchtower status:**
 
 ```bash
-# Edit the .env file with your settings
-vi .env
+docker logs watchtower
 ```
 
-#### Step 4: Deploy
+**Force immediate update:**
 
 ```bash
-# Pull and start the container
-docker compose -f docker-compose.synology.yml up -d
-
-# Check status
-docker compose -f docker-compose.synology.yml ps
-
-# View logs
-docker compose -f docker-compose.synology.yml logs -f
+docker exec watchtower /watchtower --run-once
 ```
+
+See [WATCHTOWER.md](../WATCHTOWER.md) for more configuration options.
+
+## Accessing AutoArr
+
+Once deployed:
+
+- **Web UI**: `http://your-synology-ip:8088`
+- **API Docs**: `http://your-synology-ip:8088/docs`
+- **Health Check**: `http://your-synology-ip:8088/health`
+
+Configure your services (SABnzbd, Sonarr, Radarr, Plex) via the Settings page in the web UI.
 
 ## Configuration
 
 ### Environment Variables
 
-Edit `/volume1/docker/autoarr/.env` with your configuration:
+The docker-compose file includes sensible defaults. To customize, edit the `environment` section:
 
-```bash
-# Required: Service URLs (adjust IPs to match your setup)
-SABNZBD_URL=http://192.168.1.100:8080
-SABNZBD_API_KEY=your_actual_sabnzbd_api_key
-
-SONARR_URL=http://192.168.1.100:8989
-SONARR_API_KEY=your_actual_sonarr_api_key
-
-RADARR_URL=http://192.168.1.100:7878
-RADARR_API_KEY=your_actual_radarr_api_key
-
-PLEX_URL=http://192.168.1.100:32400
-PLEX_TOKEN=your_actual_plex_token
-
-# Optional: AI Features
-ANTHROPIC_API_KEY=sk-ant-...  # Leave empty to disable
+```yaml
+environment:
+  - PUID=1026 # Your user ID
+  - PGID=100 # Your group ID
+  - TZ=Europe/London # Your timezone
+  - LOG_LEVEL=INFO # DEBUG, INFO, WARNING, ERROR
 ```
 
 ### Network Configuration
 
-**Option 1: Default Bridge Network** (Recommended for beginners)
+**Default (Bridge Network)**: Services are accessed by IP address. No changes needed.
 
-- Services are accessed by IP address
-- No changes needed to docker-compose.synology.yml
-
-**Option 2: Join Existing Docker Network** (Advanced)
-If your \*arr stack is already running in a Docker network:
-
-1. Edit `docker-compose.synology.yml`
-2. Uncomment the `media-stack` network section
-3. Update the network name to match your existing network
+**Join Existing Network**: If your \*arr stack is in a Docker network:
 
 ```yaml
 networks:
@@ -156,56 +148,44 @@ networks:
     name: your_existing_network_name
 ```
 
-## Accessing AutoArr
+## Manual Updates
 
-Once deployed, access AutoArr at:
+If you prefer manual updates over Watchtower:
 
-- **Web UI**: `http://your-synology-ip:8088`
-- **API Docs**: `http://your-synology-ip:8088/docs`
-- **Health Check**: `http://your-synology-ip:8088/health`
+### Via Container Manager
 
-## Updating AutoArr
-
-### Via Container Manager UI
-
-1. Open **Container Manager**
-2. Go to **Project** > `autoarr`
-3. Click **Action** > **Pull**
-4. After pull completes, click **Action** > **Restart**
+1. Go to **Project** > `autoarr`
+2. Click **Action** > **Pull**
+3. Click **Action** > **Restart**
 
 ### Via SSH
 
 ```bash
 cd /volume1/docker/autoarr
-docker compose -f docker-compose.synology.yml pull
-docker compose -f docker-compose.synology.yml up -d
+docker compose -f docker-compose.synology.yml pull autoarr
+docker compose -f docker-compose.synology.yml up -d autoarr
 ```
 
 ## Troubleshooting
 
 ### Container Won't Start
 
-1. Check logs in Container Manager or via SSH:
-   ```bash
-   docker compose -f docker-compose.synology.yml logs
-   ```
-2. Verify all API keys are correct in `.env`
-3. Ensure service URLs are accessible from the Synology
+```bash
+docker compose -f docker-compose.synology.yml logs autoarr
+```
 
 ### Can't Connect to Services
 
-1. Verify service URLs use correct IP addresses
-2. Test connectivity:
-   ```bash
-   docker exec autoarr curl http://192.168.1.100:8080/api?mode=version
-   ```
-3. If using Docker networks, ensure services are in the same network
+Test connectivity from inside the container:
+
+```bash
+docker exec autoarr curl http://192.168.1.100:8080/api?mode=version
+```
 
 ### Permission Issues
 
 ```bash
-# Fix data directory permissions
-sudo chown -R 1000:1000 /volume1/docker/autoarr/data
+sudo chown -R 1026:100 /volume1/docker/autoarr/data
 sudo chmod -R 755 /volume1/docker/autoarr/data
 ```
 
@@ -215,29 +195,19 @@ sudo chmod -R 755 /volume1/docker/autoarr/data
 docker compose -f docker-compose.synology.yml logs -f autoarr
 ```
 
-## Resource Usage
+## Getting Your Plex Token
 
-Default resource limits:
-
-- **CPU**: 2 cores max, 0.5 cores reserved
-- **Memory**: 1GB max, 512MB reserved
-
-To adjust, edit `docker-compose.synology.yml`:
-
-```yaml
-deploy:
-  resources:
-    limits:
-      cpus: "4" # Increase for better performance
-      memory: 2G
-```
+1. Go to Plex Web App (app.plex.tv)
+2. Play any media
+3. Click the "..." menu > "Get Info"
+4. Click "View XML"
+5. Look for `X-Plex-Token` in the URL
 
 ## Backup and Restore
 
 ### Backup
 
 ```bash
-# Backup database and config
 cd /volume1/docker/autoarr
 tar czf autoarr-backup-$(date +%Y%m%d).tar.gz data/
 ```
@@ -245,67 +215,28 @@ tar czf autoarr-backup-$(date +%Y%m%d).tar.gz data/
 ### Restore
 
 ```bash
-# Stop container
 docker compose -f docker-compose.synology.yml down
-
-# Restore data
 tar xzf autoarr-backup-YYYYMMDD.tar.gz
-
-# Start container
 docker compose -f docker-compose.synology.yml up -d
 ```
 
-## Advanced Configuration
+## Resource Usage
 
-### Using PostgreSQL Instead of SQLite
+Default limits:
 
-If you have PostgreSQL running:
+- **CPU**: 2 cores max, 0.5 cores reserved
+- **Memory**: 1GB max, 512MB reserved
 
-```bash
-# In .env
-DATABASE_URL=postgresql://user:password@postgres:5432/autoarr
-```
-
-### Using Redis for Caching
-
-If you have Redis running:
-
-```bash
-# In .env
-REDIS_URL=redis://redis:6379/0
-```
-
-### Custom Port
-
-Change the port in `.env`:
-
-```bash
-AUTOARR_PORT=9999  # Use any available port
-```
+Adjust in `docker-compose.synology.yml` if needed.
 
 ## Security Recommendations
 
-1. **Use Reverse Proxy**: Consider using Synology's built-in reverse proxy or Nginx Proxy Manager
-2. **Enable HTTPS**: Configure SSL certificates through DSM or reverse proxy
-3. **Firewall**: Restrict access to AutoArr port to your local network
-4. **API Keys**: Keep your `.env` file secure and don't share it
-
-## Support
-
-- **GitHub Issues**: [https://github.com/yourusername/autoarr/issues](https://github.com/yourusername/autoarr/issues)
-- **Documentation**: [https://github.com/yourusername/autoarr/docs](https://github.com/yourusername/autoarr/docs)
-- **Discord**: [Your Discord Link]
+1. **Reverse Proxy**: Use Synology's built-in reverse proxy or Nginx Proxy Manager
+2. **HTTPS**: Configure SSL certificates through DSM
+3. **Firewall**: Restrict AutoArr port to your local network
+4. **Network**: Keep AutoArr on the same network as your \*arr stack
 
 ## Uninstalling
-
-### Via Container Manager
-
-1. Open **Container Manager**
-2. Go to **Project** > `autoarr`
-3. Click **Action** > **Stop**
-4. Click **Action** > **Delete**
-
-### Via SSH
 
 ```bash
 cd /volume1/docker/autoarr
@@ -313,6 +244,7 @@ docker compose -f docker-compose.synology.yml down -v
 rm -rf /volume1/docker/autoarr  # Remove all data
 ```
 
-## License
+## Support
 
-AutoArr is licensed under the MIT License. See [LICENSE](../LICENSE) for details.
+- **GitHub Issues**: https://github.com/FEAWServices/autoarr/issues
+- **Documentation**: https://github.com/FEAWServices/autoarr/tree/main/docs

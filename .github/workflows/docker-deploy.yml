@@ -1,18 +1,21 @@
 name: Docker Build & Deploy
 
 on:
-  # Run after CI completes successfully
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
+  # Trigger directly on push to main for FAST deployment (~5 min)
+  # CI already validated the PR, so we skip waiting for it
+  push:
     branches:
       - main # Production and staging deployment
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/dependabot.yml"
+      - ".github/labeler.yml"
 
-# Cancel in-progress runs when a new workflow is triggered
-# Use event.workflow_run.head_branch for workflow_run events
+# Cancel in-progress runs when a new commit is pushed
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -23,8 +26,10 @@ jobs:
   build-and-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    # Only run if Python CI succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Skip for bot commits (dependabot, renovate)
+    if: |
+      !contains(github.event.head_commit.author.name, 'dependabot') &&
+      !contains(github.event.head_commit.author.name, 'renovate')
     permissions:
       contents: read
       packages: write
@@ -32,8 +37,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Set up QEMU (for multi-platform builds)
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -52,11 +58,11 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             # Staging tag - updated on every merge (for Watchtower auto-updates)
-            type=raw,value=staging,enable=${{ github.event.workflow_run.head_branch == 'main' }}
+            type=raw,value=staging
             # Latest tag - same as staging for continuous deployment
-            type=raw,value=latest,enable=${{ github.event.workflow_run.head_branch == 'main' }}
+            type=raw,value=latest
             # SHA for traceability
-            type=sha,prefix=main-,enable=${{ github.event.workflow_run.head_branch == 'main' }}
+            type=sha,prefix=main-
             # Semver (when release-please creates version tags)
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -71,20 +77,20 @@ jobs:
           context: .
           file: ./docker/Dockerfile.production
           platforms: linux/amd64,linux/arm64
-          push: true # Always push when CI succeeds on main/develop
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            BUILD_DATE=${{ github.event.workflow_run.created_at }}
-            VCS_REF=${{ github.event.workflow_run.head_sha }}
-            VERSION=${{ github.event.workflow_run.head_branch }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
 
       - name: Run Trivy security scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging
           format: "sarif"
           output: "trivy-results.sarif"
         continue-on-error: true
@@ -97,17 +103,17 @@ jobs:
 
       - name: Generate deployment summary
         run: |
-          echo "## 🐳 Docker Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "## Docker Image Published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`${{ github.event.workflow_run.head_branch }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ github.event.workflow_run.head_sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 Tags Published" >> $GITHUB_STEP_SUMMARY
+          echo "### Tags Published" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🚀 Quick Start" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Start" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
@@ -117,7 +123,6 @@ jobs:
   deploy-production:
     name: Production Deployment Gate
     needs: build-and-push
-    if: ${{ github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -125,7 +130,7 @@ jobs:
     steps:
       - name: Production deployment notification
         run: |
-          echo "## 🚀 Production Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "## Production Image Published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ github.event.workflow_run.head_sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
