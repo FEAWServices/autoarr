@@ -26,8 +26,6 @@
 - AutoArr instances connect TO it via secure outbound WebSocket (like Plex)
 - No firewall configuration needed on user's network
 
-See [docs/VISION_AND_PRICING.md](docs/VISION_AND_PRICING.md) for complete details.
-
 ### Multi-Repo Development
 
 When working in the devcontainer, both repos are available:
