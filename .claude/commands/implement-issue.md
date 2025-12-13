@@ -247,6 +247,37 @@ Implements configuration health scoring based on best practices.
 Closes #123"
 ```
 
+## Step 7: QA Audit
+
+Run the QA audit command:
+
+```
+/qa-audit
+```
+
+This will:
+
+1. Verify implementation against issue requirements
+2. Run automated tests
+3. Capture evidence/screenshots
+4. Post findings as PR comment
+
+## Step 8: PR Review
+
+Run the PR review command for comprehensive code review:
+
+```
+/pr-review
+```
+
+This will:
+
+1. Review code changes against best practices
+2. Check for security issues
+3. Verify test coverage
+4. Ensure documentation is complete
+5. Post review comments on the PR
+
 ## Agent Routing Guide
 
 | Task Type        | Primary Agent              | Backup Agent               |

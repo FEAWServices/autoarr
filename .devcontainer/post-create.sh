@@ -151,6 +151,45 @@ else
     echo "✅ Docker MCP Gateway plugin already installed"
 fi
 
+# -----------------------------------------------------------------------------
+# Gemini CLI (for AI-powered graphics, photos, and UI design)
+# -----------------------------------------------------------------------------
+
+echo "🎨 Installing Gemini CLI..."
+if ! command -v gemini &> /dev/null; then
+    npm install -g @google/gemini-cli
+    echo "✅ Gemini CLI installed"
+else
+    echo "✅ Gemini CLI already installed"
+fi
+
+# Configure Gemini authentication
+if [ -f ".env" ]; then
+    GEMINI_API_KEY=$(grep -E "^GEMINI_API_KEY=" .env 2>/dev/null | cut -d'=' -f2 | tr -d '"' | tr -d "'")
+    if [ -n "$GEMINI_API_KEY" ]; then
+        # Add to bashrc for persistent auth
+        if ! grep -q "GEMINI_API_KEY" ~/.bashrc 2>/dev/null; then
+            cat >> ~/.bashrc << 'EOF'
+
+# Gemini CLI authentication (auto-configured by devcontainer)
+if [ -f /app/.env ]; then
+    export GEMINI_API_KEY=$(grep -E "^GEMINI_API_KEY=" /app/.env 2>/dev/null | cut -d'=' -f2 | tr -d '"' | tr -d "'")
+fi
+EOF
+        fi
+        export GEMINI_API_KEY
+        echo "✅ Gemini CLI configured with API key"
+    else
+        echo "ℹ️  Gemini CLI authentication options:"
+        echo "   Option 1: Add GEMINI_API_KEY to /app/.env"
+        echo "   Option 2: Run 'gemini' to login with Google account (Gemini Advanced subscription)"
+    fi
+else
+    echo "ℹ️  Gemini CLI authentication options:"
+    echo "   Option 1: Create .env with GEMINI_API_KEY=your_key"
+    echo "   Option 2: Run 'gemini' to login with Google account (Gemini Advanced subscription)"
+fi
+
 echo ""
 
 # -----------------------------------------------------------------------------
@@ -168,6 +207,7 @@ echo "   Node.js: $(node --version 2>&1)"
 echo "   pnpm:    $(pnpm --version 2>&1)"
 echo "   gh:      $(gh --version 2>&1 | head -1 | cut -d' ' -f3)"
 echo "   claude:  $(claude --version 2>&1 || echo 'not available')"
+echo "   gemini:  $(gemini --version 2>&1 || echo 'not available')"
 echo ""
 echo "🎯 Quick commands:"
 echo "   Run API:        cd /app && poetry run uvicorn autoarr.api.main:app --reload"

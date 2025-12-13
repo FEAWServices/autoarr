@@ -514,6 +514,24 @@ async def serve_favicon() -> FileResponse:
     raise HTTPException(status_code=404, detail="favicon.ico not found")
 
 
+@app.get("/logo.png", include_in_schema=False)
+async def serve_logo() -> FileResponse:
+    """Serve main logo from UI dist directory."""
+    logo_file = Path(__file__).parent.parent / "ui" / "dist" / "logo.png"
+    if logo_file.exists():
+        return FileResponse(str(logo_file.resolve()), media_type="image/png")
+    raise HTTPException(status_code=404, detail="logo.png not found")
+
+
+@app.get("/apple-touch-icon.png", include_in_schema=False)
+async def serve_apple_touch_icon() -> FileResponse:
+    """Serve Apple touch icon from UI dist directory."""
+    icon_file = Path(__file__).parent.parent / "ui" / "dist" / "apple-touch-icon.png"
+    if icon_file.exists():
+        return FileResponse(str(icon_file.resolve()), media_type="image/png")
+    raise HTTPException(status_code=404, detail="apple-touch-icon.png not found")
+
+
 # ============================================================================
 # UI Catch-all Route (SPA)
 # ============================================================================

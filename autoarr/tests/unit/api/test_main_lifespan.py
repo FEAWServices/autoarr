@@ -396,6 +396,8 @@ class TestAppConfiguration:
         assert "/logo-192.png" in routes
         assert "/logo-512.png" in routes
         assert "/favicon.ico" in routes
+        assert "/logo.png" in routes
+        assert "/apple-touch-icon.png" in routes
 
     def test_spa_catchall_endpoint_exists(self):
         """Test that SPA catch-all endpoint exists."""
@@ -514,6 +516,38 @@ class TestPWAEndpoints:
             assert exc_info.value.status_code == 404
             assert "favicon.ico not found" in str(exc_info.value.detail)
 
+    @pytest.mark.asyncio
+    async def test_serve_logo_raises_404_when_missing(self):
+        """Test serve_logo raises 404 when file doesn't exist."""
+        from fastapi import HTTPException
+
+        from autoarr.api.main import serve_logo
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=False)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await serve_logo()
+
+            assert exc_info.value.status_code == 404
+            assert "logo.png not found" in str(exc_info.value.detail)
+
+    @pytest.mark.asyncio
+    async def test_serve_apple_touch_icon_raises_404_when_missing(self):
+        """Test serve_apple_touch_icon raises 404 when file doesn't exist."""
+        from fastapi import HTTPException
+
+        from autoarr.api.main import serve_apple_touch_icon
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=False)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await serve_apple_touch_icon()
+
+            assert exc_info.value.status_code == 404
+            assert "apple-touch-icon.png not found" in str(exc_info.value.detail)
+
 
 class TestServeSPA:
     """Test SPA catch-all route."""
@@ -615,6 +649,36 @@ class TestPWAEndpointsSuccess:
             _setup_pwa_file_mock(mock_path, exists=True, resolve_path="/app/ui/dist/favicon.ico")
 
             result = await serve_favicon()
+
+            from fastapi.responses import FileResponse
+
+            assert isinstance(result, FileResponse)
+
+    @pytest.mark.asyncio
+    async def test_serve_logo_returns_file_when_exists(self):
+        """Test serve_logo returns FileResponse when file exists."""
+        from autoarr.api.main import serve_logo
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(mock_path, exists=True, resolve_path="/app/ui/dist/logo.png")
+
+            result = await serve_logo()
+
+            from fastapi.responses import FileResponse
+
+            assert isinstance(result, FileResponse)
+
+    @pytest.mark.asyncio
+    async def test_serve_apple_touch_icon_returns_file_when_exists(self):
+        """Test serve_apple_touch_icon returns FileResponse when file exists."""
+        from autoarr.api.main import serve_apple_touch_icon
+
+        with patch("autoarr.api.main.Path") as mock_path:
+            _setup_pwa_file_mock(
+                mock_path, exists=True, resolve_path="/app/ui/dist/apple-touch-icon.png"
+            )
+
+            result = await serve_apple_touch_icon()
 
             from fastapi.responses import FileResponse
 
