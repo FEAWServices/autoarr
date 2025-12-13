@@ -93,7 +93,8 @@ services:
         # Only run poetry install if .venv is missing or outdated
         if [ ! -d .venv ] || [ poetry.lock -nt .venv ]; then
           echo 'Installing Python dependencies...' &&
-          poetry install --no-interaction --only main
+          poetry install --no-interaction --only main --no-root &&
+          touch .venv
         else
           echo 'Python deps up to date, skipping...'
         fi &&
@@ -120,8 +121,9 @@ services:
         echo '========================================' &&
         echo 'Starting API server on port 8088...' &&
         echo '========================================' &&
-        (cd /app && poetry run uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 &) &&
-        sleep 2 &&
+        cd /app &&
+        nohup poetry run uvicorn autoarr.api.main:app --host 0.0.0.0 --port 8088 > /tmp/uvicorn.log 2>&1 &
+        sleep 5 &&
         echo '' &&
         echo '========================================' &&
         echo 'Starting Vite dev server on port 5173...' &&
@@ -132,6 +134,7 @@ services:
         echo '*   http://localhost:9080           *' &&
         echo '**************************************' &&
         echo '' &&
+        cd /app/autoarr/ui &&
         pnpm run dev --host 0.0.0.0 --port 5173
       "
 
