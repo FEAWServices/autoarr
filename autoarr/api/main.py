@@ -37,17 +37,27 @@ from slowapi.errors import RateLimitExceeded
 from .config import get_settings
 from .database import get_database, init_database
 from .dependencies import get_orchestrator, shutdown_orchestrator
-from .middleware import (ErrorHandlerMiddleware, RequestLoggingMiddleware,
-                         add_security_headers)
+from .middleware import ErrorHandlerMiddleware, RequestLoggingMiddleware, add_security_headers
 from .rate_limiter import limiter
-from .routers import (activity, chat, configuration, downloads, health, logs,
-                      mcp, media, movies, onboarding, optimize, requests)
+from .routers import (
+    activity,
+    chat,
+    configuration,
+    downloads,
+    health,
+    logs,
+    mcp,
+    media,
+    movies,
+    onboarding,
+    optimize,
+    requests,
+)
 from .routers import settings as settings_router
 from .routers import shows
 from .routers.logs import setup_log_buffer_handler
 from .services.event_bus import get_event_bus
-from .services.websocket_bridge import (initialize_websocket_bridge,
-                                        shutdown_websocket_bridge)
+from .services.websocket_bridge import initialize_websocket_bridge, shutdown_websocket_bridge
 
 # Configure logging
 logging.basicConfig(
