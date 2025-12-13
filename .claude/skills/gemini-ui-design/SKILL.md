@@ -14,11 +14,15 @@ Use Gemini CLI for graphics, photos, image analysis, and UI design tasks.
 
 ## Prerequisites
 
-Ensure `GEMINI_API_KEY` is set in the root `.env` file:
+Authentication options:
+
+**Option 1: API Key** - Add to root `.env` file:
 
 ```bash
 GEMINI_API_KEY=your_api_key_here
 ```
+
+**Option 2: Google Account** - Run `gemini` in terminal and login with your Google account (requires Gemini Advanced subscription)
 
 ## Calling Gemini from Claude
 
