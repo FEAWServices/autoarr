@@ -1,0 +1,117 @@
+# AutoArr Synology Deployment with Watchtower Auto-Updates
+#
+# This compose file sets up AutoArr with automatic updates via Watchtower.
+# When a PR is merged to main, the new Docker image is built and pushed to GHCR.
+# Watchtower detects the new image and automatically updates the container.
+#
+# EXPECTED TIMELINE:
+#   PR merged to main         ->  0 min
+#   Docker build & push       ->  ~3-5 min
+#   Watchtower detects update ->  ~0-2 min (2 min poll interval)
+#   Container restart         ->  ~30 sec
+#   TOTAL                     ->  ~5-8 min
+#
+# USAGE:
+#   1. Copy this file to your Synology: /volume1/docker/autoarr/
+#   2. Create data directory: mkdir -p /volume1/docker/autoarr/data
+#   3. Start: docker-compose -f docker-compose.synology.yml up -d
+#
+# IMAGE: ghcr.io/feawservices/autoarr:staging (public, no auth required)
+
+version: "3.8"
+
+services:
+  # ==========================================================================
+  # AUTOARR - Intelligent Media Automation
+  # ==========================================================================
+  autoarr:
+    image: ghcr.io/feawservices/autoarr:staging
+    container_name: autoarr
+    restart: unless-stopped
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Europe/London
+      - APP_ENV=production
+      - LOG_LEVEL=INFO
+      - DATABASE_URL=sqlite:////data/autoarr.db
+      # Services configured via UI at http://YOUR_NAS_IP:8088/settings
+    volumes:
+      - /volume1/docker/autoarr/data:/data
+      - /volume1/docker/autoarr/logs:/app/logs
+    ports:
+      - 8088:8088
+    labels:
+      # Enable Watchtower auto-updates for this container
+      - "com.centurylinklabs.watchtower.enable=true"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    networks:
+      - autoarr-network
+
+  # ==========================================================================
+  # WATCHTOWER - Automatic Container Updates
+  # ==========================================================================
+  # Polls GHCR every 2 minutes for new images and auto-updates AutoArr.
+  # Only updates containers with the watchtower label (label-enable mode).
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # Poll every 2 minutes (120 seconds) for fast updates
+      WATCHTOWER_POLL_INTERVAL: 120
+      # Only update containers with the watchtower label
+      WATCHTOWER_LABEL_ENABLE: "true"
+      # Remove old images after updating
+      WATCHTOWER_CLEANUP: "true"
+      # Rolling restart (stop old, start new)
+      WATCHTOWER_ROLLING_RESTART: "true"
+      # Enable lifecycle hooks
+      WATCHTOWER_LIFECYCLE_HOOKS: "true"
+      # Timezone
+      TZ: Europe/London
+      # Logging
+      WATCHTOWER_LOG_LEVEL: info
+      WATCHTOWER_DEBUG: "false"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "/watchtower", "--health-check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - autoarr-network
+
+# ==========================================================================
+# NETWORKS
+# ==========================================================================
+networks:
+  autoarr-network:
+    driver: bridge
+    name: autoarr-network

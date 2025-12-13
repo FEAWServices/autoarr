@@ -2,16 +2,50 @@
 
 This guide explains how to set up automatic container updates using [Watchtower](https://containrrr.dev/watchtower/) so your AutoArr installation stays current with the latest changes.
 
+## Fast Deployment Pipeline
+
+AutoArr is configured for rapid deployment. When you merge a PR to main:
+
+| Step                         | Duration     |
+| ---------------------------- | ------------ |
+| PR merged to main            | 0 min        |
+| Docker build starts          | ~30 sec      |
+| Docker build & push to GHCR  | ~3-5 min     |
+| Watchtower detects new image | ~0-2 min     |
+| Container restart            | ~30 sec      |
+| **Total**                    | **~5-8 min** |
+
 ## How It Works
 
 1. You merge a PR to `main`
-2. CI runs and builds a new Docker image tagged `:staging`
+2. Docker image is built and tagged `:staging` (CI already validated the PR)
 3. Watchtower detects the new image and automatically pulls it
 4. Your container restarts with the updated image
 
 ## Quick Start
 
-### Option 1: Docker Compose (Recommended)
+### Option 1: Synology NAS (Recommended)
+
+Use the pre-configured Synology docker-compose file:
+
+```bash
+# SSH into your Synology
+ssh admin@your-synology-ip
+
+# Create directory
+mkdir -p /volume1/docker/autoarr/{data,logs}
+cd /volume1/docker/autoarr
+
+# Download the Synology compose file
+curl -O https://raw.githubusercontent.com/FEAWServices/autoarr/main/docker/docker-compose.synology.yml
+
+# Start the stack
+docker-compose -f docker-compose.synology.yml up -d
+```
+
+See [Synology Deployment Guide](deployment/synology-deployment.md) for detailed instructions.
+
+### Option 2: Generic Docker Compose
 
 Create a `docker-compose.yml`:
 
@@ -47,8 +81,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      # Poll interval in seconds (300 = 5 minutes)
-      WATCHTOWER_POLL_INTERVAL: 300
+      # Poll every 2 minutes for fast updates
+      WATCHTOWER_POLL_INTERVAL: 120
       # Only update containers with the watchtower label
       WATCHTOWER_LABEL_ENABLE: "true"
       # Remove old images after updating
@@ -61,7 +95,7 @@ Start the stack:
 docker-compose up -d
 ```
 
-### Option 2: Docker Run Commands
+### Option 3: Docker Run Commands
 
 ```bash
 # Create network
@@ -80,12 +114,12 @@ docker run -d \
   -l com.centurylinklabs.watchtower.enable=true \
   ghcr.io/feawservices/autoarr:staging
 
-# Run Watchtower
+# Run Watchtower (2-minute polling)
 docker run -d \
   --name watchtower \
   --restart unless-stopped \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -e WATCHTOWER_POLL_INTERVAL=300 \
+  -e WATCHTOWER_POLL_INTERVAL=120 \
   -e WATCHTOWER_LABEL_ENABLE=true \
   -e WATCHTOWER_CLEANUP=true \
   containrrr/watchtower
@@ -105,20 +139,20 @@ docker run -d \
 
 | Environment Variable       | Default | Description                              |
 | -------------------------- | ------- | ---------------------------------------- |
-| `WATCHTOWER_POLL_INTERVAL` | 86400   | Seconds between checks (300 = 5 min)     |
+| `WATCHTOWER_POLL_INTERVAL` | 86400   | Seconds between checks (120 = 2 min)     |
 | `WATCHTOWER_LABEL_ENABLE`  | false   | Only update labeled containers           |
 | `WATCHTOWER_CLEANUP`       | false   | Remove old images after update           |
 | `WATCHTOWER_LOG_LEVEL`     | info    | Log verbosity (debug, info, warn, error) |
 | `WATCHTOWER_NOTIFICATIONS` | -       | Notification type (slack, email, etc.)   |
 
-### Polling Intervals
+### Recommended Polling Intervals
 
-| Interval   | Seconds | Use Case                          |
-| ---------- | ------- | --------------------------------- |
-| 5 minutes  | 300     | Fast feedback during development  |
-| 30 minutes | 1800    | Balanced for staging environments |
-| 1 hour     | 3600    | Production-like stability         |
-| 24 hours   | 86400   | Minimal API calls                 |
+| Interval   | Seconds | Use Case                         |
+| ---------- | ------- | -------------------------------- |
+| 2 minutes  | 120     | Fast feedback during development |
+| 5 minutes  | 300     | Balanced for most users          |
+| 30 minutes | 1800    | Lower resource usage             |
+| 1 hour     | 3600    | Production-like stability        |
 
 ## Notifications (Optional)
 
@@ -158,6 +192,12 @@ Check when AutoArr was last updated:
 docker inspect autoarr --format '{{.Created}}'
 ```
 
+Watch for updates in real-time:
+
+```bash
+docker logs -f watchtower
+```
+
 ## Troubleshooting
 
 ### Container Not Updating
@@ -165,38 +205,33 @@ docker inspect autoarr --format '{{.Created}}'
 1. Check Watchtower logs: `docker logs watchtower`
 2. Verify label is set: `docker inspect autoarr | grep watchtower`
 3. Ensure registry is accessible: `docker pull ghcr.io/feawservices/autoarr:staging`
+4. Check if new image exists: `docker images | grep autoarr`
 
-### Private Registry Authentication
+### Force Update Now
 
-If the registry requires authentication, create a config file:
-
-```json
-{
-  "auths": {
-    "ghcr.io": {
-      "auth": "<base64-encoded-credentials>"
-    }
-  }
-}
+```bash
+# Trigger immediate update check
+docker exec watchtower /watchtower --run-once
 ```
 
-Mount it in Watchtower:
+### Verify Image is Public
 
-```yaml
-watchtower:
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    - ./config.json:/config.json
-  command: --config-file=/config.json
+The AutoArr image is public on GHCR. Verify you can pull without auth:
+
+```bash
+docker logout ghcr.io  # Remove any cached credentials
+docker pull ghcr.io/feawservices/autoarr:staging
 ```
 
 ## Security Considerations
 
 - Watchtower requires access to Docker socket (`/var/run/docker.sock`)
-- Consider using `WATCHTOWER_LABEL_ENABLE=true` to limit which containers can be updated
+- Use `WATCHTOWER_LABEL_ENABLE=true` to limit which containers can be updated
+- The AutoArr image is public - no secrets are included in the image
 - Review container images before enabling auto-updates in production
 
 ## Further Reading
 
 - [Watchtower Documentation](https://containrrr.dev/watchtower/)
+- [AutoArr Synology Guide](deployment/synology-deployment.md)
 - [AutoArr Docker Guide](QUICK-START.md)
