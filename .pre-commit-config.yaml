@@ -44,12 +44,14 @@ repos:
         args: [--config=pyproject.toml]
         exclude: ^(autoarr/ui/|node_modules/|\.venv/)
 
-  # Python: isort (import sorting)
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+  # Python: isort (import sorting) - uses poetry version for consistency with CI
+  - repo: local
     hooks:
       - id: isort
-        args: [--profile=black, --line-length=100]
+        name: isort
+        entry: poetry run isort --profile=black --line-length=100
+        language: system
+        types: [python]
         exclude: ^(autoarr/ui/|node_modules/|\.venv/)
 
   # Python: Flake8 linting
