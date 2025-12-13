@@ -5,7 +5,7 @@ on:
   # CI already validated the PR, so we skip waiting for it
   push:
     branches:
-      - main
+      - main # Production and staging deployment
     paths-ignore:
       - "docs/**"
       - "*.md"
@@ -107,7 +107,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Triggered by:** Fast deploy (CI validated in PR)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Tags Published" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
@@ -119,11 +118,7 @@ jobs:
           echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Watchtower Auto-Update" >> $GITHUB_STEP_SUMMARY
-          echo "If Watchtower is configured with 2-min polling, your Synology NAS" >> $GITHUB_STEP_SUMMARY
-          echo "will automatically pull this image within **~5 minutes** of this build." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "See [WATCHTOWER.md](docs/WATCHTOWER.md) for setup instructions." >> $GITHUB_STEP_SUMMARY
+          echo "See [WATCHTOWER.md](docs/WATCHTOWER.md) for auto-update setup." >> $GITHUB_STEP_SUMMARY
 
   deploy-production:
     name: Production Deployment Gate

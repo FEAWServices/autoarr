@@ -485,27 +485,32 @@ async def serve_spa(full_path: str) -> FileResponse:
     Returns:
         FileResponse: The requested file or index.html for SPA routing
     """
+    import mimetypes
+
     ui_dist_dir = Path(__file__).parent.parent / "ui" / "dist"
+    ui_dist_resolved = ui_dist_dir.resolve()
 
     # First, check if the requested path is a static file in dist
     if full_path:
-        requested_file = ui_dist_dir / full_path
-        # Security: ensure the resolved path is within ui_dist_dir
-        try:
-            requested_file = requested_file.resolve()
-            if requested_file.is_file() and str(requested_file).startswith(
-                str(ui_dist_dir.resolve())
-            ):
-                # Determine media type based on file extension
-                import mimetypes
-
-                media_type, _ = mimetypes.guess_type(str(requested_file))
-                return FileResponse(str(requested_file), media_type=media_type)
-        except (ValueError, OSError):
-            pass  # Invalid path, fall through to index.html
+        # Security: reject paths with directory traversal sequences
+        if ".." in full_path or full_path.startswith("/"):
+            pass  # Skip to index.html
+        else:
+            try:
+                # Construct and resolve the requested file path
+                requested_file = (ui_dist_dir / full_path).resolve()
+                # Security: use is_relative_to for proper path containment check
+                if (
+                    requested_file.is_relative_to(ui_dist_resolved)
+                    and requested_file.is_file()
+                ):
+                    media_type, _ = mimetypes.guess_type(str(requested_file))
+                    return FileResponse(str(requested_file), media_type=media_type)
+            except (ValueError, OSError):
+                pass  # Invalid path, fall through to index.html
 
     # Serve index.html for SPA routing
-    index_file = ui_dist_dir / "index.html"
+    index_file = ui_dist_resolved / "index.html"
     if index_file.exists():
         return FileResponse(str(index_file))
 

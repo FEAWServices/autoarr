@@ -1,18 +1,12 @@
 name: CI
 
 on:
-  # CI runs on PRs only - merge to main goes directly to Docker build
-  # This enables fast deployment (~5 min from merge to running on Synology)
+  push:
+    branches:
+      - main # Triggers Docker build after merge
   pull_request:
     branches:
       - main # PRs to production
-  # Allow manual trigger for full CI on main if needed
-  workflow_dispatch:
-    inputs:
-      run_full_ci:
-        description: "Run full CI suite"
-        required: false
-        default: "true"
 
 # Cancel in-progress runs when a new commit is pushed
 concurrency:
